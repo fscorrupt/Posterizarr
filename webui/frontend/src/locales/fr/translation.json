@@ -1,0 +1,1737 @@
+{
+  "runModes": {
+    "scriptRunning": "Le script est déjà en cours d'exécution ! Veuillez l'arrêter d'abord.",
+    "startedMode": "Démarré en mode {{mode}}",
+    "manualModeSuccess": "Mode manuel démarré avec succès !",
+    "viewDocumentation": "Voir la documentation complète",
+    "validation": {
+      "imageRequired": "Veuillez télécharger une image ou fournir une URL/chemin !",
+      "titleRequired": "Le texte du titre est requis !",
+      "folderRequired": "Le nom du dossier est requis !",
+      "libraryRequired": "Le nom de la bibliothèque est requis !",
+      "seasonRequired": "Le nom de l'affiche de saison est requis pour les affiches de saison !",
+      "episodeTitleRequired": "Le titre de l'épisode est requis pour les cartons de titre !",
+      "seasonNameRequired": "Le nom de la saison est requis pour les cartons de titre !",
+      "episodeNumberRequired": "Le numéro d'épisode est requis pour les cartons de titre !",
+      "tmdbQueryRequired": "Veuillez entrer un titre de recherche ou un ID TMDB !",
+      "seasonNumberRequired": "Veuillez entrer un numéro de saison !",
+      "episodeInfoRequired": "Veuillez entrer les numéros de saison et d'épisode !",
+      "libraryNameRequired": "Veuillez entrer un nom de bibliothèque !",
+      "yearRequiredForNumericTitle": "L'année est requise pour les titres numériques (ex : '2012', '1917', '365 Days')"
+    },
+    "reset": {
+      "stopFirst": "Le script doit être arrêté avant de réinitialiser les affiches !",
+      "success": "Affiches réinitialisées avec succès !",
+      "confirmTitle": "Réinitialiser les affiches",
+      "confirmMessage": "Êtes-vous sûr de vouloir réinitialiser TOUTES les affiches dans \"{{library}}\" ? Cette action NE PEUT PAS être annulée !\\n\\nÊtes-vous absolument sûr ?",
+      "title": "Réinitialiser les affiches",
+      "description": "Réinitialiser toutes les affiches d'une bibliothèque Plex par défaut",
+      "warning": "Avertissement :",
+      "warningText": "Cela réinitialisera TOUTES les affiches dans la bibliothèque spécifiée. Cette action NE PEUT PAS être annulée ! Le script doit être arrêté avant de réinitialiser les affiches.",
+      "placeholder": "Entrez le nom de la bibliothèque (ex : Films, Séries TV)",
+      "button": "Réinitialiser les affiches"
+    },
+    "stop": {
+      "success": "Script arrêté avec succès",
+      "button": "Arrêter le script"
+    },
+    "tmdb": {
+      "title": "Rechercher TMDB pour",
+      "seasonPosters": "Affiches de saison",
+      "episodeImages": "Images d'épisode",
+      "tvShowPosters": "Affiches de série TV",
+      "moviePosters": "Affiches de film",
+      "posters": "Affiches",
+      "seasonHint": "Rechercher des affiches spécifiques à la saison depuis TMDB",
+      "episodeHint": "Rechercher des captures d'épisode depuis TMDB",
+      "titleHint": "Rechercher par titre ou ID TMDB pour trouver des affiches directement depuis TMDB",
+      "placeholder": "Entrez le titre du film/série ou l'ID TMDB...",
+      "searching": "Recherche en cours...",
+      "search": "Rechercher",
+      "seasonNumber": "Numéro de saison",
+      "episodeNumber": "Numéro d'épisode",
+      "seasonNumberHint": "💡 Entrez le numéro de saison pour trouver des affiches spécifiques à la saison",
+      "episodeNumberHint": "💡 Entrez les numéros de saison et d'épisode pour trouver des captures d'épisode",
+      "noResults": "Aucune affiche trouvée. Essayez un autre terme de recherche.",
+      "posterSelected": "URL de l'affiche définie ! 🎨",
+      "clickToSelect": "Cliquez sur une affiche pour la sélectionner pour votre création manuelle d'affiche",
+      "results": "Résultats d'affiche TMDB",
+      "seasonResults": "Affiches de la saison {{season}}",
+      "episodeResults": "Images de l'épisode {{season}}x{{episode}}",
+      "loadMore": "Charger plus ({{remaining}} restant(s))",
+      "episodeStill": "CAPTURE D'ÉPISODE",
+      "seasonPoster": "AFFICHE DE SAISON"
+    },
+    "quickRun": {
+      "title": "Modes d'exécution rapide",
+      "normal": {
+        "title": "Mode normal",
+        "description": "Exécuter Posterizarr normalement"
+      },
+      "testing": {
+        "title": "Mode test",
+        "description": "Générer des affiches d'exemple"
+      },
+      "backup": {
+        "title": "Mode sauvegarde",
+        "description": "Sauvegarder les affiches existantes"
+      },
+      "syncJellyfin": {
+        "title": "Sync Jellyfin",
+        "description": "Synchroniser les affiches vers Jellyfin"
+      },
+      "syncEmby": {
+        "title": "Sync Emby",
+        "description": "Synchroniser les affiches vers Emby"
+      }
+    },
+    "manual": {
+      "title": "Mode Manuel (Semi-Automatisé)",
+      "description": "Créez ou remplacez des affiches manuellement avec un contrôle total sur la recherche, la source et les métadonnées.",
+      "posterType": "Type d'affiche",
+      "types": {
+        "poster": "Affiche",
+        "season": "Saison",
+        "titleCard": "Carton de titre",
+        "background": "Arrière-plan",
+        "collection": "Collection"
+      },
+      "mediaType": "Type de média",
+      "mediaTypes": {
+        "movie": "Film",
+        "tv": "Série TV"
+      },
+      "mediaTypeHint": "Sélectionnez si vous recherchez une affiche de film ou de série TV",
+      "pictureSource": "Source de l'image",
+      "uploadImage": "Télécharger une image",
+      "fileSelected": "Fichier sélectionné",
+      "or": "ou",
+      "urlPlaceholder": "Ou entrez une URL/chemin : C:\\\\chemin\\\\vers\\\\image.jpg ou https://url.to/image.jpg",
+      "uploadHint": "Téléchargez un fichier image local ou entrez une URL/chemin direct vers l'image source",
+      "titleText": "Texte du titre",
+      "titlePlaceholder": "Seul sur Mars",
+      "titleHint": "Titre à afficher sur l'affiche",
+      "folderName": "Nom du dossier",
+      "libraryName": "Nom de la bibliothèque",
+      "seasonPosterName": "Nom de l'affiche de saison",
+      "seasonPlaceholder": "Saison 1",
+      "seasonHint": "Nom de la saison (par ex., \"Saison 1\", \"Staffel 2\", \"Specials\")",
+      "episodeTitle": "Titre de l'épisode",
+      "episodeTitlePlaceholder": "Ozymandias",
+      "episodeTitleHint": "Nom du titre de l'épisode (par ex., \"Ozymandias\", \"Pilote\")",
+      "seasonName": "Nom de la saison",
+      "seasonNamePlaceholder": "Saison 5",
+      "seasonNameHint": "Nom de la saison (par ex., \"Saison 5\", \"Staffel 1\")",
+      "episodeNumber": "Numéro de l'épisode",
+      "episodeNumberPlaceholder": "14",
+      "episodeNumberHint": "Numéro de l'épisode (par ex., \"14\", \"1\")",
+      "runButton": "Exécuter le mode manuel",
+      "processing": "Traitement en cours...",
+      "tmdbSearchTitle": "Recherche TMDB de {{type}}",
+      "tmdbTypeSeasonPosters": "Affiches de saison",
+      "tmdbTypeEpisodeImages": "Images d'épisode",
+      "tmdbTypeTvPosters": "Affiches de séries TV",
+      "tmdbTypeMoviePosters": "Affiches de films",
+      "tmdbTypePosters": "Affiches",
+      "tmdbHintSeason": "Recherchez des séries TV sur TMDB pour trouver des affiches de saison",
+      "tmdbHintTitleCard": "Recherchez des séries TV sur TMDB pour trouver des captures d'épisode",
+      "tmdbHintStandard": "Recherchez des films ou des séries TV sur TMDB pour trouver des affiches",
+      "tmdbSearchPlaceholder": "Entrez un titre ou un ID TMDB...",
+      "tmdbIdPlaceholder": "Entrez l'ID TMDB (ex : 530915 pour '1917')...",
+      "searchByIdLabel": "Rechercher par ID TMDB",
+      "searchByIdHint": "Année non requise lors de la recherche par ID",
+      "searchByIdWarning": "Assurez-vous de sélectionner le bon type de média (Film ou TV) pour l'ID TMDB",
+      "yearLabel": "Année (optionnel)",
+      "numericTitleWarning": "Titre numérique détecté - L'année est requise pour une recherche précise",
+      "tmdbSearchButton": "Rechercher",
+      "tmdbSearching": "Recherche en cours...",
+      "howItWorks": "Comment fonctionne le mode manuel :",
+      "step1": "L'image source est déplacée (si locale) ou téléchargée (si URL)",
+      "step2": "L'image est modifiée avec vos superpositions et votre texte configurés",
+      "step3": "L'affiche finale est placée dans l'emplacement des ressources",
+      "step4": "L'affiche est synchronisée avec votre serveur multimédia",
+      "viewDocs": "Voir la documentation complète"
+    },
+    "jellyfin": {
+      "title": "Mode de synchronisation Jellyfin",
+      "description": "Synchroniser toutes les illustrations de Plex vers Jellyfin",
+      "syncInfo": "Ce mode synchronisera toutes les illustrations que vous avez dans Plex avec votre serveur Jellyfin.",
+      "howItWorks": "Comment fonctionne la synchronisation Jellyfin :",
+      "step1Title": "Les noms de bibliothèque doivent correspondre",
+      "step1Text": "Le script requiert que les noms des bibliothèques dans Plex et Jellyfin correspondent exactement pour que la synchronisation fonctionne.",
+      "step2Title": "Calcul du hash",
+      "step2Text": "Le script calcule le hash des illustrations des deux serveurs pour déterminer s'il y a des différences.",
+      "step3Title": "Synchronisation intelligente",
+      "step3Text": "Ne synchronise les illustrations que si les hashes ne correspondent pas, économisant du temps et de la bande passante.",
+      "tip": "💡 Astuce : Ceci est pratique si vous voulez lancer la synchronisation après une exécution de Kometa, pour avoir les images avec superposition de Kometa dans Jellyfin.",
+      "important": "Important : Assurez-vous que UseJellyfin et UsePlex sont tous deux définis sur vrai dans votre config.json, et que les noms de bibliothèque correspondent exactement.",
+      "cancel": "Annuler",
+      "start": "Démarrer la synchronisation Jellyfin"
+    },
+    "emby": {
+      "title": "Mode de synchronisation Emby",
+      "description": "Synchroniser toutes les illustrations de Plex vers Emby",
+      "syncInfo": "Ce mode synchronisera toutes les illustrations que vous avez dans Plex avec votre serveur Emby.",
+      "howItWorks": "Comment fonctionne la synchronisation Emby :",
+      "step1Title": "Les noms de bibliothèque doivent correspondre",
+      "step1Text": "Le script requiert que les noms des bibliothèques dans Plex et Emby correspondent exactement pour que la synchronisation fonctionne.",
+      "step2Title": "Calcul du hash",
+      "step2Text": "Le script calcule le hash des illustrations des deux serveurs pour déterminer s'il y a des différences.",
+      "step3Title": "Synchronisation intelligente",
+      "step3Text": "Ne synchronise les illustrations que si les hashes ne correspondent pas, économisant du temps et de la bande passante.",
+      "tip": "💡 Astuce : Ceci est pratique si vous voulez lancer la synchronisation après une exécution de Kometa, pour avoir les images avec superposition de Kometa dans Emby.",
+      "important": "Important : Assurez-vous que UseEmby et UsePlex sont tous deux définis sur vrai dans votre config.json, et que les noms de bibliothèque correspondent exactement.",
+      "cancel": "Annuler",
+      "start": "Démarrer la synchronisation Emby"
+    },
+    "status": {
+      "running": "Script en cours",
+      "stopFirst": "Arrêtez le script avant de lancer un autre mode",
+      "stopButton": "Arrêter le script",
+      "scriptRunning": "Le script est en cours d'exécution",
+      "mode": "Mode :"
+    },
+    "required": "*",
+    "hints": {
+      "standard": {
+        "folderLabel": "Nom du dossier",
+        "folderPlaceholder": "Seul sur Mars (2015) {tmdb-286217}",
+        "folderDescription": "Nom exact du dossier du film (tel qu'il apparaît dans votre bibliothèque Plex)",
+        "libraryPlaceholder": "Films",
+        "libraryDescription": "Nom de la bibliothèque Plex (ex : Films, Séries TV)"
+      },
+      "season": {
+        "folderLabel": "Nom du dossier de la série TV",
+        "folderPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+        "folderDescription": "Nom exact du dossier de la série TV (tel qu'il apparaît dans votre bibliothèque Plex)",
+        "libraryPlaceholder": "Séries TV",
+        "libraryDescription": "Nom de la bibliothèque Plex (ex : Séries TV, Anime)"
+      },
+      "titlecard": {
+        "folderLabel": "Nom du dossier de la série TV",
+        "folderPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+        "folderDescription": "Nom exact du dossier de la série TV (tel qu'il apparaît dans votre bibliothèque Plex)",
+        "libraryPlaceholder": "Séries TV",
+        "libraryDescription": "Nom de la bibliothèque Plex (ex : Séries TV, Anime)"
+      },
+      "background": {
+        "folderLabel": "Nom du dossier",
+        "folderPlaceholder": "Seul sur Mars (2015) {tmdb-286217}",
+        "folderDescription": "Nom exact du dossier du film/de la série (tel qu'il apparaît dans votre bibliothèque Plex)",
+        "libraryPlaceholder": "Films",
+        "libraryDescription": "Nom de la bibliothèque Plex (ex : Films, Séries TV)"
+      },
+      "collection": {
+        "libraryPlaceholder": "Films",
+        "libraryDescription": "Nom de la bibliothèque Plex où la collection existe"
+      },
+      "folderNameLabel": "Nom du dossier",
+      "tvShowPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+      "tvShowDescription": "Nom exact du dossier de la série TV (tel qu'il apparaît dans votre bibliothèque Plex)",
+      "tvLibraryPlaceholder": "Séries TV",
+      "tvLibraryDescription": "Nom de la bibliothèque Plex (ex : Séries TV, Anime)",
+      "collectionLabel": "Nom de la collection",
+      "collectionPlaceholder": "Univers cinématographique Marvel",
+      "collectionDescription": "Nom exact de la collection (tel qu'il apparaît dans votre bibliothèque Plex)",
+      "collectionLibraryDescription": "Nom de la bibliothèque Plex où la collection existe",
+      "moviePlaceholder": "Seul sur Mars (2015) {tmdb-286217}",
+      "movieDescription": "Nom exact du dossier du film (tel qu'il apparaît dans votre bibliothèque Plex)",
+      "movieLibraryPlaceholder": "Films",
+      "movieLibraryDescription": "Nom de la bibliothèque Plex (ex : Films, Séries TV)",
+      "defaultDescription": "Nom exact du dossier (tel qu'il apparaît dans votre bibliothèque Plex)"
+    }
+  },
+  "releasesSection": {
+    "title": "Versions",
+    "fetchFailed": "Échec de la récupération des versions",
+    "fetchError": "Échec de la connexion à l'API",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "daysAgo": "Il y a {{days}} jours",
+    "latest": "Dernière version",
+    "preRelease": "Pré-version",
+    "viewChangelog": "Voir le journal des modifications",
+    "error": "Erreur",
+    "noReleases": "Aucune version trouvée"
+  },
+  "overlayAssets": {
+    "description": "Gérer les fichiers de superposition (Images : PNG, JPEG | Polices : TTF, OTF, WOFF, WOFF2)",
+    "loadFailed": "Échec du chargement des fichiers de superposition",
+    "loadError": "Échec du chargement des fichiers de superposition : {{message}}",
+    "invalidFileType": "Type de fichier invalide. Seuls les fichiers PNG, JPEG, TTF, OTF, WOFF et WOFF2 sont autorisés.",
+    "fileTooLarge": "Taille de fichier trop grande. La taille maximale est de 10 Mo.",
+    "uploadSuccess": "Fichier téléversé avec succès",
+    "uploadFailed": "Échec du téléversement du fichier",
+    "uploadError": "Échec du téléversement du fichier : {{message}}",
+    "deleteSuccess": "Fichier supprimé avec succès",
+    "deleteFailed": "Échec de la suppression du fichier",
+    "deleteError": "Échec de la suppression du fichier : {{message}}",
+    "uploadTitle": "Téléverser un fichier de superposition",
+    "uploading": "Téléversement en cours...",
+    "clickToUpload": "Cliquez pour téléverser un fichier",
+    "uploadHint": "Images : PNG, JPEG (max 10 Mo) | Polices : TTF, OTF, WOFF, WOFF2",
+    "filesTitle": "Fichiers de superposition",
+    "all": "Tous",
+    "images": "Images",
+    "fonts": "Polices",
+    "image": "image",
+    "font": "police",
+    "loading": "Chargement...",
+    "refresh": "Actualiser",
+    "noFiles": "Aucun fichier de superposition trouvé",
+    "uploadFirst": "Téléversez votre premier fichier de superposition pour commencer",
+    "noFilteredFiles": "Aucun fichier de type {{type}} trouvé",
+    "uploadOrChangeFilter": "Téléversez un fichier de type {{type}} ou changez le filtre",
+    "preview": "Aperçu",
+    "delete": "Supprimer",
+    "download": "Télécharger",
+    "imagePreview": "Aperçu de l'image",
+    "fontPreview": "Aperçu de la police",
+    "filename": "Nom de fichier",
+    "failedToLoad": "Échec du chargement de l'image",
+    "uppercase": "Majuscules",
+    "lowercase": "Minuscules",
+    "numbers": "Chiffres",
+    "sample": "Exemple",
+    "fontInfo": "Informations sur la police",
+    "type": "Type",
+    "size": "Taille",
+    "close": "Fermer",
+    "deleteTitle": "Supprimer le fichier",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce fichier ?",
+    "cancel": "Annuler",
+    "uploadPreview": "Aperçu du téléversement",
+    "fontFile": "Fichier de police"
+  },
+  "assetsManager": {
+    "testGallery": "Galerie de test",
+    "overlayAssets": "Ressources de superposition"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "runModes": "Modes d'exécution",
+    "runtimeHistory": "Historique d'exécution",
+    "assets": "Ressources",
+    "config": "Configuration",
+    "galleries": "Galeries",
+    "scheduler": "Planificateur",
+    "logs": "Journaux",
+    "about": "À propos",
+    "howItWorks": "Fonctionnement",
+    "autoTriggers": "Déclencheurs automatiques",
+    "assetOverview": "Aperçu des ressources",
+    "assetReplacer": "Remplacement de ressource",
+    "assetsManager": "Gestionnaire de ressources",
+    "generalSettings": "Paramètres généraux",
+    "library": "Bibliothèque",
+    "notifications": "Notifications",
+    "security": "Sécurité",
+    "advanced": "Avancé",
+    "backgrounds": "Arrière-plans",
+    "titleCards": "Cartons de titre",
+    "seasons": "Saisons",
+    "folderView": "Vue par dossier"
+  },
+  "scrollButtons": {
+    "scrollToTop": "Faire défiler vers le haut",
+    "scrollToBottom": "Faire défiler vers le bas"
+  },
+  "validateButton": {
+    "validating": "Validation en cours..."
+  },
+  "versionBadge": {
+    "upToDate": "À jour",
+    "version": "Version",
+    "updateAvailable": "Mise à jour disponible !",
+    "clickForReleases": "Cliquez ici pour accéder aux versions Github.",
+    "currentVersion": "✓ Version actuelle installée"
+  },
+  "topNavbar": {
+    "changeTheme": "Changer de thème",
+    "selectTheme": "Sélectionner un thème",
+    "userMenu": "Menu utilisateur",
+    "signOut": "Se déconnecter",
+    "userProfile": "Profil utilisateur"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Surveillez votre instance Posterizarr",
+    "status": "Statut",
+    "running": "En cours d'exécution",
+    "stopped": "Arrêté",
+    "start": "Lancer le script",
+    "stop": "Arrêter le script",
+    "refresh": "Actualiser le statut",
+    "logs": "Journaux",
+    "clearLogs": "Vider les journaux",
+    "autoScroll": "Défilement auto",
+    "scriptStatus": "Statut du script",
+    "scriptFile": "Fichier script",
+    "configFile": "Fichier de config",
+    "configExists": "Config existe",
+    "scriptExists": "Script existe",
+    "currentMode": "Mode actuel",
+    "activeLog": "Journal actif",
+    "pid": "ID du processus",
+    "found": "Trouvé",
+    "missing": "Manquant",
+    "mode": "Mode",
+    "local": "Local",
+    "remote": "Distant",
+    "checkUpdates": "Vérifier les mises à jour",
+    "lastRun": "Dernière exécution",
+    "version": "Version",
+    "localVersion": "Version locale",
+    "remoteVersion": "Version distante",
+    "upToDate": "À jour",
+    "updateAvailable": "Mise à jour disponible",
+    "websocketConnected": "WebSocket connecté",
+    "websocketDisconnected": "WebSocket déconnecté",
+    "recentAssets": "Récemment ajouté",
+    "systemInfo": "Informations système",
+    "runtimeStats": "Statistiques d'exécution",
+    "dangerZone": "Zone de danger",
+    "alreadyRunning": "Une autre instance de Posterizarr est déjà en cours d'exécution",
+    "alreadyRunningDesc": "Le script a détecté une autre instance. S'il s'agit d'un faux positif, supprimez le fichier d'exécution ci-dessous.",
+    "deleteRunningFile": "Supprimer le fichier d'exécution",
+    "noLogs": "Aucun journal disponible",
+    "viewFullLogs": "Voir les journaux complets",
+    "customize": "Personnaliser",
+    "runScript": "Lancer le script",
+    "deleteConfirmTitle": "Supprimer le fichier d'exécution ?",
+    "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer le fichier d'exécution ?",
+    "deleteSuccess": "Fichier d'exécution supprimé avec succès",
+    "deleteError": "Erreur lors de la suppression du fichier d'exécution",
+    "liveLogFeed": "Flux de journal en direct",
+    "readingFrom": "Lecture depuis",
+    "linesLoaded": "lignes chargées",
+    "autoScrollEnabled": "Défilement automatique activé",
+    "autoScrollDisabled": "Défilement automatique désactivé",
+    "waitingForLogs": "En attente des journaux...",
+    "startRunToSeeLogs": "Veuillez démarrer une exécution pour voir les journaux ici",
+    "autoRefresh": "Actualisation auto",
+    "live": "En direct",
+    "lastEntries": "Dernières {{count}} entrées",
+    "noActiveLog": "Aucun journal actif",
+    "statusCards": "Cartes de statut",
+    "customizeDescription": "Afficher ou masquer les sections du tableau de bord • Glisser pour réorganiser"
+  },
+  "config": {
+    "title": "Configuration",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "reset": "Réinitialiser",
+    "validate": "Valider",
+    "validating": "Validation en cours...",
+    "valid": "Valide",
+    "invalid": "Invalide",
+    "saveSuccess": "Configuration enregistrée avec succès",
+    "saveError": "Erreur lors de l'enregistrement de la configuration",
+    "loadError": "Erreur lors du chargement de la configuration",
+    "validateSuccess": "La configuration est valide",
+    "validateError": "La configuration contient des erreurs",
+    "confirmReset": "Êtes-vous sûr de vouloir réinitialiser la configuration ?",
+    "resetWarning": "Toutes les modifications non enregistrées seront perdues."
+  },
+  "assets": {
+    "title": "Ressources",
+    "overview": "Aperçu",
+    "replacer": "Remplacement",
+    "overlay": "Superpositions",
+    "total": "Total",
+    "missing": "Manquant",
+    "withIssues": "Avec problèmes",
+    "backgrounds": "Arrière-plans",
+    "titleCards": "Cartons de titre",
+    "seasons": "Saisons",
+    "posters": "Affiches",
+    "upload": "Téléverser",
+    "delete": "Supprimer",
+    "replace": "Remplacer",
+    "download": "Télécharger",
+    "preview": "Aperçu",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sortBy": "Trier par",
+    "name": "Nom",
+    "date": "Date",
+    "size": "Taille",
+    "type": "Type",
+    "noAssets": "Aucune ressource trouvée",
+    "loading": "Chargement des ressources...",
+    "uploadSuccess": "Ressource téléversée avec succès",
+    "uploadError": "Erreur lors du téléversement de la ressource",
+    "deleteSuccess": "Ressource supprimée avec succès",
+    "deleteError": "Erreur lors de la suppression de la ressource",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette ressource ?"
+  },
+  "notification": {
+    "success": "Succès",
+    "error": "Erreur",
+    "info": "Info"
+  },
+  "logViewer": {
+    "scriptStopped": "Script arrêté avec succès",
+    "error": "Erreur : {{message}}",
+    "logsRefreshed": "Fichiers journaux actualisés",
+    "refreshFailed": "Échec de l'actualisation des fichiers journaux",
+    "loadFailed": "Échec du chargement de {{name}}",
+    "switchedTo": "Passage à {{file}}",
+    "disconnected": "Flux en direct déconnecté. Reconnexion...",
+    "logsCleared": "Journaux vidés",
+    "downloaded": "Fichier journal téléchargé",
+    "downloadFailed": "Échec du téléchargement du fichier journal",
+    "status": {
+      "live": "En direct",
+      "reconnecting": "Reconnexion...",
+      "disconnected": "Déconnecté"
+    },
+    "scriptRunning": "Le script est en cours d'exécution",
+    "mode": "Mode",
+    "stopBeforeRunning": "Arrêtez le script avant de lancer un autre mode",
+    "stopScript": "Arrêter le script",
+    "selectLogFile": "Sélectionner un fichier journal",
+    "autoScroll": "Défilement auto",
+    "refresh": "Actualiser",
+    "download": "Télécharger",
+    "clear": "Vider",
+    "showingLast": "Affichage des 1000 dernières entrées",
+    "entries": "{{count}} entrées",
+    "noLogs": "Aucun journal à afficher",
+    "startScript": "Démarrez un script ou sélectionnez un autre fichier journal",
+    "logEntries": "{{count}} entrées de journal",
+    "autoScrollStatus": "Défilement auto : {{status}}",
+    "on": "Activé",
+    "off": "Désactivé",
+    "receivingUpdates": "Réception des mises à jour en direct"
+  },
+  "libraryExclusion": {
+    "configNotFound": "Configuration du serveur multimédia non trouvée",
+    "fetchFailed": "Échec de la récupération des bibliothèques",
+    "fetchError": "Erreur lors de la récupération des bibliothèques : {{message}}",
+    "disabled": "La sélection de bibliothèque est actuellement désactivée",
+    "disabledHint": "Activez le serveur {{server}} ou {{server}}Sync pour accéder à cette fonctionnalité",
+    "fetchLibraries": "Récupérer les bibliothèques",
+    "refreshLibraries": "Actualiser les bibliothèques",
+    "includeAll": "Tout inclure",
+    "excludeAll": "Tout exclure",
+    "errorTitle": "Échec de la récupération des bibliothèques",
+    "fetching": "Récupération des bibliothèques depuis {{server}}...",
+    "selectToExclude": "Sélectionnez les bibliothèques à <strong>exclure</strong> du traitement :",
+    "excluded": "Exclu",
+    "included": "Inclus",
+    "clickToFetch": "Cliquez sur \"Récupérer les bibliothèques\" pour charger les bibliothèques depuis votre serveur {{server}}.",
+    "noLibraries": "Aucune bibliothèque de films ou de séries TV trouvée sur ce serveur.",
+    "excludedCount": "Bibliothèques exclues ({{count}}) :"
+  },
+  "languageOrderSelector": {
+    "noLanguages": "Aucune langue sélectionnée. Ajoutez des langues à l'aide du menu déroulant ci-dessous.",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "removeLanguage": "Supprimer la langue",
+    "addLanguage": "Ajouter une langue",
+    "currentOrder": "Ordre actuel :"
+  },
+  "imageSizeSlider": {
+    "imageSize": "Taille de l'image"
+  },
+  "galleryHub": {
+    "viewMode": "Mode d'affichage",
+    "gridDescription": "Parcourez toutes les ressources par type (affiches, arrière-plans, saisons, cartons de titre)",
+    "folderDescription": "Parcourez les ressources en naviguant dans les bibliothèques et les dossiers",
+    "gridView": "Vue en grille",
+    "folderView": "Vue par dossier"
+  },
+  "howItWorks": {
+    "header": {
+      "title": "Comment fonctionne Posterizarr",
+      "subtitle": "Gestion automatisée des affiches pour votre médiathèque avec application intelligente de superpositions et intégration transparente"
+    },
+    "workflow": {
+      "title": "Le flux de travail"
+    },
+    "steps": {
+      "libraryScanning": {
+        "title": "Analyse de la bibliothèque",
+        "description": "Posterizarr analyse de manière autonome votre serveur Plex, Jellyfin ou Emby à la recherche de bibliothèques et de contenus multimédias.",
+        "details": [
+          "Découverte automatique des bibliothèques",
+          "Prise en charge de plusieurs versions (versions cinéma, director's cuts)",
+          "Exportation CSV des données multimédias",
+          "Options d'exclusion de bibliothèques"
+        ]
+      },
+      "artworkDiscovery": {
+        "title": "Découverte des illustrations",
+        "description": "Recherche sur plusieurs sources des illustrations de haute qualité en fonction de vos préférences linguistiques.",
+        "details": [
+          "Sources : Fanart.tv, TMDB, TVDB, Plex, IMDb",
+          "Images sans texte priorisées",
+          "Ordre des langues configurable",
+          "Filtrage par résolution (affiches 2000x3000, arrière-plans 3840x2160)"
+        ]
+      },
+      "imageProcessing": {
+        "title": "Traitement d'image",
+        "description": "Transforme les illustrations téléchargées avec des superpositions, du texte, des bordures et des effets personnalisés.",
+        "details": [
+          "Redimensionnement automatique aux dimensions optimales",
+          "Application de superpositions personnalisées",
+          "Rendu de texte avec plusieurs polices",
+          "Effets de bordure et de dégradé"
+        ]
+      },
+      "assetOrganization": {
+        "title": "Organisation des ressources",
+        "description": "Organise les ressources traitées en utilisant une structure de dossiers compatible avec Kometa pour une intégration transparente.",
+        "details": [
+          "Prise en charge de la structure de dossiers Kometa",
+          "Organisation des dossiers de bibliothèque",
+          "Priorité manuelle du chemin des ressources",
+          "Nettoyage des ressources pour les médias supprimés"
+        ]
+      },
+      "mediaServerUpload": {
+        "title": "Téléversement sur le serveur multimédia",
+        "description": "Téléverse directement les illustrations terminées sur votre serveur multimédia ou les stocke pour l'intégration Kometa.",
+        "details": [
+          "Téléversement direct sur Plex/Jellyfin/Emby",
+          "Validation intelligente par hash pour éviter les doublons",
+          "Étiquetage des métadonnées EXIF",
+          "Prise en charge du téléversement de ressources existantes"
+        ]
+      }
+    },
+    "assetTypes": {
+      "title": "Types de ressources pris en charge",
+      "posters": {
+        "title": "Affiches de films/séries",
+        "description": "Affiches de haute qualité 2000x3000"
+      },
+      "backgrounds": {
+        "title": "Arrière-plans",
+        "description": "Superbes arrière-plans 3840x2160"
+      },
+      "seasons": {
+        "title": "Affiches de saison",
+        "description": "Illustrations de saison organisées"
+      },
+      "titleCards": {
+        "title": "Cartons de titre",
+        "description": "Cartons de titre d'épisode en 16:9"
+      }
+    },
+    "features": {
+      "title": "Fonctionnalités clés",
+      "multiSource": {
+        "title": "Découverte multi-sources",
+        "text": "Recherche sur Fanart.tv, TMDB, TVDB, Plex et IMDb"
+      },
+      "customOverlays": {
+        "title": "Superpositions personnalisées",
+        "text": "Appliquez des bordures, du texte et des effets de dégradé"
+      },
+      "smartFiltering": {
+        "title": "Filtrage intelligent",
+        "text": "Filtrage par résolution et préférence de langue"
+      },
+      "autoSync": {
+        "title": "Synchronisation automatique",
+        "text": "Synchronisez les illustrations entre les serveurs multimédias"
+      },
+      "kometaCompatible": {
+        "title": "Compatible avec Kometa",
+        "text": "Intégration transparente avec la structure de dossiers Kometa"
+      },
+      "crossPlatform": {
+        "title": "Multi-plateforme",
+        "text": "Fonctionne sur Docker, Linux, Windows, macOS et ARM"
+      }
+    },
+    "showcase": {
+      "title": "Voir en action",
+      "posterizarrOutput": "Résultat de Posterizarr",
+      "posterizarrDescription": "Illustrations de haute qualité téléchargées et traitées automatiquement avec vos superpositions personnalisées",
+      "kometaIntegration": "Après l'intégration Kometa",
+      "kometaDescription": "Résultats finaux dans votre serveur multimédia avec des superpositions Kometa supplémentaires appliquées"
+    },
+    "cta": {
+      "title": "Prêt à transformer votre bibliothèque ?",
+      "description": "Posterizarr gère tout, de la découverte des illustrations au téléversement sur le serveur multimédia, vous offrant des illustrations magnifiques et cohérentes dans toute votre collection.",
+      "installationGuide": "Voir le guide d'installation",
+      "viewOnGitHub": "Voir sur GitHub"
+    },
+    "technical": {
+      "title": "Points forts techniques",
+      "smartCaching": "<strong>Mise en cache intelligente :</strong> Ne crée que les illustrations manquantes, en ignorant les ressources existantes",
+      "hashValidation": "<strong>Validation par hash :</strong> Empêche les téléversements en double à l'aide des métadonnées EXIF",
+      "rtlSupport": "<strong>Prise en charge RTL :</strong> Rendu des polices de droite à gauche pour l'arabe et l'hébreu",
+      "backupMode": "<strong>Mode sauvegarde :</strong> Téléchargez et sauvegardez toutes les illustrations Plex existantes",
+      "automatedCleanup": "<strong>Nettoyage automatisé :</strong> Supprime les ressources lorsque le média est supprimé",
+      "multipleTriggers": "<strong>Déclencheurs multiples :</strong> Intégration Tautulli, Sonarr, Radarr"
+    }
+  },
+  "gallery": {
+    "title": "Galerie",
+    "viewMode": "Mode d'affichage",
+    "grid": "Grille",
+    "list": "Liste",
+    "folder": "Dossier",
+    "imageSize": "Taille de l'image",
+    "showInfo": "Afficher les infos",
+    "hideInfo": "Masquer les infos",
+    "fullscreen": "Plein écran",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "loading": "Chargement de la galerie...",
+    "noImages": "Aucune image trouvée",
+    "error": "Erreur lors du chargement de la galerie",
+    "folders": "Dossiers",
+    "cancelSelect": "Annuler la sélection",
+    "select": "Sélectionner",
+    "refresh": "Actualiser",
+    "searchPlaceholder": "Rechercher des affiches dans {{folder}}...",
+    "loadingFolders": "Chargement des dossiers...",
+    "errorLoadingGallery": "Erreur lors du chargement de la galerie d'affiches",
+    "tryAgain": "Réessayer",
+    "noFoldersFound": "Aucun dossier trouvé",
+    "noFoldersDescription": "Aucun dossier trouvé dans le répertoire des ressources. Veuillez vérifier votre configuration.",
+    "loadingPosters": "Chargement des affiches...",
+    "noMatchingPosters": "Aucune affiche correspondante",
+    "noPostersFound": "Aucune affiche trouvée",
+    "adjustSearch": "Essayez d'ajuster vos termes de recherche pour trouver ce que vous cherchez",
+    "noPostersInFolder": "Aucune affiche trouvée dans {{folder}}",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout désélectionner",
+    "selected": "{{count}} sélectionné(s)",
+    "deleteSelected": "Supprimer la sélection ({{count}})",
+    "showing": "Affichage de {{displayed}} sur {{total}} affiches dans {{folder}}",
+    "filteredFrom": "Filtré sur un total de {{total}}",
+    "deletePoster": "Supprimer l'affiche",
+    "replaceAsset": "Remplacer la ressource",
+    "itemsPerPage": "Éléments par page",
+    "loadMore": "Charger plus",
+    "remaining": "{{count}} restant(s)",
+    "loadAll": "Tout charger",
+    "total": "{{count}} au total",
+    "replace": "Remplacer",
+    "delete": "Supprimer",
+    "previewNotAvailable": "Aperçu de l'image non disponible",
+    "useFileExplorer": "Utilisez l'explorateur de fichiers pour voir l'affiche",
+    "size": "Taille",
+    "close": "Fermer",
+    "deleteMultipleTitle": "Supprimer plusieurs affiches",
+    "deletePosterTitle": "Supprimer l'affiche",
+    "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} affiche(s) sélectionnée(s) ?",
+    "deletePosterMessage": "Êtes-vous sûr de vouloir supprimer cette affiche ?",
+    "deleteButton": "Supprimer",
+    "foldersLoaded": "{{folderCount}} dossier(s) chargé(s) avec {{posterCount}} affiche(s)",
+    "foldersFound": "{{count}} dossier(s) trouvé(s) avec 0 affiche(s)",
+    "loadFoldersError": "Échec du chargement des dossiers",
+    "postersLoaded": "Chargé {{count}} affiches depuis {{folder}}",
+    "loadImagesError": "Échec du chargement des images depuis {{folder}}",
+    "posterDeleted": "L'affiche \"{{name}}\" a été supprimée avec succès",
+    "deleteError": "Erreur lors de la suppression : {{message}}",
+    "bulkDeletePartial": "Supprimé {{deleted}} affiche(s), mais {{failed}} ont échoué.",
+    "bulkDeleteSuccess": "Supprimé avec succès {{count}} affiche(s)",
+    "assetReplaced": "Ressource remplacée avec succès !"
+  },
+  "toast": {
+    "success": "Succès",
+    "error": "Erreur",
+    "info": "Info"
+  },
+  "runtimeHistory": {
+    "title": "Historique d'exécution",
+    "migrationAvailable": "Migration des données historiques disponible",
+    "migrationDescription": "Les données d'exécution de vos fichiers journaux existants peuvent être importées dans la base de données. Cela préservera les statistiques historiques et les rendra interrogeables.",
+    "migrationInfo": "💡 La migration s'exécute automatiquement lors de la première création de la base de données, ou vous pouvez la déclencher manuellement ci-dessous.",
+    "migrating": "Migration en cours...",
+    "runMigration": "Lancer la migration",
+    "importing": "Importation...",
+    "importJson": "Importer JSON",
+    "summary": "Résumé ({{days}} derniers jours)",
+    "days": "{{count}} jours",
+    "totalRuns": "Exécutions totales",
+    "totalImages": "Images totales",
+    "totalCollections": "Collections totales",
+    "totalSpaceSaved": "Espace total économisé",
+    "avgRuntime": "Durée d'exécution moy.",
+    "totalErrors": "Erreurs totales",
+    "runsByMode": "Exécutions par mode",
+    "allModes": "Tous les modes",
+    "modes": {
+      "normal": "Normal",
+      "testing": "Test",
+      "manual": "Manuel",
+      "scheduled": "Planifié",
+      "backup": "Sauvegarde",
+      "syncjelly": "Sync Jellyfin",
+      "syncemby": "Sync Emby",
+      "reset": "Réinitialiser",
+      "tautulli": "Tautulli",
+      "arr": "Arr"
+    },
+    "refreshHistory": "Actualiser l'historique",
+    "clickForDetails": "Cliquer pour voir les détails",
+    "detailTitle": "Détails de l'exécution",
+    "table": {
+      "timestamp": "Horodatage",
+      "mode": "Mode",
+      "runtime": "Durée d'exécution",
+      "images": "Images",
+      "posters": "Affiches",
+      "seasons": "Saisons",
+      "backgrounds": "Arrière-plans",
+      "titlecards": "Cartons de titre",
+      "collections": "Collections",
+      "errors": "Erreurs"
+    },
+    "noEntries": "Aucune entrée d'historique trouvée",
+    "pagination": {
+      "page": "Page {{page}} • Affichage de {{count}} entrées",
+      "previous": "Précédent",
+      "next": "Suivant"
+    }
+  },
+  "schedulerSettings": {
+    "loading": "Chargement des paramètres du planificateur...",
+    "updating": "Mise à jour...",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "containerUsersOnly": "Utilisateurs de conteneurs uniquement",
+    "containerUsersInfo": "Veuillez n'utiliser qu'une seule option de planification. Utilisez soit la variable d'environnement RUN_TIME pour la planification, soit les planifications de l'interface utilisateur. Si vous préférez utiliser les planifications de l'interface utilisateur, définissez la variable d'environnement sur désactivé.",
+    "lastRun": "Dernière exécution",
+    "nextRun": "Prochaine exécution",
+    "never": "Jamais",
+    "status": {
+      "running": "En cours d'exécution",
+      "active": "Actif",
+      "inactive": "Inactif"
+    },
+    "configuration": "Configuration",
+    "timezone": "Fuseau horaire",
+    "timezoneDescription": "Définissez le fuseau horaire pour les exécutions planifiées. Toutes les heures sont affichées automatiquement dans le fuseau horaire de votre navigateur.",
+    "skipIfRunning": "Ignorer les exécutions planifiées si déjà en cours",
+    "skipIfRunningDesc": "Empêche les exécutions qui se chevauchent",
+    "restartScheduler": "Redémarrer le planificateur",
+    "runNow": "Exécuter maintenant",
+    "schedules": "Planifications",
+    "clearAll": "Tout effacer",
+    "confirmClearAllTitle": "Effacer toutes les planifications",
+    "confirmClearAllMessage": "Êtes-vous sûr de vouloir effacer toutes les planifications ? Cette action est irréversible.",
+    "timePlaceholder": "HH:MM (ex., 14:30)",
+    "descriptionPlaceholder": "Description (facultatif)",
+    "add": "Ajouter",
+    "removeSchedule": "Supprimer la planification",
+    "noSchedulesConfigured": "Aucune planification configurée",
+    "addScheduleHint": "Ajoutez une planification ci-dessus pour commencer",
+    "activeJobs": "Tâches actives",
+    "next": "Suivant",
+    "success": {
+      "scheduleAdded": "Planification ajoutée",
+      "scheduleRemoved": "Planification supprimée",
+      "allCleared": "Toutes les planifications effacées",
+      "timezoneUpdated": "Fuseau horaire mis à jour",
+      "willSkip": "Ignorera si déjà en cours d'exécution",
+      "willAllow": "Autorisera les exécutions simultanées",
+      "manualRunTriggered": "Exécution manuelle déclenchée",
+      "schedulerRestarted": "Planificateur redémarré",
+      "schedulerEnabled": "Planificateur activé",
+      "schedulerDisabled": "Planificateur désactivé"
+    },
+    "errors": {
+      "loadData": "Échec du chargement des données du planificateur",
+      "updateScheduler": "Échec de la mise à jour du planificateur",
+      "enterTime": "Veuillez entrer une heure",
+      "addSchedule": "Échec de l'ajout de la planification",
+      "removeSchedule": "Échec de la suppression de la planification",
+      "clearSchedules": "Échec de l'effacement des planifications",
+      "updateTimezone": "Échec de la mise à jour du fuseau horaire",
+      "updateConfig": "Échec de la mise à jour de la configuration",
+      "triggerRun": "Échec du déclenchement de l'exécution",
+      "restartScheduler": "Échec du redémarrage du planificateur"
+    }
+  },
+  "testGallery": {
+    "success": {
+      "filesLoaded": "Chargé {{count}} fichiers de test",
+      "testModeStarted": "Mode Test démarré avec succès !"
+    },
+    "errors": {
+      "scriptRunning": "Le script est déjà en cours d'exécution ! Veuillez d'abord l'arrêter.",
+      "loadFailed": "Échec du chargement de la galerie de test",
+      "withMessage": "Échec du démarrage du mode Test : {{message}}"
+    },
+    "open": "Ouvrir",
+    "closed": "Fermé",
+    "previewUnavailable": "Aperçu indisponible",
+    "imagePreviewNotAvailable": "Aperçu de l'image non disponible",
+    "refresh": "Actualiser",
+    "startTestMode": "Démarrer le mode Test",
+    "scriptRunning": "Script en cours",
+    "mode": "Mode :",
+    "unknown": "Inconnu",
+    "searchPlaceholder": "Rechercher des fichiers de test...",
+    "loading": "Chargement de la galerie de test...",
+    "errorLoadingTitle": "Erreur lors du chargement de la galerie de test",
+    "noFilesTitle": "Aucun fichier de test trouvé",
+    "noFilesSearchHint": "Aucun fichier de test ne correspond à votre recherche",
+    "noFilesHint": "Exécutez le script en mode Test pour générer des images de test",
+    "total": "Total :",
+    "testFiles": "Fichiers de test",
+    "filteredFrom": "(filtré sur un total de {{total}})",
+    "expandAll": "Tout développer",
+    "collapseAll": "Tout réduire",
+    "size": "Taille :",
+    "close": "Fermer",
+    "categories": {
+      "posters": "Affiches",
+      "postersDesc": "Affiches standard de films et de séries TV",
+      "backgrounds": "Arrière-plans",
+      "backgroundsDesc": "Images d'arrière-plan pour les séries et les films",
+      "seasonPosters": "Affiches de saison",
+      "seasonPostersDesc": "Affiches pour les saisons individuelles de séries TV",
+      "titleCards": "Cartons de titre",
+      "titleCardsDesc": "Cartons de titre d'épisode pour les séries TV"
+    }
+  },
+  "seasonGallery": {
+    "folders": "Dossiers",
+    "select": "Sélectionner",
+    "cancelSelect": "Annuler la sélection",
+    "refresh": "Actualiser",
+    "searchPlaceholder": "Rechercher des saisons dans {{folderName}}...",
+    "loadingFolders": "Chargement des dossiers...",
+    "errorLoadingTitle": "Erreur lors du chargement de la galerie des saisons",
+    "tryAgain": "Réessayer",
+    "noFoldersTitle": "Aucun dossier trouvé",
+    "noFoldersDescription": "Aucun dossier trouvé dans le répertoire des ressources. Veuillez vérifier votre configuration.",
+    "loadingSeasons": "Chargement des saisons...",
+    "noMatchingTitle": "Aucune saison correspondante",
+    "noMatchingDescription": "Essayez d'ajuster vos termes de recherche pour trouver ce que vous cherchez",
+    "noSeasonsTitle": "Aucune saison trouvée",
+    "noSeasonsDescription": "Aucune saison trouvée dans {{folderName}}",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout désélectionner",
+    "selectedCount": "{{count}} sélectionné(s)",
+    "deleteSelected": "Supprimer la sélection ({{count}})",
+    "showing": "Affichage de {{displayed}} sur {{total}} saisons dans {{folderName}}",
+    "filteredFrom": "Filtré sur un total de {{total}}",
+    "deleteSeason": "Supprimer la saison",
+    "replaceAsset": "Remplacer la ressource",
+    "itemsPerPage": "Éléments par page :",
+    "loadMore": "Charger plus",
+    "remaining": "{{count}} restant(s)",
+    "loadAll": "Tout charger",
+    "total": "{{count}} au total",
+    "replace": "Remplacer",
+    "delete": "Supprimer",
+    "imageNotAvailable": "Aperçu de l'image non disponible",
+    "useFileExplorer": "Utilisez l'explorateur de fichiers pour voir la saison",
+    "size": "Taille : {{size}} Ko",
+    "close": "Fermer",
+    "deleteMultipleTitle": "Supprimer plusieurs saisons",
+    "deleteSeasonTitle": "Supprimer l'affiche de saison",
+    "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} saison(s) sélectionnée(s) ?",
+    "deleteSeasonMessage": "Êtes-vous sûr de vouloir supprimer cette affiche de saison ?",
+    "foldersLoaded": "{{folderCount}} dossier(s) chargé(s) avec {{seasonCount}} affiche(s) de saison",
+    "foldersFoundNoSeasons": "{{count}} dossier(s) trouvé(s) avec 0 affiche(s) de saison",
+    "seasonsLoaded": "Chargé {{count}} saisons depuis {{folderName}}",
+    "deleteSuccess": "La saison \"{{name}}\" a été supprimée avec succès",
+    "bulkDeleteSuccess": "Supprimé avec succès {{count}} saison(s)",
+    "bulkDeletePartial": "Supprimé {{deletedCount}} saison(s), mais {{failedCount}} ont échoué.",
+    "assetReplaced": "Ressource remplacée avec succès !",
+    "errors": {
+      "loadFolders": "Échec du chargement des dossiers",
+      "loadImages": "Échec du chargement des images depuis {{folderName}}",
+      "deleteSeason": "Échec de la suppression de la saison",
+      "deleteError": "Erreur lors de la suppression : {{message}}",
+      "bulkDelete": "Échec de la suppression des saisons"
+    }
+  },
+  "titleCardGallery": {
+    "success": {
+      "foldersLoaded": "{{folders}} dossier(s) chargé(s) avec {{titlecards}} carton(s) de titre",
+      "foldersFound": "{{count}} dossier(s) trouvé(s) avec 0 carton de titre",
+      "titleCardsLoaded": "Chargé {{count}} cartons de titre depuis {{folder}}",
+      "titleCardDeleted": "Le carton de titre \"{{name}}\" a été supprimé avec succès",
+      "bulkDeleteSuccess": "Supprimé avec succès {{count}} carton(s) de titre"
+    },
+    "errors": {
+      "bulkDeletePartial": "Supprimé {{deleted}} carton(s) de titre, mais {{failed}} ont échoué."
+    },
+    "folders": "Dossiers",
+    "select": "Sélectionner",
+    "cancelSelect": "Annuler la sélection",
+    "refresh": "Actualiser",
+    "searchPlaceholder": "Rechercher des cartons de titre dans {{folder}}...",
+    "loadingFolders": "Chargement des dossiers...",
+    "errorLoadingTitle": "Erreur lors du chargement de la galerie des cartons de titre",
+    "tryAgain": "Réessayer",
+    "noFoldersTitle": "Aucun dossier trouvé",
+    "noFoldersMessage": "Aucun dossier trouvé dans le répertoire des ressources. Veuillez vérifier votre configuration.",
+    "loadingTitleCards": "Chargement des cartons de titre...",
+    "noMatchingTitle": "Aucun carton de titre correspondant",
+    "noTitleCardsTitle": "Aucun carton de titre trouvé",
+    "noMatchingMessage": "Essayez d'ajuster vos termes de recherche pour trouver ce que vous cherchez",
+    "noTitleCardsMessage": "Aucun carton de titre trouvé dans {{folder}}",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout désélectionner",
+    "selected": "{{count}} sélectionné(s)",
+    "deleteSelected": "Supprimer la sélection ({{count}})",
+    "showingCount": "Affichage de {{displayed}} sur {{total}} cartons de titre dans {{folder}}",
+    "filteredFrom": "Filtré sur un total de {{total}}",
+    "itemsPerPage": "Éléments par page :",
+    "loadMore": "Charger plus",
+    "remaining": "{{count}} restant(s)",
+    "loadAll": "Tout charger",
+    "total": "{{count}} au total",
+    "replace": "Remplacer",
+    "delete": "Supprimer",
+    "imagePreviewNotAvailable": "Aperçu de l'image non disponible",
+    "useFileExplorer": "Utilisez l'explorateur de fichiers pour voir le carton de titre",
+    "size": "Taille :",
+    "close": "Fermer",
+    "deleteMultipleTitle": "Supprimer plusieurs cartons de titre",
+    "deleteSingleTitle": "Supprimer le carton de titre",
+    "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} carton(s) de titre sélectionné(s) ?",
+    "deleteSingleMessage": "Êtes-vous sûr de vouloir supprimer ce carton de titre ?"
+  },
+  "scheduler": {
+    "title": "Planificateur",
+    "enable": "Activer le planificateur",
+    "disable": "Désactiver le planificateur",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "schedule": "Planification",
+    "addTask": "Ajouter une tâche",
+    "editTask": "Modifier la tâche",
+    "deleteTask": "Supprimer la tâche",
+    "taskName": "Nom de la tâche",
+    "mode": "Mode",
+    "time": "Heure",
+    "days": "Jours",
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "noTasks": "Aucune tâche planifiée",
+    "saveSuccess": "Planification enregistrée avec succès",
+    "saveError": "Erreur lors de l'enregistrement de la planification"
+  },
+  "logs": {
+    "title": "Journaux",
+    "refresh": "Actualiser",
+    "clear": "Vider",
+    "download": "Télécharger",
+    "autoRefresh": "Actualisation auto",
+    "filter": "Filtrer",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Info",
+    "debug": "Débogage",
+    "noLogs": "Aucun journal disponible",
+    "loading": "Chargement des journaux...",
+    "confirmClear": "Êtes-vous sûr de vouloir vider tous les journaux ?",
+    "clearSuccess": "Journaux vidés avec succès",
+    "clearError": "Erreur lors du vidage des journaux"
+  },
+  "about": {
+    "title": "À propos de Posterizarr",
+    "version": "Version",
+    "description": "Gestion automatique des affiches et des ressources pour Plex, Jellyfin et Emby",
+    "credits": "Crédits",
+    "license": "Licence",
+    "documentation": "Documentation",
+    "github": "GitHub",
+    "support": "Support",
+    "updates": "Mises à jour",
+    "changelog": "Journal des modifications",
+    "betaWarning": "Ceci est un logiciel BÊTA. Les fonctionnalités peuvent être défectueuses et/ou instables. Veuillez signaler tout problème sur",
+    "unknown": "Inconnu",
+    "outOfDate": "Obsolète",
+    "upToDate": "À jour",
+    "latestAvailable": "Dernière version disponible",
+    "dataDirectory": "Répertoire des données",
+    "timeZone": "Fuseau horaire",
+    "gettingSupport": "Obtenir de l'aide",
+    "githubIssues": "Problèmes GitHub",
+    "discordServer": "Serveur Discord",
+    "supportPosterizarr": "Soutenir Posterizarr",
+    "helpPayForCoffee": "Aidez à payer le café ☕",
+    "supportDevelopment": "Soutenez le développement de Posterizarr",
+    "preferred": "Préféré",
+    "webuiDevelopedWith": "Interface web développée avec",
+    "by": "par",
+    "forTheCommunity": "pour la communauté"
+  },
+  "backgroundsGallery": {
+    "folders": "Dossiers",
+    "select": "Sélectionner",
+    "cancelSelect": "Annuler la sélection",
+    "searchPlaceholder": "Rechercher des arrière-plans dans {{folder}}...",
+    "loadingFolders": "Chargement des dossiers...",
+    "loadingBackgrounds": "Chargement des arrière-plans...",
+    "errorTitle": "Erreur lors du chargement de la galerie d'arrière-plans",
+    "tryAgain": "Réessayer",
+    "noFoldersTitle": "Aucun dossier trouvé",
+    "noFoldersDescription": "Aucun dossier trouvé dans le répertoire des ressources. Veuillez vérifier votre configuration.",
+    "noMatchingTitle": "Aucun arrière-plan correspondant",
+    "noMatchingDescription": "Essayez d'ajuster vos termes de recherche pour trouver ce que vous cherchez",
+    "noBackgroundsTitle": "Aucun arrière-plan trouvé",
+    "noBackgroundsDescription": "Aucun arrière-plan trouvé dans {{folder}}",
+    "foldersLoaded": "{{folders}} dossier(s) chargé(s) avec {{backgrounds}} arrière-plan(s)",
+    "foldersFoundEmpty": "{{count}} dossier(s) trouvé(s) avec 0 arrière-plan",
+    "failedLoadFolders": "Échec du chargement des dossiers",
+    "loadedFromFolder": "Chargé {{count}} arrière-plans depuis {{folder}}",
+    "failedLoadImages": "Échec du chargement des images depuis {{folder}}",
+    "failedDeleteBackground": "Échec de la suppression de l'arrière-plan",
+    "deleteSuccess": "L'arrière-plan \"{{name}}\" a été supprimé avec succès",
+    "deleteError": "Erreur lors de la suppression : {{error}}",
+    "failedBulkDelete": "Échec de la suppression des arrière-plans",
+    "bulkDeletePartial": "Supprimé {{deleted}} arrière-plan(s), mais {{failed}} ont échoué.",
+    "bulkDeleteSuccess": "Supprimé avec succès {{count}} arrière-plan(s)",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout désélectionner",
+    "selectedCount": "{{count}} sélectionné(s)",
+    "deleteSelected": "Supprimer la sélection ({{count}})",
+    "showingCount": "Affichage de {{displayed}} sur {{filtered}} arrière-plans dans {{folder}}",
+    "filteredFrom": "Filtré sur un total de {{total}}",
+    "deleteTooltip": "Supprimer l'arrière-plan",
+    "replaceTooltip": "Remplacer la ressource",
+    "itemsPerPage": "Éléments par page :",
+    "loadMore": "Charger plus",
+    "remaining": "{{count}} restant(s)",
+    "loadAll": "Tout charger",
+    "total": "{{count}} au total",
+    "replace": "Remplacer",
+    "previewNotAvailable": "Aperçu de l'image non disponible",
+    "useFileExplorer": "Utilisez l'explorateur de fichiers pour voir l'arrière-plan",
+    "size": "Taille : {{size}} Ko",
+    "deleteMultipleTitle": "Supprimer plusieurs arrière-plans",
+    "deleteSingleTitle": "Supprimer l'arrière-plan",
+    "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} arrière-plan(s) sélectionné(s) ?",
+    "deleteSingleMessage": "Êtes-vous sûr de vouloir supprimer cet arrière-plan ?",
+    "replaceSuccess": "Ressource remplacée avec succès !"
+  },
+  "configEditor": {
+    "loadingConfig": "Chargement de la configuration...",
+    "errorLoadingConfig": "Erreur lors du chargement de la configuration",
+    "retry": "Réessayer",
+    "reload": "Recharger",
+    "saveConfigTitle": "Enregistrer la configuration (Ctrl+Entrée)",
+    "saving": "Enregistrement...",
+    "saveChanges": "Enregistrer les modifications",
+    "searchPlaceholder": "Rechercher des paramètres par nom ou valeur...",
+    "filteringSettings": "Filtrage des paramètres correspondant à \"{{query}}\"",
+    "section": "{{count}} section",
+    "section_plural": "{{count}} sections",
+    "filtered": "filtré(s)",
+    "expandAll": "Tout développer",
+    "collapseAll": "Tout réduire",
+    "noSettingsFound": "Aucun paramètre trouvé",
+    "noSettingsMatch": "Aucun paramètre ne correspond à votre recherche \"{{query}}\" dans la section {{tab}}",
+    "clearSearch": "Effacer la recherche",
+    "overlayPreview": "Aperçu de la superposition",
+    "fontPreview": "Aperçu de la police",
+    "filename": "Nom de fichier",
+    "failedLoadImage": "Échec du chargement de l'image",
+    "uppercase": "Majuscules",
+    "lowercase": "Minuscules",
+    "numbers": "Chiffres",
+    "sample": "Exemple"
+  },
+  "assetsStats": {
+    "title": "Aperçu des ressources",
+    "fetchError": "Échec de la récupération des statistiques des ressources",
+    "apiError": "Échec de la connexion à l'API",
+    "refreshSuccess": "Cache des ressources actualisé avec succès !",
+    "refreshError": "Échec de l'actualisation du cache : {{error}}",
+    "refreshFailed": "Échec de l'actualisation du cache",
+    "error": "Erreur",
+    "refreshTooltip": "Actualiser le cache des ressources",
+    "posters": "Affiches",
+    "backgrounds": "Arrière-plans",
+    "seasons": "Saisons",
+    "titleCards": "Cartons de titre",
+    "totalAssets": "Total des ressources",
+    "totalSize": "Taille totale",
+    "topFolders": "Top des dossiers par nombre de fichiers",
+    "filesCount": "{{count}} fichiers"
+  },
+  "assetReplacer": {
+    "title": "Remplacer la ressource",
+    "enterTitleError": "Veuillez entrer un titre à rechercher",
+    "foundReplacements": "Trouvé {{count}} options de remplacement parmi {{sources}} sources",
+    "fetchPreviewsError": "Échec de la récupération des aperçus",
+    "errorFetchingPreviews": "Erreur lors de la récupération des aperçus : {{error}}",
+    "selectImageError": "Veuillez sélectionner un fichier image",
+    "enterTitleTextError": "Veuillez entrer un texte de titre pour le traitement de la superposition",
+    "enterFolderNameError": "Veuillez entrer un nom de dossier pour le traitement de la superposition",
+    "enterLibraryNameError": "Veuillez entrer un nom de bibliothèque pour le traitement de la superposition",
+    "enterSeasonNumberError": "Veuillez entrer un numéro de saison pour le traitement de la superposition",
+    "enterEpisodeNumberError": "Veuillez entrer un numéro d'épisode pour le traitement de la superposition",
+    "enterEpisodeTitleError": "Veuillez entrer un titre d'épisode pour le traitement de la superposition",
+    "enterSeasonPosterNameError": "Veuillez entrer un nom d'affiche de saison pour le traitement de la superposition",
+    "replacedAndQueued": "Ressource remplacée et mise en file d'attente pour le traitement de la superposition ! 🎨",
+    "replacedSuccessfully": "Ressource remplacée avec succès !",
+    "uploadError": "Échec du téléversement de la ressource",
+    "errorUploadingFile": "Erreur lors du téléversement du fichier : {{error}}",
+    "replaceError": "Échec du remplacement de la ressource",
+    "errorReplacingAsset": "Erreur lors du remplacement de la ressource : {{error}}",
+    "uploadCustom": "Téléverser personnalisé",
+    "servicePreviews": "Aperçus du service",
+    "uploadYourOwnImage": "Téléversez votre propre image",
+    "selectCustomImage": "Sélectionnez une image personnalisée pour remplacer cette ressource",
+    "uploading": "Téléversement en cours...",
+    "chooseFile": "Choisir un fichier",
+    "manualSearchByTitle": "Recherche manuelle par titre",
+    "searchForAssets": "Rechercher des ressources :",
+    "orFetchFromServices": "Ou récupérer depuis les services :",
+    "fetchFromServices": "Récupérer depuis TMDB/TVDB/Fanart",
+    "fetchingPreviews": "Récupération des aperçus depuis les services...",
+    "noPreviewsLoaded": "Aucun aperçu chargé pour le moment",
+    "fetchPreviews": "Récupérer les aperçus",
+    "select": "Sélectionner"
+  },
+  "assetOverview": {
+    "title": "Aperçu des ressources",
+    "description": "Aperçu de toutes les ressources avec une catégorisation détaillée",
+    "loading": "Chargement de l'aperçu des ressources...",
+    "fetchError": "Échec de la récupération de l'aperçu des ressources",
+    "errorLoadingData": "Erreur lors du chargement des données",
+    "assetsWithIssues": "Ressources avec problèmes",
+    "missingAssets": "Ressources manquantes",
+    "nonPrimaryLang": "Langue non principale",
+    "nonPrimaryProvider": "Fournisseur non principal",
+    "truncatedTextCategory": "Texte tronqué",
+    "missingAsset": "Ressource manquante",
+    "notPrimaryLanguage": "Langue non principale",
+    "notPrimaryProvider": "Fournisseur non principal",
+    "truncatedText": "Texte tronqué",
+    "manual": "Manuel",
+    "searchPlaceholder": "Rechercher par titre ou chemin...",
+    "allTypes": "Tous les types",
+    "allLibraries": "Toutes les bibliothèques",
+    "allCategories": "Toutes les catégories",
+    "allAssets": "Toutes les ressources",
+    "noAssetsFound": "Aucune ressource trouvée",
+    "type": "Type",
+    "language": "Langue",
+    "source": "Source",
+    "viewSource": "Voir la source",
+    "replace": "Remplacer",
+    "replaceTooltip": "Remplacer cette ressource"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Info",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "upload": "Téléverser",
+    "download": "Télécharger",
+    "refresh": "Actualiser",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "done": "Terminé"
+  },
+  "theme": {
+    "title": "Thème",
+    "selectTheme": "Sélectionner un thème",
+    "dark": "Sombre",
+    "light": "Clair",
+    "auto": "Auto"
+  },
+  "language": {
+    "title": "Langue",
+    "selectLanguage": "Sélectionner la langue",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "it": "Italiano",
+    "pt": "Português"
+  },
+  "notifications": {
+    "success": "Succès",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Information"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "signInToContinue": "Connectez-vous pour continuer",
+    "signingIn": "Connexion en cours...",
+    "enterUsername": "Entrez votre nom d'utilisateur",
+    "enterPassword": "Entrez votre mot de passe",
+    "loginSuccess": "Connexion réussie",
+    "loginError": "Échec de la connexion. Veuillez réessayer.",
+    "logoutSuccess": "Déconnexion réussie",
+    "invalidCredentials": "Nom d'utilisateur ou mot de passe invalide",
+    "connectionError": "Erreur de connexion. Veuillez réessayer.",
+    "sessionExpired": "Session expirée"
+  },
+  "validation": {
+    "required": "Ce champ est requis",
+    "invalid": "Valeur invalide",
+    "min": "Valeur minimale : {{min}}",
+    "max": "Valeur maximale : {{max}}",
+    "minLength": "Longueur minimale : {{min}} caractères",
+    "maxLength": "Longueur maximale : {{max}} caractères",
+    "email": "Adresse e-mail invalide",
+    "url": "URL invalide"
+  },
+  "loading": {
+    "initializing": "Initialisation de Posterizarr...",
+    "messages": [
+      "Au moins, vous n'êtes pas en attente...",
+      "Chargement de vos affiches avec style...",
+      "Convaincre l'IA que votre goût est impeccable...",
+      "Demander aux hamsters de courir plus vite...",
+      "Réticulation des splines...",
+      "Calibrage du convecteur temporel...",
+      "Préparation de pixels frais...",
+      "Réveil des hamsters du serveur...",
+      "Téléchargement de plus de RAM...",
+      "Polissage de votre collection de films...",
+      "Apprendre aux robots à apprécier l'art...",
+      "Consultation de la boule de cristal magique...",
+      "Invocation des esprits des affiches...",
+      "Faire en sorte que ça paraisse facile...",
+      "99 petits bugs dans le code... attendez, maintenant 100...",
+      "Le temps est une illusion. Le temps de chargement, doublement...",
+      "On est bientôt arrivés ?",
+      "Patience, jeune padawan...",
+      "Chargement de l'écran de chargement...",
+      "Cela prend plus de temps que prévu..."
+    ]
+  },
+  "systemInfo": {
+    "title": "Informations système",
+    "refreshTooltip": "Actualiser les informations système",
+    "platform": "Plateforme",
+    "cpuModel": "Modèle de CPU",
+    "cpuUnavailable": "Informations CPU indisponibles",
+    "cores": "{{count}} Cœurs",
+    "unknownCores": "Cœurs inconnus",
+    "memoryUsage": "Utilisation de la mémoire",
+    "free": "libre",
+    "memoryUnavailable": "Informations sur la mémoire indisponibles"
+  },
+  "runtimeStats": {
+    "title": "Statistiques d'exécution",
+    "refreshTooltip": "Actualiser les statistiques d'exécution",
+    "noData": "Aucune donnée d'exécution disponible pour le moment. Lancez le script pour voir les statistiques.",
+    "migrationTip": "Astuce :",
+    "migrationDesc": "Les données d'exécution historiques de vos journaux peuvent être importées automatiquement. La migration se lancera automatiquement au prochain démarrage, ou vous pouvez la déclencher manuellement depuis la page Historique d'exécution.",
+    "executionTime": "Temps d'exécution",
+    "totalImages": "Total d'images",
+    "errors": "Erreurs",
+    "additionalInfo": "Informations supplémentaires",
+    "tbaSkipped": "TBA ignorés",
+    "japChinesSkipped": "JP/CN ignorés",
+    "imagesCleared": "Images supprimées",
+    "foldersCleared": "Dossiers supprimés",
+    "spaceSaved": "Espace économisé",
+    "versionInfo": "Informations de version",
+    "scriptVersion": "Version du script",
+    "imVersion": "Version ImageMagick",
+    "scheduledRuns": "Exécutions planifiées",
+    "nextRun": "Prochaine exécution",
+    "configuredSchedules": "Heures de planification configurées",
+    "timezone": "Fuseau horaire",
+    "schedulerTimezone": "Fuseau horaire du planificateur",
+    "displayedInYourTimezone": "Affiché dans votre fuseau horaire",
+    "differentFromBrowser": "différent du navigateur",
+    "runInfo": "Informations d'exécution",
+    "imageStats": "Statistiques d'images",
+    "startTime": "Heure de début",
+    "endTime": "Heure de fin",
+    "notificationSent": "Notification envoyée",
+    "notes": "Notes"
+  },
+  "dangerZone": {
+    "title": "Zone de danger",
+    "warning": "Ces actions sont potentiellement destructrices",
+    "forceKill": "Forcer l'arrêt",
+    "forceKillTitle": "Forcer l'arrêt du script",
+    "forceKillMessage": "Forcer l'arrêt terminera immédiatement le script. Ceci ne doit être utilisé que lorsque l'arrêt normal ne fonctionne pas.",
+    "stopSuccess": "Script arrêté avec succès",
+    "stopError": "Échec de l'arrêt du script",
+    "forceKillSuccess": "Script arrêté de force avec succès",
+    "forceKillError": "Échec de l'arrêt forcé du script"
+  },
+  "recentAssets": {
+    "title": "Récemment créées",
+    "refreshTooltip": "Actualiser les ressources récentes",
+    "loadError": "Échec du chargement des ressources récentes",
+    "noAssets": "Aucune ressource récente trouvée"
+  },
+  "confirmDialog": {
+    "title": "Confirmer l'action",
+    "confirm": "Supprimer",
+    "cancel": "Annuler"
+  },
+  "folderView": {
+    "assets": "Ressources",
+    "searchLibraries": "Rechercher des bibliothèques...",
+    "searchItems": "Rechercher des éléments...",
+    "searchAssets": "Rechercher des ressources...",
+    "selectAll": "Tout sélectionner ({{count}})",
+    "deselectAll": "Tout désélectionner",
+    "deleteAllAssets": "Supprimer toutes les ressources ({{count}})",
+    "delete": "Supprimer ({{count}})",
+    "cancelSelect": "Annuler la sélection",
+    "select": "Sélectionner",
+    "refresh": "Actualiser",
+    "loading": "Chargement...",
+    "total": "Total : {{count}} ressources",
+    "posters": "Affiches : {{count}}",
+    "backgrounds": "Arrière-plans : {{count}}",
+    "seasons": "Saisons : {{count}}",
+    "episodes": "Épisodes : {{count}}",
+    "assetsCount": "{{count}} ressources",
+    "replaceImage": "Remplacer l'image",
+    "deleteImage": "Supprimer l'image",
+    "noResults": "Aucun résultat trouvé",
+    "noLibraries": "Aucune bibliothèque trouvée",
+    "noItems": "Aucun élément trouvé",
+    "noAssets": "Aucune ressource trouvée",
+    "adjustSearch": "Essayez d'ajuster vos termes de recherche",
+    "emptyFolder": "Ce dossier est vide",
+    "replace": "Remplacer",
+    "previewNotAvailable": "Aperçu de l'image non disponible",
+    "useFileExplorer": "Utilisez l'explorateur de fichiers pour voir l'image",
+    "size": "Taille",
+    "close": "Fermer",
+    "refreshSuccess": "Contenu actualisé avec succès",
+    "deleteSuccess": "{{name}} supprimé(e) avec succès",
+    "deleteError": "Échec de la suppression de {{name}}",
+    "bulkDeleteSuccess": "Supprimé avec succès {{count}} ressource(s)",
+    "bulkDeleteError": "Échec de la suppression de {{count}} ressource(s)",
+    "bulkDeleteFoldersSuccess": "Traité avec succès {{folderCount}} dossier(s) ({{assetCount}} ressources supprimées)",
+    "bulkDeleteFoldersError": "Échec du traitement de {{count}} dossier(s)",
+    "deleteAllAssetsTitle": "Supprimer toutes les ressources dans les dossiers sélectionnés",
+    "deleteMultipleTitle": "Supprimer plusieurs ressources",
+    "deleteAssetTitle": "Supprimer la ressource",
+    "deleteAllAssetsMessage": "Êtes-vous sûr de vouloir supprimer TOUTES les ressources dans les {{count}} dossier(s) sélectionné(s) ? Cela supprimera toutes les affiches, arrière-plans, saisons et cartons de titre dans ces dossiers.",
+    "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} ressource(s) sélectionnée(s) ?",
+    "deleteAssetMessage": "Êtes-vous sûr de vouloir supprimer cette ressource ?",
+    "deleteButton": "Supprimer"
+  },
+  "autoTriggers": {
+    "header": {
+      "title": "Déclencheurs automatiques",
+      "subtitle": "Configurez la création automatique d'affiches lorsque de nouveaux médias sont ajoutés à votre bibliothèque"
+    },
+    "tabs": {
+      "tautulli": {
+        "description": "Déclenchement sur les événements de la bibliothèque Plex"
+      },
+      "sonarr": {
+        "description": "Déclenchement sur les importations de séries TV"
+      },
+      "radarr": {
+        "description": "Déclenchement sur les importations de films"
+      }
+    },
+    "setupSteps": "Étapes de configuration",
+    "howItWorks": "Comment ça fonctionne",
+    "copyCode": "Copier dans le presse-papiers",
+    "resources": {
+      "title": "Ressources supplémentaires",
+      "tautulliWiki": "Wiki des scripts personnalisés Tautulli",
+      "sonarrWiki": "Documentation des paramètres Connect de Sonarr",
+      "radarrWiki": "Documentation des paramètres Connect de Radarr",
+      "triggerScript": "Voir trigger.py sur GitHub",
+      "arrTriggerScript": "Voir ArrTrigger.sh sur GitHub"
+    },
+    "tautulli": {
+      "selectMode": "Sélectionnez votre environnement",
+      "requirements": {
+        "title": "Prérequis",
+        "docker": "Tautulli et Posterizarr doivent tous deux être exécutés en tant que conteneurs Docker",
+        "windows": "Tautulli et Posterizarr doivent être installés sur le même système Windows"
+      },
+      "docker": {
+        "description": "Pour les environnements conteneurisés",
+        "steps": [
+          {
+            "title": "Monter le répertoire Posterizarr sur Tautulli",
+            "description": "Tautulli a besoin d'accéder au répertoire Posterizarr pour exécuter le script de déclenchement.",
+            "warning": "Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+            "code": [
+              {
+                "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Tautulli :",
+                "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+              }
+            ]
+          },
+          {
+            "title": "Télécharger le script de déclenchement",
+            "description": "Téléchargez trigger.py depuis GitHub et placez-le dans votre répertoire de scripts Tautulli.",
+            "substeps": [
+              "Téléchargez depuis : https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
+              "Placez dans le répertoire de scripts Tautulli (voir Wiki Tautulli pour l'emplacement)",
+              "Définir les permissions d'exécution : chmod +x trigger.py"
+            ]
+          },
+          {
+            "title": "Configurer l'agent de notification Tautulli",
+            "description": "Créez un nouvel agent de notification Script dans Tautulli.",
+            "substeps": [
+              "Allez dans Paramètres → Agents de notification",
+              "Cliquez sur 'Ajouter un nouvel agent de notification' et sélectionnez 'Script'",
+              "Sélectionnez trigger.py depuis votre dossier de scripts",
+              "Ajoutez une description (facultatif)"
+            ]
+          },
+          {
+            "title": "Définir les déclencheurs",
+            "description": "Configurez quand le script doit être exécuté.",
+            "substeps": [
+              "Allez dans l'onglet 'Déclencheurs'",
+              "Faites défiler vers le bas et activez 'Récemment ajouté'"
+            ]
+          },
+          {
+            "title": "Définir les conditions",
+            "description": "Définissez quels types de médias doivent déclencher le script.",
+            "substeps": [
+              "Allez dans l'onglet 'Conditions'",
+              "Définissez Type de média sur : episode, movie, show, season",
+              "Excluez éventuellement les bibliothèques (ex : YouTube) qui n'ont pas d'ID TMDB/TVDB"
+            ]
+          },
+          {
+            "title": "Configurer les arguments",
+            "description": "Définissez les arguments requis pour que le script fonctionne correctement.",
+            "info": "Ne modifiez pas cet argument - le script nécessite exactement ce format",
+            "code": [
+              {
+                "label": "Allez dans l'onglet Arguments → Développez 'Récemment ajouté' → Collez :",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      },
+      "windows": {
+        "description": "Pour les installations Windows",
+        "steps": [
+          {
+            "title": "Configurer l'agent de notification Tautulli",
+            "description": "Créez un nouvel agent de notification Script dans Tautulli.",
+            "substeps": [
+              "Allez dans Paramètres → Agents de notification",
+              "Cliquez sur 'Ajouter un nouvel agent de notification' et sélectionnez 'Script'",
+              "Sélectionnez Posterizarr.ps1 depuis votre dossier Posterizarr",
+              "Définissez le délai d'attente du script sur 0 (illimité) - les 30 secondes par défaut tueraient le script",
+              "Ajoutez une description (facultatif)"
+            ]
+          },
+          {
+            "title": "Définir les déclencheurs",
+            "description": "Configurez quand le script doit être exécuté.",
+            "substeps": [
+              "Allez dans l'onglet 'Déclencheurs'",
+              "Faites défiler vers le bas et activez 'Récemment ajouté'"
+            ]
+          },
+          {
+            "title": "Définir les conditions",
+            "description": "Définissez quels types de médias doivent déclencher le script.",
+            "substeps": [
+              "Allez dans l'onglet 'Conditions'",
+              "Définissez Type de média sur : episode, movie, show, season",
+              "Excluez éventuellement les bibliothèques (ex : YouTube) qui n'ont pas d'ID TMDB/TVDB"
+            ]
+          },
+          {
+            "title": "Configurer les arguments",
+            "description": "Définissez les arguments requis pour que le script fonctionne correctement.",
+            "info": "Ne modifiez pas cet argument - le script nécessite exactement ce format",
+            "code": [
+              {
+                "label": "Allez dans l'onglet Arguments → Développez 'Récemment ajouté' → Collez :",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sonarr": {
+      "requirements": {
+        "title": "Prérequis",
+        "description": "Sonarr et Posterizarr doivent tous deux être exécutés en tant que conteneurs Docker"
+      },
+      "howItWorks": [
+        "Sonarr crée un fichier .posterizarr dans le répertoire watcher lorsqu'un fichier est importé",
+        "Le fichier contient des métadonnées sur l'épisode importé",
+        "Posterizarr surveille ce répertoire pour les nouveaux fichiers",
+        "Une fois détecté, Posterizarr attend jusqu'à 5 minutes (en fonction de l'âge du fichier)",
+        "Puis lit le fichier et déclenche une exécution de création d'affiches pour cet élément spécifique"
+      ],
+      "steps": [
+        {
+          "title": "Monter le répertoire Posterizarr sur Sonarr",
+          "description": "Sonarr a besoin d'un accès en écriture au répertoire watcher de Posterizarr.",
+          "warning": "Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+          "code": [
+            {
+              "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Sonarr :",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Télécharger le script de déclenchement",
+          "description": "Téléchargez ArrTrigger.sh depuis GitHub et placez-le dans votre répertoire de scripts Sonarr.",
+          "substeps": [
+            "Téléchargez depuis : https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Exemple : Créez le répertoire /opt/appdata/sonarr/scripts/",
+            "Placez ArrTrigger.sh dans ce répertoire",
+            "Définir les permissions d'exécution : chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configurer les paramètres Connect de Sonarr",
+          "description": "Ajoutez une connexion de script personnalisé dans Sonarr.",
+          "substeps": [
+            "Allez dans Paramètres → Connect",
+            "Cliquez sur le bouton '+' et sélectionnez 'Script personnalisé'",
+            "Donnez-lui un nom (ex : 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Définir le déclencheur de notification",
+          "description": "Configurez quand le script doit être exécuté.",
+          "substeps": [
+            "Sous 'Déclencheurs de notification', activez UNIQUEMENT 'À l'importation'",
+            "Désactivez tous les autres déclencheurs"
+          ]
+        },
+        {
+          "title": "Définir le chemin du script",
+          "description": "Pointez Sonarr vers le script de déclenchement.",
+          "info": "Le chemin doit être relatif au système de fichiers du conteneur Sonarr",
+          "code": [
+            {
+              "label": "Définissez Chemin sur :",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Tester et enregistrer",
+          "description": "Vérifiez que la configuration fonctionne correctement.",
+          "substeps": [
+            "Cliquez sur 'Test' pour vous assurer que Sonarr peut exécuter le script",
+            "Si réussi, cliquez sur 'Enregistrer'"
+          ]
+        }
+      ]
+    },
+    "radarr": {
+      "requirements": {
+        "title": "Prérequis",
+        "description": "Radarr et Posterizarr doivent tous deux être exécutés en tant que conteneurs Docker"
+      },
+      "howItWorks": [
+        "Radarr crée un fichier .posterizarr dans le répertoire watcher lorsqu'un fichier est importé",
+        "Le fichier contient des métadonnées sur le film importé",
+        "Posterizarr surveille ce répertoire pour les nouveaux fichiers",
+        "Une fois détecté, Posterizarr attend jusqu'à 5 minutes (en fonction de l'âge du fichier)",
+        "Puis lit le fichier et déclenche une exécution de création d'affiches pour cet élément spécifique"
+      ],
+      "steps": [
+        {
+          "title": "Monter le répertoire Posterizarr sur Radarr",
+          "description": "Radarr a besoin d'un accès en écriture au répertoire watcher de Posterizarr.",
+          "warning": "Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+          "code": [
+            {
+              "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Radarr :",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Télécharger le script de déclenchement",
+          "description": "Téléchargez ArrTrigger.sh depuis GitHub et placez-le dans votre répertoire de scripts Radarr.",
+          "substeps": [
+            "Téléchargez depuis : https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Exemple : Créez le répertoire /opt/appdata/radarr/scripts/",
+            "Placez ArrTrigger.sh dans ce répertoire",
+            "Définir les permissions d'exécution : chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configurer les paramètres Connect de Radarr",
+          "description": "Ajoutez une connexion de script personnalisé dans Radarr.",
+          "substeps": [
+            "Allez dans Paramètres → Connect",
+            "Cliquez sur le bouton '+' et sélectionnez 'Script personnalisé'",
+            "Donnez-lui un nom (ex : 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Définir le déclencheur de notification",
+          "description": "Configurez quand le script doit être exécuté.",
+          "substeps": [
+            "Sous 'Déclencheurs de notification', activez UNIQUEMENT 'À l'importation'",
+            "Désactivez tous les autres déclencheurs"
+          ]
+        },
+        {
+          "title": "Définir le chemin du script",
+          "description": "Pointez Radarr vers le script de déclenchement.",
+          "info": "Le chemin doit être relatif au système de fichiers du conteneur Radarr",
+          "code": [
+            {
+              "label": "Définissez Chemin sur :",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Tester et enregistrer",
+          "description": "Vérifiez que la configuration fonctionne correctement.",
+          "substeps": [
+            "Cliquez sur 'Test' pour vous assurer que Radarr peut exécuter le script",
+            "Si réussi, cliquez sur 'Enregistrer'"
+          ]
+        }
+      ]
+    }
+  }
+}

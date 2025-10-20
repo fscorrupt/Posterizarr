@@ -3,10 +3,8 @@
 <br />
 <div align="center">
   <a href="https://github.com/fscorrupt/Posterizarr">
-    <img src="/images/webhook.png" alt="Logo" width="100" height="100">
+    <img src="/images/logo_banner.png" alt="Logo" width="100" height="100">
   </a>
-
-<h1 align="center">Posterizarr</h1>
 
   <p align="center">
     <a href="https://ko-fi.com/R6R81S6SC">Donate</a>
@@ -40,6 +38,29 @@
 ## Introduction
 This PowerShell script automates generating images for your Plex, Jellyfin, or Emby library by using media info like titles, seasons, and episodes. It fetches artwork from Fanart.tv, TMDB, TVDB, Plex, and IMDb, focusing on specific languages - **defaulting to textless** images and falling back to English if unavailable. Users can choose between textless or text posters. The script supports both automatic bulk downloads and manual mode (interactive) for custom artwork that can’t be retrieved automatically.
 
+## Introducing the Posterizarr Web UI 🌐
+
+Exciting news! Posterizarr now features a user-friendly web interface to make configuration and management easier than ever.
+
+From the UI, you can:
+* Adjust all your settings directly in the browser
+* Monitor real-time script activity
+* View your created assets
+* Set and manage script schedules
+* Trigger runs with the click of a button
+* ...and much more!
+
+By default (Docker Only), the UI is accessible at `http://localhost:8000`.
+
+The web UI comes pre-integrated in the Docker container. For other platforms like Windows or Linux, please see the [Manual Installation how-to](#ui-installation-manual).
+
+<p align="center">
+  <a href="https://github.com/fscorrupt/Posterizarr">
+    <img alt="Web UI Preview" width="100%" src="/images/PosterizarrUI.png">
+  </a>
+</p>
+
+
 > [!NOTE]
 Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpine Base Image)](#docker), [unRAID](#unraid) and on Windows operating systems.
 >
@@ -48,7 +69,40 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- Movie/Show Backgrounds
 >- Season Posters
 >- TitleCards
->- Collections are **NOT** supported
+>- Collections are **NOT** supported (but you can create them through manual mode)
+
+## Quick Start
+1. **Installation**
+   - Docker: `docker-compose up -d` (using provided docker-compose.yml)
+   - Manual: Clone repo and follow [Manual Installation guide](walkthrough.md)
+
+2. **Required API Keys**
+   - Get TMDB API Token from [TMDB](https://www.themoviedb.org/settings/api)
+   - Get Fanart API Key from [Fanart.tv](https://fanart.tv/get-an-api-key)
+   - Get TVDB API Key from [TVDB](https://thetvdb.com/api-information/signup)
+   - Review the [What You Need](#-what-you-need) section for required software/plugins
+
+3. **Basic Configuration**
+   - Copy `config.example.json` to `config.json` -> [Configuration](#configuration)
+   - Add your API keys
+   - Set your media server details (Plex/Jellyfin/Emby)
+   - Configure asset paths
+
+4. **First Run**
+   ```bash
+   # Docker
+   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
+
+   # Windows (as Admin) & Linux
+   ./Posterizarr.ps1 -Testing
+   ```
+
+5. **Access Web UI**
+   - Open `http://localhost:8000` in your browser
+   - Default credentials: none required
+
+For detailed setup instructions, see the [full walkthrough](walkthrough.md).
+
 
 ## 🧰 What You Need
 
@@ -67,7 +121,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- **ImageMagick (already integrated in container)**
 >   - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 >- **Powershell Version (already integrated in container)**
->   - 5.x or higher.
+>   - 7.x or higher.
 >- **FanartTv Powershell Module (already integrated in container)**
 >   - This module is required, goto: [Install Module](https://github.com/Celerium/FanartTV-PowerShellWrapper)
 
@@ -697,7 +751,65 @@ To use it we need to configure a script in Sonarr/Radarr, please follow these in
 9. Posterizarr monitors this directory for files ending in `.posterizarr`.
     - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
 
+### UI Installation (Manual)
 
+This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
+
+**Prerequisites**
+
+Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
+* ✅ **Python 3:** Required for the backend server.
+* ✅ **Node.js (with npm):** Required for the frontend interface.
+* ✅ **PowerShell Core:** Required to run the main `Posterizarr.ps1` script.
+
+**Setup Instructions**
+
+The setup process is handled by a simple script that installs all necessary dependencies.
+
+1.  Open a terminal or command prompt.
+2.  Navigate into the `webui` directory located in the project's root folder.
+    ```bash
+    cd path/to/Posterizarr/webui
+    ```
+3.  Run the appropriate setup script for your operating system:
+    * **On Windows:**
+        ```bash
+        setup.ps1
+        ```
+        or
+        ```bash
+        setup.bat
+        ```
+    * **On Linux or macOS:**
+        ```bash
+        sh setup.sh
+        ```
+    The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
+
+**Running the UI**
+
+After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
+
+**Terminal 2: Start the Frontend**
+```bash
+# Navigate to the frontend directory
+cd webui/frontend
+
+# Run the development server
+npm run build
+```
+
+**Terminal 1: Start the Backend**
+```bash
+# Navigate to the backend directory
+cd webui/backend
+
+# Run the Python server
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+
+Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
 
 ### Testing Mode
 
@@ -759,7 +871,7 @@ Follow the prompts to enter the source picture path (Container needs Access to i
 ```Enter Plex Library Name:```
 - Enter the name of the Plex (or Jellyfin) library, e.g., "Movies" or "TV Shows".
 
-### Manual Mode (Semi Automnated)
+### Manual Mode (Semi Automated)
 
 > [!IMPORTANT]
 >
@@ -810,6 +922,17 @@ To create a poster for a media collection, use the -CollectionCard switch. The s
 On [docker](#docker) this way:
 ```sh
 docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -CollectionCard -PicturePath "/path/to/collection_bg.jpg" -Titletext "James Bond" -LibraryName "Movies"
+```
+
+**Background Poster**
+
+To create a standard background poster for a movie or a TV show's main entry:
+```powershell
+.\Posterizarr.ps1 -Manual -BackgroundCard -PicturePath "C:\path\to\movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
+```
+On [docker](#docker) this way:
+```sh
+docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -BackgroundCard -PicturePath "/path/to/movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
 ```
 
 **Episode Title Card**

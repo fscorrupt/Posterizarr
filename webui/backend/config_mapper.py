@@ -3,7 +3,7 @@ Config Mapper - Transforms between grouped and flat config structures
 Author: Posterizarr
 
 Usage in Backend:
-    from config_mapper import flatten_config, unflatten_config
+    from config_mapper import flatten_config, unflatten_config, get_display_name, get_tooltip
 
     # When loading config
     grouped_config = json.load(f)
@@ -12,10 +12,252 @@ Usage in Backend:
     # When saving config
     grouped_config = unflatten_config(flat_config)
     json.dump(grouped_config, f)
+
+    # Get tooltip for a config key
+    tooltip = get_tooltip("tmdbtoken")
 """
+import logging
+logger = logging.getLogger(__name__)
+
+# Import tooltips from separate file
+try:
+    from config_tooltips import CONFIG_TOOLTIPS
+except ImportError:
+    # Fallback if config_tooltips.py is not available
+    CONFIG_TOOLTIPS = {}
+
+
+# =============================================================================
+# ORIGINAL KEY MAPPINGS - Preserves exact case from config.json
+# =============================================================================
+
+ORIGINAL_KEYS = {
+    # PosterOverlayPart
+    "PosterFontAllCaps": "fontAllCaps",
+    "PosterAddBorder": "AddBorder",
+    "PosterAddText": "AddText",
+    "PosterAddTextStroke": "AddTextStroke",
+    "PosterStrokecolor": "strokecolor",
+    "PosterStrokewidth": "strokewidth",
+    "PosterAddOverlay": "AddOverlay",
+    "PosterFontcolor": "fontcolor",
+    "PosterBordercolor": "bordercolor",
+    "PosterMinPointSize": "minPointSize",
+    "PosterMaxPointSize": "maxPointSize",
+    "PosterBorderwidth": "borderwidth",
+    "PosterMaxWidth": "MaxWidth",
+    "PosterMaxHeight": "MaxHeight",
+    "PosterTextOffset": "text_offset",
+    "PosterLineSpacing": "lineSpacing",
+    "PosterTextGravity": "TextGravity",
+    # SeasonPosterOverlayPart
+    "SeasonPosterFontAllCaps": "fontAllCaps",
+    "SeasonPosterShowFallback": "ShowFallback",
+    "SeasonPosterAddBorder": "AddBorder",
+    "SeasonPosterAddText": "AddText",
+    "SeasonPosterAddTextStroke": "AddTextStroke",
+    "SeasonPosterStrokecolor": "strokecolor",
+    "SeasonPosterStrokewidth": "strokewidth",
+    "SeasonPosterAddOverlay": "AddOverlay",
+    "SeasonPosterFontcolor": "fontcolor",
+    "SeasonPosterBordercolor": "bordercolor",
+    "SeasonPosterMinPointSize": "minPointSize",
+    "SeasonPosterMaxPointSize": "maxPointSize",
+    "SeasonPosterBorderwidth": "borderwidth",
+    "SeasonPosterMaxWidth": "MaxWidth",
+    "SeasonPosterMaxHeight": "MaxHeight",
+    "SeasonPosterTextOffset": "text_offset",
+    "SeasonPosterLineSpacing": "lineSpacing",
+    "SeasonPosterTextGravity": "TextGravity",
+    # BackgroundOverlayPart
+    "BackgroundFontAllCaps": "fontAllCaps",
+    "BackgroundAddOverlay": "AddOverlay",
+    "BackgroundAddBorder": "AddBorder",
+    "BackgroundAddText": "AddText",
+    "BackgroundAddTextStroke": "AddTextStroke",
+    "BackgroundStrokecolor": "strokecolor",
+    "BackgroundStrokewidth": "strokewidth",
+    "BackgroundFontcolor": "fontcolor",
+    "BackgroundBordercolor": "bordercolor",
+    "BackgroundMinPointSize": "minPointSize",
+    "BackgroundMaxPointSize": "maxPointSize",
+    "BackgroundBorderwidth": "borderwidth",
+    "BackgroundMaxWidth": "MaxWidth",
+    "BackgroundMaxHeight": "MaxHeight",
+    "BackgroundTextOffset": "text_offset",
+    "BackgroundLineSpacing": "lineSpacing",
+    "BackgroundTextGravity": "TextGravity",
+    # TitleCardOverlayPart
+    "TitleCardUseBackgroundAsTitleCard": "UseBackgroundAsTitleCard",
+    "TitleCardBackgroundFallback": "BackgroundFallback",
+    "TitleCardAddOverlay": "AddOverlay",
+    "TitleCardAddBorder": "AddBorder",
+    "TitleCardBordercolor": "bordercolor",
+    "TitleCardBorderwidth": "borderwidth",
+    # TitleCardTitleTextPart
+    "TitleCardTitleFontAllCaps": "fontAllCaps",
+    "TitleCardTitleAddEPTitleText": "AddEPTitleText",
+    "TitleCardTitleAddTextStroke": "AddTextStroke",
+    "TitleCardTitleStrokecolor": "strokecolor",
+    "TitleCardTitleStrokewidth": "strokewidth",
+    "TitleCardTitleFontcolor": "fontcolor",
+    "TitleCardTitleMinPointSize": "minPointSize",
+    "TitleCardTitleMaxPointSize": "maxPointSize",
+    "TitleCardTitleMaxWidth": "MaxWidth",
+    "TitleCardTitleMaxHeight": "MaxHeight",
+    "TitleCardTitleTextOffset": "text_offset",
+    "TitleCardTitleLineSpacing": "lineSpacing",
+    "TitleCardTitleTextGravity": "TextGravity",
+    # TitleCardEPTextPart
+    "TitleCardEPSeasonTCText": "SeasonTCText",
+    "TitleCardEPEpisodeTCText": "EpisodeTCText",
+    "TitleCardEPFontAllCaps": "fontAllCaps",
+    "TitleCardEPAddEPText": "AddEPText",
+    "TitleCardEPAddTextStroke": "AddTextStroke",
+    "TitleCardEPStrokecolor": "strokecolor",
+    "TitleCardEPStrokewidth": "strokewidth",
+    "TitleCardEPFontcolor": "fontcolor",
+    "TitleCardEPMinPointSize": "minPointSize",
+    "TitleCardEPMaxPointSize": "maxPointSize",
+    "TitleCardEPMaxWidth": "MaxWidth",
+    "TitleCardEPMaxHeight": "MaxHeight",
+    "TitleCardEPTextOffset": "text_offset",
+    "TitleCardEPLineSpacing": "lineSpacing",
+    "TitleCardEPTextGravity": "TextGravity",
+    # ShowTitleOnSeasonPosterPart
+    "ShowTitleAddShowTitletoSeason": "AddShowTitletoSeason",
+    "ShowTitleFontAllCaps": "fontAllCaps",
+    "ShowTitleAddTextStroke": "AddTextStroke",
+    "ShowTitleStrokecolor": "strokecolor",
+    "ShowTitleStrokewidth": "strokewidth",
+    "ShowTitleFontcolor": "fontcolor",
+    "ShowTitleMinPointSize": "minPointSize",
+    "ShowTitleMaxPointSize": "maxPointSize",
+    "ShowTitleMaxWidth": "MaxWidth",
+    "ShowTitleMaxHeight": "MaxHeight",
+    "ShowTitleTextOffset": "text_offset",
+    "ShowTitleLineSpacing": "lineSpacing",
+    "ShowTitleTextGravity": "TextGravity",
+    # CollectionTitlePosterPart
+    "CollectionTitleAddCollectionTitle": "AddCollectionTitle",
+    "CollectionTitleCollectionTitle": "CollectionTitle",
+    "CollectionTitleFontAllCaps": "fontAllCaps",
+    "CollectionTitleAddTextStroke": "AddTextStroke",
+    "CollectionTitleStrokecolor": "strokecolor",
+    "CollectionTitleStrokewidth": "strokewidth",
+    "CollectionTitleFontcolor": "fontcolor",
+    "CollectionTitleMinPointSize": "minPointSize",
+    "CollectionTitleMaxPointSize": "maxPointSize",
+    "CollectionTitleMaxWidth": "MaxWidth",
+    "CollectionTitleMaxHeight": "MaxHeight",
+    "CollectionTitleTextOffset": "text_offset",
+    "CollectionTitleLineSpacing": "lineSpacing",
+    "CollectionTitleTextGravity": "TextGravity",
+    # CollectionPosterOverlayPart
+    "CollectionPosterFontAllCaps": "fontAllCaps",
+    "CollectionPosterAddBorder": "AddBorder",
+    "CollectionPosterAddText": "AddText",
+    "CollectionPosterAddTextStroke": "AddTextStroke",
+    "CollectionPosterStrokecolor": "strokecolor",
+    "CollectionPosterStrokewidth": "strokewidth",
+    "CollectionPosterAddOverlay": "AddOverlay",
+    "CollectionPosterFontcolor": "fontcolor",
+    "CollectionPosterBordercolor": "bordercolor",
+    "CollectionPosterMinPointSize": "minPointSize",
+    "CollectionPosterMaxPointSize": "maxPointSize",
+    "CollectionPosterBorderwidth": "borderwidth",
+    "CollectionPosterMaxWidth": "MaxWidth",
+    "CollectionPosterMaxHeight": "MaxHeight",
+    "CollectionPosterTextOffset": "text_offset",
+    "CollectionPosterLineSpacing": "lineSpacing",
+    "CollectionPosterTextGravity": "TextGravity",
+}
+
+
+# =============================================================================
+# HELPER FUNCTIONS FOR CASE CONVERSION
+# =============================================================================
+
+
+def snake_to_pascal(snake_str):
+    """
+    Convert snake_case to PascalCase: text_offset -> TextOffset
+    """
+    if not snake_str or "_" not in snake_str:
+        return snake_str
+    components = snake_str.split("_")
+    return "".join(word.capitalize() for word in components)
+
+
+def apply_prefix_with_conversion(prefix, key):
+    """
+    Apply prefix and convert key if necessary.
+
+    Examples:
+        ("Poster", "text_offset") -> "PosterTextOffset"
+        ("Poster", "AddBorder") -> "PosterAddBorder"
+        ("Poster", "fontAllCaps") -> "PosterFontAllCaps"
+    """
+    # Convert snake_case to PascalCase
+    if "_" in key:
+        key = snake_to_pascal(key)
+
+    # Ensure first letter is capitalized
+    if key and key[0].islower():
+        key = key[0].upper() + key[1:]
+
+    return f"{prefix}{key}"
+
+
+def remove_prefix_with_original_case(flat_key):
+    """
+    Remove prefix and restore original case from ORIGINAL_KEYS mapping.
+
+    Examples:
+        "PosterTextOffset" -> "text_offset"
+        "PosterAddBorder" -> "AddBorder"
+        "PosterTextGravity" -> "TextGravity"
+    """
+    # Check if we have the exact mapping
+    if flat_key in ORIGINAL_KEYS:
+        return ORIGINAL_KEYS[flat_key]
+
+    # Fallback: try to infer the original key
+    # This should rarely be needed if ORIGINAL_KEYS is complete
+    logger.warning(f"No mapping found for '{flat_key}', using fallback logic")
+
+    # Try to find the prefix
+    for prefix in [
+        "CollectionPoster",
+        "CollectionTitle",
+        "SeasonPoster",
+        "TitleCardTitle",
+        "TitleCardEP",
+        "TitleCard",
+        "ShowTitle",
+        "Background",
+        "Poster",
+    ]:
+        if flat_key.startswith(prefix):
+            storage_key = flat_key[len(prefix) :]
+            # Just lowercase first letter as fallback
+            if storage_key:
+                return storage_key[0].lower() + storage_key[1:]
+            return storage_key
+
+    return flat_key
+
+
+# =============================================================================
+# CONFIG GROUPS MAPPING
+# =============================================================================
 
 # Complete mapping of all config variables to their groups
 CONFIG_GROUPS = {
+    # WebUI Settings
+    "basicAuthEnabled": "WebUI",
+    "basicAuthUsername": "WebUI",
+    "basicAuthPassword": "WebUI",
     # ApiPart
     "tvdbapi": "ApiPart",
     "tmdbtoken": "ApiPart",
@@ -249,6 +491,11 @@ CONFIG_GROUPS = {
 
 # UI Grouping for better organization
 UI_GROUPS = {
+    "WebUI Settings": [
+        "basicAuthEnabled",
+        "basicAuthUsername",
+        "basicAuthPassword",
+    ],
     "General Settings": [
         "AssetPath",
         "BackupPath",
@@ -541,63 +788,27 @@ def flatten_config(grouped_config):
                 else:
                     flat_key = key
             else:
-                # For unique keys in specific groups, add prefixes for clarity
+                # Use the new helper function for prefix application with proper case conversion
                 if group_name == "PosterOverlayPart":
-                    flat_key = (
-                        f"Poster{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"Poster{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("Poster", key)
                 elif group_name == "SeasonPosterOverlayPart":
-                    flat_key = (
-                        f"SeasonPoster{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"SeasonPoster{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("SeasonPoster", key)
                 elif group_name == "BackgroundOverlayPart":
-                    flat_key = (
-                        f"Background{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"Background{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("Background", key)
                 elif group_name == "TitleCardOverlayPart":
-                    flat_key = (
-                        f"TitleCard{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"TitleCard{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("TitleCard", key)
                 elif group_name == "TitleCardTitleTextPart":
-                    flat_key = (
-                        f"TitleCardTitle{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"TitleCardTitle{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("TitleCardTitle", key)
                 elif group_name == "TitleCardEPTextPart":
-                    flat_key = (
-                        f"TitleCardEP{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"TitleCardEP{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("TitleCardEP", key)
                 elif group_name == "ShowTitleOnSeasonPosterPart":
-                    flat_key = (
-                        f"ShowTitle{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"ShowTitle{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("ShowTitle", key)
                 elif group_name == "CollectionTitlePosterPart":
-                    flat_key = (
-                        f"CollectionTitle{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"CollectionTitle{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("CollectionTitle", key)
                 elif group_name == "CollectionPosterOverlayPart":
-                    flat_key = (
-                        f"CollectionPoster{key[0].upper()}{key[1:]}"
-                        if key[0].islower()
-                        else f"CollectionPoster{key}"
-                    )
+                    flat_key = apply_prefix_with_conversion("CollectionPoster", key)
                 else:
-                    # For simple groups (ApiPart, Notification, etc.), use original key
+                    # For simple groups (ApiPart, Notification, WebUI, etc.), use original key
                     flat_key = key
 
             flat[flat_key] = value
@@ -620,14 +831,14 @@ def unflatten_config(flat_config):
 
         if not group_name:
             # Unknown key - try to determine group from prefix
-            print(f"Warning: Unknown config key '{key}' - skipping")
+            logger.warning(f"Unknown config key '{key}' - skipping")
             continue
 
         # Initialize group if it doesn't exist
         if group_name not in grouped:
             grouped[group_name] = {}
 
-        # Remove prefix for storage (reverse of flatten logic)
+        # Remove prefix for storage using the new helper function
         storage_key = key
 
         # Handle prefixed keys
@@ -651,61 +862,35 @@ def unflatten_config(flat_config):
                 storage_key = "UploadExistingAssets"
             elif key == "EmbyReplaceThumbwithBackdrop":
                 storage_key = "ReplaceThumbwithBackdrop"
+        # Use the new helper function to restore original case
         elif key.startswith("Poster") and group_name == "PosterOverlayPart":
-            storage_key = key[6:]  # Remove "Poster" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif key.startswith("SeasonPoster") and group_name == "SeasonPosterOverlayPart":
-            storage_key = key[12:]  # Remove "SeasonPoster" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif key.startswith("Background") and group_name == "BackgroundOverlayPart":
-            storage_key = key[10:]  # Remove "Background" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif (
             key.startswith("TitleCardTitle") and group_name == "TitleCardTitleTextPart"
         ):
-            storage_key = key[14:]  # Remove "TitleCardTitle" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif key.startswith("TitleCardEP") and group_name == "TitleCardEPTextPart":
-            storage_key = key[11:]  # Remove "TitleCardEP" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif key.startswith("TitleCard") and group_name == "TitleCardOverlayPart":
-            storage_key = key[9:]  # Remove "TitleCard" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif (
             key.startswith("ShowTitle") and group_name == "ShowTitleOnSeasonPosterPart"
         ):
-            storage_key = key[9:]  # Remove "ShowTitle" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif (
             key.startswith("CollectionTitle")
             and group_name == "CollectionTitlePosterPart"
         ):
-            storage_key = key[15:]  # Remove "CollectionTitle" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
         elif (
             key.startswith("CollectionPoster")
             and group_name == "CollectionPosterOverlayPart"
         ):
-            storage_key = key[16:]  # Remove "CollectionPoster" prefix
-            storage_key = (
-                storage_key[0].lower() + storage_key[1:] if storage_key else ""
-            )
+            storage_key = remove_prefix_with_original_case(key)
 
         grouped[group_name][storage_key] = value
 
@@ -714,6 +899,10 @@ def unflatten_config(flat_config):
 
 # Friendly display names for UI
 DISPLAY_NAMES = {
+    # WebUI Settings
+    "basicAuthEnabled": "Enable Basic Authentication",
+    "basicAuthUsername": "Basic Auth Username",
+    "basicAuthPassword": "Basic Auth Password",
     # API Keys & Tokens
     "tvdbapi": "TVDB API Key",
     "tmdbtoken": "TMDB API Token",
@@ -950,3 +1139,8 @@ DISPLAY_NAMES = {
 def get_display_name(key):
     """Get friendly display name for a config key"""
     return DISPLAY_NAMES.get(key, key.replace("_", " ").title())
+
+
+def get_tooltip(key):
+    """Get tooltip description for a config key"""
+    return CONFIG_TOOLTIPS.get(key, "")

@@ -10,6 +10,9 @@ RotatedLogs/
 Cache/
 *.zip
 
+# UI
+webui/frontend/node_modules
+
 # Dev
 .pester.yml
 .vscode/

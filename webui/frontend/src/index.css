@@ -366,8 +366,8 @@
   --plex-poster-unwatched: #6df751;
 }
 
-/* Overseerr Theme */
-[data-theme="overseerr"] {
+/* Seerr Theme */
+[data-theme="seerr"] {
   --theme-primary: #6366f1;
   --theme-primary-hover: #4f46e5;
   --theme-accent: #a78bfa;
@@ -484,25 +484,36 @@ code {
 }
 
 /* ========================================
-   CUSTOM SCROLLBAR
+   CUSTOM SCROLLBAR - HIDDEN
    ======================================== */
 
+/* Hide scrollbars for Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 0px;
+  height: 0px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--theme-bg-card);
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--theme-border);
-  border-radius: 5px;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-bg-hover);
+  display: none;
+}
+
+/* Hide scrollbars for Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* Hide scrollbars for IE and Edge Legacy */
+* {
+  -ms-overflow-style: none;
 }
 
 /* ========================================
@@ -713,4 +724,29 @@ select option:checked {
     var(--theme-primary)
   ) !important;
   color: white !important;
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY FOR MOBILE
+   ======================================== */
+
+/* H1 Titel auf Mobile kleiner machen */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem !important; /* 24px statt der normalen text-3xl (30px) */
+    line-height: 2rem !important;
+  }
+}
+
+/* Optional: Auch h2 und h3 anpassen */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.25rem !important; /* 20px */
+    line-height: 1.75rem !important;
+  }
+
+  h3 {
+    font-size: 1.125rem !important; /* 18px */
+    line-height: 1.5rem !important;
+  }
 }

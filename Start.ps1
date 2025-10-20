@@ -4,12 +4,38 @@ function ScriptSchedule {
     $Directory = Get-ChildItem -Name $inputDir
 
     if (!$env:RUN_TIME) {
-        $env:RUN_TIME = "05:00" # Set default value if not provided
+        $env:RUN_TIME = "disabled" # Set default value if not provided
     }
 
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
 
-    write-host "UI is being initialized this can take a minute..."
+    # Define the URL you want to check and the timeout settings.
+    Write-Host "UI is being initialized this can take a minute..."
+    $websiteUrl = "http://localhost:8000/"
+    $retryIntervalSeconds = 5
+    $maxWaitSeconds = 60
+    $UIstartTime = Get-Date
+    $isOnline = $false
+
+    # Loop until the website is online or the timeout is reached.
+    while (((Get-Date) - $UIstartTime).TotalSeconds -lt $maxWaitSeconds) {
+        try {
+            $response = Invoke-WebRequest -Uri $websiteUrl -UseBasicParsing -TimeoutSec $retryIntervalSeconds -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                $isOnline = $true
+                break # Exit the loop since the website is online.
+            }
+        }
+        catch {
+        }
+        Start-Sleep -Seconds $retryIntervalSeconds
+    }
+
+    # Final status message after the loop exits.
+    if ($isOnline) {
+        Write-Host "UI & Cache is now builded and online."
+    }
+
     Write-Host "File Watcher Started..."
     # Next Run
     while ($true) {
@@ -182,7 +208,41 @@ function CompareScriptVersion {
                 # Extract the version from the line
                 Write-Host ""
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
-                Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+
+                # Check if local version is greater than remote (development version)
+                $displayVersion = $version
+                if ($version -and $LatestScriptVersion) {
+                    try {
+                        $localParts = $version.Split('.') | ForEach-Object { [int]$_ }
+                        $remoteParts = $LatestScriptVersion.Split('.') | ForEach-Object { [int]$_ }
+
+                        # Compare versions (major.minor.patch)
+                        $isGreater = $false
+                        for ($i = 0; $i -lt [Math]::Min($localParts.Count, $remoteParts.Count); $i++) {
+                            if ($localParts[$i] -gt $remoteParts[$i]) {
+                                $isGreater = $true
+                                break
+                            }
+                            elseif ($localParts[$i] -lt $remoteParts[$i]) {
+                                break
+                            }
+                        }
+
+                        if ($isGreater) {
+                            $displayVersion = "$version-dev"
+                            Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion (Development version ahead of release)" -ForegroundColor Yellow
+                        }
+                        else {
+                            Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                        }
+                    }
+                    catch {
+                        Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                    }
+                }
+                else {
+                    Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                }
             }
         }
         else {
@@ -285,6 +345,52 @@ function CopyAssetFiles {
         }
     }
 }
+function Ensure-WebUIConfig {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$jsonFilePath
+    )
+
+    try {
+        # Define the default WebUI configuration object
+        $defaultWebUI = [PSCustomObject]@{
+            basicAuthEnabled = $false
+            basicAuthUsername = "admin"
+            basicAuthPassword = "posterizarr"
+        }
+
+        # Read the existing configuration file
+        $config = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+
+        $configChanged = $false
+
+        # Ensure the 'WebUI' top-level attribute exists
+        if (-not $config.PSObject.Properties.Name.Contains('WebUI')) {
+            $config | Add-Member -MemberType NoteProperty -Name 'WebUI' -Value $defaultWebUI
+            $configChanged = $true
+        }
+        # If 'WebUI' exists, ensure all its sub-attributes are present
+        else {
+            foreach ($key in $defaultWebUI.PSObject.Properties.Name) {
+                if (-not $config.WebUI.PSObject.Properties.Name.Contains($key)) {
+                    # Add the specific missing sub-attribute and its default value
+                    $config.WebUI | Add-Member -MemberType NoteProperty -Name $key -Value $defaultWebUI.$key
+                    $configChanged = $true
+                }
+            }
+        }
+
+        # If changes were made, convert the object back to JSON and save it
+        if ($configChanged) {
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $jsonFilePath -Force
+        }
+    }
+    catch {
+        Write-Error "An unexpected error occurred while processing '$jsonFilePath': $($_.Exception.Message)"
+    }
+}
 
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
@@ -351,15 +457,38 @@ CopyAssetFiles
 if (-not (test-path "$env:APP_DATA/config.json")) {
     Write-Host ""
     Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
-    Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
-    Write-Host "    After that restart the container..."
-    Write-Host "Waiting for config.json file to be created..."
+    Copy-Item "$env:APP_DATA/config.example.json" "$env:APP_DATA/config.json" -Force | out-null
+    Write-Host "Created a default 'config.json' file from 'config.example.json'" -ForegroundColor Yellow
+    Write-Host "Please edit the config.json according to GH repo to match your needs.." -ForegroundColor Yellow
     do {
         Start-Sleep 600
     } until (
         test-path "$env:APP_DATA/config.json"
     )
 }
+
+# Define file paths in variables for clarity and easy maintenance
+$configDir = "$env:APP_DATA"
+$configFile = Join-Path -Path $configDir -ChildPath "config.json"
+$exampleFile = Join-Path -Path $configDir -ChildPath "config.example.json"
+
+# Check if the config file exists
+if (-not (Test-Path $configFile)) {
+    Write-Warning "Configuration file not found at '$configFile'."
+
+    # Check if the example file exists before trying to copy it
+    if (Test-Path $exampleFile) {
+        Copy-Item -Path $exampleFile -Destination $configFile -Force | Out-Null
+        Write-Host "    A new 'config.json' has been created from the example." -ForegroundColor Green
+        Write-Host "    Please edit this file with your settings..." -ForegroundColor Yellow
+    }
+}
+
+# Rest of your script continues here, knowing the config file exists
+Write-Host "Config file found. Proceeding with script..."
+
+# Ensure WebUI config
+Ensure-WebUIConfig -jsonFilePath $configFile
 
 # Check temp dir if there is a Currently running file present
 $CurrentlyRunning = "$env:APP_DATA/temp/Posterizarr.Running"

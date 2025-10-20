@@ -1,0 +1,1738 @@
+{
+  "runModes": {
+    "scriptRunning": "Script is already running! Please stop it first.",
+    "startedMode": "Started in {{mode}} mode",
+    "manualModeSuccess": "Manual mode started successfully!",
+    "viewDocumentation": "View Full Documentation",
+    "validation": {
+      "imageRequired": "Please upload an image or provide a URL/path!",
+      "titleRequired": "Title Text is required!",
+      "folderRequired": "Folder Name is required!",
+      "libraryRequired": "Library Name is required!",
+      "seasonRequired": "Season Poster Name is required for season posters!",
+      "episodeTitleRequired": "Episode Title is required for title cards!",
+      "seasonNameRequired": "Season Name is required for title cards!",
+      "episodeNumberRequired": "Episode Number is required for title cards!",
+      "tmdbQueryRequired": "Please enter a search title or TMDB ID!",
+      "seasonNumberRequired": "Please enter a season number!",
+      "episodeInfoRequired": "Please enter season and episode numbers!",
+      "libraryNameRequired": "Please enter a library name!",
+      "yearRequiredForNumericTitle": "Year is required for numeric titles (e.g., '2012', '1917', '365 Days')"
+    },
+    "reset": {
+      "stopFirst": "The script must be stopped before resetting posters!",
+      "success": "Posters reset successfully!",
+      "confirmTitle": "Reset Posters",
+      "confirmMessage": "Are you sure you want to reset ALL posters in \"{{library}}\"? This action CANNOT be undone!\\n\\nAre you absolutely sure?",
+      "title": "Reset Posters",
+      "description": "Reset all posters in a Plex library to default",
+      "warning": "Warning:",
+      "warningText": "This will reset ALL posters in the specified library. This action CANNOT be undone! The script must be stopped before resetting posters.",
+      "placeholder": "Enter library name (e.g., Movies, TV Shows)",
+      "button": "Reset Posters"
+    },
+    "stop": {
+      "success": "Script stopped successfully",
+      "button": "Stop Script"
+    },
+    "tmdb": {
+      "title": "Search TMDB for",
+      "seasonPosters": "Season Posters",
+      "episodeImages": "Episode Images",
+      "tvShowPosters": "TV Show Posters",
+      "moviePosters": "Movie Posters",
+      "posters": "Posters",
+      "seasonHint": "Search for season-specific posters from TMDB",
+      "episodeHint": "Search for episode stills/screenshots from TMDB",
+      "titleHint": "Search by title or TMDB ID to find posters directly from TMDB",
+      "placeholder": "Enter movie/show title or TMDB ID...",
+      "searching": "Searching...",
+      "search": "Search",
+      "seasonNumber": "Season Number",
+      "episodeNumber": "Episode Number",
+      "seasonNumberHint": "💡 Enter the season number to find season-specific posters",
+      "episodeNumberHint": "💡 Enter season and episode numbers to find episode stills",
+      "noResults": "No posters found. Try a different search term.",
+      "posterSelected": "Poster URL set! 🎨",
+      "clickToSelect": "Click on a poster to select it for your manual poster creation",
+      "results": "TMDB Poster Results",
+      "seasonResults": "Season {{season}} Posters",
+      "episodeResults": "Episode {{season}}x{{episode}} Images",
+      "loadMore": "Load More ({{remaining}} remaining)",
+      "episodeStill": "EPISODE STILL",
+      "seasonPoster": "SEASON POSTER"
+    },
+    "quickRun": {
+      "title": "Quick Run Modes",
+      "normal": {
+        "title": "Normal Mode",
+        "description": "Run Posterizarr normally"
+      },
+      "testing": {
+        "title": "Testing Mode",
+        "description": "Generate sample posters"
+      },
+      "backup": {
+        "title": "Backup Mode",
+        "description": "Backup existing posters"
+      },
+      "syncJellyfin": {
+        "title": "Sync Jellyfin",
+        "description": "Sync posters to Jellyfin"
+      },
+      "syncEmby": {
+        "title": "Sync Emby",
+        "description": "Sync posters to Emby"
+      }
+    },
+    "manual": {
+      "title": "Manual Mode (Semi-Automated)",
+      "description": "Create or replace posters manually with full control over search, source, and metadata.",
+      "posterType": "Poster Type",
+      "types": {
+        "poster": "Poster",
+        "season": "Season",
+        "titleCard": "Title Card",
+        "background": "Background",
+        "collection": "Collection"
+      },
+      "mediaType": "Media Type",
+      "mediaTypes": {
+        "movie": "Movie",
+        "tv": "TV Show"
+      },
+      "mediaTypeHint": "Select whether you're searching for a movie or TV show poster",
+      "pictureSource": "Picture Source",
+      "uploadImage": "Upload Image",
+      "fileSelected": "File Selected",
+      "or": "or",
+      "urlPlaceholder": "Or enter URL/path: C:\\\\path\\\\to\\\\image.jpg or https://url.to/image.jpg",
+      "uploadHint": "Upload a local image file or enter a direct URL/path to the source image",
+      "titleText": "Title Text",
+      "titlePlaceholder": "The Martian",
+      "titleHint": "Title to display on the poster",
+      "folderName": "Folder Name",
+      "libraryName": "Library Name",
+      "seasonPosterName": "Season Poster Name",
+      "seasonPlaceholder": "Season 1",
+      "seasonHint": "Season name (e.g., \"Season 1\", \"Staffel 2\", \"Specials\")",
+      "episodeTitle": "Episode Title",
+      "episodeTitlePlaceholder": "Ozymandias",
+      "episodeTitleHint": "Episode title name (e.g., \"Ozymandias\", \"Pilot\")",
+      "seasonName": "Season Name",
+      "seasonNamePlaceholder": "Season 5",
+      "seasonNameHint": "Season name (e.g., \"Season 5\", \"Staffel 1\")",
+      "episodeNumber": "Episode Number",
+      "episodeNumberPlaceholder": "14",
+      "episodeNumberHint": "Episode number (e.g., \"14\", \"1\")",
+      "runButton": "Run Manual Mode",
+      "processing": "Processing...",
+      "tmdbSearchTitle": "TMDB {{type}} Search",
+      "tmdbTypeSeasonPosters": "Season Posters",
+      "tmdbTypeEpisodeImages": "Episode Images",
+      "tmdbTypeTvPosters": "TV Show Posters",
+      "tmdbTypeMoviePosters": "Movie Posters",
+      "tmdbTypePosters": "Posters",
+      "tmdbHintSeason": "Search for TV shows on TMDB to find season posters",
+      "tmdbHintTitleCard": "Search for TV shows on TMDB to find episode stills",
+      "tmdbHintStandard": "Search for movies or TV shows on TMDB to find posters",
+      "tmdbSearchPlaceholder": "Enter title or TMDB ID...",
+      "tmdbIdPlaceholder": "Enter TMDB ID (e.g., 530915 for '1917')...",
+      "searchByIdLabel": "Search by TMDB ID",
+      "searchByIdHint": "Year not required when searching by ID",
+      "searchByIdWarning": "Make sure to select the correct media type (Movie or TV) for the TMDB ID",
+      "yearLabel": "Year (optional)",
+      "numericTitleWarning": "Numeric title detected - Year is required for accurate search",
+      "tmdbSearchButton": "Search",
+      "tmdbSearching": "Searching...",
+      "howItWorks": "How Manual Mode works:",
+      "step1": "The source picture is moved (if local) or downloaded (if URL)",
+      "step2": "Image is edited with your configured overlays and text",
+      "step3": "Final poster is placed in the asset location",
+      "step4": "Poster is synced to your media server",
+      "viewDocs": "View Full Documentation"
+    },
+    "jellyfin": {
+      "title": "Jellyfin Sync Mode",
+      "description": "Sync all artwork from Plex to Jellyfin",
+      "syncInfo": "This mode will synchronize every artwork you have in Plex to your Jellyfin server.",
+      "howItWorks": "How Jellyfin Sync works:",
+      "step1Title": "Library Names Must Match",
+      "step1Text": "The script requires that library names in Plex and Jellyfin match exactly for the sync to work.",
+      "step2Title": "Hash Calculation",
+      "step2Text": "The script calculates the hash of artwork from both servers to determine if there are differences.",
+      "step3Title": "Smart Sync",
+      "step3Text": "Only syncs artwork if the hashes don't match, saving time and bandwidth.",
+      "tip": "💡 Tip: This is handy if you want to run the sync after a Kometa run, so you have Kometa overlayed images in Jellyfin.",
+      "important": "Important: Make sure both UseJellyfin and UsePlex are set to true in your config.json, and that library names match exactly.",
+      "cancel": "Cancel",
+      "start": "Start Jellyfin Sync"
+    },
+    "emby": {
+      "title": "Emby Sync Mode",
+      "description": "Sync all artwork from Plex to Emby",
+      "syncInfo": "This mode will synchronize every artwork you have in Plex to your Emby server.",
+      "howItWorks": "How Emby Sync works:",
+      "step1Title": "Library Names Must Match",
+      "step1Text": "The script requires that library names in Plex and Emby match exactly for the sync to work.",
+      "step2Title": "Hash Calculation",
+      "step2Text": "The script calculates the hash of artwork from both servers to determine if there are differences.",
+      "step3Title": "Smart Sync",
+      "step3Text": "Only syncs artwork if the hashes don't match, saving time and bandwidth.",
+      "tip": "💡 Tip: This is handy if you want to run the sync after a Kometa run, so you have Kometa overlayed images in Emby.",
+      "important": "Important: Make sure both UseEmby and UsePlex are set to true in your config.json, and that library names match exactly.",
+      "cancel": "Cancel",
+      "start": "Start Emby Sync"
+    },
+    "status": {
+      "running": "Script Running",
+      "stopFirst": "Stop the script before running another mode",
+      "stopButton": "Stop Script",
+      "scriptRunning": "Script is currently running",
+      "mode": "Mode:"
+    },
+    "required": "*",
+    "hints": {
+      "standard": {
+        "folderLabel": "Folder Name",
+        "folderPlaceholder": "The Martian (2015) {tmdb-286217}",
+        "folderDescription": "Exact folder name of the movie (as it appears in your Plex library)",
+        "libraryPlaceholder": "Movies",
+        "libraryDescription": "Name of the Plex library (e.g., Movies, TV Shows)"
+      },
+      "season": {
+        "folderLabel": "TV Show Folder Name",
+        "folderPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+        "folderDescription": "Exact folder name of the TV show (as it appears in your Plex library)",
+        "libraryPlaceholder": "TV Shows",
+        "libraryDescription": "Name of the Plex library (e.g., TV Shows, Anime)"
+      },
+      "titlecard": {
+        "folderLabel": "TV Show Folder Name",
+        "folderPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+        "folderDescription": "Exact folder name of the TV show (as it appears in your Plex library)",
+        "libraryPlaceholder": "TV Shows",
+        "libraryDescription": "Name of the Plex library (e.g., TV Shows, Anime)"
+      },
+      "background": {
+        "folderLabel": "Folder Name",
+        "folderPlaceholder": "The Martian (2015) {tmdb-286217}",
+        "folderDescription": "Exact folder name of the movie/show (as it appears in your Plex library)",
+        "libraryPlaceholder": "Movies",
+        "libraryDescription": "Name of the Plex library (e.g., Movies, TV Shows)"
+      },
+      "collection": {
+        "libraryPlaceholder": "Movies",
+        "libraryDescription": "Name of the Plex library where the collection exists"
+      },
+      "folderNameLabel": "Folder Name",
+      "tvShowPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+      "tvShowDescription": "Exact folder name of the TV show (as it appears in your Plex library)",
+      "tvLibraryPlaceholder": "TV Shows",
+      "tvLibraryDescription": "Name of the Plex library (e.g., TV Shows, Anime)",
+      "collectionLabel": "Collection Name",
+      "collectionPlaceholder": "Marvel Cinematic Universe",
+      "collectionDescription": "Exact name of the collection (as it appears in your Plex library)",
+      "collectionLibraryDescription": "Name of the Plex library where the collection exists",
+      "moviePlaceholder": "The Martian (2015) {tmdb-286217}",
+      "movieDescription": "Exact folder name of the movie (as it appears in your Plex library)",
+      "movieLibraryPlaceholder": "Movies",
+      "movieLibraryDescription": "Name of the Plex library (e.g., Movies, TV Shows)",
+      "defaultDescription": "Exact folder name (as it appears in your Plex library)"
+    }
+  },
+  "releasesSection": {
+    "title": "Releases",
+    "fetchFailed": "Failed to fetch releases",
+    "fetchError": "Failed to connect to API",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{days}} days ago",
+    "latest": "Latest",
+    "preRelease": "Pre-release",
+    "viewChangelog": "View Changelog",
+    "error": "Error",
+    "noReleases": "No releases found"
+  },
+  "overlayAssets": {
+    "description": "Manage overlay files (Images: PNG, JPEG | Fonts: TTF, OTF, WOFF, WOFF2)",
+    "loadFailed": "Failed to load overlay files",
+    "loadError": "Failed to load overlay files: {{message}}",
+    "invalidFileType": "Invalid file type. Only PNG, JPEG, TTF, OTF, WOFF, and WOFF2 files are allowed.",
+    "fileTooLarge": "File size too large. Maximum size is 10MB.",
+    "uploadSuccess": "File uploaded successfully",
+    "uploadFailed": "Failed to upload file",
+    "uploadError": "Failed to upload file: {{message}}",
+    "deleteSuccess": "File deleted successfully",
+    "deleteFailed": "Failed to delete file",
+    "deleteError": "Failed to delete file: {{message}}",
+    "uploadTitle": "Upload Overlay File",
+    "uploading": "Uploading...",
+    "clickToUpload": "Click to upload a file",
+    "uploadHint": "Images: PNG, JPEG (max 10MB) | Fonts: TTF, OTF, WOFF, WOFF2",
+    "filesTitle": "Overlay Files",
+    "all": "All",
+    "images": "Images",
+    "fonts": "Fonts",
+    "image": "image",
+    "font": "font",
+    "loading": "Loading...",
+    "refresh": "Refresh",
+    "noFiles": "No overlay files found",
+    "uploadFirst": "Upload your first overlay file to get started",
+    "noFilteredFiles": "No {{type}} files found",
+    "uploadOrChangeFilter": "Upload a {{type}} file or change the filter",
+    "preview": "Preview",
+    "delete": "Delete",
+    "download": "Download",
+    "imagePreview": "Image Preview",
+    "fontPreview": "Font Preview",
+    "filename": "Filename",
+    "failedToLoad": "Failed to load image",
+    "uppercase": "Uppercase",
+    "lowercase": "Lowercase",
+    "numbers": "Numbers",
+    "sample": "Sample",
+    "fontInfo": "Font Information",
+    "type": "Type",
+    "size": "Size",
+    "close": "Close",
+    "deleteTitle": "Delete File",
+    "deleteConfirm": "Are you sure you want to delete this file?",
+    "cancel": "Cancel",
+    "uploadPreview": "Upload Preview",
+    "fontFile": "Font File"
+  },
+  "assetsManager": {
+    "testGallery": "Test Gallery",
+    "overlayAssets": "Overlay Assets"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "runModes": "Run Modes",
+    "runtimeHistory": "Runtime History",
+    "assets": "Assets",
+    "config": "Configuration",
+    "galleries": "Galleries",
+    "scheduler": "Scheduler",
+    "logs": "Logs",
+    "about": "About",
+    "howItWorks": "How It Works",
+    "autoTriggers": "Auto Triggers",
+    "assetOverview": "Asset Overview",
+    "assetReplacer": "Asset Replacer",
+    "assetsManager": "Assets Manager",
+    "generalSettings": "General Settings",
+    "library": "Library",
+    "notifications": "Notifications",
+    "security": "Security",
+    "advanced": "Advanced",
+    "backgrounds": "Backgrounds",
+    "titleCards": "Title Cards",
+    "seasons": "Seasons",
+    "folderView": "Folder View"
+  },
+  "scrollButtons": {
+    "scrollToTop": "Scroll to top",
+    "scrollToBottom": "Scroll to bottom"
+  },
+  "validateButton": {
+    "validating": "Validating..."
+  },
+  "versionBadge": {
+    "upToDate": "Up to Date",
+    "version": "Version",
+    "updateAvailable": "Update available!",
+    "clickForReleases": "Click here to get to the Github Releases.",
+    "currentVersion": "✓ Current version installed"
+  },
+  "topNavbar": {
+    "changeTheme": "Change Theme",
+    "selectTheme": "Select Theme",
+    "userMenu": "User Menu",
+    "signOut": "Sign Out",
+    "userProfile": "User Profile"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Monitor your Posterizarr instance",
+    "status": "Status",
+    "running": "Running",
+    "stopped": "Stopped",
+    "start": "Run Script",
+    "stop": "Stop Script",
+    "refresh": "Refresh Status",
+    "logs": "Logs",
+    "clearLogs": "Clear Logs",
+    "autoScroll": "Auto Scroll",
+    "scriptStatus": "Script Status",
+    "scriptFile": "Script File",
+    "configFile": "Config File",
+    "configExists": "Config Exists",
+    "scriptExists": "Script Exists",
+    "currentMode": "Current Mode",
+    "activeLog": "Active Log",
+    "pid": "Process ID",
+    "found": "Found",
+    "missing": "Missing",
+    "mode": "Mode",
+    "local": "Local",
+    "remote": "Remote",
+    "checkUpdates": "Check for Updates",
+    "lastRun": "Last Run",
+    "version": "Version",
+    "localVersion": "Local Version",
+    "remoteVersion": "Remote Version",
+    "upToDate": "Up to Date",
+    "updateAvailable": "Update Available",
+    "websocketConnected": "WebSocket Connected",
+    "websocketDisconnected": "WebSocket Disconnected",
+    "recentAssets": "Recently Added",
+    "systemInfo": "System Information",
+    "runtimeStats": "Runtime Statistics",
+    "dangerZone": "Danger Zone",
+    "alreadyRunning": "Another Posterizarr Instance Already Running",
+    "alreadyRunningDesc": "The script detected another instance. If this is a false positive, delete the running file below.",
+    "deleteRunningFile": "Delete Running File",
+    "noLogs": "No logs available",
+    "viewFullLogs": "View Full Logs",
+    "customize": "Customize",
+    "runScript": "Run Script",
+    "deleteConfirmTitle": "Delete Running File?",
+    "deleteConfirmMessage": "Are you sure you want to delete the running file?",
+    "deleteSuccess": "Running file deleted successfully",
+    "deleteError": "Error deleting running file",
+    "liveLogFeed": "Live Log Feed",
+    "readingFrom": "Reading from",
+    "linesLoaded": "lines loaded",
+    "autoScrollEnabled": "Auto-scroll enabled",
+    "autoScrollDisabled": "Auto-scroll disabled",
+    "waitingForLogs": "Waiting for logs...",
+    "startRunToSeeLogs": "Please start a run to see logs here",
+    "autoRefresh": "Auto-refresh",
+    "live": "Live",
+    "lastEntries": "Last {{count}} entries",
+    "noActiveLog": "No active log",
+    "statusCards": "Status Cards",
+    "customizeDescription": "Show or hide dashboard sections • Drag to reorder"
+  },
+  "config": {
+    "title": "Configuration",
+    "save": "Save",
+    "cancel": "Cancel",
+    "reset": "Reset",
+    "validate": "Validate",
+    "validating": "Validating...",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "saveSuccess": "Configuration saved successfully",
+    "saveError": "Error saving configuration",
+    "loadError": "Error loading configuration",
+    "validateSuccess": "Configuration is valid",
+    "validateError": "Configuration contains errors",
+    "confirmReset": "Are you sure you want to reset the configuration?",
+    "resetWarning": "All unsaved changes will be lost."
+  },
+  "assets": {
+    "title": "Assets",
+    "overview": "Overview",
+    "replacer": "Replacer",
+    "overlay": "Overlays",
+    "total": "Total",
+    "missing": "Missing",
+    "withIssues": "With Issues",
+    "backgrounds": "Backgrounds",
+    "titleCards": "Title Cards",
+    "seasons": "Seasons",
+    "posters": "Posters",
+    "collections": "Collections",
+    "upload": "Upload",
+    "delete": "Delete",
+    "replace": "Replace",
+    "download": "Download",
+    "preview": "Preview",
+    "search": "Search",
+    "filter": "Filter",
+    "sortBy": "Sort by",
+    "name": "Name",
+    "date": "Date",
+    "size": "Size",
+    "type": "Type",
+    "noAssets": "No assets found",
+    "loading": "Loading assets...",
+    "uploadSuccess": "Asset uploaded successfully",
+    "uploadError": "Error uploading asset",
+    "deleteSuccess": "Asset deleted successfully",
+    "deleteError": "Error deleting asset",
+    "confirmDelete": "Are you sure you want to delete this asset?"
+  },
+  "notification": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Info"
+  },
+  "logViewer": {
+    "scriptStopped": "Script stopped successfully",
+    "error": "Error: {{message}}",
+    "logsRefreshed": "Log files refreshed",
+    "refreshFailed": "Failed to refresh log files",
+    "loadFailed": "Failed to load {{name}}",
+    "switchedTo": "Switched to {{file}}",
+    "disconnected": "Live feed disconnected. Reconnecting...",
+    "logsCleared": "Logs cleared",
+    "downloaded": "Log file downloaded",
+    "downloadFailed": "Failed to download log file",
+    "status": {
+      "live": "Live",
+      "reconnecting": "Reconnecting...",
+      "disconnected": "Disconnected"
+    },
+    "scriptRunning": "Script is running",
+    "mode": "Mode",
+    "stopBeforeRunning": "Stop the script before running another mode",
+    "stopScript": "Stop Script",
+    "selectLogFile": "Select Log File",
+    "autoScroll": "Auto-scroll",
+    "refresh": "Refresh",
+    "download": "Download",
+    "clear": "Clear",
+    "showingLast": "Showing last 1000 entries",
+    "entries": "{{count}} entries",
+    "noLogs": "No logs to display",
+    "startScript": "Start a script or select a different log file",
+    "logEntries": "{{count}} log entries",
+    "autoScrollStatus": "Auto-scroll: {{status}}",
+    "on": "On",
+    "off": "Off",
+    "receivingUpdates": "Receiving live updates"
+  },
+  "libraryExclusion": {
+    "configNotFound": "Media server configuration not found",
+    "fetchFailed": "Failed to fetch libraries",
+    "fetchError": "Error fetching libraries: {{message}}",
+    "disabled": "Library selection is currently disabled",
+    "disabledHint": "Enable {{server}} server or {{server}}Sync to access this feature",
+    "fetchLibraries": "Fetch Libraries",
+    "refreshLibraries": "Refresh Libraries",
+    "includeAll": "Include All",
+    "excludeAll": "Exclude All",
+    "errorTitle": "Failed to fetch libraries",
+    "fetching": "Fetching libraries from {{server}}...",
+    "selectToExclude": "Select libraries to <strong>exclude</strong> from processing:",
+    "excluded": "Excluded",
+    "included": "Included",
+    "clickToFetch": "Click \"Fetch Libraries\" to load libraries from your {{server}} server.",
+    "noLibraries": "No movie or TV show libraries found on this server.",
+    "excludedCount": "Excluded Libraries ({{count}}):"
+  },
+  "languageOrderSelector": {
+    "noLanguages": "No languages selected. Add languages using the dropdown below.",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeLanguage": "Remove language",
+    "addLanguage": "Add Language",
+    "currentOrder": "Current Order:"
+  },
+  "imageSizeSlider": {
+    "imageSize": "Image Size"
+  },
+  "galleryHub": {
+    "viewMode": "View Mode",
+    "gridDescription": "Browse all assets by type (posters, backgrounds, seasons, titlecards)",
+    "folderDescription": "Browse assets by navigating through libraries and folders",
+    "gridView": "Grid View",
+    "folderView": "Folder View"
+  },
+  "howItWorks": {
+    "header": {
+      "title": "How Posterizarr Works",
+      "subtitle": "Automated poster management for your media library with intelligent overlay application and seamless integration"
+    },
+    "workflow": {
+      "title": "The Workflow"
+    },
+    "steps": {
+      "libraryScanning": {
+        "title": "Library Scanning",
+        "description": "Posterizarr autonomously scans your Plex, Jellyfin, or Emby server for libraries and media content.",
+        "details": [
+          "Automatic library discovery",
+          "Multi-version support (theatrical cuts, director's cuts)",
+          "CSV export of media data",
+          "Library exclusion options"
+        ]
+      },
+      "artworkDiscovery": {
+        "title": "Artwork Discovery",
+        "description": "Searches multiple sources for high-quality artwork based on your language preferences.",
+        "details": [
+          "Sources: Fanart.tv, TMDB, TVDB, Plex, IMDb",
+          "Textless images prioritized",
+          "Configurable language ordering",
+          "Resolution filtering (2000x3000 posters, 3840x2160 backgrounds)"
+        ]
+      },
+      "imageProcessing": {
+        "title": "Image Processing",
+        "description": "Transforms downloaded artwork with custom overlays, text, borders, and effects.",
+        "details": [
+          "Automatic resizing to optimal dimensions",
+          "Custom overlay application",
+          "Text rendering with multiple fonts",
+          "Border and gradient effects"
+        ]
+      },
+      "assetOrganization": {
+        "title": "Asset Organization",
+        "description": "Organizes processed assets using Kometa-compatible folder structure for seamless integration.",
+        "details": [
+          "Kometa folder structure support",
+          "Library folder organization",
+          "Manual asset path priority",
+          "Asset cleanup for deleted media"
+        ]
+      },
+      "mediaServerUpload": {
+        "title": "Media Server Upload",
+        "description": "Directly uploads finished artwork to your media server or stores for Kometa integration.",
+        "details": [
+          "Direct upload to Plex/Jellyfin/Emby",
+          "Smart hash validation to skip duplicates",
+          "EXIF metadata tagging",
+          "Existing asset upload support"
+        ]
+      }
+    },
+    "assetTypes": {
+      "title": "Supported Asset Types",
+      "posters": {
+        "title": "Movie/Show Posters",
+        "description": "High-quality 2000x3000 posters"
+      },
+      "backgrounds": {
+        "title": "Backgrounds",
+        "description": "Stunning 3840x2160 backgrounds"
+      },
+      "seasons": {
+        "title": "Season Posters",
+        "description": "Organized season artwork"
+      },
+      "titleCards": {
+        "title": "Title Cards",
+        "description": "Episode title cards in 16:9"
+      }
+    },
+    "features": {
+      "title": "Key Features",
+      "multiSource": {
+        "title": "Multi-Source Discovery",
+        "text": "Searches Fanart.tv, TMDB, TVDB, Plex, and IMDb"
+      },
+      "customOverlays": {
+        "title": "Custom Overlays",
+        "text": "Apply borders, text, and gradient effects"
+      },
+      "smartFiltering": {
+        "title": "Smart Filtering",
+        "text": "Resolution and language preference filtering"
+      },
+      "autoSync": {
+        "title": "Auto-Sync",
+        "text": "Sync artwork between media servers"
+      },
+      "kometaCompatible": {
+        "title": "Kometa Compatible",
+        "text": "Seamless integration with Kometa folder structure"
+      },
+      "crossPlatform": {
+        "title": "Cross-Platform",
+        "text": "Works on Docker, Linux, Windows, macOS, and ARM"
+      }
+    },
+    "showcase": {
+      "title": "See It In Action",
+      "posterizarrOutput": "Posterizarr Output",
+      "posterizarrDescription": "High-quality artwork automatically downloaded and processed with your custom overlays",
+      "kometaIntegration": "After Kometa Integration",
+      "kometaDescription": "Final results in your media server with additional Kometa overlays applied"
+    },
+    "cta": {
+      "title": "Ready to Transform Your Library?",
+      "description": "Posterizarr handles everything from artwork discovery to media server upload, giving you beautiful, consistent artwork across your entire collection.",
+      "installationGuide": "View Installation Guide",
+      "viewOnGitHub": "View on GitHub"
+    },
+    "technical": {
+      "title": "Technical Highlights",
+      "smartCaching": "<strong>Smart Caching:</strong> Only creates missing artwork, skipping existing assets",
+      "hashValidation": "<strong>Hash Validation:</strong> Prevents duplicate uploads using EXIF metadata",
+      "rtlSupport": "<strong>RTL Support:</strong> Right-to-left font rendering for Arabic & Hebrew",
+      "backupMode": "<strong>Backup Mode:</strong> Download and backup all existing Plex artwork",
+      "automatedCleanup": "<strong>Automated Cleanup:</strong> Removes assets when media is deleted",
+      "multipleTriggers": "<strong>Multiple Triggers:</strong> Tautulli, Sonarr, Radarr integration"
+    }
+  },
+  "gallery": {
+    "title": "Gallery",
+    "viewMode": "View Mode",
+    "grid": "Grid",
+    "list": "List",
+    "folder": "Folder",
+    "imageSize": "Image Size",
+    "showInfo": "Show Info",
+    "hideInfo": "Hide Info",
+    "fullscreen": "Fullscreen",
+    "previous": "Previous",
+    "next": "Next",
+    "loading": "Loading gallery...",
+    "noImages": "No images found",
+    "error": "Error loading gallery",
+    "folders": "Folders",
+    "cancelSelect": "Cancel Select",
+    "select": "Select",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search posters in {{folder}}...",
+    "loadingFolders": "Loading folders...",
+    "errorLoadingGallery": "Error Loading Poster Gallery",
+    "tryAgain": "Try Again",
+    "noFoldersFound": "No Folders Found",
+    "noFoldersDescription": "No folders found in assets directory. Please check your configuration.",
+    "loadingPosters": "Loading posters...",
+    "noMatchingPosters": "No Matching Posters",
+    "noPostersFound": "No Posters Found",
+    "adjustSearch": "Try adjusting your search terms to find what you're looking for",
+    "noPostersInFolder": "No posters found in {{folder}}",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selected": "{{count}} selected",
+    "deleteSelected": "Delete Selected ({{count}})",
+    "showing": "Showing {{displayed}} of {{total}} posters in {{folder}}",
+    "filteredFrom": "Filtered from {{total}} total",
+    "deletePoster": "Delete poster",
+    "replaceAsset": "Replace asset",
+    "itemsPerPage": "Items per page",
+    "loadMore": "Load More",
+    "remaining": "{{count}} remaining",
+    "loadAll": "Load All",
+    "total": "{{count}} total",
+    "replace": "Replace",
+    "delete": "Delete",
+    "previewNotAvailable": "Image preview not available",
+    "useFileExplorer": "Use file explorer to view poster",
+    "size": "Size",
+    "close": "Close",
+    "deleteMultipleTitle": "Delete Multiple Posters",
+    "deletePosterTitle": "Delete Poster",
+    "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected poster(s)?",
+    "deletePosterMessage": "Are you sure you want to delete this poster?",
+    "deleteButton": "Delete",
+    "foldersLoaded": "{{folderCount}} folder(s) loaded with {{posterCount}} poster(s)",
+    "foldersFound": "{{count}} folder(s) found with 0 posters",
+    "loadFoldersError": "Failed to load folders",
+    "postersLoaded": "Loaded {{count}} posters from {{folder}}",
+    "loadImagesError": "Failed to load images from {{folder}}",
+    "posterDeleted": "Poster \"{{name}}\" deleted successfully",
+    "deleteError": "Error while deleting: {{message}}",
+    "bulkDeletePartial": "Deleted {{deleted}} poster(s), but {{failed}} failed.",
+    "bulkDeleteSuccess": "Successfully deleted {{count}} poster(s)",
+    "assetReplaced": "Asset replaced successfully!"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Info"
+  },
+  "runtimeHistory": {
+    "title": "Runtime History",
+    "migrationAvailable": "Historical Data Migration Available",
+    "migrationDescription": "Runtime data from your existing log files can be imported into the database. This will preserve historical statistics and make them queryable.",
+    "migrationInfo": "💡 Migration runs automatically on first database creation, or you can trigger it manually below.",
+    "migrating": "Migrating...",
+    "runMigration": "Run Migration",
+    "importing": "Importing...",
+    "importJson": "Import JSON",
+    "summary": "Summary (Last {{days}} Days)",
+    "days": "{{count}} Days",
+    "totalRuns": "Total Runs",
+    "totalImages": "Total Images",
+    "totalCollections": "Total Collections",
+    "totalSpaceSaved": "Total Space Saved",
+    "avgRuntime": "Avg Runtime",
+    "totalErrors": "Total Errors",
+    "runsByMode": "Runs by Mode",
+    "allModes": "All Modes",
+    "modes": {
+      "normal": "Normal",
+      "testing": "Testing",
+      "manual": "Manual",
+      "scheduled": "Scheduled",
+      "backup": "Backup",
+      "syncjelly": "Sync Jellyfin",
+      "syncemby": "Sync Emby",
+      "reset": "Reset",
+      "tautulli": "Tautulli",
+      "arr": "Arr"
+    },
+    "refreshHistory": "Refresh history",
+    "clickForDetails": "Click to view details",
+    "detailTitle": "Run Details",
+    "table": {
+      "timestamp": "Timestamp",
+      "mode": "Mode",
+      "runtime": "Runtime",
+      "images": "Images",
+      "posters": "Posters",
+      "seasons": "Seasons",
+      "backgrounds": "Backgrounds",
+      "titlecards": "TitleCards",
+      "collections": "Collections",
+      "errors": "Errors"
+    },
+    "noEntries": "No history entries found",
+    "pagination": {
+      "page": "Page {{page}} • Showing {{count}} entries",
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "schedulerSettings": {
+    "loading": "Loading scheduler settings...",
+    "updating": "Updating...",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "containerUsersOnly": "Container Users Only",
+    "containerUsersInfo": "Check your container settings or compose file BEFORE enabling the button here. Use the container runtime environment variable RUN_TIME for scheduling, or use the UI schedules by enabling the scheduler on this page.",
+    "lastRun": "Last Run",
+    "nextRun": "Next Run",
+    "never": "Never",
+    "status": {
+      "running": "Running",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "configuration": "Configuration",
+    "timezone": "Timezone",
+    "timezoneDescription": "Set the timezone for scheduled runs. All times are displayed in your browser's timezone automatically.",
+    "skipIfRunning": "Skip scheduled runs if already running",
+    "skipIfRunningDesc": "Prevents overlapping executions",
+    "restartScheduler": "Restart Scheduler",
+    "runNow": "Run Now",
+    "schedules": "Schedules",
+    "clearAll": "Clear All",
+    "confirmClearAllTitle": "Clear All Schedules",
+    "confirmClearAllMessage": "Are you sure you want to clear all schedules? This cannot be undone.",
+    "timePlaceholder": "HH:MM (e.g., 14:30)",
+    "descriptionPlaceholder": "Description (optional)",
+    "add": "Add",
+    "removeSchedule": "Remove schedule",
+    "noSchedulesConfigured": "No schedules configured",
+    "addScheduleHint": "Add a schedule above to get started",
+    "activeJobs": "Active Jobs",
+    "next": "Next",
+    "success": {
+      "scheduleAdded": "Schedule added",
+      "scheduleRemoved": "Schedule removed",
+      "allCleared": "All schedules cleared",
+      "timezoneUpdated": "Timezone updated",
+      "willSkip": "Will skip if already running",
+      "willAllow": "Will allow concurrent runs",
+      "manualRunTriggered": "Manual run triggered",
+      "schedulerRestarted": "Scheduler restarted",
+      "schedulerEnabled": "Scheduler enabled",
+      "schedulerDisabled": "Scheduler disabled"
+    },
+    "errors": {
+      "loadData": "Failed to load scheduler data",
+      "updateScheduler": "Failed to update scheduler",
+      "enterTime": "Please enter a time",
+      "addSchedule": "Failed to add schedule",
+      "removeSchedule": "Failed to remove schedule",
+      "clearSchedules": "Failed to clear schedules",
+      "updateTimezone": "Failed to update timezone",
+      "updateConfig": "Failed to update configuration",
+      "triggerRun": "Failed to trigger run",
+      "restartScheduler": "Failed to restart scheduler"
+    }
+  },
+  "testGallery": {
+    "success": {
+      "filesLoaded": "Loaded {{count}} test files",
+      "testModeStarted": "Test Mode started successfully!"
+    },
+    "errors": {
+      "scriptRunning": "Script is already running! Please stop it first.",
+      "loadFailed": "Failed to load test gallery",
+      "withMessage": "Failed to start Test Mode: {{message}}"
+    },
+    "open": "Open",
+    "closed": "Closed",
+    "previewUnavailable": "Preview unavailable",
+    "imagePreviewNotAvailable": "Image preview not available",
+    "refresh": "Refresh",
+    "startTestMode": "Start Test Mode",
+    "scriptRunning": "Script is running",
+    "mode": "Mode:",
+    "unknown": "Unknown",
+    "searchPlaceholder": "Search test files...",
+    "loading": "Loading test gallery...",
+    "errorLoadingTitle": "Error Loading Test Gallery",
+    "noFilesTitle": "No Test Files Found",
+    "noFilesSearchHint": "No test files match your search",
+    "noFilesHint": "Run the script in Testing mode to generate test images",
+    "total": "Total:",
+    "testFiles": "Test files",
+    "filteredFrom": "(filtered from {{total}} total)",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "size": "Size:",
+    "close": "Close",
+    "categories": {
+      "posters": "Posters",
+      "postersDesc": "Standard movie and TV series posters",
+      "backgrounds": "Backgrounds",
+      "backgroundsDesc": "Background images for series and movies",
+      "seasonPosters": "Season Posters",
+      "seasonPostersDesc": "Posters for individual TV series seasons",
+      "titleCards": "Title Cards",
+      "titleCardsDesc": "Episode title cards for TV series"
+    }
+  },
+  "seasonGallery": {
+    "folders": "Folders",
+    "select": "Select",
+    "cancelSelect": "Cancel Select",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search seasons in {{folderName}}...",
+    "loadingFolders": "Loading folders...",
+    "errorLoadingTitle": "Error Loading Season Gallery",
+    "tryAgain": "Try Again",
+    "noFoldersTitle": "No Folders Found",
+    "noFoldersDescription": "No folders found in assets directory. Please check your configuration.",
+    "loadingSeasons": "Loading seasons...",
+    "noMatchingTitle": "No Matching Seasons",
+    "noMatchingDescription": "Try adjusting your search terms to find what you're looking for",
+    "noSeasonsTitle": "No Seasons Found",
+    "noSeasonsDescription": "No seasons found in {{folderName}}",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectedCount": "{{count}} selected",
+    "deleteSelected": "Delete Selected ({{count}})",
+    "showing": "Showing {{displayed}} of {{total}} seasons in {{folderName}}",
+    "filteredFrom": "Filtered from {{total}} total",
+    "deleteSeason": "Delete season",
+    "replaceAsset": "Replace asset",
+    "itemsPerPage": "Items per page:",
+    "loadMore": "Load More",
+    "remaining": "{{count}} remaining",
+    "loadAll": "Load All",
+    "total": "{{count}} total",
+    "replace": "Replace",
+    "delete": "Delete",
+    "imageNotAvailable": "Image preview not available",
+    "useFileExplorer": "Use file explorer to view season",
+    "size": "Size: {{size}} KB",
+    "close": "Close",
+    "deleteMultipleTitle": "Delete Multiple Seasons",
+    "deleteSeasonTitle": "Delete Season Poster",
+    "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected season(s)?",
+    "deleteSeasonMessage": "Are you sure you want to delete this season poster?",
+    "foldersLoaded": "{{folderCount}} folder(s) loaded with {{seasonCount}} season poster(s)",
+    "foldersFoundNoSeasons": "{{count}} folder(s) found with 0 season posters",
+    "seasonsLoaded": "Loaded {{count}} seasons from {{folderName}}",
+    "deleteSuccess": "Season \"{{name}}\" deleted successfully",
+    "bulkDeleteSuccess": "Successfully deleted {{count}} season(s)",
+    "bulkDeletePartial": "Deleted {{deletedCount}} season(s), but {{failedCount}} failed.",
+    "assetReplaced": "Asset replaced successfully!",
+    "errors": {
+      "loadFolders": "Failed to load folders",
+      "loadImages": "Failed to load images from {{folderName}}",
+      "deleteSeason": "Failed to delete season",
+      "deleteError": "Error while deleting: {{message}}",
+      "bulkDelete": "Failed to delete seasons"
+    }
+  },
+  "titleCardGallery": {
+    "success": {
+      "foldersLoaded": "{{folders}} folder(s) loaded with {{titlecards}} title card(s)",
+      "foldersFound": "{{count}} folder(s) found with 0 title cards",
+      "titleCardsLoaded": "Loaded {{count}} title cards from {{folder}}",
+      "titleCardDeleted": "Title card \"{{name}}\" deleted successfully",
+      "bulkDeleteSuccess": "Successfully deleted {{count}} title card(s)"
+    },
+    "errors": {
+      "bulkDeletePartial": "Deleted {{deleted}} title card(s), but {{failed}} failed."
+    },
+    "folders": "Folders",
+    "select": "Select",
+    "cancelSelect": "Cancel Select",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search title cards in {{folder}}...",
+    "loadingFolders": "Loading folders...",
+    "errorLoadingTitle": "Error Loading Title Card Gallery",
+    "tryAgain": "Try Again",
+    "noFoldersTitle": "No Folders Found",
+    "noFoldersMessage": "No folders found in assets directory. Please check your configuration.",
+    "loadingTitleCards": "Loading title cards...",
+    "noMatchingTitle": "No Matching Title Cards",
+    "noTitleCardsTitle": "No Title Cards Found",
+    "noMatchingMessage": "Try adjusting your search terms to find what you're looking for",
+    "noTitleCardsMessage": "No title cards found in {{folder}}",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selected": "{{count}} selected",
+    "deleteSelected": "Delete Selected ({{count}})",
+    "showingCount": "Showing {{displayed}} of {{total}} title cards in {{folder}}",
+    "filteredFrom": "Filtered from {{total}} total",
+    "itemsPerPage": "Items per page:",
+    "loadMore": "Load More",
+    "remaining": "{{count}} remaining",
+    "loadAll": "Load All",
+    "total": "{{count}} total",
+    "replace": "Replace",
+    "delete": "Delete",
+    "imagePreviewNotAvailable": "Image preview not available",
+    "useFileExplorer": "Use file explorer to view title card",
+    "size": "Size:",
+    "close": "Close",
+    "deleteMultipleTitle": "Delete Multiple Title Cards",
+    "deleteSingleTitle": "Delete Title Card",
+    "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected title card(s)?",
+    "deleteSingleMessage": "Are you sure you want to delete this title card?"
+  },
+  "scheduler": {
+    "title": "Scheduler",
+    "enable": "Enable Scheduler",
+    "disable": "Disable Scheduler",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "schedule": "Schedule",
+    "addTask": "Add Task",
+    "editTask": "Edit Task",
+    "deleteTask": "Delete Task",
+    "taskName": "Task Name",
+    "mode": "Mode",
+    "time": "Time",
+    "days": "Days",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noTasks": "No scheduled tasks",
+    "saveSuccess": "Schedule saved successfully",
+    "saveError": "Error saving schedule"
+  },
+  "logs": {
+    "title": "Logs",
+    "refresh": "Refresh",
+    "clear": "Clear",
+    "download": "Download",
+    "autoRefresh": "Auto Refresh",
+    "filter": "Filter",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "debug": "Debug",
+    "noLogs": "No logs available",
+    "loading": "Loading logs...",
+    "confirmClear": "Are you sure you want to clear all logs?",
+    "clearSuccess": "Logs cleared successfully",
+    "clearError": "Error clearing logs"
+  },
+  "about": {
+    "title": "About Posterizarr",
+    "version": "Version",
+    "description": "Automatic poster and asset management for Plex, Jellyfin and Emby",
+    "credits": "Credits",
+    "license": "License",
+    "documentation": "Documentation",
+    "github": "GitHub",
+    "support": "Support",
+    "updates": "Updates",
+    "changelog": "Changelog",
+    "betaWarning": "This is BETA software. Features may be broken and/or unstable. Please report any issues on",
+    "unknown": "Unknown",
+    "outOfDate": "Out of Date",
+    "upToDate": "Up to Date",
+    "latestAvailable": "Latest Available",
+    "dataDirectory": "Data Directory",
+    "timeZone": "Time Zone",
+    "gettingSupport": "Getting Support",
+    "githubIssues": "GitHub Issues",
+    "discordServer": "Discord Server",
+    "supportPosterizarr": "Support Posterizarr",
+    "helpPayForCoffee": "Help Pay for Coffee ☕",
+    "supportDevelopment": "Support the development of Posterizarr",
+    "preferred": "Preferred",
+    "webuiDevelopedWith": "WebUI developed with",
+    "by": "by",
+    "forTheCommunity": "for the community"
+  },
+  "backgroundsGallery": {
+    "folders": "Folders",
+    "select": "Select",
+    "cancelSelect": "Cancel Select",
+    "searchPlaceholder": "Search backgrounds in {{folder}}...",
+    "loadingFolders": "Loading folders...",
+    "loadingBackgrounds": "Loading backgrounds...",
+    "errorTitle": "Error Loading Background Gallery",
+    "tryAgain": "Try Again",
+    "noFoldersTitle": "No Folders Found",
+    "noFoldersDescription": "No folders found in assets directory. Please check your configuration.",
+    "noMatchingTitle": "No Matching Backgrounds",
+    "noMatchingDescription": "Try adjusting your search terms to find what you're looking for",
+    "noBackgroundsTitle": "No Backgrounds Found",
+    "noBackgroundsDescription": "No backgrounds found in {{folder}}",
+    "foldersLoaded": "{{folders}} folder(s) loaded with {{backgrounds}} background(s)",
+    "foldersFoundEmpty": "{{count}} folder(s) found with 0 backgrounds",
+    "failedLoadFolders": "Failed to load folders",
+    "loadedFromFolder": "Loaded {{count}} backgrounds from {{folder}}",
+    "failedLoadImages": "Failed to load images from {{folder}}",
+    "failedDeleteBackground": "Failed to delete background",
+    "deleteSuccess": "Background \"{{name}}\" deleted successfully",
+    "deleteError": "Error while deleting: {{error}}",
+    "failedBulkDelete": "Failed to delete backgrounds",
+    "bulkDeletePartial": "Deleted {{deleted}} background(s), but {{failed}} failed.",
+    "bulkDeleteSuccess": "Successfully deleted {{count}} background(s)",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectedCount": "{{count}} selected",
+    "deleteSelected": "Delete Selected ({{count}})",
+    "showingCount": "Showing {{displayed}} of {{filtered}} backgrounds in {{folder}}",
+    "filteredFrom": "Filtered from {{total}} total",
+    "deleteTooltip": "Delete background",
+    "replaceTooltip": "Replace asset",
+    "itemsPerPage": "Items per page:",
+    "loadMore": "Load More",
+    "remaining": "{{count}} remaining",
+    "loadAll": "Load All",
+    "total": "{{count}} total",
+    "replace": "Replace",
+    "previewNotAvailable": "Image preview not available",
+    "useFileExplorer": "Use file explorer to view background",
+    "size": "Size: {{size}} KB",
+    "deleteMultipleTitle": "Delete Multiple Backgrounds",
+    "deleteSingleTitle": "Delete Background",
+    "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected background(s)?",
+    "deleteSingleMessage": "Are you sure you want to delete this background?",
+    "replaceSuccess": "Asset replaced successfully!"
+  },
+  "configEditor": {
+    "loadingConfig": "Loading configuration...",
+    "errorLoadingConfig": "Error Loading Configuration",
+    "retry": "Retry",
+    "reload": "Reload",
+    "saveConfigTitle": "Save configuration (Ctrl+Enter)",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "searchPlaceholder": "Search settings by name or value...",
+    "filteringSettings": "Filtering settings matching \"{{query}}\"",
+    "section": "{{count}} section",
+    "section_plural": "{{count}} sections",
+    "filtered": "filtered",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "noSettingsFound": "No settings found",
+    "noSettingsMatch": "No settings match your search \"{{query}}\" in the {{tab}} section",
+    "clearSearch": "Clear Search",
+    "overlayPreview": "Overlay Preview",
+    "fontPreview": "Font Preview",
+    "filename": "Filename",
+    "failedLoadImage": "Failed to load image",
+    "uppercase": "Uppercase",
+    "lowercase": "Lowercase",
+    "numbers": "Numbers",
+    "sample": "Sample"
+  },
+  "assetsStats": {
+    "title": "Assets Overview",
+    "fetchError": "Failed to fetch assets stats",
+    "apiError": "Failed to connect to API",
+    "refreshSuccess": "Asset cache refreshed successfully!",
+    "refreshError": "Failed to refresh cache: {{error}}",
+    "refreshFailed": "Failed to refresh cache",
+    "error": "Error",
+    "refreshTooltip": "Refresh asset cache",
+    "posters": "Posters",
+    "backgrounds": "Backgrounds",
+    "seasons": "Seasons",
+    "titleCards": "Title Cards",
+    "totalAssets": "Total Assets",
+    "totalSize": "Total Size",
+    "topFolders": "Top Folders by File Count",
+    "filesCount": "{{count}} files"
+  },
+  "assetReplacer": {
+    "title": "Replace Asset",
+    "enterTitleError": "Please enter a title to search for",
+    "foundReplacements": "Found {{count}} replacement options from {{sources}} sources",
+    "fetchPreviewsError": "Failed to fetch previews",
+    "errorFetchingPreviews": "Error fetching previews: {{error}}",
+    "selectImageError": "Please select an image file",
+    "enterTitleTextError": "Please enter a title text for overlay processing",
+    "enterFolderNameError": "Please enter a folder name for overlay processing",
+    "enterLibraryNameError": "Please enter a library name for overlay processing",
+    "enterSeasonNumberError": "Please enter a season number for overlay processing",
+    "enterEpisodeNumberError": "Please enter an episode number for overlay processing",
+    "enterEpisodeTitleError": "Please enter an episode title for overlay processing",
+    "enterSeasonPosterNameError": "Please enter a season poster name for overlay processing",
+    "replacedAndQueued": "Asset replaced and queued for overlay processing! 🎨",
+    "replacedSuccessfully": "Asset replaced successfully!",
+    "uploadError": "Failed to upload asset",
+    "errorUploadingFile": "Error uploading file: {{error}}",
+    "replaceError": "Failed to replace asset",
+    "errorReplacingAsset": "Error replacing asset: {{error}}",
+    "uploadCustom": "Upload Custom",
+    "servicePreviews": "Service Previews",
+    "uploadYourOwnImage": "Upload Your Own Image",
+    "selectCustomImage": "Select a custom image to replace this asset",
+    "uploading": "Uploading...",
+    "chooseFile": "Choose File",
+    "manualSearchByTitle": "Manual search by title",
+    "searchForAssets": "Search for assets:",
+    "orFetchFromServices": "Or fetch from services:",
+    "fetchFromServices": "Fetch from TMDB/TVDB/Fanart",
+    "fetchingPreviews": "Fetching previews from services...",
+    "noPreviewsLoaded": "No previews loaded yet",
+    "fetchPreviews": "Fetch Previews",
+    "select": "Select"
+  },
+  "assetOverview": {
+    "title": "Asset Overview",
+    "description": "Overview of all assets with detailed categorization",
+    "loading": "Loading asset overview...",
+    "fetchError": "Failed to fetch asset overview",
+    "errorLoadingData": "Error Loading Data",
+    "assetsWithIssues": "Assets with Issues",
+    "missingAssets": "Missing Assets",
+    "nonPrimaryLang": "Non-Primary Lang",
+    "nonPrimaryProvider": "Non-Primary Provider",
+    "truncatedTextCategory": "Truncated Text",
+    "missingAsset": "Missing Asset",
+    "notPrimaryLanguage": "Not Primary Language",
+    "notPrimaryProvider": "Not Primary Provider",
+    "truncatedText": "Truncated Text",
+    "manual": "Manual",
+    "searchPlaceholder": "Search by title or path...",
+    "allTypes": "All Types",
+    "allLibraries": "All Libraries",
+    "allCategories": "All Categories",
+    "allAssets": "All Assets",
+    "noAssetsFound": "No assets found",
+    "type": "Type",
+    "language": "Language",
+    "source": "Source",
+    "viewSource": "View Source",
+    "replace": "Replace",
+    "replaceTooltip": "Replace this asset"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "upload": "Upload",
+    "download": "Download",
+    "refresh": "Refresh",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "done": "Done"
+  },
+  "theme": {
+    "title": "Theme",
+    "selectTheme": "Select Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "auto": "Auto"
+  },
+  "language": {
+    "title": "Language",
+    "selectLanguage": "Select Language",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "it": "Italiano",
+    "pt": "Português"
+  },
+  "notifications": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signInToContinue": "Sign in to continue",
+    "signingIn": "Signing in...",
+    "enterUsername": "Enter your username",
+    "enterPassword": "Enter your password",
+    "loginSuccess": "Login successful",
+    "loginError": "Login failed. Please try again.",
+    "logoutSuccess": "Logout successful",
+    "invalidCredentials": "Invalid username or password",
+    "connectionError": "Connection error. Please try again.",
+    "sessionExpired": "Session expired"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalid": "Invalid value",
+    "min": "Minimum value: {{min}}",
+    "max": "Maximum value: {{max}}",
+    "minLength": "Minimum length: {{min}} characters",
+    "maxLength": "Maximum length: {{max}} characters",
+    "email": "Invalid email address",
+    "url": "Invalid URL"
+  },
+  "loading": {
+    "initializing": "Initializing Posterizarr...",
+    "messages": [
+      "At least you're not on hold...",
+      "Loading your posters with style...",
+      "Convincing AI that your taste is impeccable...",
+      "Asking the hamsters to run faster...",
+      "Reticulating splines...",
+      "Calibrating flux capacitor...",
+      "Brewing fresh pixels...",
+      "Waking up the server hamsters...",
+      "Downloading more RAM...",
+      "Polishing your movie collection...",
+      "Teaching robots to appreciate art...",
+      "Consulting the magic 8-ball...",
+      "Summoning the poster spirits...",
+      "Making it look effortless...",
+      "99 little bugs in the code... wait, now 100...",
+      "Time is an illusion. Loading time doubly so...",
+      "Are we there yet?",
+      "Patience, young padawan...",
+      "Loading the loading screen...",
+      "This is taking longer than expected..."
+    ]
+  },
+  "systemInfo": {
+    "title": "System Information",
+    "refreshTooltip": "Refresh system info",
+    "platform": "Platform",
+    "cpuModel": "CPU Model",
+    "cpuUnavailable": "CPU Info Unavailable",
+    "cores": "{{count}} Cores",
+    "unknownCores": "Unknown Cores",
+    "memoryUsage": "Memory Usage",
+    "free": "free",
+    "memoryUnavailable": "Memory information unavailable"
+  },
+  "runtimeStats": {
+    "title": "Runtime Statistics",
+    "refreshTooltip": "Refresh runtime stats",
+    "noData": "No runtime data available yet. Run the script to see statistics.",
+    "migrationTip": "Tip:",
+    "migrationDesc": "Historical runtime data from your logs can be automatically imported. The migration will run automatically on next startup, or you can trigger it manually from the Runtime History page.",
+    "executionTime": "Execution Time",
+    "totalImages": "Total Images",
+    "errors": "Errors",
+    "additionalInfo": "Additional Information",
+    "tbaSkipped": "TBA Skipped",
+    "japChinesSkipped": "JP/CN Skipped",
+    "imagesCleared": "Images Cleared",
+    "foldersCleared": "Folders Cleared",
+    "spaceSaved": "Space Saved",
+    "versionInfo": "Version Information",
+    "scriptVersion": "Script Version",
+    "imVersion": "ImageMagick Version",
+    "scheduledRuns": "Scheduled Runs",
+    "nextRun": "Next Run",
+    "configuredSchedules": "Configured Schedule Times",
+    "timezone": "Timezone",
+    "schedulerTimezone": "Scheduler Timezone",
+    "displayedInYourTimezone": "Displayed in your timezone",
+    "differentFromBrowser": "different from browser",
+    "runInfo": "Run Information",
+    "imageStats": "Image Statistics",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "notificationSent": "Notification Sent",
+    "notes": "Notes"
+  },
+  "dangerZone": {
+    "title": "Danger Zone",
+    "warning": "These actions are potentially destructive",
+    "forceKill": "Force Kill",
+    "forceKillTitle": "Force Kill Script",
+    "forceKillMessage": "Force kill will immediately terminate the script. This should only be used when normal stop doesn't work.",
+    "stopSuccess": "Script stopped successfully",
+    "stopError": "Failed to stop script",
+    "forceKillSuccess": "Script force killed successfully",
+    "forceKillError": "Failed to force kill script"
+  },
+  "recentAssets": {
+    "title": "Recently Created",
+    "refreshTooltip": "Refresh recent assets",
+    "loadError": "Failed to load recent assets",
+    "noAssets": "No recent assets found"
+  },
+  "confirmDialog": {
+    "title": "Confirm Action",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "folderView": {
+    "assets": "Assets",
+    "searchLibraries": "Search libraries...",
+    "searchItems": "Search items...",
+    "searchAssets": "Search assets...",
+    "selectAll": "Select All ({{count}})",
+    "deselectAll": "Deselect All",
+    "deleteAllAssets": "Delete All Assets ({{count}})",
+    "delete": "Delete ({{count}})",
+    "cancelSelect": "Cancel Select",
+    "select": "Select",
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "total": "Total: {{count}} assets",
+    "posters": "Posters: {{count}}",
+    "backgrounds": "Backgrounds: {{count}}",
+    "seasons": "Seasons: {{count}}",
+    "episodes": "Episodes: {{count}}",
+    "assetsCount": "{{count}} assets",
+    "replaceImage": "Replace image",
+    "deleteImage": "Delete image",
+    "noResults": "No results found",
+    "noLibraries": "No libraries found",
+    "noItems": "No items found",
+    "noAssets": "No assets found",
+    "adjustSearch": "Try adjusting your search terms",
+    "emptyFolder": "This folder is empty",
+    "replace": "Replace",
+    "previewNotAvailable": "Image preview not available",
+    "useFileExplorer": "Use file explorer to view image",
+    "size": "Size",
+    "close": "Close",
+    "refreshSuccess": "Content refreshed successfully",
+    "deleteSuccess": "Successfully deleted {{name}}",
+    "deleteError": "Failed to delete {{name}}",
+    "bulkDeleteSuccess": "Successfully deleted {{count}} asset(s)",
+    "bulkDeleteError": "Failed to delete {{count}} asset(s)",
+    "bulkDeleteFoldersSuccess": "Successfully processed {{folderCount}} folder(s) ({{assetCount}} assets deleted)",
+    "bulkDeleteFoldersError": "Failed to process {{count}} folder(s)",
+    "deleteAllAssetsTitle": "Delete All Assets in Selected Folders",
+    "deleteMultipleTitle": "Delete Multiple Assets",
+    "deleteAssetTitle": "Delete Asset",
+    "deleteAllAssetsMessage": "Are you sure you want to delete ALL assets in {{count}} selected folder(s)? This will delete all posters, backgrounds, seasons, and title cards within these folders.",
+    "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected asset(s)?",
+    "deleteAssetMessage": "Are you sure you want to delete this asset?",
+    "deleteButton": "Delete"
+  },
+  "autoTriggers": {
+    "header": {
+      "title": "Auto Triggers",
+      "subtitle": "Set up automatic poster creation when new media is added to your library"
+    },
+    "tabs": {
+      "tautulli": {
+        "description": "Trigger on Plex library events"
+      },
+      "sonarr": {
+        "description": "Trigger on TV show imports"
+      },
+      "radarr": {
+        "description": "Trigger on movie imports"
+      }
+    },
+    "setupSteps": "Setup Steps",
+    "howItWorks": "How It Works",
+    "copyCode": "Copy to clipboard",
+    "resources": {
+      "title": "Additional Resources",
+      "tautulliWiki": "Tautulli Custom Scripts Wiki",
+      "sonarrWiki": "Sonarr Connect Settings Documentation",
+      "radarrWiki": "Radarr Connect Settings Documentation",
+      "triggerScript": "View trigger.py on GitHub",
+      "arrTriggerScript": "View ArrTrigger.sh on GitHub"
+    },
+    "tautulli": {
+      "selectMode": "Select Your Environment",
+      "requirements": {
+        "title": "Requirements",
+        "docker": "Tautulli and Posterizarr must both be running as Docker containers",
+        "windows": "Tautulli and Posterizarr must be installed on the same Windows system"
+      },
+      "docker": {
+        "description": "For containerized environments",
+        "steps": [
+          {
+            "title": "Mount Posterizarr Directory to Tautulli",
+            "description": "Tautulli needs access to the Posterizarr directory to execute the trigger script.",
+            "warning": "The mount path is case-sensitive and must be exactly /posterizarr",
+            "code": [
+              {
+                "label": "Add this volume mount to your Tautulli docker-compose.yml:",
+                "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+              }
+            ]
+          },
+          {
+            "title": "Download the Trigger Script",
+            "description": "Download trigger.py from GitHub and place it in your Tautulli scripts directory.",
+            "substeps": [
+              "Download from: https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
+              "Place in Tautulli script directory (see Tautulli Wiki for location)",
+              "Set executable permissions: chmod +x trigger.py"
+            ]
+          },
+          {
+            "title": "Configure Tautulli Notification Agent",
+            "description": "Create a new Script notification agent in Tautulli.",
+            "substeps": [
+              "Go to Settings → Notification Agents",
+              "Click 'Add a new notification agent' and select 'Script'",
+              "Select trigger.py from your script folder",
+              "Add a description (optional)"
+            ]
+          },
+          {
+            "title": "Set Triggers",
+            "description": "Configure when the script should run.",
+            "substeps": [
+              "Go to the 'Triggers' tab",
+              "Scroll down and enable 'Recently Added'"
+            ]
+          },
+          {
+            "title": "Set Conditions",
+            "description": "Define which media types should trigger the script.",
+            "substeps": [
+              "Go to the 'Conditions' tab",
+              "Set Media Type to: episode, movie, show, season",
+              "Optionally exclude libraries (e.g., YouTube) that don't have TMDB/TVDB IDs"
+            ]
+          },
+          {
+            "title": "Configure Arguments",
+            "description": "Set the required arguments for the script to work properly.",
+            "info": "Do not modify this argument - the script requires this exact format",
+            "code": [
+              {
+                "label": "Go to Arguments tab → Expand 'Recently Added' → Paste:",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      },
+      "windows": {
+        "description": "For Windows installations",
+        "steps": [
+          {
+            "title": "Configure Tautulli Notification Agent",
+            "description": "Create a new Script notification agent in Tautulli.",
+            "substeps": [
+              "Go to Settings → Notification Agents",
+              "Click 'Add a new notification agent' and select 'Script'",
+              "Select Posterizarr.ps1 from your Posterizarr folder",
+              "Set script timeout to 0 (unlimited) - default 30 seconds will kill the script",
+              "Add a description (optional)"
+            ]
+          },
+          {
+            "title": "Set Triggers",
+            "description": "Configure when the script should run.",
+            "substeps": [
+              "Go to the 'Triggers' tab",
+              "Scroll down and enable 'Recently Added'"
+            ]
+          },
+          {
+            "title": "Set Conditions",
+            "description": "Define which media types should trigger the script.",
+            "substeps": [
+              "Go to the 'Conditions' tab",
+              "Set Media Type to: episode, movie, show, season",
+              "Optionally exclude libraries (e.g., YouTube) that don't have TMDB/TVDB IDs"
+            ]
+          },
+          {
+            "title": "Configure Arguments",
+            "description": "Set the required arguments for the script to work properly.",
+            "info": "Do not modify this argument - the script requires this exact format",
+            "code": [
+              {
+                "label": "Go to Arguments tab → Expand 'Recently Added' → Paste:",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sonarr": {
+      "requirements": {
+        "title": "Requirements",
+        "description": "Sonarr and Posterizarr must both be running as Docker containers"
+      },
+      "howItWorks": [
+        "Sonarr creates a .posterizarr file in the watcher directory when a file is imported",
+        "The file contains metadata about the imported episode",
+        "Posterizarr monitors this directory for new files",
+        "When detected, Posterizarr waits up to 5 minutes (based on file age)",
+        "Then reads the file and triggers a poster creation run for that specific item"
+      ],
+      "steps": [
+        {
+          "title": "Mount Posterizarr Directory to Sonarr",
+          "description": "Sonarr needs write access to the Posterizarr watcher directory.",
+          "warning": "The mount path is case-sensitive and must be exactly /posterizarr",
+          "code": [
+            {
+              "label": "Add this volume mount to your Sonarr docker-compose.yml:",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Download the Trigger Script",
+          "description": "Download ArrTrigger.sh from GitHub and place it in your Sonarr scripts directory.",
+          "substeps": [
+            "Download from: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Example: Create /opt/appdata/sonarr/scripts/ directory",
+            "Place ArrTrigger.sh in this directory",
+            "Set executable permissions: chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configure Sonarr Connect Settings",
+          "description": "Add a custom script connection in Sonarr.",
+          "substeps": [
+            "Go to Settings → Connect",
+            "Click the '+' button and select 'Custom Script'",
+            "Give it a name (e.g., 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Set Notification Trigger",
+          "description": "Configure when the script should execute.",
+          "substeps": [
+            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Disable all other triggers"
+          ]
+        },
+        {
+          "title": "Set Script Path",
+          "description": "Point Sonarr to the trigger script.",
+          "info": "The path should be relative to your Sonarr container's file system",
+          "code": [
+            {
+              "label": "Set Path to:",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Test and Save",
+          "description": "Verify the configuration works correctly.",
+          "substeps": [
+            "Click 'Test' to ensure Sonarr can execute the script",
+            "If successful, click 'Save'"
+          ]
+        }
+      ]
+    },
+    "radarr": {
+      "requirements": {
+        "title": "Requirements",
+        "description": "Radarr and Posterizarr must both be running as Docker containers"
+      },
+      "howItWorks": [
+        "Radarr creates a .posterizarr file in the watcher directory when a file is imported",
+        "The file contains metadata about the imported movie",
+        "Posterizarr monitors this directory for new files",
+        "When detected, Posterizarr waits up to 5 minutes (based on file age)",
+        "Then reads the file and triggers a poster creation run for that specific item"
+      ],
+      "steps": [
+        {
+          "title": "Mount Posterizarr Directory to Radarr",
+          "description": "Radarr needs write access to the Posterizarr watcher directory.",
+          "warning": "The mount path is case-sensitive and must be exactly /posterizarr",
+          "code": [
+            {
+              "label": "Add this volume mount to your Radarr docker-compose.yml:",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Download the Trigger Script",
+          "description": "Download ArrTrigger.sh from GitHub and place it in your Radarr scripts directory.",
+          "substeps": [
+            "Download from: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Example: Create /opt/appdata/radarr/scripts/ directory",
+            "Place ArrTrigger.sh in this directory",
+            "Set executable permissions: chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configure Radarr Connect Settings",
+          "description": "Add a custom script connection in Radarr.",
+          "substeps": [
+            "Go to Settings → Connect",
+            "Click the '+' button and select 'Custom Script'",
+            "Give it a name (e.g., 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Set Notification Trigger",
+          "description": "Configure when the script should execute.",
+          "substeps": [
+            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Disable all other triggers"
+          ]
+        },
+        {
+          "title": "Set Script Path",
+          "description": "Point Radarr to the trigger script.",
+          "info": "The path should be relative to your Radarr container's file system",
+          "code": [
+            {
+              "label": "Set Path to:",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Test and Save",
+          "description": "Verify the configuration works correctly.",
+          "substeps": [
+            "Click 'Test' to ensure Radarr can execute the script",
+            "If successful, click 'Save'"
+          ]
+        }
+      ]
+    }
+  }
+}

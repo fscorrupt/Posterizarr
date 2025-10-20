@@ -1,248 +1,243 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
+  Navigate,
   useLocation,
 } from "react-router-dom";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { SidebarProvider, useSidebar } from "./context/SidebarContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
+import {
+  DashboardLoadingProvider,
+  useDashboardLoading,
+} from "./context/DashboardLoadingContext";
+
+// Setup fetch interceptor BEFORE any other imports that might use fetch
+import { setupFetchInterceptor } from "./utils/fetchInterceptor";
+setupFetchInterceptor();
+
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
 import GalleryHub from "./components/GalleryHub";
-import TestGallery from "./components/TestGallery";
+import AssetsManager from "./components/AssetsManager";
 import About from "./components/About";
+import HowItWorks from "./components/HowItWorks";
+import AutoTriggers from "./components/AutoTriggers";
 import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
-import VersionBadge from "./components/VersionBadge";
-import {
-  Menu,
-  Settings,
-  Image,
-  FileText,
-  Activity,
-  TestTube,
-  Palette,
-  Info,
-  Clock,
-  Play,
-} from "lucide-react";
+import AssetOverview from "./components/AssetOverview";
+import RuntimeHistory from "./components/RuntimeHistory";
+import Sidebar from "./components/Sidebar";
+import TopNavbar from "./components/TopNavbar";
+import LoginScreen from "./components/LoginScreen";
+import LoadingScreen from "./components/LoadingScreen";
 
-// ============================================================================
-// UI-LOGGER IMPORT - Erfasst alle Console-Logs und speichert sie in UIlog.log
-// ============================================================================
 import uiLogger from "./utils/uiLogger";
 
-function ThemeSwitcher() {
-  const { theme, setTheme, themes } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
-
-  const themeArray = Object.entries(themes).map(([id, config]) => ({
-    id,
-    name: config.name,
-    color: config.variables["--theme-primary"],
-  }));
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-theme-hover hover:text-white transition-colors"
-        title="Change Theme"
-      >
-        <Palette className="w-4 h-4" />
-      </button>
-
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-48 rounded-lg bg-theme-card border border-theme shadow-lg z-50">
-            <div className="p-2">
-              <div className="px-3 py-2 text-xs font-semibold text-theme-muted uppercase tracking-wider">
-                Select Theme
-              </div>
-              {themeArray.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setTheme(t.id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
-                    theme === t.id
-                      ? "bg-theme-primary text-white"
-                      : "text-gray-300 hover:bg-theme-hover"
-                  }`}
-                >
-                  <span>{t.name}</span>
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: t.color }}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function Navigation() {
-  const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const navItems = [
-    { path: "/", label: "Dashboard", icon: Activity },
-    { path: "/run-modes", label: "Run Modes", icon: Play },
-    { path: "/gallery", label: "Assets", icon: Image },
-    { path: "/test-gallery", label: "Test Assets", icon: Image },
-    { path: "/config", label: "Config", icon: Settings },
-    { path: "/scheduler", label: "Scheduler", icon: Clock },
-    { path: "/logs", label: "Logs", icon: FileText },
-    { path: "/about", label: "About", icon: Info },
-  ];
-
-  return (
-    <nav className="bg-theme-card border-b border-theme shadow-lg fixed top-0 left-0 right-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-theme-primary">
-                Posterizarr
-              </span>
-              <VersionBadge />
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:ml-10 md:flex md:space-x-2">
-              <div className="flex space-x-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-theme-primary text-white"
-                          : "text-gray-300 hover:bg-theme-hover hover:text-white"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Desktop Theme Switcher */}
-          <div className="hidden md:flex items-center">
-            <ThemeSwitcher />
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-gray-400 hover:text-white p-2"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-theme-card border-t border-theme">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
-                    isActive
-                      ? "bg-theme-primary text-white"
-                      : "text-gray-300 hover:bg-theme-hover hover:text-white"
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Mobile Theme Switcher */}
-          <div className="px-2 pb-3 border-t border-theme">
-            <div className="pt-3">
-              <ThemeSwitcher />
-            </div>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-}
-
 function AppContent() {
-  // ============================================================================
-  // UI-LOGGER INITIALISIERUNG
-  // Alle console.log/error/warn werden automatisch in UIlog.log gespeichert
-  // ============================================================================
-  useEffect(() => {
-    console.log("✅ Posterizarr UI started - UI-Logger active");
-    console.info("📊 UI logs will be saved to UIlog.log");
+  const { isCollapsed } = useSidebar();
+  const { isAuthenticated, loading, login, isAuthEnabled } = useAuth();
+  const { isDashboardFullyLoaded, resetLoading } = useDashboardLoading();
+  const location = useLocation();
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  const [hasLoggedIn, setHasLoggedIn] = useState(false);
+  const hasShownStartupScreen = React.useRef(false);
+  const isDashboardRoute =
+    location.pathname === "/" || location.pathname === "/dashboard";
 
-    // Cleanup (optional, nur bei App-Unmount)
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    // Reset dashboard loading state when navigating away from dashboard
+    if (!isDashboardRoute) {
+      resetLoading();
+    }
+  }, [location.pathname, isDashboardRoute, resetLoading]);
+
+  useEffect(() => {
+    console.log("Posterizarr UI started - UI-Logger active");
+    console.info(" UI logs will be saved to FrontendUI.log");
+
     return () => {
-      // uiLogger.destroy(); // Nur aktivieren wenn wirklich nötig
+      // uiLogger.destroy();
     };
   }, []);
 
+  // Show loading screen when authenticated without login (auth disabled on startup)
+  // This provides a smooth experience even when auth is not required
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      !hasLoggedIn &&
+      !loading &&
+      isAuthEnabled === false &&
+      !hasShownStartupScreen.current
+    ) {
+      // Auth is disabled, show loading screen until dashboard is fully loaded
+      hasShownStartupScreen.current = true;
+      setShowLoadingScreen(true);
+    }
+  }, [isAuthenticated, hasLoggedIn, loading, isAuthEnabled]);
+
+  // Hide loading screen when dashboard is fully loaded (only on dashboard route)
+  // OR immediately hide if we're on a non-dashboard route
+  useEffect(() => {
+    if (showLoadingScreen) {
+      if (isDashboardRoute && isDashboardFullyLoaded) {
+        // Dashboard is ready - hide loading screen
+        setTimeout(() => {
+          setShowLoadingScreen(false);
+        }, 300);
+      } else if (!isDashboardRoute) {
+        // We're not on dashboard - hide loading screen immediately
+        // This fixes the bug where reload on other pages causes loading screen to hang
+        setShowLoadingScreen(false);
+      }
+    }
+  }, [isDashboardRoute, isDashboardFullyLoaded, showLoadingScreen]);
+
+  // Handle login success with loading screen
+  const handleLoginSuccess = (credentials) => {
+    setShowLoadingScreen(true);
+    setHasLoggedIn(true);
+    login(credentials);
+
+    // Loading screen will be hidden when dashboard fully loads
+    // No timeout needed - controlled by dashboard loading state
+  };
+
+  // Show loading spinner while checking auth status on initial load
+  if (loading && !hasLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-theme-muted">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login screen if auth is required and user is not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // Show main app if authenticated (or auth is disabled)
+  // When showLoadingScreen is true, render the UI but overlay the loading screen
   return (
-    <div className="min-h-screen bg-theme-dark text-theme-text">
-      <Navigation />
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 pt-24">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/run-modes" element={<RunModes />} />
-          <Route path="/test-gallery" element={<TestGallery />} />
-          <Route path="/gallery" element={<GalleryHub />} />
-          <Route path="/config" element={<ConfigEditor />} />
-          <Route path="/scheduler" element={<SchedulerSettings />} />
-          <Route path="/logs" element={<LogViewer />} />
-          <Route path="/about" element={<About />} />
-        </Routes>
-      </main>
-    </div>
+    <>
+      {/* Loading Screen Overlay - shown over the UI during login transition */}
+      {showLoadingScreen && (
+        <div className="fixed inset-0 z-[9999] bg-theme-bg">
+          <LoadingScreen />
+        </div>
+      )}
+
+      {/* Main App - rendered in background while loading screen is shown */}
+      <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark text-theme-text">
+        <TopNavbar />
+        <Sidebar />
+
+        <main
+          className={`pt-16 transition-all duration-300 ${
+            isCollapsed ? "md:ml-20" : "md:ml-64"
+          }`}
+        >
+          {/* Extra padding on mobile for sidebar menu */}
+          <div className="md:pt-0">
+            <div className="py-4 sm:py-6 px-3 sm:px-4 lg:px-8">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/run-modes" element={<RunModes />} />
+                <Route path="/assets-manager" element={<AssetsManager />} />
+                <Route path="/asset-overview" element={<AssetOverview />} />
+                <Route path="/runtime-history" element={<RuntimeHistory />} />
+
+                <Route
+                  path="/gallery"
+                  element={<Navigate to="/gallery/posters" replace />}
+                />
+                <Route path="/gallery/posters" element={<GalleryHub />} />
+                <Route path="/gallery/backgrounds" element={<GalleryHub />} />
+                <Route path="/gallery/seasons" element={<GalleryHub />} />
+                <Route path="/gallery/titlecards" element={<GalleryHub />} />
+
+                <Route
+                  path="/config"
+                  element={<Navigate to="/config/general" replace />}
+                />
+                <Route
+                  path="/config/webui"
+                  element={<ConfigEditor tab="WebUI" />}
+                />
+                <Route
+                  path="/config/general"
+                  element={<ConfigEditor tab="General" />}
+                />
+                <Route
+                  path="/config/services"
+                  element={<ConfigEditor tab="Services" />}
+                />
+                <Route
+                  path="/config/api"
+                  element={<ConfigEditor tab="API" />}
+                />
+                <Route
+                  path="/config/languages"
+                  element={<ConfigEditor tab="Languages" />}
+                />
+                <Route
+                  path="/config/visuals"
+                  element={<ConfigEditor tab="Visuals" />}
+                />
+                <Route
+                  path="/config/overlays"
+                  element={<ConfigEditor tab="Overlays" />}
+                />
+                <Route
+                  path="/config/collections"
+                  element={<ConfigEditor tab="Collections" />}
+                />
+                <Route
+                  path="/config/notifications"
+                  element={<ConfigEditor tab="Notifications" />}
+                />
+
+                <Route path="/scheduler" element={<SchedulerSettings />} />
+                <Route path="/logs" element={<LogViewer />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/auto-triggers" element={<AutoTriggers />} />
+                <Route path="/about" element={<About />} />
+              </Routes>
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            <ToastProvider>
+              <DashboardLoadingProvider>
+                <AppContent />
+              </DashboardLoadingProvider>
+            </ToastProvider>
+          </SidebarProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 

@@ -21,10 +21,10 @@ class UILogger {
   }
 
   initialize() {
-    // Überschreibe Console-Methoden
+    // Override Console methods
     this.interceptConsole();
 
-    // Starte automatisches Flush
+    // Start automatic flush
     this.startAutoFlush();
 
     // Cleanup bei Page-Unload
@@ -85,18 +85,32 @@ class UILogger {
         })
         .join(" ");
 
-      // Erstelle Log-Entry
+      // Create log entry with local timezone timestamp (matches backend format)
+      const now = new Date();
+      const localTimestamp =
+        now.getFullYear() +
+        "-" +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getDate()).padStart(2, "0") +
+        " " +
+        String(now.getHours()).padStart(2, "0") +
+        ":" +
+        String(now.getMinutes()).padStart(2, "0") +
+        ":" +
+        String(now.getSeconds()).padStart(2, "0");
+
       const logEntry = {
         level: level,
         message: message,
-        timestamp: new Date().toISOString(),
+        timestamp: localTimestamp,
         source: "ui",
       };
 
-      // Füge zu Queue hinzu
+      // Add to queue
       this.logQueue.push(logEntry);
 
-      // Flush wenn Queue voll ist
+      // Flush if queue is full
       if (this.logQueue.length >= this.maxQueueSize) {
         this.flush();
       }
@@ -134,7 +148,7 @@ class UILogger {
       }
     } catch (error) {
       this.originalConsole.warn("Error sending UI logs:", error);
-      // Bei Fehler: Logs zurück in Queue (optional)
+      // On error: Put logs back in queue (optional)
       // this.logQueue.unshift(...logsToSend);
     }
   }
@@ -148,25 +162,25 @@ class UILogger {
   }
 
   destroy() {
-    // Stelle Original-Console wieder her
+    // Restore original console
     console.log = this.originalConsole.log;
     console.error = this.originalConsole.error;
     console.warn = this.originalConsole.warn;
     console.info = this.originalConsole.info;
     console.debug = this.originalConsole.debug;
 
-    // Stoppe Auto-Flush
+    // Stop auto-flush
     if (this.flushTimer) {
       clearInterval(this.flushTimer);
     }
 
-    // Final Flush
+    // Final flush
     this.flush();
   }
 }
 
-// Erstelle globale Instanz
+// Create global instance
 const uiLogger = new UILogger();
 
-// Export für React
+// Export for React
 export default uiLogger;
