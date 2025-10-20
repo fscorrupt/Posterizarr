@@ -1,0 +1,1737 @@
+{
+  "runModes": {
+    "scriptRunning": "O script já está em execução! Por favor, pare-o primeiro.",
+    "startedMode": "Iniciado no modo {{mode}}",
+    "manualModeSuccess": "Modo manual iniciado com sucesso!",
+    "viewDocumentation": "Ver documentação completa",
+    "validation": {
+      "imageRequired": "Envie uma imagem ou forneça um URL/caminho!",
+      "titleRequired": "O texto do título é obrigatório!",
+      "folderRequired": "O nome da pasta é obrigatório!",
+      "libraryRequired": "O nome da biblioteca é obrigatório!",
+      "seasonRequired": "O nome do cartaz da temporada é obrigatório para cartazes de temporada!",
+      "episodeTitleRequired": "O título do episódio é obrigatório para os cartões de título!",
+      "seasonNameRequired": "O nome da temporada é obrigatório para os cartões de título!",
+      "episodeNumberRequired": "O número do episódio é obrigatório para os cartões de título!",
+      "tmdbQueryRequired": "Insira um título de pesquisa ou ID do TMDB!",
+      "seasonNumberRequired": "Insira um número de temporada!",
+      "episodeInfoRequired": "Insira os números da temporada e do episódio!",
+      "libraryNameRequired": "Insira um nome de biblioteca!",
+      "yearRequiredForNumericTitle": "O ano é obrigatório para títulos numéricos (ex: '2012', '1917', '365 Dias')"
+    },
+    "reset": {
+      "stopFirst": "O script deve ser parado antes de redefinir os cartazes!",
+      "success": "Cartazes redefinidos com sucesso!",
+      "confirmTitle": "Redefinir cartazes",
+      "confirmMessage": "Tem certeza de que deseja redefinir TODOS os cartazes em \"{{library}}\"? Esta ação NÃO PODE ser desfeita!\\n\\nTem certeza absoluta?",
+      "title": "Redefinir cartazes",
+      "description": "Redefinir todos os cartazes em uma biblioteca Plex para o padrão",
+      "warning": "Aviso:",
+      "warningText": "Isso redefinirá TODOS os cartazes na biblioteca especificada. Esta ação NÃO PODE ser desfeita! O script deve ser parado antes de redefinir os cartazes.",
+      "placeholder": "Insira o nome da biblioteca (ex: Filmes, Séries)",
+      "button": "Redefinir cartazes"
+    },
+    "stop": {
+      "success": "Script parado com sucesso",
+      "button": "Parar script"
+    },
+    "tmdb": {
+      "title": "Pesquisar no TMDB por",
+      "seasonPosters": "Cartazes de temporada",
+      "episodeImages": "Imagens de episódio",
+      "tvShowPosters": "Cartazes de Séries",
+      "moviePosters": "Cartazes de Filmes",
+      "posters": "Cartazes",
+      "seasonHint": "Pesquise cartazes específicos da temporada no TMDB",
+      "episodeHint": "Pesquise fotos/screenshots de episódios no TMDB",
+      "titleHint": "Pesquise por título ou ID do TMDB para encontrar cartazes diretamente do TMDB",
+      "placeholder": "Insira o título do filme/série ou ID do TMDB...",
+      "searching": "Pesquisando...",
+      "search": "Pesquisar",
+      "seasonNumber": "Número da temporada",
+      "episodeNumber": "Número do episódio",
+      "seasonNumberHint": "Insira o número da temporada para encontrar cartazes específicos da temporada",
+      "episodeNumberHint": "Insira os números da temporada e do episódio para encontrar fotos do episódio",
+      "noResults": "Nenhum cartaz encontrado. Tente um termo de pesquisa diferente.",
+      "posterSelected": "URL do cartaz definido! ",
+      "clickToSelect": "Clique em um cartaz para selecioná-lo para a criação manual do seu cartaz",
+      "results": "Resultados de cartazes do TMDB",
+      "seasonResults": "Cartazes da temporada {{season}}",
+      "episodeResults": "Imagens do episódio {{season}}x{{episode}}",
+      "loadMore": "Carregar mais ({{remaining}} restantes)",
+      "episodeStill": "FOTO DO EPISÓDIO",
+      "seasonPoster": "CARTAZ DA TEMPORADA"
+    },
+    "quickRun": {
+      "title": "Modos de execução rápida",
+      "normal": {
+        "title": "Modo normal",
+        "description": "Executar o Posterizarr normalmente"
+      },
+      "testing": {
+        "title": "Modo de teste",
+        "description": "Gerar cartazes de amostra"
+      },
+      "backup": {
+        "title": "Modo de backup",
+        "description": "Fazer backup dos cartazes existentes"
+      },
+      "syncJellyfin": {
+        "title": "Sincronizar Jellyfin",
+        "description": "Sincronizar cartazes para o Jellyfin"
+      },
+      "syncEmby": {
+        "title": "Sincronizar Emby",
+        "description": "Sincronizar cartazes para o Emby"
+      }
+    },
+    "manual": {
+      "title": "Modo manual (semiautomatizado)",
+      "description": "Crie ou substitua cartazes manualmente com controle total sobre pesquisa, fonte e metadados.",
+      "posterType": "Tipo de cartaz",
+      "types": {
+        "poster": "Cartaz",
+        "season": "Temporada",
+        "titleCard": "Cartão de título",
+        "background": "Fundo",
+        "collection": "Coleção"
+      },
+      "mediaType": "Tipo de mídia",
+      "mediaTypes": {
+        "movie": "Filme",
+        "tv": "Série"
+      },
+      "mediaTypeHint": "Selecione se está procurando um cartaz de filme ou série",
+      "pictureSource": "Fonte da imagem",
+      "uploadImage": "Carregar imagem",
+      "fileSelected": "Arquivo selecionado",
+      "or": "ou",
+      "urlPlaceholder": "Ou insira URL/caminho: C:\\\\caminho\\\\para\\\\imagem.jpg ou https://url.to/image.jpg",
+      "uploadHint": "Carregue um arquivo de imagem local ou insira um URL/caminho direto para a imagem de origem",
+      "titleText": "Texto do título",
+      "titlePlaceholder": "Perdido em Marte",
+      "titleHint": "Título a ser exibido no cartaz",
+      "folderName": "Nome da pasta",
+      "libraryName": "Nome da biblioteca",
+      "seasonPosterName": "Nome do cartaz da temporada",
+      "seasonPlaceholder": "Temporada 1",
+      "seasonHint": "Nome da temporada (ex: \"Temporada 1\", \"Staffel 2\", \"Especiais\")",
+      "episodeTitle": "Título do episódio",
+      "episodeTitlePlaceholder": "Ozymandias",
+      "episodeTitleHint": "Nome do título do episódio (ex: \"Ozymandias\", \"Piloto\")",
+      "seasonName": "Nome da temporada",
+      "seasonNamePlaceholder": "Temporada 5",
+      "seasonNameHint": "Nome da temporada (ex: \"Temporada 5\", \"Staffel 1\")",
+      "episodeNumber": "Número do episódio",
+      "episodeNumberPlaceholder": "14",
+      "episodeNumberHint": "Número do episódio (ex: \"14\", \"1\")",
+      "runButton": "Executar modo manual",
+      "processing": "Processando...",
+      "tmdbSearchTitle": "Pesquisa de {{type}} no TMDB",
+      "tmdbTypeSeasonPosters": "Cartazes de temporada",
+      "tmdbTypeEpisodeImages": "Imagens de episódio",
+      "tmdbTypeTvPosters": "Cartazes de Séries",
+      "tmdbTypeMoviePosters": "Cartazes de Filmes",
+      "tmdbTypePosters": "Cartazes",
+      "tmdbHintSeason": "Pesquise séries no TMDB para encontrar cartazes de temporada",
+      "tmdbHintTitleCard": "Pesquise séries no TMDB para encontrar fotos de episódios",
+      "tmdbHintStandard": "Pesquise filmes ou séries no TMDB para encontrar cartazes",
+      "tmdbSearchPlaceholder": "Insira o título ou ID do TMDB...",
+      "tmdbIdPlaceholder": "Insira o ID do TMDB (ex: 530915 para '1917')...",
+      "searchByIdLabel": "Pesquisar por ID do TMDB",
+      "searchByIdHint": "O ano não é necessário ao pesquisar por ID",
+      "searchByIdWarning": "Certifique-se de selecionar o tipo de mídia correto (Filme ou TV) para o ID do TMDB",
+      "yearLabel": "Ano (opcional)",
+      "numericTitleWarning": "Título numérico detectado - O ano é obrigatório para uma pesquisa precisa",
+      "tmdbSearchButton": "Pesquisar",
+      "tmdbSearching": "Pesquisando...",
+      "howItWorks": "Como funciona o modo manual:",
+      "step1": "A imagem de origem é movida (se local) ou baixada (se URL)",
+      "step2": "A imagem é editada com suas sobreposições e texto configurados",
+      "step3": "O cartaz final é colocado no local do ativo",
+      "step4": "O cartaz é sincronizado com o seu servidor de mídia",
+      "viewDocs": "Ver documentação completa"
+    },
+    "jellyfin": {
+      "title": "Modo de sincronização do Jellyfin",
+      "description": "Sincronizar todas as artes do Plex para o Jellyfin",
+      "syncInfo": "Este modo sincronizará todas as artes que você tem no Plex para o seu servidor Jellyfin.",
+      "howItWorks": "Como funciona a sincronização do Jellyfin:",
+      "step1Title": "Os nomes das bibliotecas devem corresponder",
+      "step1Text": "O script requer que os nomes das bibliotecas no Plex e no Jellyfin correspondam exatamente para que a sincronização funcione.",
+      "step2Title": "Cálculo de hash",
+      "step2Text": "O script calcula o hash das artes de ambos os servidores para determinar se há diferenças.",
+      "step3Title": "Sincronização inteligente",
+      "step3Text": "Sincroniza apenas as artes se os hashes não corresponderem, economizando tempo e largura de banda.",
+      "tip": "Dica: isso é útil se você deseja executar a sincronização após uma execução do Kometa, para ter imagens sobrepostas do Kometa no Jellyfin.",
+      "important": "Importante: certifique-se de que UseJellyfin e UsePlex estejam definidos como true em seu config.json e que os nomes das bibliotecas correspondam exatamente.",
+      "cancel": "Cancelar",
+      "start": "Iniciar sincronização do Jellyfin"
+    },
+    "emby": {
+      "title": "Modo de sincronização do Emby",
+      "description": "Sincronizar todas as artes do Plex para o Emby",
+      "syncInfo": "Este modo sincronizará todas as artes que você tem no Plex para o seu servidor Emby.",
+      "howItWorks": "Como funciona a sincronização do Emby:",
+      "step1Title": "Os nomes das bibliotecas devem corresponder",
+      "step1Text": "O script requer que os nomes das bibliotecas no Plex e no Emby correspondam exatamente para que a sincronização funcione.",
+      "step2Title": "Cálculo de hash",
+      "step2Text": "O script calcula o hash das artes de ambos os servidores para determinar se há diferenças.",
+      "step3Title": "Sincronização inteligente",
+      "step3Text": "Sincroniza apenas as artes se os hashes não corresponderem, economizando tempo e largura de banda.",
+      "tip": "Dica: isso é útil se você deseja executar a sincronização após uma execução do Kometa, para ter imagens sobrepostas do Kometa no Emby.",
+      "important": "Importante: certifique-se de que UseEmby e UsePlex estejam definidos como true em seu config.json e que os nomes das bibliotecas correspondam exatamente.",
+      "cancel": "Cancelar",
+      "start": "Iniciar sincronização do Emby"
+    },
+    "status": {
+      "running": "Script em execução",
+      "stopFirst": "Pare o script antes de executar outro modo",
+      "stopButton": "Parar script",
+      "scriptRunning": "O script está atualmente em execução",
+      "mode": "Modo:"
+    },
+    "required": "*",
+    "hints": {
+      "standard": {
+        "folderLabel": "Nome da pasta",
+        "folderPlaceholder": "Perdido em Marte (2015) {tmdb-286217}",
+        "folderDescription": "Nome exato da pasta do filme (como aparece na sua biblioteca Plex)",
+        "libraryPlaceholder": "Filmes",
+        "libraryDescription": "Nome da biblioteca Plex (ex: Filmes, Séries)"
+      },
+      "season": {
+        "folderLabel": "Nome da pasta da Série",
+        "folderPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+        "folderDescription": "Nome exato da pasta da série (como aparece na sua biblioteca Plex)",
+        "libraryPlaceholder": "Séries",
+        "libraryDescription": "Nome da biblioteca Plex (ex: Séries, Animes)"
+      },
+      "titlecard": {
+        "folderLabel": "Nome da pasta da Série",
+        "folderPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+        "folderDescription": "Nome exato da pasta da série (como aparece na sua biblioteca Plex)",
+        "libraryPlaceholder": "Séries",
+        "libraryDescription": "Nome da biblioteca Plex (ex: Séries, Animes)"
+      },
+      "background": {
+        "folderLabel": "Nome da pasta",
+        "folderPlaceholder": "Perdido em Marte (2015) {tmdb-286217}",
+        "folderDescription": "Nome exato da pasta do filme/série (como aparece na sua biblioteca Plex)",
+        "libraryPlaceholder": "Filmes",
+        "libraryDescription": "Nome da biblioteca Plex (ex: Filmes, Séries)"
+      },
+      "collection": {
+        "libraryPlaceholder": "Filmes",
+        "libraryDescription": "Nome da biblioteca Plex onde a coleção existe"
+      },
+      "folderNameLabel": "Nome da pasta",
+      "tvShowPlaceholder": "Breaking Bad (2008) {tmdb-1396}",
+      "tvShowDescription": "Nome exato da pasta da série (como aparece na sua biblioteca Plex)",
+      "tvLibraryPlaceholder": "Séries",
+      "tvLibraryDescription": "Nome da biblioteca Plex (ex: Séries, Animes)",
+      "collectionLabel": "Nome da coleção",
+      "collectionPlaceholder": "Marvel Cinematic Universe",
+      "collectionDescription": "Nome exato da coleção (como aparece na sua biblioteca Plex)",
+      "collectionLibraryDescription": "Nome da biblioteca Plex onde a coleção existe",
+      "moviePlaceholder": "Perdido em Marte (2015) {tmdb-286217}",
+      "movieDescription": "Nome exato da pasta do filme (como aparece na sua biblioteca Plex)",
+      "movieLibraryPlaceholder": "Filmes",
+      "movieLibraryDescription": "Nome da biblioteca Plex (ex: Filmes, Séries)",
+      "defaultDescription": "Nome exato da pasta (como aparece na sua biblioteca Plex)"
+    }
+  },
+  "releasesSection": {
+    "title": "Lançamentos",
+    "fetchFailed": "Falha ao buscar lançamentos",
+    "fetchError": "Falha ao conectar à API",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "daysAgo": "Há {{days}} dias",
+    "latest": "Mais recente",
+    "preRelease": "Pré-lançamento",
+    "viewChangelog": "Ver changelog",
+    "error": "Erro",
+    "noReleases": "Nenhum lançamento encontrado"
+  },
+  "overlayAssets": {
+    "description": "Gerenciar arquivos de sobreposição (Imagens: PNG, JPEG | Fontes: TTF, OTF, WOFF, WOFF2)",
+    "loadFailed": "Falha ao carregar arquivos de sobreposição",
+    "loadError": "Falha ao carregar arquivos de sobreposição: {{message}}",
+    "invalidFileType": "Tipo de arquivo inválido. Apenas arquivos PNG, JPEG, TTF, OTF, WOFF e WOFF2 são permitidos.",
+    "fileTooLarge": "Tamanho do arquivo muito grande. O tamanho máximo é 10MB.",
+    "uploadSuccess": "Arquivo enviado com sucesso",
+    "uploadFailed": "Falha ao enviar arquivo",
+    "uploadError": "Falha ao enviar arquivo: {{message}}",
+    "deleteSuccess": "Arquivo excluído com sucesso",
+    "deleteFailed": "Falha ao excluir arquivo",
+    "deleteError": "Falha ao excluir arquivo: {{message}}",
+    "uploadTitle": "Enviar arquivo de sobreposição",
+    "uploading": "Enviando...",
+    "clickToUpload": "Clique para enviar um arquivo",
+    "uploadHint": "Imagens: PNG, JPEG (máx 10MB) | Fontes: TTF, OTF, WOFF, WOFF2",
+    "filesTitle": "Arquivos de sobreposição",
+    "all": "Todos",
+    "images": "Imagens",
+    "fonts": "Fontes",
+    "image": "imagem",
+    "font": "fonte",
+    "loading": "Carregando...",
+    "refresh": "Atualizar",
+    "noFiles": "Nenhum arquivo de sobreposição encontrado",
+    "uploadFirst": "Envie seu primeiro arquivo de sobreposição para começar",
+    "noFilteredFiles": "Nenhum arquivo {{type}} encontrado",
+    "uploadOrChangeFilter": "Envie um arquivo {{type}} ou altere o filtro",
+    "preview": "Pré-visualizar",
+    "delete": "Excluir",
+    "download": "Baixar",
+    "imagePreview": "Pré-visualização da imagem",
+    "fontPreview": "Pré-visualização da fonte",
+    "filename": "Nome do arquivo",
+    "failedToLoad": "Falha ao carregar imagem",
+    "uppercase": "Maiúsculas",
+    "lowercase": "Minúsculas",
+    "numbers": "Números",
+    "sample": "Amostra",
+    "fontInfo": "Informações da fonte",
+    "type": "Tipo",
+    "size": "Tamanho",
+    "close": "Fechar",
+    "deleteTitle": "Excluir arquivo",
+    "deleteConfirm": "Tem certeza de que deseja excluir este arquivo?",
+    "cancel": "Cancelar",
+    "uploadPreview": "Pré-visualização do upload",
+    "fontFile": "Arquivo de fonte"
+  },
+  "assetsManager": {
+    "testGallery": "Galeria de teste",
+    "overlayAssets": "Ativos de sobreposição"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "runModes": "Modos de execução",
+    "runtimeHistory": "Histórico de execução",
+    "assets": "Ativos",
+    "config": "Configuração",
+    "galleries": "Galerias",
+    "scheduler": "Agendador",
+    "logs": "Logs",
+    "about": "Sobre",
+    "howItWorks": "Como funciona",
+    "autoTriggers": "Gatilhos automáticos",
+    "assetOverview": "Visão geral dos ativos",
+    "assetReplacer": "Substituidor de ativos",
+    "assetsManager": "Gerenciador de ativos",
+    "generalSettings": "Configurações gerais",
+    "library": "Biblioteca",
+    "notifications": "Notificações",
+    "security": "Segurança",
+    "advanced": "Avançado",
+    "backgrounds": "Fundos",
+    "titleCards": "Cartões de título",
+    "seasons": "Temporadas",
+    "folderView": "Visão de pastas"
+  },
+  "scrollButtons": {
+    "scrollToTop": "Rolar para o topo",
+    "scrollToBottom": "Rolar para o final"
+  },
+  "validateButton": {
+    "validating": "Validando..."
+  },
+  "versionBadge": {
+    "upToDate": "Atualizado",
+    "version": "Versão",
+    "updateAvailable": "Atualização disponível!",
+    "clickForReleases": "Clique aqui para ir para os lançamentos do Github.",
+    "currentVersion": "✓ Versão atual instalada"
+  },
+  "topNavbar": {
+    "changeTheme": "Mudar tema",
+    "selectTheme": "Selecionar tema",
+    "userMenu": "Menu do usuário",
+    "signOut": "Sair",
+    "userProfile": "Perfil do usuário"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "welcome": "Monitore sua instância do Posterizarr",
+    "status": "Status",
+    "running": "Em execução",
+    "stopped": "Parado",
+    "start": "Executar script",
+    "stop": "Parar script",
+    "refresh": "Atualizar status",
+    "logs": "Logs",
+    "clearLogs": "Limpar logs",
+    "autoScroll": "Rolagem automática",
+    "scriptStatus": "Status do script",
+    "scriptFile": "Arquivo do script",
+    "configFile": "Arquivo de configuração",
+    "configExists": "Configuração existe",
+    "scriptExists": "Script existe",
+    "currentMode": "Modo atual",
+    "activeLog": "Log ativo",
+    "pid": "ID do processo",
+    "found": "Encontrado",
+    "missing": "Ausente",
+    "mode": "Modo",
+    "local": "Local",
+    "remote": "Remoto",
+    "checkUpdates": "Verificar atualizações",
+    "lastRun": "Última execução",
+    "version": "Versão",
+    "localVersion": "Versão local",
+    "remoteVersion": "Versão remota",
+    "upToDate": "Atualizado",
+    "updateAvailable": "Atualização disponível",
+    "websocketConnected": "WebSocket conectado",
+    "websocketDisconnected": "WebSocket desconectado",
+    "recentAssets": "Adicionados recentemente",
+    "systemInfo": "Informações do sistema",
+    "runtimeStats": "Estatísticas de execução",
+    "dangerZone": "Zona de perigo",
+    "alreadyRunning": "Outra instância do Posterizarr já está em execução",
+    "alreadyRunningDesc": "O script detectou outra instância. Se for um falso positivo, exclua o arquivo 'running' abaixo.",
+    "deleteRunningFile": "Excluir arquivo 'running'",
+    "noLogs": "Nenhum log disponível",
+    "viewFullLogs": "Ver logs completos",
+    "customize": "Personalizar",
+    "runScript": "Executar script",
+    "deleteConfirmTitle": "Excluir arquivo 'running'?",
+    "deleteConfirmMessage": "Tem certeza de que deseja excluir o arquivo 'running'?",
+    "deleteSuccess": "Arquivo 'running' excluído com sucesso",
+    "deleteError": "Erro ao excluir o arquivo 'running'",
+    "liveLogFeed": "Feed de log ao vivo",
+    "readingFrom": "Lendo de",
+    "linesLoaded": "linhas carregadas",
+    "autoScrollEnabled": "Rolagem automática ativada",
+    "autoScrollDisabled": "Rolagem automática desativada",
+    "waitingForLogs": "Aguardando logs...",
+    "startRunToSeeLogs": "Inicie uma execução para ver os logs aqui",
+    "autoRefresh": "Atualização automática",
+    "live": "Ao vivo",
+    "lastEntries": "Últimas {{count}} entradas",
+    "noActiveLog": "Nenhum log ativo",
+    "statusCards": "Cartões de status",
+    "customizeDescription": "Mostrar ou ocultar seções do painel • Arraste para reordenar"
+  },
+  "config": {
+    "title": "Configuração",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "reset": "Redefinir",
+    "validate": "Validar",
+    "validating": "Validando...",
+    "valid": "Válido",
+    "invalid": "Inválido",
+    "saveSuccess": "Configuração salva com sucesso",
+    "saveError": "Erro ao salvar configuração",
+    "loadError": "Erro ao carregar configuração",
+    "validateSuccess": "A configuração é válida",
+    "validateError": "A configuração contém erros",
+    "confirmReset": "Tem certeza de que deseja redefinir a configuração?",
+    "resetWarning": "Todas as alterações não salvas serão perdidas."
+  },
+  "assets": {
+    "title": "Ativos",
+    "overview": "Visão geral",
+    "replacer": "Substituidor",
+    "overlay": "Sobreposições",
+    "total": "Total",
+    "missing": "Ausentes",
+    "withIssues": "Com problemas",
+    "backgrounds": "Fundos",
+    "titleCards": "Cartões de título",
+    "seasons": "Temporadas",
+    "posters": "Cartazes",
+    "upload": "Enviar",
+    "delete": "Excluir",
+    "replace": "Substituir",
+    "download": "Baixar",
+    "preview": "Pré-visualizar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "sortBy": "Ordenar por",
+    "name": "Nome",
+    "date": "Data",
+    "size": "Tamanho",
+    "type": "Tipo",
+    "noAssets": "Nenhum ativo encontrado",
+    "loading": "Carregando ativos...",
+    "uploadSuccess": "Ativo enviado com sucesso",
+    "uploadError": "Erro ao enviar ativo",
+    "deleteSuccess": "Ativo excluído com sucesso",
+    "deleteError": "Erro ao excluir ativo",
+    "confirmDelete": "Tem certeza de que deseja excluir este ativo?"
+  },
+  "notification": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "info": "Informação"
+  },
+  "logViewer": {
+    "scriptStopped": "Script parado com sucesso",
+    "error": "Erro: {{message}}",
+    "logsRefreshed": "Arquivos de log atualizados",
+    "refreshFailed": "Falha ao atualizar arquivos de log",
+    "loadFailed": "Falha ao carregar {{name}}",
+    "switchedTo": "Mudou para {{file}}",
+    "disconnected": "Feed ao vivo desconectado. Reconectando...",
+    "logsCleared": "Logs limpos",
+    "downloaded": "Arquivo de log baixado",
+    "downloadFailed": "Falha ao baixar arquivo de log",
+    "status": {
+      "live": "Ao vivo",
+      "reconnecting": "Reconectando...",
+      "disconnected": "Desconectado"
+    },
+    "scriptRunning": "O script está em execução",
+    "mode": "Modo",
+    "stopBeforeRunning": "Pare o script antes de executar outro modo",
+    "stopScript": "Parar script",
+    "selectLogFile": "Selecionar arquivo de log",
+    "autoScroll": "Rolagem auto.",
+    "refresh": "Atualizar",
+    "download": "Baixar",
+    "clear": "Limpar",
+    "showingLast": "Mostrando últimas 1000 entradas",
+    "entries": "{{count}} entradas",
+    "noLogs": "Nenhum log para exibir",
+    "startScript": "Inicie um script ou selecione um arquivo de log diferente",
+    "logEntries": "{{count}} entradas de log",
+    "autoScrollStatus": "Rolagem automática: {{status}}",
+    "on": "Ligado",
+    "off": "Desligado",
+    "receivingUpdates": "Recebendo atualizações ao vivo"
+  },
+  "libraryExclusion": {
+    "configNotFound": "Configuração do servidor de mídia não encontrada",
+    "fetchFailed": "Falha ao buscar bibliotecas",
+    "fetchError": "Erro ao buscar bibliotecas: {{message}}",
+    "disabled": "A seleção de biblioteca está desativada no momento",
+    "disabledHint": "Ative o servidor {{server}} ou {{server}}Sync para acessar este recurso",
+    "fetchLibraries": "Buscar bibliotecas",
+    "refreshLibraries": "Atualizar bibliotecas",
+    "includeAll": "Incluir tudo",
+    "excludeAll": "Excluir tudo",
+    "errorTitle": "Falha ao buscar bibliotecas",
+    "fetching": "Buscando bibliotecas de {{server}}...",
+    "selectToExclude": "Selecione bibliotecas para <strong>excluir</strong> do processamento:",
+    "excluded": "Excluído",
+    "included": "Incluído",
+    "clickToFetch": "Clique em \"Buscar bibliotecas\" para carregar bibliotecas do seu servidor {{server}}.",
+    "noLibraries": "Nenhuma biblioteca de filmes ou séries encontrada neste servidor.",
+    "excludedCount": "Bibliotecas excluídas ({{count}}):"
+  },
+  "languageOrderSelector": {
+    "noLanguages": "Nenhum idioma selecionado. Adicione idiomas usando o menu suspenso abaixo.",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo",
+    "removeLanguage": "Remover idioma",
+    "addLanguage": "Adicionar idioma",
+    "currentOrder": "Ordem atual:"
+  },
+  "imageSizeSlider": {
+    "imageSize": "Tamanho da imagem"
+  },
+  "galleryHub": {
+    "viewMode": "Modo de visualização",
+    "gridDescription": "Navegue por todos os ativos por tipo (cartazes, fundos, temporadas, cartões de título)",
+    "folderDescription": "Navegue pelos ativos navegando por bibliotecas e pastas",
+    "gridView": "Visão em grade",
+    "folderView": "Visão de pastas"
+  },
+  "howItWorks": {
+    "header": {
+      "title": "Como o Posterizarr funciona",
+      "subtitle": "Gerenciamento automatizado de cartazes para sua biblioteca de mídia com aplicação inteligente de sobreposição e integração perfeita"
+    },
+    "workflow": {
+      "title": "O fluxo de trabalho"
+    },
+    "steps": {
+      "libraryScanning": {
+        "title": "Escaneamento da biblioteca",
+        "description": "O Posterizarr escaneia autonomamente seu servidor Plex, Jellyfin ou Emby em busca de bibliotecas e conteúdo de mídia.",
+        "details": [
+          "Descoberta automática de biblioteca",
+          "Suporte a múltiplas versões (cortes de cinema, cortes do diretor)",
+          "Exportação CSV de dados de mídia",
+          "Opções de exclusão de biblioteca"
+        ]
+      },
+      "artworkDiscovery": {
+        "title": "Descoberta de arte",
+        "description": "Pesquisa várias fontes em busca de arte de alta qualidade com base em suas preferências de idioma.",
+        "details": [
+          "Fontes: Fanart.tv, TMDB, TVDB, Plex, IMDb",
+          "Imagens sem texto priorizadas",
+          "Ordenação de idioma configurável",
+          "Filtragem de resolução (cartazes 2000x3000, fundos 3840x2160)"
+        ]
+      },
+      "imageProcessing": {
+        "title": "Processamento de imagem",
+        "description": "Transforma a arte baixada com sobreposições personalizadas, texto, bordas e efeitos.",
+        "details": [
+          "Redimensionamento automático para dimensões ideais",
+          "Aplicação de sobreposição personalizada",
+          "Renderização de texto com múltiplas fontes",
+          "Efeitos de borda e gradiente"
+        ]
+      },
+      "assetOrganization": {
+        "title": "Organização de ativos",
+        "description": "Organiza ativos processados usando estrutura de pastas compatível com Kometa para integração perfeita.",
+        "details": [
+          "Suporte à estrutura de pastas Kometa",
+          "Organização de pastas da biblioteca",
+          "Prioridade de caminho de ativo manual",
+          "Limpeza de ativos para mídias excluídas"
+        ]
+      },
+      "mediaServerUpload": {
+        "title": "Envio para servidor de mídia",
+        "description": "Envia diretamente a arte finalizada para seu servidor de mídia ou armazena para integração com Kometa.",
+        "details": [
+          "Envio direto para Plex/Jellyfin/Emby",
+          "Validação de hash inteligente para pular duplicatas",
+          "Marcação de metadados EXIF",
+          "Suporte ao envio de ativos existentes"
+        ]
+      }
+    },
+    "assetTypes": {
+      "title": "Tipos de ativos suportados",
+      "posters": {
+        "title": "Cartazes de filmes/séries",
+        "description": "Cartazes de alta qualidade 2000x3000"
+      },
+      "backgrounds": {
+        "title": "Fundos",
+        "description": "Fundos deslumbrantes 3840x2160"
+      },
+      "seasons": {
+        "title": "Cartazes de temporada",
+        "description": "Arte de temporada organizada"
+      },
+      "titleCards": {
+        "title": "Cartões de título",
+        "description": "Cartões de título de episódios em 16:9"
+      }
+    },
+    "features": {
+      "title": "Principais recursos",
+      "multiSource": {
+        "title": "Descoberta de múltiplas fontes",
+        "text": "Pesquisa Fanart.tv, TMDB, TVDB, Plex e IMDb"
+      },
+      "customOverlays": {
+        "title": "Sobreposições personalizadas",
+        "text": "Aplique bordas, texto e efeitos de gradiente"
+      },
+      "smartFiltering": {
+        "title": "Filtragem inteligente",
+        "text": "Filtragem por resolução e preferência de idioma"
+      },
+      "autoSync": {
+        "title": "Sincronização automática",
+        "text": "Sincronize arte entre servidores de mídia"
+      },
+      "kometaCompatible": {
+        "title": "Compatível com Kometa",
+        "text": "Integração perfeita com a estrutura de pastas Kometa"
+      },
+      "crossPlatform": {
+        "title": "Multiplataforma",
+        "text": "Funciona em Docker, Linux, Windows, macOS e ARM"
+      }
+    },
+    "showcase": {
+      "title": "Veja em ação",
+      "posterizarrOutput": "Saída do Posterizarr",
+      "posterizarrDescription": "Arte de alta qualidade baixada e processada automaticamente com suas sobreposições personalizadas",
+      "kometaIntegration": "Após integração com Kometa",
+      "kometaDescription": "Resultados finais em seu servidor de mídia com sobreposições Kometa adicionais aplicadas"
+    },
+    "cta": {
+      "title": "Pronto para transformar sua biblioteca?",
+      "description": "O Posterizarr cuida de tudo, desde a descoberta da arte até o envio para o servidor de mídia, oferecendo arte bonita e consistente em toda a sua coleção.",
+      "installationGuide": "Ver guia de instalação",
+      "viewOnGitHub": "Ver no GitHub"
+    },
+    "technical": {
+      "title": "Destaques técnicos",
+      "smartCaching": "<strong>Cache inteligente:</strong> cria apenas arte ausente, pulando ativos existentes",
+      "hashValidation": "<strong>Validação de hash:</strong> impede envios duplicados usando metadados EXIF",
+      "rtlSupport": "<strong>Suporte RTL:</strong> renderização de fonte da direita para a esquerda para árabe e hebraico",
+      "backupMode": "<strong>Modo de backup:</strong> baixe e faça backup de toda a arte Plex existente",
+      "automatedCleanup": "<strong>Limpeza automatizada:</strong> remove ativos quando a mídia é excluída",
+      "multipleTriggers": "<strong>Múltiplos gatilhos:</strong> integração com Tautulli, Sonarr, Radarr"
+    }
+  },
+  "gallery": {
+    "title": "Galeria",
+    "viewMode": "Modo de visualização",
+    "grid": "Grade",
+    "list": "Lista",
+    "folder": "Pasta",
+    "imageSize": "Tamanho da imagem",
+    "showInfo": "Mostrar informações",
+    "hideInfo": "Ocultar informações",
+    "fullscreen": "Tela cheia",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "loading": "Carregando galeria...",
+    "noImages": "Nenhuma imagem encontrada",
+    "error": "Erro ao carregar galeria",
+    "folders": "Pastas",
+    "cancelSelect": "Cancelar seleção",
+    "select": "Selecionar",
+    "refresh": "Atualizar",
+    "searchPlaceholder": "Pesquisar cartazes em {{folder}}...",
+    "loadingFolders": "Carregando pastas...",
+    "errorLoadingGallery": "Erro ao carregar galeria de cartazes",
+    "tryAgain": "Tentar novamente",
+    "noFoldersFound": "Nenhuma pasta encontrada",
+    "noFoldersDescription": "Nenhuma pasta encontrada no diretório de ativos. Verifique sua configuração.",
+    "loadingPosters": "Carregando cartazes...",
+    "noMatchingPosters": "Nenhum cartaz correspondente",
+    "noPostersFound": "Nenhum cartaz encontrado",
+    "adjustSearch": "Tente ajustar seus termos de pesquisa para encontrar o que procura",
+    "noPostersInFolder": "Nenhum cartaz encontrado em {{folder}}",
+    "selectAll": "Selecionar tudo",
+    "deselectAll": "Desselecionar tudo",
+    "selected": "{{count}} selecionados",
+    "deleteSelected": "Excluir selecionados ({{count}})",
+    "showing": "Mostrando {{displayed}} de {{total}} cartazes em {{folder}}",
+    "filteredFrom": "Filtrado de {{total}} no total",
+    "deletePoster": "Excluir cartaz",
+    "replaceAsset": "Substituir ativo",
+    "itemsPerPage": "Itens por página",
+    "loadMore": "Carregar mais",
+    "remaining": "{{count}} restantes",
+    "loadAll": "Carregar tudo",
+    "total": "{{count}} no total",
+    "replace": "Substituir",
+    "delete": "Excluir",
+    "previewNotAvailable": "Pré-visualização da imagem não disponível",
+    "useFileExplorer": "Use o explorador de arquivos para ver o cartaz",
+    "size": "Tamanho",
+    "close": "Fechar",
+    "deleteMultipleTitle": "Excluir múltiplos cartazes",
+    "deletePosterTitle": "Excluir cartaz",
+    "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} cartaz(es) selecionado(s)?",
+    "deletePosterMessage": "Tem certeza de que deseja excluir este cartaz?",
+    "deleteButton": "Excluir",
+    "foldersLoaded": "{{folderCount}} pasta(s) carregada(s) com {{posterCount}} cartaz(es)",
+    "foldersFound": "{{count}} pasta(s) encontrada(s) com 0 cartazes",
+    "loadFoldersError": "Falha ao carregar pastas",
+    "postersLoaded": "Carregados {{count}} cartazes de {{folder}}",
+    "loadImagesError": "Falha ao carregar imagens de {{folder}}",
+    "posterDeleted": "Cartaz \"{{name}}\" excluído com sucesso",
+    "deleteError": "Erro ao excluir: {{message}}",
+    "bulkDeletePartial": "Excluídos {{deleted}} cartazes, mas {{failed}} falharam.",
+    "bulkDeleteSuccess": "Excluídos {{count}} cartaz(es) com sucesso",
+    "assetReplaced": "Ativo substituído com sucesso!"
+  },
+  "toast": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "info": "Informação"
+  },
+  "runtimeHistory": {
+    "title": "Histórico de execução",
+    "migrationAvailable": "Migração de dados históricos disponível",
+    "migrationDescription": "Dados de execução de seus arquivos de log existentes podem ser importados para o banco de dados. Isso preservará estatísticas históricas e as tornará consultáveis.",
+    "migrationInfo": "A migração é executada automaticamente na primeira criação do banco de dados, ou você pode acioná-la manualmente abaixo.",
+    "migrating": "Migrando...",
+    "runMigration": "Executar migração",
+    "importing": "Importando...",
+    "importJson": "Importar JSON",
+    "summary": "Resumo (Últimos {{days}} dias)",
+    "days": "{{count}} dias",
+    "totalRuns": "Execuções totais",
+    "totalImages": "Imagens totais",
+    "totalCollections": "Coleções totais",
+    "totalSpaceSaved": "Espaço total economizado",
+    "avgRuntime": "Tempo médio de execução",
+    "totalErrors": "Erros totais",
+    "runsByMode": "Execuções por modo",
+    "allModes": "Todos os modos",
+    "modes": {
+      "normal": "Normal",
+      "testing": "Teste",
+      "manual": "Manual",
+      "scheduled": "Agendado",
+      "backup": "Backup",
+      "syncjelly": "Sinc. Jellyfin",
+      "syncemby": "Sinc. Emby",
+      "reset": "Redefinir",
+      "tautulli": "Tautulli",
+      "arr": "Arr"
+    },
+    "refreshHistory": "Atualizar histórico",
+    "clickForDetails": "Clique para ver detalhes",
+    "detailTitle": "Detalhes da execução",
+    "table": {
+      "timestamp": "Timestamp",
+      "mode": "Modo",
+      "runtime": "Tempo de execução",
+      "images": "Imagens",
+      "posters": "Cartazes",
+      "seasons": "Temporadas",
+      "backgrounds": "Fundos",
+      "titlecards": "Cartões de título",
+      "collections": "Coleções",
+      "errors": "Erros"
+    },
+    "noEntries": "Nenhuma entrada de histórico encontrada",
+    "pagination": {
+      "page": "Página {{page}} • Mostrando {{count}} entradas",
+      "previous": "Anterior",
+      "next": "Próximo"
+    }
+  },
+  "schedulerSettings": {
+    "loading": "Carregando configurações do agendador...",
+    "updating": "Atualizando...",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "containerUsersOnly": "Apenas usuários de contêiner",
+    "containerUsersInfo": "Defina <strong>RUN_TIME=disabled</strong> nas configurações do seu compose ou container antes de ativar o agendador da interface - não use ambos os agendamentos ao mesmo tempo. (Exemplo: <strong>RUN_TIME=02:00</strong> → alterar para <strong>RUN_TIME=disabled</strong>)",
+    "lastRun": "Última execução",
+    "nextRun": "Próxima execução",
+    "never": "Nunca",
+    "status": {
+      "running": "Em execução",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    },
+    "configuration": "Configuração",
+    "timezone": "Fuso horário",
+    "timezoneDescription": "Defina o fuso horário para execuções agendadas. Todos os horários são exibidos automaticamente no fuso horário do seu navegador.",
+    "skipIfRunning": "Pular execuções agendadas se já estiverem em execução",
+    "skipIfRunningDesc": "Impede execuções sobrepostas",
+    "restartScheduler": "Reiniciar agendador",
+    "runNow": "Executar agora",
+    "schedules": "Agendamentos",
+    "clearAll": "Limpar tudo",
+    "confirmClearAllTitle": "Limpar todos os agendamentos",
+    "confirmClearAllMessage": "Tem certeza de que deseja limpar todos os agendamentos? Isso não pode ser desfeito.",
+    "timePlaceholder": "HH:MM (ex: 14:30)",
+    "descriptionPlaceholder": "Descrição (opcional)",
+    "add": "Adicionar",
+    "removeSchedule": "Remover agendamento",
+    "noSchedulesConfigured": "Nenhum agendamento configurado",
+    "addScheduleHint": "Adicione um agendamento acima para começar",
+    "activeJobs": "Trabalhos ativos",
+    "next": "Próximo",
+    "success": {
+      "scheduleAdded": "Agendamento adicionado",
+      "scheduleRemoved": "Agendamento removido",
+      "allCleared": "Todos os agendamentos limpos",
+      "timezoneUpdated": "Fuso horário atualizado",
+      "willSkip": "Pulará se já estiver em execução",
+      "willAllow": "Permitirá execuções simultâneas",
+      "manualRunTriggered": "Execução manual acionada",
+      "schedulerRestarted": "Agendador reiniciado",
+      "schedulerEnabled": "Agendador ativado",
+      "schedulerDisabled": "Agendador desativado"
+    },
+    "errors": {
+      "loadData": "Falha ao carregar dados do agendador",
+      "updateScheduler": "Falha ao atualizar agendador",
+      "enterTime": "Insira um horário",
+      "addSchedule": "Falha ao adicionar agendamento",
+      "removeSchedule": "Falha ao remover agendamento",
+      "clearSchedules": "Falha ao limpar agendamentos",
+      "updateTimezone": "Falha ao atualizar fuso horário",
+      "updateConfig": "Falha ao atualizar configuração",
+      "triggerRun": "Falha ao acionar execução",
+      "restartScheduler": "Falha ao reiniciar agendador"
+    }
+  },
+  "testGallery": {
+    "success": {
+      "filesLoaded": "Carregados {{count}} arquivos de teste",
+      "testModeStarted": "Modo de teste iniciado com sucesso!"
+    },
+    "errors": {
+      "scriptRunning": "O script já está em execução! Por favor, pare-o primeiro.",
+      "loadFailed": "Falha ao carregar galeria de teste",
+      "withMessage": "Falha ao iniciar modo de teste: {{message}}"
+    },
+    "open": "Abrir",
+    "closed": "Fechado",
+    "previewUnavailable": "Pré-visualização indisponível",
+    "imagePreviewNotAvailable": "Pré-visualização da imagem não disponível",
+    "refresh": "Atualizar",
+    "startTestMode": "Iniciar modo de teste",
+    "scriptRunning": "Script em execução",
+    "mode": "Modo:",
+    "unknown": "Desconhecido",
+    "searchPlaceholder": "Pesquisar arquivos de teste...",
+    "loading": "Carregando galeria de teste...",
+    "errorLoadingTitle": "Erro ao carregar galeria de teste",
+    "noFilesTitle": "Nenhum arquivo de teste encontrado",
+    "noFilesSearchHint": "Nenhum arquivo de teste corresponde à sua pesquisa",
+    "noFilesHint": "Execute o script no modo de teste para gerar imagens de teste",
+    "total": "Total:",
+    "testFiles": "Arquivos de teste",
+    "filteredFrom": "(filtrado de {{total}} no total)",
+    "expandAll": "Expandir tudo",
+    "collapseAll": "Recolher tudo",
+    "size": "Tamanho:",
+    "close": "Fechar",
+    "categories": {
+      "posters": "Cartazes",
+      "postersDesc": "Cartazes padrão de filmes e séries",
+      "backgrounds": "Fundos",
+      "backgroundsDesc": "Imagens de fundo para séries e filmes",
+      "seasonPosters": "Cartazes de temporada",
+      "seasonPostersDesc": "Cartazes para temporadas individuais de séries",
+      "titleCards": "Cartões de título",
+      "titleCardsDesc": "Cartões de título de episódios para séries"
+    }
+  },
+  "seasonGallery": {
+    "folders": "Pastas",
+    "select": "Selecionar",
+    "cancelSelect": "Cancelar seleção",
+    "refresh": "Atualizar",
+    "searchPlaceholder": "Pesquisar temporadas em {{folderName}}...",
+    "loadingFolders": "Carregando pastas...",
+    "errorLoadingTitle": "Erro ao carregar galeria de temporadas",
+    "tryAgain": "Tentar novamente",
+    "noFoldersTitle": "Nenhuma pasta encontrada",
+    "noFoldersDescription": "Nenhuma pasta encontrada no diretório de ativos. Verifique sua configuração.",
+    "loadingSeasons": "Carregando temporadas...",
+    "noMatchingTitle": "Nenhuma temporada correspondente",
+    "noMatchingDescription": "Tente ajustar seus termos de pesquisa para encontrar o que procura",
+    "noSeasonsTitle": "Nenhuma temporada encontrada",
+    "noSeasonsDescription": "Nenhuma temporada encontrada em {{folderName}}",
+    "selectAll": "Selecionar tudo",
+    "deselectAll": "Desselecionar tudo",
+    "selectedCount": "{{count}} selecionados",
+    "deleteSelected": "Excluir selecionados ({{count}})",
+    "showing": "Mostrando {{displayed}} de {{total}} temporadas em {{folderName}}",
+    "filteredFrom": "Filtrado de {{total}} no total",
+    "deleteSeason": "Excluir temporada",
+    "replaceAsset": "Substituir ativo",
+    "itemsPerPage": "Itens por página:",
+    "loadMore": "Carregar mais",
+    "remaining": "{{count}} restantes",
+    "loadAll": "Carregar tudo",
+    "total": "{{count}} no total",
+    "replace": "Substituir",
+    "delete": "Excluir",
+    "imageNotAvailable": "Pré-visualização da imagem não disponível",
+    "useFileExplorer": "Use o explorador de arquivos para ver a temporada",
+    "size": "Tamanho: {{size}} KB",
+    "close": "Fechar",
+    "deleteMultipleTitle": "Excluir múltiplas temporadas",
+    "deleteSeasonTitle": "Excluir cartaz da temporada",
+    "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} temporada(s) selecionada(s)?",
+    "deleteSeasonMessage": "Tem certeza de que deseja excluir este cartaz da temporada?",
+    "foldersLoaded": "{{folderCount}} pasta(s) carregada(s) com {{seasonCount}} cartaz(es) de temporada",
+    "foldersFoundNoSeasons": "{{count}} pasta(s) encontrada(s) com 0 cartazes de temporada",
+    "seasonsLoaded": "Carregadas {{count}} temporadas de {{folderName}}",
+    "deleteSuccess": "Temporada \"{{name}}\" excluída com sucesso",
+    "bulkDeleteSuccess": "Excluídas {{count}} temporada(s) com sucesso",
+    "bulkDeletePartial": "Excluídas {{deletedCount}} temporadas, mas {{failedCount}} falharam.",
+    "assetReplaced": "Ativo substituído com sucesso!",
+    "errors": {
+      "loadFolders": "Falha ao carregar pastas",
+      "loadImages": "Falha ao carregar imagens de {{folderName}}",
+      "deleteSeason": "Falha ao excluir temporada",
+      "deleteError": "Erro ao excluir: {{message}}",
+      "bulkDelete": "Falha ao excluir temporadas"
+    }
+  },
+  "titleCardGallery": {
+    "success": {
+      "foldersLoaded": "{{folders}} pasta(s) carregada(s) com {{titlecards}} cartão(ões) de título",
+      "foldersFound": "{{count}} pasta(s) encontrada(s) com 0 cartões de título",
+      "titleCardsLoaded": "Carregados {{count}} cartões de título de {{folder}}",
+      "titleCardDeleted": "Cartão de título \"{{name}}\" excluído com sucesso",
+      "bulkDeleteSuccess": "Excluídos {{count}} cartão(ões) de título com sucesso"
+    },
+    "errors": {
+      "bulkDeletePartial": "Excluídos {{deleted}} cartões de título, mas {{failed}} falharam."
+    },
+    "folders": "Pastas",
+    "select": "Selecionar",
+    "cancelSelect": "Cancelar seleção",
+    "refresh": "Atualizar",
+    "searchPlaceholder": "Pesquisar cartões de título em {{folder}}...",
+    "loadingFolders": "Carregando pastas...",
+    "errorLoadingTitle": "Erro ao carregar galeria de cartões de título",
+    "tryAgain": "Tentar novamente",
+    "noFoldersTitle": "Nenhuma pasta encontrada",
+    "noFoldersMessage": "Nenhuma pasta encontrada no diretório de ativos. Verifique sua configuração.",
+    "loadingTitleCards": "Carregando cartões de título...",
+    "noMatchingTitle": "Nenhum cartão de título correspondente",
+    "noTitleCardsTitle": "Nenhum cartão de título encontrado",
+    "noMatchingMessage": "Tente ajustar seus termos de pesquisa para encontrar o que procura",
+    "noTitleCardsMessage": "Nenhum cartão de título encontrado em {{folder}}",
+    "selectAll": "Selecionar tudo",
+    "deselectAll": "Desselecionar tudo",
+    "selected": "{{count}} selecionados",
+    "deleteSelected": "Excluir selecionados ({{count}})",
+    "showingCount": "Mostrando {{displayed}} de {{total}} cartões de título em {{folder}}",
+    "filteredFrom": "Filtrado de {{total}} no total",
+    "itemsPerPage": "Itens por página:",
+    "loadMore": "Carregar mais",
+    "remaining": "{{count}} restantes",
+    "loadAll": "Carregar tudo",
+    "total": "{{count}} no total",
+    "replace": "Substituir",
+    "delete": "Excluir",
+    "imagePreviewNotAvailable": "Pré-visualização da imagem não disponível",
+    "useFileExplorer": "Use o explorador de arquivos para ver o cartão de título",
+    "size": "Tamanho:",
+    "close": "Fechar",
+    "deleteMultipleTitle": "Excluir múltiplos cartões de título",
+    "deleteSingleTitle": "Excluir cartão de título",
+    "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} cartão(ões) de título selecionado(s)?",
+    "deleteSingleMessage": "Tem certeza de que deseja excluir este cartão de título?"
+  },
+  "scheduler": {
+    "title": "Agendador",
+    "enable": "Ativar agendador",
+    "disable": "Desativar agendador",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "schedule": "Agendamento",
+    "addTask": "Adicionar tarefa",
+    "editTask": "Editar tarefa",
+    "deleteTask": "Excluir tarefa",
+    "taskName": "Nome da tarefa",
+    "mode": "Modo",
+    "time": "Hora",
+    "days": "Dias",
+    "monday": "Segunda-feira",
+    "tuesday": "Terça-feira",
+    "wednesday": "Quarta-feira",
+    "thursday": "Quinta-feira",
+    "friday": "Sexta-feira",
+    "saturday": "Sábado",
+    "sunday": "Domingo",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "noTasks": "Nenhuma tarefa agendada",
+    "saveSuccess": "Agendamento salvo com sucesso",
+    "saveError": "Erro ao salvar agendamento"
+  },
+  "logs": {
+    "title": "Logs",
+    "refresh": "Atualizar",
+    "clear": "Limpar",
+    "download": "Baixar",
+    "autoRefresh": "Atualização automática",
+    "filter": "Filtrar",
+    "error": "Erro",
+    "warning": "Aviso",
+    "info": "Info",
+    "debug": "Debug",
+    "noLogs": "Nenhum log disponível",
+    "loading": "Carregando logs...",
+    "confirmClear": "Tem certeza de que deseja limpar todos os logs?",
+    "clearSuccess": "Logs limpos com sucesso",
+    "clearError": "Erro ao limpar logs"
+  },
+  "about": {
+    "title": "Sobre o Posterizarr",
+    "version": "Versão",
+    "description": "Gerenciamento automático de cartazes e ativos para Plex, Jellyfin e Emby",
+    "credits": "Créditos",
+    "license": "Licença",
+    "documentation": "Documentação",
+    "github": "GitHub",
+    "support": "Suporte",
+    "updates": "Atualizações",
+    "changelog": "Changelog",
+    "betaWarning": "Este é um software BETA. Recursos podem estar quebrados e/ou instáveis. Por favor, reporte quaisquer problemas no",
+    "unknown": "Desconhecido",
+    "outOfDate": "Desatualizado",
+    "upToDate": "Atualizado",
+    "latestAvailable": "Mais recente disponível",
+    "dataDirectory": "Diretório de dados",
+    "timeZone": "Fuso horário",
+    "gettingSupport": "Obtendo suporte",
+    "githubIssues": "Problemas do GitHub",
+    "discordServer": "Servidor Discord",
+    "supportPosterizarr": "Apoie o Posterizarr",
+    "helpPayForCoffee": "Ajude a pagar um café ☕",
+    "supportDevelopment": "Apoie o desenvolvimento do Posterizarr",
+    "preferred": "Preferido",
+    "webuiDevelopedWith": "WebUI desenvolvida com",
+    "by": "por",
+    "forTheCommunity": "para a comunidade"
+  },
+  "backgroundsGallery": {
+    "folders": "Pastas",
+    "select": "Selecionar",
+    "cancelSelect": "Cancelar seleção",
+    "searchPlaceholder": "Pesquisar fundos em {{folder}}...",
+    "loadingFolders": "Carregando pastas...",
+    "loadingBackgrounds": "Carregando fundos...",
+    "errorTitle": "Erro ao carregar galeria de fundos",
+    "tryAgain": "Tentar novamente",
+    "noFoldersTitle": "Nenhuma pasta encontrada",
+    "noFoldersDescription": "Nenhuma pasta encontrada no diretório de ativos. Verifique sua configuração.",
+    "noMatchingTitle": "Nenhum fundo correspondente",
+    "noMatchingDescription": "Tente ajustar seus termos de pesquisa para encontrar o que procura",
+    "noBackgroundsTitle": "Nenhum fundo encontrado",
+    "noBackgroundsDescription": "Nenhum fundo encontrado em {{folder}}",
+    "foldersLoaded": "{{folders}} pasta(s) carregada(s) com {{backgrounds}} fundo(s)",
+    "foldersFoundEmpty": "{{count}} pasta(s) encontrada(s) com 0 fundos",
+    "failedLoadFolders": "Falha ao carregar pastas",
+    "loadedFromFolder": "Carregados {{count}} fundos de {{folder}}",
+    "failedLoadImages": "Falha ao carregar imagens de {{folder}}",
+    "failedDeleteBackground": "Falha ao excluir fundo",
+    "deleteSuccess": "Fundo \"{{name}}\" excluído com sucesso",
+    "deleteError": "Erro ao excluir: {{error}}",
+    "failedBulkDelete": "Falha ao excluir fundos",
+    "bulkDeletePartial": "Excluídos {{deleted}} fundos, mas {{failed}} falharam.",
+    "bulkDeleteSuccess": "Excluídos {{count}} fundo(s) com sucesso",
+    "selectAll": "Selecionar tudo",
+    "deselectAll": "Desselecionar tudo",
+    "selectedCount": "{{count}} selecionados",
+    "deleteSelected": "Excluir selecionados ({{count}})",
+    "showingCount": "Mostrando {{displayed}} de {{filtered}} fundos em {{folder}}",
+    "filteredFrom": "Filtrado de {{total}} no total",
+    "deleteTooltip": "Excluir fundo",
+    "replaceTooltip": "Substituir ativo",
+    "itemsPerPage": "Itens por página:",
+    "loadMore": "Carregar mais",
+    "remaining": "{{count}} restantes",
+    "loadAll": "Carregar tudo",
+    "total": "{{count}} no total",
+    "replace": "Substituir",
+    "previewNotAvailable": "Pré-visualização da imagem não disponível",
+    "useFileExplorer": "Use o explorador de arquivos para ver o fundo",
+    "size": "Tamanho: {{size}} KB",
+    "deleteMultipleTitle": "Excluir múltiplos fundos",
+    "deleteSingleTitle": "Excluir fundo",
+    "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} fundo(s) selecionado(s)?",
+    "deleteSingleMessage": "Tem certeza de que deseja excluir este fundo?",
+    "replaceSuccess": "Ativo substituído com sucesso!"
+  },
+  "configEditor": {
+    "loadingConfig": "Carregando configuração...",
+    "errorLoadingConfig": "Erro ao carregar configuração",
+    "retry": "Tentar novamente",
+    "reload": "Recarregar",
+    "saveConfigTitle": "Salvar configuração (Ctrl+Enter)",
+    "saving": "Salvando...",
+    "saveChanges": "Salvar alterações",
+    "searchPlaceholder": "Pesquisar configurações por nome ou valor...",
+    "filteringSettings": "Filtrando configurações que correspondem a \"{{query}}\"",
+    "section": "{{count}} seção",
+    "section_plural": "{{count}} seções",
+    "filtered": "filtradas",
+    "expandAll": "Expandir tudo",
+    "collapseAll": "Recolher tudo",
+    "noSettingsFound": "Nenhuma configuração encontrada",
+    "noSettingsMatch": "Nenhuma configuração corresponde à sua pesquisa \"{{query}}\" na seção {{tab}}",
+    "clearSearch": "Limpar pesquisa",
+    "overlayPreview": "Pré-visualização da sobreposição",
+    "fontPreview": "Pré-visualização da fonte",
+    "filename": "Nome do arquivo",
+    "failedLoadImage": "Falha ao carregar imagem",
+    "uppercase": "Maiúsculas",
+    "lowercase": "Minúsculas",
+    "numbers": "Números",
+    "sample": "Amostra"
+  },
+  "assetsStats": {
+    "title": "Visão geral dos ativos",
+    "fetchError": "Falha ao buscar estatísticas de ativos",
+    "apiError": "Falha ao conectar à API",
+    "refreshSuccess": "Cache de ativos atualizado com sucesso!",
+    "refreshError": "Falha ao atualizar cache: {{error}}",
+    "refreshFailed": "Falha ao atualizar cache",
+    "error": "Erro",
+    "refreshTooltip": "Atualizar cache de ativos",
+    "posters": "Cartazes",
+    "backgrounds": "Fundos",
+    "seasons": "Temporadas",
+    "titleCards": "Cartões de título",
+    "totalAssets": "Total de ativos",
+    "totalSize": "Tamanho total",
+    "topFolders": "Principais pastas por contagem de arquivos",
+    "filesCount": "{{count}} arquivos"
+  },
+  "assetReplacer": {
+    "title": "Substituir ativo",
+    "enterTitleError": "Insira um título para pesquisar",
+    "foundReplacements": "Encontradas {{count}} opções de substituição de {{sources}} fontes",
+    "fetchPreviewsError": "Falha ao buscar pré-visualizações",
+    "errorFetchingPreviews": "Erro ao buscar pré-visualizações: {{error}}",
+    "selectImageError": "Selecione um arquivo de imagem",
+    "enterTitleTextError": "Insira um texto de título para processamento de sobreposição",
+    "enterFolderNameError": "Insira um nome de pasta para processamento de sobreposição",
+    "enterLibraryNameError": "Insira um nome de biblioteca para processamento de sobreposição",
+    "enterSeasonNumberError": "Insira um número de temporada para processamento de sobreposição",
+    "enterEpisodeNumberError": "Insira um número de episódio para processamento de sobreposição",
+    "enterEpisodeTitleError": "Insira um título de episódio para processamento de sobreposição",
+    "enterSeasonPosterNameError": "Insira um nome de cartaz de temporada para processamento de sobreposição",
+    "replacedAndQueued": "Ativo substituído e enfileirado para processamento de sobreposição! ",
+    "replacedSuccessfully": "Ativo substituído com sucesso!",
+    "uploadError": "Falha ao enviar ativo",
+    "errorUploadingFile": "Erro ao enviar arquivo: {{error}}",
+    "replaceError": "Falha ao substituir ativo",
+    "errorReplacingAsset": "Erro ao substituir ativo: {{error}}",
+    "uploadCustom": "Enviar personalizado",
+    "servicePreviews": "Pré-visualizações do serviço",
+    "uploadYourOwnImage": "Envie sua própria imagem",
+    "selectCustomImage": "Selecione uma imagem personalizada para substituir este ativo",
+    "uploading": "Enviando...",
+    "chooseFile": "Escolher arquivo",
+    "manualSearchByTitle": "Pesquisa manual por título",
+    "searchForAssets": "Pesquisar ativos:",
+    "orFetchFromServices": "Ou buscar de serviços:",
+    "fetchFromServices": "Buscar de TMDB/TVDB/Fanart",
+    "fetchingPreviews": "Buscando pré-visualizações dos serviços...",
+    "noPreviewsLoaded": "Nenhuma pré-visualização carregada ainda",
+    "fetchPreviews": "Buscar pré-visualizações",
+    "select": "Selecionar"
+  },
+  "assetOverview": {
+    "title": "Visão geral dos ativos",
+    "description": "Visão geral de todos os ativos com categorização detalhada",
+    "loading": "Carregando visão geral dos ativos...",
+    "fetchError": "Falha ao buscar visão geral dos ativos",
+    "errorLoadingData": "Erro ao carregar dados",
+    "assetsWithIssues": "Ativos com problemas",
+    "missingAssets": "Ativos ausentes",
+    "nonPrimaryLang": "Idioma não primário",
+    "nonPrimaryProvider": "Provedor não primário",
+    "truncatedTextCategory": "Texto truncado",
+    "missingAsset": "Ativo ausente",
+    "notPrimaryLanguage": "Idioma não primário",
+    "notPrimaryProvider": "Provedor não primário",
+    "truncatedText": "Texto truncado",
+    "manual": "Manual",
+    "searchPlaceholder": "Pesquisar por título ou caminho...",
+    "allTypes": "Todos os tipos",
+    "allLibraries": "Todas as bibliotecas",
+    "allCategories": "Todas as categorias",
+    "allAssets": "Todos os ativos",
+    "noAssetsFound": "Nenhum ativo encontrado",
+    "type": "Tipo",
+    "language": "Idioma",
+    "source": "Fonte",
+    "viewSource": "Ver fonte",
+    "replace": "Substituir",
+    "replaceTooltip": "Substituir este ativo"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "remove": "Remover",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "yes": "Sim",
+    "no": "Não",
+    "ok": "OK",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "warning": "Aviso",
+    "info": "Informação",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "upload": "Enviar",
+    "download": "Baixar",
+    "refresh": "Atualizar",
+    "settings": "Configurações",
+    "logout": "Sair",
+    "login": "Entrar",
+    "done": "Concluído"
+  },
+  "theme": {
+    "title": "Tema",
+    "selectTheme": "Selecionar tema",
+    "dark": "Escuro",
+    "light": "Claro",
+    "auto": "Automático"
+  },
+  "language": {
+    "title": "Idioma",
+    "selectLanguage": "Selecionar idioma",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "it": "Italiano",
+    "pt": "Português"
+  },
+  "notifications": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "warning": "Aviso",
+    "info": "Informação"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "username": "Nome de usuário",
+    "password": "Senha",
+    "signIn": "Entrar",
+    "signInToContinue": "Entre para continuar",
+    "signingIn": "Entrando...",
+    "enterUsername": "Insira seu nome de usuário",
+    "enterPassword": "Insira sua senha",
+    "loginSuccess": "Login bem-sucedido",
+    "loginError": "Falha no login. Tente novamente.",
+    "logoutSuccess": "Logout bem-sucedido",
+    "invalidCredentials": "Nome de usuário ou senha inválidos",
+    "connectionError": "Erro de conexão. Tente novamente.",
+    "sessionExpired": "Sessão expirada"
+  },
+  "validation": {
+    "required": "Este campo é obrigatório",
+    "invalid": "Valor inválido",
+    "min": "Valor mínimo: {{min}}",
+    "max": "Valor máximo: {{max}}",
+    "minLength": "Comprimento mínimo: {{min}} caracteres",
+    "maxLength": "Comprimento máximo: {{max}} caracteres",
+    "email": "Endereço de e-mail inválido",
+    "url": "URL inválida"
+  },
+  "loading": {
+    "initializing": "Inicializando o Posterizarr...",
+    "messages": [
+      "Pelo menos você não está em espera...",
+      "Carregando seus cartazes com estilo...",
+      "Convencendo a IA de que seu gosto é impecável...",
+      "Pedindo aos hamsters para correrem mais rápido...",
+      "Reticulando splines...",
+      "Calibrando o capacitor de fluxo...",
+      "Preparando pixels frescos...",
+      "Acordando os hamsters do servidor...",
+      "Baixando mais RAM...",
+      "Polindo sua coleção de filmes...",
+      "Ensinando robôs a apreciar arte...",
+      "Consultando a bola 8 mágica...",
+      "Invocando os espíritos dos cartazes...",
+      "Fazendo parecer fácil...",
+      "99 pequenos bugs no código... espere, agora 100...",
+      "O tempo é uma ilusão. O tempo de carregamento, duplamente...",
+      "Já chegamos?",
+      "Paciência, jovem padawan...",
+      "Carregando a tela de carregamento...",
+      "Isso está demorando mais do que o esperado..."
+    ]
+  },
+  "systemInfo": {
+    "title": "Informações do sistema",
+    "refreshTooltip": "Atualizar informações do sistema",
+    "platform": "Plataforma",
+    "cpuModel": "Modelo da CPU",
+    "cpuUnavailable": "Informações da CPU indisponíveis",
+    "cores": "{{count}} núcleos",
+    "unknownCores": "Núcleos desconhecidos",
+    "memoryUsage": "Uso de memória",
+    "free": "livre",
+    "memoryUnavailable": "Informações de memória indisponíveis"
+  },
+  "runtimeStats": {
+    "title": "Estatísticas de execução",
+    "refreshTooltip": "Atualizar estatísticas de execução",
+    "noData": "Nenhum dado de execução disponível ainda. Execute o script para ver as estatísticas.",
+    "migrationTip": "Dica:",
+    "migrationDesc": "Dados históricos de execução de seus logs podem ser importados automaticamente. A migração será executada automaticamente na próxima inicialização, ou você pode acioná-la manualmente na página Histórico de execução.",
+    "executionTime": "Tempo de execução",
+    "totalImages": "Total de imagens",
+    "errors": "Erros",
+    "additionalInfo": "Informações adicionais",
+    "tbaSkipped": "TBA ignorados",
+    "japChinesSkipped": "JP/CN ignorados",
+    "imagesCleared": "Imagens removidas",
+    "foldersCleared": "Pastas removidas",
+    "spaceSaved": "Espaço economizado",
+    "versionInfo": "Informações de versão",
+    "scriptVersion": "Versão do script",
+    "imVersion": "Versão ImageMagick",
+    "scheduledRuns": "Execuções agendadas",
+    "nextRun": "Próxima execução",
+    "configuredSchedules": "Horários agendados configurados",
+    "timezone": "Fuso horário",
+    "schedulerTimezone": "Fuso horário do agendador",
+    "displayedInYourTimezone": "Exibido no seu fuso horário",
+    "differentFromBrowser": "diferente do navegador",
+    "runInfo": "Informações de execução",
+    "imageStats": "Estatísticas de imagens",
+    "startTime": "Hora de início",
+    "endTime": "Hora de término",
+    "notificationSent": "Notificação enviada",
+    "notes": "Notas"
+  },
+  "dangerZone": {
+    "title": "Zona de perigo",
+    "warning": "Estas ações são potencialmente destrutivas",
+    "forceKill": "Forçar parada",
+    "forceKillTitle": "Forçar parada do script",
+    "forceKillMessage": "Forçar parada encerrará imediatamente o script. Isso só deve ser usado quando a parada normal não funcionar.",
+    "stopSuccess": "Script parado com sucesso",
+    "stopError": "Falha ao parar o script",
+    "forceKillSuccess": "Script forçado a parar com sucesso",
+    "forceKillError": "Falha ao forçar a parada do script"
+  },
+  "recentAssets": {
+    "title": "Criados recentemente",
+    "refreshTooltip": "Atualizar ativos recentes",
+    "loadError": "Falha ao carregar ativos recentes",
+    "noAssets": "Nenhum ativo recente encontrado"
+  },
+  "confirmDialog": {
+    "title": "Confirmar ação",
+    "confirm": "Excluir",
+    "cancel": "Cancelar"
+  },
+  "folderView": {
+    "assets": "Ativos",
+    "searchLibraries": "Pesquisar bibliotecas...",
+    "searchItems": "Pesquisar itens...",
+    "searchAssets": "Pesquisar ativos...",
+    "selectAll": "Selecionar tudo ({{count}})",
+    "deselectAll": "Desselecionar tudo",
+    "deleteAllAssets": "Excluir todos os ativos ({{count}})",
+    "delete": "Excluir ({{count}})",
+    "cancelSelect": "Cancelar seleção",
+    "select": "Selecionar",
+    "refresh": "Atualizar",
+    "loading": "Carregando...",
+    "total": "Total: {{count}} ativos",
+    "posters": "Cartazes: {{count}}",
+    "backgrounds": "Fundos: {{count}}",
+    "seasons": "Temporadas: {{count}}",
+    "episodes": "Episódios: {{count}}",
+    "assetsCount": "{{count}} ativos",
+    "replaceImage": "Substituir imagem",
+    "deleteImage": "Excluir imagem",
+    "noResults": "Nenhum resultado encontrado",
+    "noLibraries": "Nenhuma biblioteca encontrada",
+    "noItems": "Nenhum item encontrado",
+    "noAssets": "Nenhum ativo encontrado",
+    "adjustSearch": "Tente ajustar seus termos de pesquisa",
+    "emptyFolder": "Esta pasta está vazia",
+    "replace": "Substituir",
+    "previewNotAvailable": "Pré-visualização da imagem não disponível",
+    "useFileExplorer": "Use o explorador de arquivos para ver a imagem",
+    "size": "Tamanho",
+    "close": "Fechar",
+    "refreshSuccess": "Conteúdo atualizado com sucesso",
+    "deleteSuccess": "{{name}} excluído com sucesso",
+    "deleteError": "Falha ao excluir {{name}}",
+    "bulkDeleteSuccess": "Excluídos {{count}} ativo(s) com sucesso",
+    "bulkDeleteError": "Falha ao excluir {{count}} ativo(s)",
+    "bulkDeleteFoldersSuccess": "Processadas {{folderCount}} pastas com sucesso ({{assetCount}} ativos excluídos)",
+    "bulkDeleteFoldersError": "Falha ao processar {{count}} pastas",
+    "deleteAllAssetsTitle": "Excluir todos os ativos nas pastas selecionadas",
+    "deleteMultipleTitle": "Excluir múltiplos ativos",
+    "deleteAssetTitle": "Excluir ativo",
+    "deleteAllAssetsMessage": "Tem certeza de que deseja excluir TODOS os ativos em {{count}} pasta(s) selecionada(s)? Isso excluirá todos os cartazes, fundos, temporadas e cartões de título dentro dessas pastas.",
+    "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} ativo(s) selecionado(s)?",
+    "deleteAssetMessage": "Tem certeza de que deseja excluir este ativo?",
+    "deleteButton": "Excluir"
+  },
+  "autoTriggers": {
+    "header": {
+      "title": "Gatilhos automáticos",
+      "subtitle": "Configure a criação automática de cartazes quando novos conteúdos forem adicionados à sua biblioteca"
+    },
+    "tabs": {
+      "tautulli": {
+        "description": "Gatilho em eventos da biblioteca Plex"
+      },
+      "sonarr": {
+        "description": "Gatilho em importações de séries de TV"
+      },
+      "radarr": {
+        "description": "Gatilho em importações de filmes"
+      }
+    },
+    "setupSteps": "Passos de configuração",
+    "howItWorks": "Como funciona",
+    "copyCode": "Copiar para área de transferência",
+    "resources": {
+      "title": "Recursos adicionais",
+      "tautulliWiki": "Wiki de Scripts Personalizados do Tautulli",
+      "sonarrWiki": "Documentação de Configurações Connect do Sonarr",
+      "radarrWiki": "Documentação de Configurações Connect do Radarr",
+      "triggerScript": "Ver trigger.py no GitHub",
+      "arrTriggerScript": "Ver ArrTrigger.sh no GitHub"
+    },
+    "tautulli": {
+      "selectMode": "Selecione seu ambiente",
+      "requirements": {
+        "title": "Requisitos",
+        "docker": "Tautulli e Posterizarr devem estar sendo executados como contêineres Docker",
+        "windows": "Tautulli e Posterizarr devem estar instalados no mesmo sistema Windows"
+      },
+      "docker": {
+        "description": "Para ambientes em contêineres",
+        "steps": [
+          {
+            "title": "Montar diretório Posterizarr no Tautulli",
+            "description": "Tautulli precisa de acesso ao diretório Posterizarr para executar o script de gatilho.",
+            "warning": "O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
+            "code": [
+              {
+                "label": "Adicione esta montagem de volume ao seu docker-compose.yml do Tautulli:",
+                "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+              }
+            ]
+          },
+          {
+            "title": "Baixar o script de gatilho",
+            "description": "Baixe trigger.py do GitHub e coloque-o no diretório de scripts do Tautulli.",
+            "substeps": [
+              "Baixe de: https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
+              "Coloque no diretório de scripts do Tautulli (veja Wiki do Tautulli para localização)",
+              "Defina permissões de execução: chmod +x trigger.py"
+            ]
+          },
+          {
+            "title": "Configurar agente de notificação do Tautulli",
+            "description": "Crie um novo agente de notificação Script no Tautulli.",
+            "substeps": [
+              "Vá para Configurações → Agentes de notificação",
+              "Clique em 'Adicionar novo agente de notificação' e selecione 'Script'",
+              "Selecione trigger.py da sua pasta de scripts",
+              "Adicione uma descrição (opcional)"
+            ]
+          },
+          {
+            "title": "Definir gatilhos",
+            "description": "Configure quando o script deve ser executado.",
+            "substeps": [
+              "Vá para a aba 'Gatilhos'",
+              "Role para baixo e habilite 'Adicionados recentemente'"
+            ]
+          },
+          {
+            "title": "Definir condições",
+            "description": "Defina quais tipos de mídia devem acionar o script.",
+            "substeps": [
+              "Vá para a aba 'Condições'",
+              "Defina Tipo de mídia para: episode, movie, show, season",
+              "Opcionalmente exclua bibliotecas (ex: YouTube) que não têm IDs TMDB/TVDB"
+            ]
+          },
+          {
+            "title": "Configurar argumentos",
+            "description": "Defina os argumentos necessários para o script funcionar corretamente.",
+            "info": "Não modifique este argumento - o script requer exatamente este formato",
+            "code": [
+              {
+                "label": "Vá para aba Argumentos → Expanda 'Adicionados recentemente' → Cole:",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      },
+      "windows": {
+        "description": "Para instalações Windows",
+        "steps": [
+          {
+            "title": "Configurar agente de notificação do Tautulli",
+            "description": "Crie um novo agente de notificação Script no Tautulli.",
+            "substeps": [
+              "Vá para Configurações → Agentes de notificação",
+              "Clique em 'Adicionar novo agente de notificação' e selecione 'Script'",
+              "Selecione Posterizarr.ps1 da sua pasta Posterizarr",
+              "Defina tempo limite do script para 0 (ilimitado) - os 30 segundos padrão matariam o script",
+              "Adicione uma descrição (opcional)"
+            ]
+          },
+          {
+            "title": "Definir gatilhos",
+            "description": "Configure quando o script deve ser executado.",
+            "substeps": [
+              "Vá para a aba 'Gatilhos'",
+              "Role para baixo e habilite 'Adicionados recentemente'"
+            ]
+          },
+          {
+            "title": "Definir condições",
+            "description": "Defina quais tipos de mídia devem acionar o script.",
+            "substeps": [
+              "Vá para a aba 'Condições'",
+              "Defina Tipo de mídia para: episode, movie, show, season",
+              "Opcionalmente exclua bibliotecas (ex: YouTube) que não têm IDs TMDB/TVDB"
+            ]
+          },
+          {
+            "title": "Configurar argumentos",
+            "description": "Defina os argumentos necessários para o script funcionar corretamente.",
+            "info": "Não modifique este argumento - o script requer exatamente este formato",
+            "code": [
+              {
+                "label": "Vá para aba Argumentos → Expanda 'Adicionados recentemente' → Cole:",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sonarr": {
+      "requirements": {
+        "title": "Requisitos",
+        "description": "Sonarr e Posterizarr devem estar sendo executados como contêineres Docker"
+      },
+      "howItWorks": [
+        "Sonarr cria um arquivo .posterizarr no diretório watcher quando um arquivo é importado",
+        "O arquivo contém metadados sobre o episódio importado",
+        "Posterizarr monitora este diretório para novos arquivos",
+        "Quando detectado, Posterizarr aguarda até 5 minutos (baseado na idade do arquivo)",
+        "Então lê o arquivo e aciona uma execução de criação de cartazes para aquele item específico"
+      ],
+      "steps": [
+        {
+          "title": "Montar diretório Posterizarr no Sonarr",
+          "description": "Sonarr precisa de acesso de escrita ao diretório watcher do Posterizarr.",
+          "warning": "O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
+          "code": [
+            {
+              "label": "Adicione esta montagem de volume ao seu docker-compose.yml do Sonarr:",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Baixar o script de gatilho",
+          "description": "Baixe ArrTrigger.sh do GitHub e coloque-o no diretório de scripts do Sonarr.",
+          "substeps": [
+            "Baixe de: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Exemplo: Crie diretório /opt/appdata/sonarr/scripts/",
+            "Coloque ArrTrigger.sh neste diretório",
+            "Defina permissões de execução: chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configurar configurações Connect do Sonarr",
+          "description": "Adicione uma conexão de script personalizado no Sonarr.",
+          "substeps": [
+            "Vá para Configurações → Connect",
+            "Clique no botão '+' e selecione 'Script personalizado'",
+            "Dê um nome (ex: 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Definir gatilho de notificação",
+          "description": "Configure quando o script deve ser executado.",
+          "substeps": [
+            "Em 'Gatilhos de notificação', habilite APENAS 'Na importação'",
+            "Desabilite todos os outros gatilhos"
+          ]
+        },
+        {
+          "title": "Definir caminho do script",
+          "description": "Aponte o Sonarr para o script de gatilho.",
+          "info": "O caminho deve ser relativo ao sistema de arquivos do contêiner Sonarr",
+          "code": [
+            {
+              "label": "Defina Caminho para:",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Testar e salvar",
+          "description": "Verifique se a configuração funciona corretamente.",
+          "substeps": [
+            "Clique em 'Testar' para garantir que o Sonarr pode executar o script",
+            "Se bem-sucedido, clique em 'Salvar'"
+          ]
+        }
+      ]
+    },
+    "radarr": {
+      "requirements": {
+        "title": "Requisitos",
+        "description": "Radarr e Posterizarr devem estar sendo executados como contêineres Docker"
+      },
+      "howItWorks": [
+        "Radarr cria um arquivo .posterizarr no diretório watcher quando um arquivo é importado",
+        "O arquivo contém metadados sobre o filme importado",
+        "Posterizarr monitora este diretório para novos arquivos",
+        "Quando detectado, Posterizarr aguarda até 5 minutos (baseado na idade do arquivo)",
+        "Então lê o arquivo e aciona uma execução de criação de cartazes para aquele item específico"
+      ],
+      "steps": [
+        {
+          "title": "Montar diretório Posterizarr no Radarr",
+          "description": "Radarr precisa de acesso de escrita ao diretório watcher do Posterizarr.",
+          "warning": "O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
+          "code": [
+            {
+              "label": "Adicione esta montagem de volume ao seu docker-compose.yml do Radarr:",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Baixar o script de gatilho",
+          "description": "Baixe ArrTrigger.sh do GitHub e coloque-o no diretório de scripts do Radarr.",
+          "substeps": [
+            "Baixe de: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Exemplo: Crie diretório /opt/appdata/radarr/scripts/",
+            "Coloque ArrTrigger.sh neste diretório",
+            "Defina permissões de execução: chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configurar configurações Connect do Radarr",
+          "description": "Adicione uma conexão de script personalizado no Radarr.",
+          "substeps": [
+            "Vá para Configurações → Connect",
+            "Clique no botão '+' e selecione 'Script personalizado'",
+            "Dê um nome (ex: 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Definir gatilho de notificação",
+          "description": "Configure quando o script deve ser executado.",
+          "substeps": [
+            "Em 'Gatilhos de notificação', habilite APENAS 'Na importação'",
+            "Desabilite todos os outros gatilhos"
+          ]
+        },
+        {
+          "title": "Definir caminho do script",
+          "description": "Aponte o Radarr para o script de gatilho.",
+          "info": "O caminho deve ser relativo ao sistema de arquivos do contêiner Radarr",
+          "code": [
+            {
+              "label": "Defina Caminho para:",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Testar e salvar",
+          "description": "Verifique se a configuração funciona corretamente.",
+          "substeps": [
+            "Clique em 'Testar' para garantir que o Radarr pode executar o script",
+            "Se bem-sucedido, clique em 'Salvar'"
+          ]
+        }
+      ]
+    }
+  }
+}

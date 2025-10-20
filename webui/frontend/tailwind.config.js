@@ -15,6 +15,35 @@ export default {
         "theme-text": "var(--theme-text)",
         "theme-text-muted": "var(--theme-text-muted)",
       },
+      keyframes: {
+        slideIn: {
+          "0%": { transform: "translateY(-10px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        scaleIn: {
+          "0%": { transform: "scale(0.9)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        slideInRight: {
+          "0%": { transform: "translateX(100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        slideOutRight: {
+          "0%": { transform: "translateX(0)", opacity: "1" },
+          "100%": { transform: "translateX(100%)", opacity: "0" },
+        },
+      },
+      animation: {
+        slideIn: "slideIn 0.3s ease-out",
+        fadeIn: "fadeIn 0.2s ease-out",
+        scaleIn: "scaleIn 0.2s ease-out",
+        slideInRight: "slideInRight 0.3s ease-out",
+        slideOutRight: "slideOutRight 0.3s ease-out",
+      },
     },
   },
   plugins: [],

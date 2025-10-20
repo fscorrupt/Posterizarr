@@ -1,4 +1,3 @@
-// RecentAssets.jsx - Improved Version
 // - CompactImageSizeSlider (5-10 Assets)
 // - Dynamic poster sizing with CSS Grid
 // - Single horizontal row, all posters visible
@@ -6,9 +5,19 @@
 // - All badges at bottom (no overlay)
 // - Cached data with silent background refresh (every 2 minutes)
 
-import React, { useState, useEffect } from "react";
-import { FileImage, ExternalLink, RefreshCw, ImageOff } from "lucide-react";
-import toast from "react-hot-toast";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  FileImage,
+  ExternalLink,
+  RefreshCw,
+  ImageOff,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useDashboardLoading } from "../context/DashboardLoadingContext";
+import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
@@ -16,10 +25,27 @@ const API_URL = "/api";
 let cachedAssets = null;
 
 function RecentAssets() {
+  const { t } = useTranslation();
+  const { showSuccess, showError, showInfo } = useToast();
+  const { startLoading, finishLoading } = useDashboardLoading();
+  const hasInitiallyLoaded = useRef(false);
   const [assets, setAssets] = useState(cachedAssets || []);
   const [loading, setLoading] = useState(false); // No initial loading if cached
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // Error state
+
   const [refreshing, setRefreshing] = useState(false);
+
+  // Tab filter state with localStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem("recent-assets-tab");
+    return saved || "All";
+  });
+
+  // Pagination offset state with localStorage per tab
+  const [pageOffset, setPageOffset] = useState(() => {
+    const saved = localStorage.getItem(`recent-assets-offset-${activeTab}`);
+    return saved ? parseInt(saved) : 0;
+  });
 
   // Asset count state with localStorage (5-10 range, default 10)
   const [assetCount, setAssetCount] = useState(() => {
@@ -32,6 +58,7 @@ function RecentAssets() {
   const fetchRecentAssets = async (silent = false) => {
     if (!silent) {
       setRefreshing(true);
+      startLoading("recent-assets");
     }
     setError(null);
 
@@ -40,54 +67,161 @@ function RecentAssets() {
       const data = await response.json();
 
       if (data.success) {
-        cachedAssets = data.assets; // 🎯 Save to persistent cache
+        cachedAssets = data.assets; // Save to persistent cache
         setAssets(data.assets);
-      } else {
-        setError(data.error || "Failed to load recent assets");
-        if (!silent) {
-          toast.error("Failed to load recent assets");
+        setError(null);
+
+        // Mark as loaded after first successful fetch
+        if (!hasInitiallyLoaded.current) {
+          hasInitiallyLoaded.current = true;
+          finishLoading("recent-assets");
         }
+      } else {
+        const errorMsg = data.error || t("recentAssets.loadError");
+        setError(errorMsg);
+        showError(errorMsg);
       }
     } catch (err) {
-      setError(err.message);
+      const errorMsg = err.message || t("recentAssets.loadError");
+      setError(errorMsg);
+      showError(errorMsg);
       console.error("Error fetching recent assets:", err);
-      if (!silent) {
-        toast.error("Error loading recent assets");
-      }
     } finally {
       setLoading(false);
       if (!silent) {
-        setTimeout(() => setRefreshing(false), 500);
+        setTimeout(() => {
+          setRefreshing(false);
+        }, 500);
       }
     }
   };
 
   useEffect(() => {
-    // 🎯 Always fetch on mount (silent mode = no loading spinner)
-    fetchRecentAssets(true);
+    // Register as loading and fetch on mount (silent mode = no loading spinner)
+    startLoading("recent-assets");
 
-    // 🎯 Background refresh every 2 minutes (silent)
+    // Check cache first
+    if (cachedAssets) {
+      setAssets(cachedAssets);
+      setLoading(false);
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("recent-assets");
+      }
+    } else {
+      fetchRecentAssets(true);
+    }
+
+    // Background refresh every 2 minutes (silent)
     const interval = setInterval(() => fetchRecentAssets(true), 2 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      // Don't finish loading on unmount - that happens when data is fetched
+    };
+  }, [startLoading]);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10
     const validCount = Math.min(Math.max(newCount, 5), 10);
     setAssetCount(validCount);
     localStorage.setItem("recent-assets-count", validCount.toString());
+    // Reset offset when changing count
+    setPageOffset(0);
+    localStorage.setItem(`recent-assets-offset-${activeTab}`, "0");
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem("recent-assets-tab", tab);
+    // Load offset for this tab or reset to 0
+    const savedOffset = localStorage.getItem(`recent-assets-offset-${tab}`);
+    setPageOffset(savedOffset ? parseInt(savedOffset) : 0);
+  };
+
+  const handlePageChange = (direction) => {
+    const filteredAssets = filterAssetsByTab(assets);
+    const maxOffset = Math.max(0, filteredAssets.length - assetCount);
+
+    let newOffset = pageOffset;
+    if (direction === "prev") {
+      newOffset = Math.max(0, pageOffset - assetCount);
+    } else if (direction === "next") {
+      newOffset = Math.min(maxOffset, pageOffset + assetCount);
+    }
+
+    setPageOffset(newOffset);
+    localStorage.setItem(
+      `recent-assets-offset-${activeTab}`,
+      newOffset.toString()
+    );
+  };
+
+  // Filter assets based on active tab
+  const filterAssetsByTab = (assetList) => {
+    if (activeTab === "All") {
+      return assetList;
+    }
+
+    return assetList.filter((asset) => {
+      const type = asset.type?.toLowerCase() || "";
+
+      switch (activeTab) {
+        case "Posters":
+          return type === "movie" || type === "poster" || type === "show";
+        case "Backgrounds":
+          return type.includes("background");
+        case "Seasons":
+          return type === "season";
+        case "TitleCards":
+          return (
+            type === "episode" || type === "titlecard" || type === "title_card"
+          );
+        default:
+          return true;
+      }
+    });
   };
 
   const getTypeColor = (type) => {
     switch (type?.toLowerCase()) {
       case "movie":
+      case "poster":
         return "bg-blue-500/20 text-blue-400 border-blue-500/50";
       case "show":
         return "bg-purple-500/20 text-purple-400 border-purple-500/50";
+      case "season":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/50";
+      case "episode":
+      case "titlecard":
+      case "title_card":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/50";
+      case "background":
+        return "bg-pink-500/20 text-pink-400 border-pink-500/50";
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/50";
     }
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type?.toLowerCase()) {
+      case "titlecard":
+      case "title_card":
+        return "Episode";
+      default:
+        return type;
+    }
+  };
+
+  // Determine if asset should use landscape aspect ratio
+  const isLandscapeAsset = (type) => {
+    const typeStr = type?.toLowerCase() || "";
+    // Check for any background or titlecard/episode types
+    const landscapeTypes = ["background", "episode", "titlecard", "title_card"];
+    const isLandscape =
+      landscapeTypes.some((t) => typeStr.includes(t)) ||
+      typeStr.includes("background");
+    return isLandscape;
   };
 
   const getLanguageColor = (language) => {
@@ -97,8 +231,58 @@ function RecentAssets() {
     return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
   };
 
-  // Get the assets to display based on slider value
-  const displayedAssets = assets.slice(0, assetCount);
+  // Get the assets to display based on slider value, active tab, and pagination
+  const filteredAssets = filterAssetsByTab(assets);
+  const displayedAssets = filteredAssets.slice(
+    pageOffset,
+    pageOffset + assetCount
+  );
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredAssets.length / assetCount);
+  const currentPage = Math.floor(pageOffset / assetCount) + 1;
+  const hasPrevPage = pageOffset > 0;
+  const hasNextPage = pageOffset + assetCount < filteredAssets.length;
+
+  // Tab configuration - dynamically filter tabs based on available assets
+  const allTabs = [
+    { id: "All", label: "All" },
+    { id: "Posters", label: "Posters" },
+    { id: "Backgrounds", label: "Backgrounds" },
+    { id: "Seasons", label: "Seasons" },
+    { id: "TitleCards", label: "TitleCards" },
+  ];
+
+  // Filter tabs to only show those with assets
+  const tabs = allTabs.filter((tab) => {
+    if (tab.id === "All") {
+      return assets.length > 0; // Always show "All" if there are any assets
+    }
+    // Count how many assets match this tab
+    const tabAssets = assets.filter((asset) => {
+      const type = asset.type?.toLowerCase() || "";
+      switch (tab.id) {
+        case "Posters":
+          return type === "movie" || type === "poster" || type === "show";
+        case "Backgrounds":
+          return type.includes("background");
+        case "Seasons":
+          return type === "season";
+        case "TitleCards":
+          return (
+            type === "episode" || type === "titlecard" || type === "title_card"
+          );
+        default:
+          return false;
+      }
+    });
+    return tabAssets.length > 0; // Only show tab if it has assets
+  });
+
+  // Don't render the card if there are no assets and not loading
+  if (!loading && assets.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
@@ -108,7 +292,7 @@ function RecentAssets() {
           <div className="p-2 rounded-lg bg-theme-primary/10">
             <FileImage className="w-5 h-5 text-theme-primary" />
           </div>
-          Recently Created Assets
+          {t("dashboard.recentAssets")}
         </h2>
 
         <div className="flex items-center gap-3">
@@ -126,14 +310,46 @@ function RecentAssets() {
             onClick={() => fetchRecentAssets()}
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
-            title="Refresh recent assets"
+            title={t("recentAssets.refreshTooltip")}
           >
             <RefreshCw
               className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
             />
-            <span className="text-sm font-medium">Refresh</span>
+            <span className="text-sm font-medium">{t("common.refresh")}</span>
           </button>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-theme-border scrollbar-track-transparent">
+        {tabs.map((tab) => {
+          const tabFilteredCount = filterAssetsByTab(assets).length;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap
+                ${
+                  isActive
+                    ? "bg-theme-primary text-white shadow-lg"
+                    : "bg-theme-bg text-theme-muted hover:text-theme-text hover:bg-theme-hover border border-theme"
+                }
+              `}
+            >
+              <span>{tab.label}</span>
+              {isActive && (
+                <span className="ml-1 px-2 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
+                  {tab.id === "All"
+                    ? assets.length
+                    : filterAssetsByTab(assets).length}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}
@@ -154,14 +370,14 @@ function RecentAssets() {
       ) : displayedAssets.length === 0 ? (
         <div className="text-center py-8 text-theme-muted">
           <FileImage className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p>No recent assets found</p>
+          <p>{t("recentAssets.noAssets")}</p>
         </div>
       ) : (
         <>
           {/* Flexible Grid - All posters visible in one row, responsive */}
-          <div className="w-full">
+          <div className="w-full overflow-x-auto">
             <div
-              className="poster-grid gap-4"
+              className="poster-grid"
               style={{
                 "--poster-count": assetCount,
               }}
@@ -169,10 +385,16 @@ function RecentAssets() {
               {displayedAssets.map((asset, index) => (
                 <div
                   key={index}
-                  className="bg-theme-bg rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all group"
+                  className="bg-theme-bg rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all group flex flex-col"
                 >
-                  {/* Poster Image */}
-                  <div className="relative aspect-[2/3] bg-theme-dark">
+                  {/* Poster/Background Image - Dynamic Aspect Ratio */}
+                  <div
+                    className={`relative bg-theme-dark flex-shrink-0 ${
+                      isLandscapeAsset(asset.type)
+                        ? "aspect-[16/9]"
+                        : "aspect-[2/3]"
+                    }`}
+                  >
                     {asset.has_poster ? (
                       <img
                         src={asset.poster_url}
@@ -209,7 +431,7 @@ function RecentAssets() {
                   </div>
 
                   {/* Asset Info */}
-                  <div className="p-3 bg-theme-card">
+                  <div className="p-3 bg-theme-card flex-1 flex flex-col justify-between">
                     <h3
                       className="font-semibold text-theme-text text-sm truncate mb-2"
                       title={asset.title}
@@ -218,15 +440,15 @@ function RecentAssets() {
                     </h3>
 
                     {/* All Badges in one row */}
-                    <div className="flex flex-wrap gap-1">
-                      {/* Type Badge (Movie/Show) */}
+                    <div className="flex flex-wrap gap-1 mt-auto">
+                      {/* Type Badge (Poster/Show/Season/Episode/Background) */}
                       {asset.type && (
                         <span
                           className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getTypeColor(
                             asset.type
                           )}`}
                         >
-                          {asset.type}
+                          {getTypeLabel(asset.type)}
                         </span>
                       )}
 
@@ -237,16 +459,25 @@ function RecentAssets() {
                         </span>
                       )}
 
-                      {/* Language Badge */}
-                      {asset.language && (
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageColor(
-                            asset.language
-                          )}`}
-                        >
-                          {asset.language}
+                      {/* Manual Badge (replaces N/A) */}
+                      {asset.is_manually_created && (
+                        <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/50">
+                          Manual
                         </span>
                       )}
+
+                      {/* Language Badge (only if not manually created) */}
+                      {!asset.is_manually_created &&
+                        asset.language &&
+                        asset.language !== "N/A" && (
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageColor(
+                              asset.language
+                            )}`}
+                          >
+                            {asset.language}
+                          </span>
+                        )}
 
                       {/* Fallback Badge */}
                       {asset.fallback && (
@@ -271,10 +502,46 @@ function RecentAssets() {
             </div>
           </div>
 
-          {/* Footer with count */}
-          <div className="mt-4 pt-4 border-t border-theme text-center text-sm text-theme-muted">
-            Showing {displayedAssets.length} of {assets.length} recent{" "}
-            {assets.length === 1 ? "asset" : "assets"}
+          {/* Footer with count and pagination */}
+          <div className="mt-4 pt-4 border-t border-theme">
+            <div className="flex items-center justify-between">
+              {/* Left: Count info */}
+              <div className="text-sm text-theme-muted">
+                Showing {pageOffset + 1}-
+                {Math.min(pageOffset + assetCount, filteredAssets.length)} of{" "}
+                {filteredAssets.length}{" "}
+                {activeTab !== "All" && `${activeTab.toLowerCase()} `}
+                {filteredAssets.length === 1 ? "asset" : "assets"}
+                {activeTab !== "All" && ` (${assets.length} total)`}
+              </div>
+
+              {/* Right: Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange("prev")}
+                    disabled={!hasPrevPage}
+                    className="p-2 rounded-lg bg-theme-bg hover:bg-theme-hover border border-theme disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-theme-text" />
+                  </button>
+
+                  <span className="text-sm text-theme-muted px-3">
+                    Page {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => handlePageChange("next")}
+                    disabled={!hasNextPage}
+                    className="p-2 rounded-lg bg-theme-bg hover:bg-theme-hover border border-theme disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4 text-theme-text" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -282,21 +549,52 @@ function RecentAssets() {
       {/* Poster Grid Styles */}
       <style jsx>{`
         .poster-grid {
-          display: grid;
-          grid-template-columns: repeat(var(--poster-count), minmax(0, 1fr));
+          display: flex;
+          gap: 1rem;
+          align-items: flex-end;
+        }
+
+        /* Cards maintain their natural size */
+        .poster-grid > div {
+          display: flex;
+          flex-direction: column;
+          flex: 0 0
+            calc(
+              (100% - (var(--poster-count) - 1) * 1rem) / var(--poster-count)
+            );
+          min-width: 0;
+        }
+
+        /* Image container maintains aspect ratio */
+        .poster-grid > div > div:first-child {
+          flex-shrink: 0;
+          width: 100%;
+        }
+
+        /* Info section */
+        .poster-grid > div > div:last-child {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
         }
 
         /* Responsive: Tablet */
         @media (max-width: 1024px) {
           .poster-grid {
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            flex-wrap: wrap;
+            align-items: flex-start;
+          }
+          .poster-grid > div {
+            flex: 0 0 calc((100% - 3rem) / 4);
+            min-width: 180px;
           }
         }
 
         /* Responsive: Mobile */
         @media (max-width: 640px) {
-          .poster-grid {
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          .poster-grid > div {
+            flex: 0 0 calc((100% - 1rem) / 2);
+            min-width: 140px;
           }
         }
       `}</style>

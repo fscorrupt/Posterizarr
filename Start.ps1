@@ -4,7 +4,7 @@ function ScriptSchedule {
     $Directory = Get-ChildItem -Name $inputDir
 
     if (!$env:RUN_TIME) {
-        $env:RUN_TIME = "05:00" # Set default value if not provided
+        $env:RUN_TIME = "disabled" # Set default value if not provided
     }
 
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
@@ -208,7 +208,41 @@ function CompareScriptVersion {
                 # Extract the version from the line
                 Write-Host ""
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
-                Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+
+                # Check if local version is greater than remote (development version)
+                $displayVersion = $version
+                if ($version -and $LatestScriptVersion) {
+                    try {
+                        $localParts = $version.Split('.') | ForEach-Object { [int]$_ }
+                        $remoteParts = $LatestScriptVersion.Split('.') | ForEach-Object { [int]$_ }
+
+                        # Compare versions (major.minor.patch)
+                        $isGreater = $false
+                        for ($i = 0; $i -lt [Math]::Min($localParts.Count, $remoteParts.Count); $i++) {
+                            if ($localParts[$i] -gt $remoteParts[$i]) {
+                                $isGreater = $true
+                                break
+                            }
+                            elseif ($localParts[$i] -lt $remoteParts[$i]) {
+                                break
+                            }
+                        }
+
+                        if ($isGreater) {
+                            $displayVersion = "$version-dev"
+                            Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion (Development version ahead of release)" -ForegroundColor Yellow
+                        }
+                        else {
+                            Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                        }
+                    }
+                    catch {
+                        Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                    }
+                }
+                else {
+                    Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                }
             }
         }
         else {
@@ -423,17 +457,37 @@ CopyAssetFiles
 if (-not (test-path "$env:APP_DATA/config.json")) {
     Write-Host ""
     Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
-    Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
-    Write-Host "    After that restart the container..."
-    Write-Host "Waiting for config.json file to be created..."
+    Copy-Item "$env:APP_DATA/config.example.json" "$env:APP_DATA/config.json" -Force | out-null
+    Write-Host "Created a default 'config.json' file from 'config.example.json'" -ForegroundColor Yellow
+    Write-Host "Please edit the config.json according to GH repo to match your needs.." -ForegroundColor Yellow
     do {
         Start-Sleep 600
     } until (
         test-path "$env:APP_DATA/config.json"
     )
 }
+
+# Define file paths in variables for clarity and easy maintenance
+$configDir = "$env:APP_DATA"
+$configFile = Join-Path -Path $configDir -ChildPath "config.json"
+$exampleFile = Join-Path -Path $configDir -ChildPath "config.example.json"
+
+# Check if the config file exists
+if (-not (Test-Path $configFile)) {
+    Write-Warning "Configuration file not found at '$configFile'."
+
+    # Check if the example file exists before trying to copy it
+    if (Test-Path $exampleFile) {
+        Copy-Item -Path $exampleFile -Destination $configFile -Force | Out-Null
+        Write-Host "    A new 'config.json' has been created from the example." -ForegroundColor Green
+        Write-Host "    Please edit this file with your settings..." -ForegroundColor Yellow
+    }
+}
+
+# Rest of your script continues here, knowing the config file exists
+Write-Host "Config file found. Proceeding with script..."
+
 # Ensure WebUI config
-$configFile = "$env:APP_DATA/config.json"
 Ensure-WebUIConfig -jsonFilePath $configFile
 
 # Check temp dir if there is a Currently running file present

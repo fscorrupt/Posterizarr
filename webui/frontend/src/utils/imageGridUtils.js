@@ -8,15 +8,15 @@ export const getGridColumns = (size, isPortrait = true) => {
   if (isPortrait) {
     // Portrait images (2:3 aspect ratio) - Posters & Seasons
     switch (size) {
-      case 1: // Sehr groß
+      case 1: // Very large
         return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3";
-      case 2: // Groß
+      case 2: // Large
         return "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
-      case 3: // Mittel (Standard)
+      case 3: // Medium (default)
         return "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
-      case 4: // Klein
+      case 4: // Small
         return "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
-      case 5: // Sehr klein
+      case 5: // Very small
         return "grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8";
       default:
         return "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
@@ -24,15 +24,15 @@ export const getGridColumns = (size, isPortrait = true) => {
   } else {
     // Landscape images (16:9 aspect ratio) - Backgrounds & TitleCards
     switch (size) {
-      case 1: // Sehr groß
+      case 1: // Very large
         return "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2";
-      case 2: // Groß
+      case 2: // Large
         return "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3";
-      case 3: // Mittel (Standard)
+      case 3: // Medium (default)
         return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
-      case 4: // Klein
+      case 4: // Small
         return "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
-      case 5: // Sehr klein
+      case 5: // Very small
         return "grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6";
       default:
         return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";

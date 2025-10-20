@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Activity,
   Play,
@@ -21,12 +22,19 @@ import {
   Bell,
   Lock,
   User,
+  FileImage,
+  Lightbulb,
+  AlertTriangle,
+  TrendingUp,
+  Zap,
+  FolderKanban,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
 import { useTheme } from "../context/ThemeContext";
 
 const Sidebar = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const { theme, setTheme, themes } = useTheme();
@@ -34,6 +42,61 @@ const Sidebar = () => {
   const [isAssetsExpanded, setIsAssetsExpanded] = useState(false);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [missingAssetsCount, setMissingAssetsCount] = useState(0);
+
+  // Check if Folder View is active
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem("gallery-view-mode") || "grid";
+  });
+
+  // Fetch missing assets count
+  React.useEffect(() => {
+    const fetchMissingAssetsCount = async () => {
+      try {
+        const response = await fetch("/api/assets/overview");
+        if (response.ok) {
+          const data = await response.json();
+          // Show total assets with issues (not just missing assets)
+          setMissingAssetsCount(data.categories.assets_with_issues.count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch missing assets count:", error);
+      }
+    };
+
+    fetchMissingAssetsCount();
+
+    // Listen for assetReplaced event to refresh immediately
+    const handleAssetReplaced = () => {
+      fetchMissingAssetsCount();
+    };
+    window.addEventListener("assetReplaced", handleAssetReplaced);
+
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchMissingAssetsCount, 60000);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("assetReplaced", handleAssetReplaced);
+    };
+  }, []);
+
+  // Update viewMode when localStorage changes (listen to storage events)
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      setViewMode(localStorage.getItem("gallery-view-mode") || "grid");
+    };
+
+    // Listen for custom event from GalleryHub
+    window.addEventListener("viewModeChanged", handleStorageChange);
+    // Also check periodically (fallback)
+    const interval = setInterval(handleStorageChange, 500);
+
+    return () => {
+      window.removeEventListener("viewModeChanged", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   const themeArray = Object.entries(themes).map(([id, config]) => ({
     id,
@@ -42,41 +105,92 @@ const Sidebar = () => {
   }));
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: Activity },
-    { path: "/run-modes", label: "Run Modes", icon: Play },
+    { path: "/", label: t("nav.dashboard"), icon: Activity },
+    { path: "/run-modes", label: t("nav.runModes"), icon: Play },
+    {
+      path: "/runtime-history",
+      label: t("nav.runtimeHistory"),
+      icon: TrendingUp,
+    },
     {
       path: "/gallery",
-      label: "Assets",
+      label: t("nav.assets"),
       icon: Image,
       hasSubItems: true,
-      subItems: [
-        { path: "/gallery/posters", label: "Posters", icon: Image },
-        { path: "/gallery/backgrounds", label: "Backgrounds", icon: Layers },
-        { path: "/gallery/seasons", label: "Seasons", icon: Film },
-        { path: "/gallery/titlecards", label: "Title Cards", icon: Tv },
-      ],
+      subItems:
+        // In Folder View: Only show "Posters" tab, in Grid View: show all tabs
+        viewMode === "folder"
+          ? [
+              {
+                path: "/gallery/posters",
+                label: t("assets.posters"),
+                icon: Image,
+              },
+            ]
+          : [
+              {
+                path: "/gallery/posters",
+                label: t("assets.posters"),
+                icon: Image,
+              },
+              {
+                path: "/gallery/backgrounds",
+                label: t("assets.backgrounds"),
+                icon: Layers,
+              },
+              {
+                path: "/gallery/seasons",
+                label: t("assets.seasons"),
+                icon: Film,
+              },
+              {
+                path: "/gallery/titlecards",
+                label: t("assets.titleCards"),
+                icon: Tv,
+              },
+            ],
     },
-    { path: "/test-gallery", label: "Test Assets", icon: Image },
+    {
+      path: "/asset-overview",
+      label: t("nav.assetOverview"),
+      icon: AlertTriangle,
+      badge: missingAssetsCount,
+    },
+    {
+      path: "/assets-manager",
+      label: t("nav.assetsManager"),
+      icon: FolderKanban,
+    },
     {
       path: "/config",
-      label: "Config",
+      label: t("nav.config"),
       icon: Settings,
       hasSubItems: true,
       subItems: [
         { path: "/config/webui", label: "WebUI", icon: Lock },
-        { path: "/config/general", label: "General", icon: Settings },
-        { path: "/config/services", label: "Services", icon: Database },
-        { path: "/config/api", label: "API", icon: Settings },
-        { path: "/config/languages", label: "Languages", icon: Type },
+        {
+          path: "/config/general",
+          label: t("nav.generalSettings"),
+          icon: Settings,
+        },
+        { path: "/config/services", label: "Media Servers", icon: Database },
+        { path: "/config/api", label: "Service APIs", icon: Settings },
+        { path: "/config/languages", label: t("nav.library"), icon: Type },
         { path: "/config/visuals", label: "Visuals", icon: Palette },
         { path: "/config/overlays", label: "Overlays", icon: Palette },
         { path: "/config/collections", label: "Collections", icon: Type },
-        { path: "/config/notifications", label: "Notifications", icon: Bell },
+        {
+          path: "/config/notifications",
+          label: t("nav.notifications"),
+          icon: Bell,
+        },
       ],
     },
-    { path: "/scheduler", label: "Scheduler", icon: Clock },
-    { path: "/logs", label: "Logs", icon: FileText },
-    { path: "/about", label: "About", icon: Info },
+    { path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
+    { path: "/logs", label: t("nav.logs"), icon: FileText },
+    { path: "/how-it-works", label: t("nav.howItWorks"), icon: Lightbulb },
+    { path: "/auto-triggers", label: t("nav.autoTriggers"), icon: Zap },
+    { path: "/about", label: t("nav.about"), icon: Info },
   ];
 
   const isInAssetsSection = location.pathname.startsWith("/gallery");
@@ -90,7 +204,7 @@ const Sidebar = () => {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <div className="flex items-center p-4 h-16">
+        <div className="flex items-center p-4 h-20">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
@@ -99,9 +213,13 @@ const Sidebar = () => {
             <Menu className="w-5 h-5" />
           </button>
           {!isCollapsed && (
-            <span className="ml-3 text-xl font-bold text-theme-primary">
-              Posterizarr
-            </span>
+            <div className="ml-3 flex items-center">
+              <img
+                src="/logo.png"
+                alt="Posterizarr Logo"
+                className="h-12 w-auto object-contain"
+              />
+            </div>
           )}
         </div>
 
@@ -188,7 +306,7 @@ const Sidebar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center ${
-                    isCollapsed ? "justify-center" : "px-3"
+                    isCollapsed ? "justify-center" : "justify-between px-3"
                   } py-3 rounded-lg text-sm font-medium transition-all group ${
                     isActive
                       ? "bg-theme-primary text-white shadow-lg"
@@ -196,8 +314,17 @@ const Sidebar = () => {
                   }`}
                   title={isCollapsed ? item.label : ""}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span className="ml-3">{item.label}</span>}
+                  <div className="flex items-center">
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="ml-3">{item.label}</span>}
+                  </div>
+                  {!isCollapsed &&
+                    item.badge !== undefined &&
+                    item.badge > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                        {item.badge}
+                      </span>
+                    )}
                 </Link>
               );
             })}
@@ -382,14 +509,21 @@ const Sidebar = () => {
                       key={item.path}
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                         isActive
                           ? "bg-theme-primary text-white shadow-lg"
                           : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
                       }`}
                     >
-                      <Icon className="w-5 h-5 mr-3" />
-                      <span>{item.label}</span>
+                      <div className="flex items-center">
+                        <Icon className="w-5 h-5 mr-3" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

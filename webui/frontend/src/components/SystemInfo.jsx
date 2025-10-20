@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Cpu, HardDrive, Server, RefreshCw, Monitor } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useDashboardLoading } from "../context/DashboardLoadingContext";
 
 const API_URL = "/api";
 
 let cachedSystemInfo = null;
 
 function SystemInfo() {
+  const { t } = useTranslation();
+  const { startLoading, finishLoading } = useDashboardLoading();
+  const hasInitiallyLoaded = useRef(false);
   const [systemInfo, setSystemInfo] = useState(
     cachedSystemInfo || {
       platform: "Loading...",
@@ -33,27 +38,39 @@ function SystemInfo() {
         return;
       }
       const data = await response.json();
-      cachedSystemInfo = data; // 🎯 Save to persistent cache
+      cachedSystemInfo = data; // Save to persistent cache
       setSystemInfo(data);
+
+      // Mark as loaded after first successful fetch
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("system-info");
+      }
     } catch (error) {
       console.error("Error fetching system info:", error);
     } finally {
       setLoading(false);
       if (!silent) {
-        setTimeout(() => setRefreshing(false), 500);
+        setTimeout(() => {
+          setRefreshing(false);
+        }, 500);
       }
     }
   };
 
   useEffect(() => {
-    // 🎯 Immer beim Mount fetchen (silent mode = kein Refresh-Spinner)
+    // Register as loading component and fetch data
+    startLoading("system-info");
     fetchSystemInfo(true);
 
-    // 🎯 Optional: Alle 5 Minuten im Hintergrund aktualisieren (silent)
+    // Optional: Alle 5 Minuten im Hintergrund aktualisieren (silent)
     const interval = setInterval(() => fetchSystemInfo(true), 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      // Don't finish loading on unmount - that happens when data is fetched
+    };
+  }, [startLoading]);
 
   // Format memory percentage color
   const getMemoryColor = (percent) => {
@@ -93,18 +110,18 @@ function SystemInfo() {
           <div className="p-2 rounded-lg bg-theme-primary/10">
             <Server className="w-5 h-5 text-theme-primary" />
           </div>
-          System Information
+          {t("dashboard.systemInfo")}
         </h2>
         <button
           onClick={() => fetchSystemInfo()}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
-          title="Refresh system info"
+          title={t("systemInfo.refreshTooltip")}
         >
           <RefreshCw
             className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
           />
-          <span className="text-sm font-medium">Refresh</span>
+          <span className="text-sm font-medium">{t("common.refresh")}</span>
         </button>
       </div>
 
@@ -115,7 +132,7 @@ function SystemInfo() {
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-theme-muted text-sm mb-1 font-medium">
-                Platform
+                {t("systemInfo.platform")}
               </p>
               <p className="text-2xl font-bold text-theme-text mb-2">
                 {systemInfo.platform}
@@ -135,7 +152,7 @@ function SystemInfo() {
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-theme-muted text-sm mb-1 font-medium">
-                CPU Model
+                {t("systemInfo.cpuModel")}
               </p>
 
               {/* CPU Name or Fallback */}
@@ -148,15 +165,15 @@ function SystemInfo() {
                 </p>
               ) : (
                 <p className="text-base font-bold text-theme-muted mb-2 italic">
-                  CPU Info Unavailable
+                  {t("systemInfo.cpuUnavailable")}
                 </p>
               )}
 
               {/* Cores Badge */}
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
                 {systemInfo.cpu_cores > 0
-                  ? `${systemInfo.cpu_cores} Cores`
-                  : "Unknown Cores"}
+                  ? t("systemInfo.cores", { count: systemInfo.cpu_cores })
+                  : t("systemInfo.unknownCores")}
               </div>
             </div>
             <div className="p-3 rounded-lg bg-theme-primary/10 flex-shrink-0">
@@ -170,7 +187,7 @@ function SystemInfo() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
               <p className="text-theme-muted text-sm mb-1 font-medium">
-                Memory Usage
+                {t("systemInfo.memoryUsage")}
               </p>
 
               {/* Memory Percentage or Fallback */}
@@ -215,13 +232,13 @@ function SystemInfo() {
                   {systemInfo.used_memory} / {systemInfo.total_memory}
                 </span>
                 <span className="text-green-400">
-                  {systemInfo.free_memory} free
+                  {systemInfo.free_memory} {t("systemInfo.free")}
                 </span>
               </div>
             </>
           ) : (
             <div className="text-xs text-theme-muted italic text-center py-2">
-              Memory information unavailable
+              {t("systemInfo.memoryUnavailable")}
             </div>
           )}
         </div>

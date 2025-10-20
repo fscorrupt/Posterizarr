@@ -1,5 +1,6 @@
 import React from "react";
 import { ZoomIn, ZoomOut } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * ImageSizeSlider - A reusable component for controlling image grid size
@@ -9,6 +10,7 @@ import { ZoomIn, ZoomOut } from "lucide-react";
  * @param {string} props.storageKey - localStorage key for persistence
  */
 function ImageSizeSlider({ value, onChange, storageKey }) {
+  const { t } = useTranslation();
   const handleChange = (e) => {
     const newValue = parseInt(e.target.value);
     onChange(newValue);
@@ -23,7 +25,7 @@ function ImageSizeSlider({ value, onChange, storageKey }) {
       <div className="flex items-center gap-2">
         <ZoomOut className="w-5 h-5 text-theme-muted" />
         <span className="text-sm font-medium text-theme-muted whitespace-nowrap">
-          Bildgröße
+          {t("imageSizeSlider.imageSize")}
         </span>
       </div>
 
