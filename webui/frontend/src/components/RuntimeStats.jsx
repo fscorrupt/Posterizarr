@@ -87,21 +87,36 @@ function RuntimeStats() {
       const response = await fetch(`${API_URL}/runtime-stats`);
       if (!response.ok) {
         console.error("Failed to fetch runtime stats:", response.status);
-        return;
-      }
-      const data = await response.json();
-      if (data.success) {
-        cachedRuntimeStats = data;
-        setRuntimeStats(data);
-
-        // Mark as loaded after first successful fetch
+        // Mark as loaded even on error to prevent infinite loading
         if (!hasInitiallyLoaded.current) {
           hasInitiallyLoaded.current = true;
           finishLoading("runtime-stats");
         }
+        return;
+      }
+      const data = await response.json();
+
+      // Always mark as loaded after receiving data, regardless of success status
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("runtime-stats");
+      }
+
+      if (data.success) {
+        cachedRuntimeStats = data;
+        setRuntimeStats(data);
+      } else {
+        // Even if no data available, store the empty response
+        cachedRuntimeStats = data;
+        setRuntimeStats(data);
       }
     } catch (error) {
       console.error("Error fetching runtime stats:", error);
+      // Mark as loaded even on error to prevent infinite loading
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("runtime-stats");
+      }
     } finally {
       setLoading(false);
       if (!silent) {
