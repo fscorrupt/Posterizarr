@@ -647,17 +647,20 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     const reader = new FileReader();
     reader.onloadend = () => {
       setUploadedImage(reader.result);
-      
+
       // Create an Image object to get dimensions
       const img = new Image();
       img.onload = () => {
         const width = img.width;
         const height = img.height;
         setImageDimensions({ width, height });
-        
+
         // Determine required dimensions based on asset type
         let minWidth, minHeight;
-        if (metadata.asset_type === "poster" || metadata.asset_type === "season") {
+        if (
+          metadata.asset_type === "poster" ||
+          metadata.asset_type === "season"
+        ) {
           minWidth = 2000;
           minHeight = 3000;
         } else {
@@ -665,15 +668,24 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           minWidth = 3840;
           minHeight = 2160;
         }
-        
+
         // Check if dimensions are valid
         const isValid = width >= minWidth && height >= minHeight;
         setIsDimensionValid(isValid);
-        
+
         if (!isValid) {
-          showError(`Image dimensions (${width}x${height}) are too small. Minimum required: ${minWidth}x${minHeight} pixels.`);
+          showError(
+            t("assetReplacer.imageDimensionsTooSmall", {
+              width,
+              height,
+              minWidth,
+              minHeight,
+            })
+          );
         } else {
-          showSuccess(`Image dimensions (${width}x${height}) are valid!`);
+          showSuccess(
+            t("assetReplacer.imageDimensionsValid", { width, height })
+          );
         }
       };
       img.src = reader.result;
@@ -683,7 +695,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   const handleConfirmUpload = async () => {
     if (!uploadedFile || !isDimensionValid) {
-      showError("Please select a valid image with correct dimensions first.");
+      showError(t("assetReplacer.selectValidImage"));
       return;
     }
 
@@ -1517,16 +1529,18 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      
+
                       {/* Dimension Info */}
                       {imageDimensions && (
-                        <div className={`mt-2 text-xs text-center p-2 rounded ${
-                          isDimensionValid 
-                            ? 'bg-green-500/10 text-green-400 border border-green-500/30' 
-                            : 'bg-red-500/10 text-red-400 border border-red-500/30'
-                        }`}>
+                        <div
+                          className={`mt-2 text-xs text-center p-2 rounded ${
+                            isDimensionValid
+                              ? "bg-green-500/10 text-green-400 border border-green-500/30"
+                              : "bg-red-500/10 text-red-400 border border-red-500/30"
+                          }`}
+                        >
                           {imageDimensions.width}x{imageDimensions.height}px
-                          {isDimensionValid ? ' ✓' : ' ✗'}
+                          {isDimensionValid ? " ✓" : " ✗"}
                         </div>
                       )}
                     </div>
@@ -1541,16 +1555,18 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       disabled={!isDimensionValid || uploading}
                       className={`w-full px-4 py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         isDimensionValid && !uploading
-                          ? 'bg-theme-primary hover:bg-theme-primary/90 text-white cursor-pointer shadow-lg hover:shadow-xl'
-                          : 'bg-gray-500/20 text-gray-500 cursor-not-allowed border border-gray-500/30'
+                          ? "bg-theme-primary hover:bg-theme-primary/90 text-white cursor-pointer shadow-lg hover:shadow-xl"
+                          : "bg-gray-500/20 text-gray-500 cursor-not-allowed border border-gray-500/30"
                       }`}
                     >
                       <Upload className="w-4 h-4" />
-                      {uploading ? 'Uploading...' : 'UPLOAD ASSET'}
+                      {uploading
+                        ? t("assetReplacer.uploadingAsset")
+                        : t("assetReplacer.uploadAssetButton")}
                     </button>
                     {!isDimensionValid && (
                       <p className="mt-2 text-xs text-red-400 text-center">
-                        Image dimensions must meet minimum requirements to upload
+                        {t("assetReplacer.dimensionRequirement")}
                       </p>
                     )}
                   </div>

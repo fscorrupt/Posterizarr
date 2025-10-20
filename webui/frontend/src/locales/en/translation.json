@@ -1199,7 +1199,15 @@
     "fetchingPreviews": "Fetching previews from services...",
     "noPreviewsLoaded": "No previews loaded yet",
     "fetchPreviews": "Fetch Previews",
-    "select": "Select"
+    "select": "Select",
+    "uploadAssetButton": "UPLOAD ASSET",
+    "uploadingAsset": "Uploading...",
+    "dimensionValid": "Dimensions valid",
+    "dimensionInvalid": "Dimensions too small",
+    "dimensionRequirement": "Image dimensions must meet minimum requirements to upload",
+    "imageDimensionsValid": "Image dimensions ({{width}}x{{height}}) are valid!",
+    "imageDimensionsTooSmall": "Image dimensions ({{width}}x{{height}}) are too small. Minimum required: {{minWidth}}x{{minHeight}} pixels.",
+    "selectValidImage": "Please select a valid image with correct dimensions first."
   },
   "assetOverview": {
     "title": "Asset Overview",

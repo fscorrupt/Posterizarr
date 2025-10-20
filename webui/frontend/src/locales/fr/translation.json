@@ -1198,7 +1198,15 @@
     "fetchingPreviews": "Récupération des aperçus depuis les services...",
     "noPreviewsLoaded": "Aucun aperçu chargé pour le moment",
     "fetchPreviews": "Récupérer les aperçus",
-    "select": "Sélectionner"
+    "select": "Sélectionner",
+    "uploadAssetButton": "TÉLÉCHARGER LA RESSOURCE",
+    "uploadingAsset": "Téléchargement en cours...",
+    "dimensionValid": "Dimensions valides",
+    "dimensionInvalid": "Dimensions trop petites",
+    "dimensionRequirement": "Les dimensions de l'image doivent respecter les exigences minimales pour le téléchargement",
+    "imageDimensionsValid": "Dimensions de l'image ({{width}}x{{height}}) sont valides !",
+    "imageDimensionsTooSmall": "Dimensions de l'image ({{width}}x{{height}}) sont trop petites. Minimum requis : {{minWidth}}x{{minHeight}} pixels.",
+    "selectValidImage": "Veuillez d'abord sélectionner une image valide avec les bonnes dimensions."
   },
   "assetOverview": {
     "title": "Aperçu des ressources",

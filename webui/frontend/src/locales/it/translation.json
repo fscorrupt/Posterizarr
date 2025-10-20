@@ -1198,7 +1198,15 @@
     "fetchingPreviews": "Recupero anteprime dai servizi...",
     "noPreviewsLoaded": "Nessuna anteprima ancora caricata",
     "fetchPreviews": "Recupera anteprime",
-    "select": "Seleziona"
+    "select": "Seleziona",
+    "uploadAssetButton": "CARICA ASSET",
+    "uploadingAsset": "Caricamento in corso...",
+    "dimensionValid": "Dimensioni valide",
+    "dimensionInvalid": "Dimensioni troppo piccole",
+    "dimensionRequirement": "Le dimensioni dell'immagine devono soddisfare i requisiti minimi per il caricamento",
+    "imageDimensionsValid": "Dimensioni dell'immagine ({{width}}x{{height}}) sono valide!",
+    "imageDimensionsTooSmall": "Dimensioni dell'immagine ({{width}}x{{height}}) sono troppo piccole. Minimo richiesto: {{minWidth}}x{{minHeight}} pixel.",
+    "selectValidImage": "Seleziona prima un'immagine valida con le dimensioni corrette."
   },
   "assetOverview": {
     "title": "Panoramica asset",

@@ -1198,7 +1198,15 @@
     "fetchingPreviews": "Buscando pré-visualizações dos serviços...",
     "noPreviewsLoaded": "Nenhuma pré-visualização carregada ainda",
     "fetchPreviews": "Buscar pré-visualizações",
-    "select": "Selecionar"
+    "select": "Selecionar",
+    "uploadAssetButton": "CARREGAR ATIVO",
+    "uploadingAsset": "Carregando...",
+    "dimensionValid": "Dimensões válidas",
+    "dimensionInvalid": "Dimensões muito pequenas",
+    "dimensionRequirement": "As dimensões da imagem devem atender aos requisitos mínimos para fazer upload",
+    "imageDimensionsValid": "Dimensões da imagem ({{width}}x{{height}}) são válidas!",
+    "imageDimensionsTooSmall": "Dimensões da imagem ({{width}}x{{height}}) são muito pequenas. Mínimo necessário: {{minWidth}}x{{minHeight}} pixels.",
+    "selectValidImage": "Por favor, selecione primeiro uma imagem válida com as dimensões corretas."
   },
   "assetOverview": {
     "title": "Visão geral dos ativos",
