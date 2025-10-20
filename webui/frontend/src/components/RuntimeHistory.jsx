@@ -379,7 +379,7 @@ function RuntimeHistory() {
                       className={`w-full px-4 py-2 text-sm transition-all text-left ${
                         summaryDays === value
                           ? "bg-theme-primary text-white"
-                          : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                          : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                       }`}
                     >
                       {t("runtimeHistory.days", { count: value })}
@@ -534,7 +534,7 @@ function RuntimeHistory() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !modeFilter
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {t("runtimeHistory.allModes")}
@@ -559,7 +559,7 @@ function RuntimeHistory() {
                       className={`w-full px-4 py-2 text-sm transition-all text-left ${
                         modeFilter === mode
                           ? "bg-theme-primary text-white"
-                          : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                          : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                       }`}
                     >
                       {t(`runtimeHistory.modes.${mode}`)}

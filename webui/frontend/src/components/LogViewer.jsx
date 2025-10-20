@@ -237,7 +237,7 @@ function LogViewer() {
             setLogs((prev) => [...prev, data.content]);
           } else if (data.type === "log_file_changed") {
             // Only accept this if we're NOT manually viewing a specific log
-            console.log(`📄 Backend wants to switch to: ${data.log_file}`);
+            console.log(`Backend wants to switch to: ${data.log_file}`);
 
             // Update selectedLog only if user hasn't manually selected a different one
             // This prevents the backend from overriding user's manual selection
@@ -533,7 +533,7 @@ function LogViewer() {
                       className={`w-full px-4 py-3 text-left text-sm transition-all ${
                         selectedLog === log.name
                           ? "bg-theme-primary text-white"
-                          : "text-theme-text hover:bg-theme-primary/20"
+                          : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -551,17 +551,20 @@ function LogViewer() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Auto-scroll Toggle */}
-            <label className="flex items-center gap-2 px-4 py-2 bg-theme-bg border border-theme rounded-lg cursor-pointer hover:bg-theme-hover transition-all">
-              <input
-                type="checkbox"
-                checked={autoScroll}
-                onChange={(e) => setAutoScroll(e.target.checked)}
-                className="w-4 h-4 rounded bg-theme-card border border-theme accent-theme-primary"
-              />
+            {/* Auto-scroll Toggle Switch */}
+            <label className="flex items-center gap-3 px-4 py-2 bg-theme-bg border border-theme rounded-lg cursor-pointer hover:bg-theme-hover transition-all">
               <span className="text-sm text-theme-text font-medium">
                 {t("logViewer.autoScroll")}
               </span>
+              <div className="relative inline-block w-11 h-6">
+                <input
+                  type="checkbox"
+                  checked={autoScroll}
+                  onChange={(e) => setAutoScroll(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-theme-primary/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
+              </div>
             </label>
 
             {/* Refresh Button */}

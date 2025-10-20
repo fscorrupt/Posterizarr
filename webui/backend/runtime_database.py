@@ -236,7 +236,7 @@ class RuntimeDatabase:
                 ("replace.json", "replace"),
             ]
 
-            logger.info("📄 Checking for JSON files...")
+            logger.info("Checking for JSON files...")
             for json_file, mode in json_files:
                 json_path = LOGS_DIR / json_file
                 if json_path.exists():

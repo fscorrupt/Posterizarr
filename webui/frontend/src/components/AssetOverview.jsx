@@ -693,7 +693,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedType === type
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {type === "All Types" ? t("assetOverview.allTypes") : type}
@@ -742,7 +742,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedLibrary === lib
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {lib === "All Libraries"
@@ -791,7 +791,7 @@ const AssetOverview = () => {
                   className={`w-full px-4 py-3 text-left text-sm transition-all ${
                     selectedCategory === "All Categories"
                       ? "bg-theme-primary text-white"
-                      : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                      : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                   }`}
                 >
                   {t("assetOverview.allCategories")}
@@ -806,7 +806,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedCategory === card.label
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {card.label}

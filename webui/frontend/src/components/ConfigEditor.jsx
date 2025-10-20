@@ -1845,7 +1845,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !stringValue
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     -- Select Overlay File --
@@ -1860,7 +1860,7 @@ function ConfigEditor() {
                       className={`w-full px-4 py-2 text-sm transition-all text-left ${
                         stringValue === file.name
                           ? "bg-theme-primary text-white"
-                          : "text-theme-text hover:bg-theme-primary/30"
+                          : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                       }`}
                     >
                       {file.name}
@@ -1976,7 +1976,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !stringValue
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     -- Select Font File --
@@ -1991,7 +1991,7 @@ function ConfigEditor() {
                       className={`w-full px-4 py-2 text-sm transition-all text-left ${
                         stringValue === file
                           ? "bg-theme-primary text-white"
-                          : "text-theme-text hover:bg-theme-primary/30"
+                          : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                       }`}
                     >
                       {file}
@@ -2420,7 +2420,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       stringValue.toLowerCase() === option
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {option.toUpperCase()}
@@ -2484,7 +2484,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       stringValue === option.value
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {option.label}
@@ -3047,7 +3047,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       numValue === option.value
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {option.label}
@@ -3126,7 +3126,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       gravityValue === option.value
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {option.label}
@@ -3387,7 +3387,7 @@ function ConfigEditor() {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !stringValue
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     -- Select Color --
@@ -3402,7 +3402,7 @@ function ConfigEditor() {
                       className={`w-full px-4 py-2 text-sm transition-all text-left flex items-center gap-2 ${
                         stringValue.toLowerCase() === color
                           ? "bg-theme-primary text-white"
-                          : "text-theme-text hover:bg-theme-primary/30"
+                          : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                       }`}
                     >
                       <div
