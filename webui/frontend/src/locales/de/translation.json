@@ -800,7 +800,7 @@
     "enabled": "Aktiviert",
     "disabled": "Deaktiviert",
     "containerUsersOnly": "Nur für Container-Nutzer",
-    "containerUsersInfo": "Setze <strong>RUN_TIME=disabled</strong> in deinen Compose- oder Container-Einstellungen, bevor du den UI-Zeitplan aktivierst – verwende nicht beide Zeitpläne gleichzeitig. (Beispiel: <strong>RUN_TIME=02:00</strong> → ändern zu <strong>RUN_TIME=disabled</strong>)",
+    "containerUsersInfo": "Setze <strong>RUN_TIME=disabled</strong> in deinen Compose- oder Container-Einstellungen, bevor du den UI-Zeitplan aktivierst - verwende nicht beide Zeitpläne gleichzeitig. (Beispiel: <strong>RUN_TIME=02:00</strong> → ändern zu <strong>RUN_TIME=disabled</strong>)",
     "lastRun": "Letzter Lauf",
     "nextRun": "Nächster Lauf",
     "never": "Niemals",
