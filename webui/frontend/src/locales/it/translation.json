@@ -800,7 +800,7 @@
     "enabled": "Abilitato",
     "disabled": "Disabilitato",
     "containerUsersOnly": "Solo utenti container",
-    "containerUsersInfo": "Controlla le impostazioni del tuo container o il file compose PRIMA di abilitare il pulsante qui. Usa la variabile d'ambiente di runtime del container RUN_TIME per la pianificazione, o usa le pianificazioni dell'interfaccia utente abilitando il pianificatore in questa pagina.",
+    "containerUsersInfo": "Imposta <strong>RUN_TIME=disabled</strong> nelle impostazioni del tuo compose o container prima di abilitare il pianificatore UI – non usare entrambe le pianificazioni contemporaneamente. (Esempio: <strong>RUN_TIME=02:00</strong> → cambia in <strong>RUN_TIME=disabled</strong>)",
     "lastRun": "Ultima esecuzione",
     "nextRun": "Prossima esecuzione",
     "never": "Mai",

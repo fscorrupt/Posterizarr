@@ -800,7 +800,7 @@
     "enabled": "Ativado",
     "disabled": "Desativado",
     "containerUsersOnly": "Apenas usuários de contêiner",
-    "containerUsersInfo": "Verifique as configurações do seu contêiner ou arquivo compose ANTES de ativar o botão aqui. Use a variável de ambiente de tempo de execução do contêiner RUN_TIME para agendamento, ou use os agendamentos da interface do usuário ativando o agendador nesta página.",
+    "containerUsersInfo": "Defina <strong>RUN_TIME=disabled</strong> nas configurações do seu compose ou container antes de ativar o agendador da interface – não use ambos os agendamentos ao mesmo tempo. (Exemplo: <strong>RUN_TIME=02:00</strong> → alterar para <strong>RUN_TIME=disabled</strong>)",
     "lastRun": "Última execução",
     "nextRun": "Próxima execução",
     "never": "Nunca",
