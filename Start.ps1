@@ -466,9 +466,6 @@ if (-not (test-path "$env:APP_DATA/config.json")) {
         test-path "$env:APP_DATA/config.json"
     )
 }
-# Ensure WebUI config
-$configFile = "$env:APP_DATA/config.json"
-Ensure-WebUIConfig -jsonFilePath $configFile
 
 # Define file paths in variables for clarity and easy maintenance
 $configDir = "$env:APP_DATA"
