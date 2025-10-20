@@ -128,9 +128,6 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
         if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
             total_images = posters + seasons + backgrounds + titlecards
 
-        # Add fallback images to error count
-        total_errors = errors + fallback_images
-
         return {
             "mode": mode,
             "runtime_seconds": runtime_seconds,
@@ -140,7 +137,8 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
             "seasons": seasons,
             "backgrounds": backgrounds,
             "titlecards": titlecards,
-            "errors": total_errors,
+            "errors": errors,
+            "fallbacks": fallback_images,
             "log_file": log_path.name,
         }
 
@@ -249,6 +247,16 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             + data.get("Seasons", 0)
         )
 
+        # Count fallback images (only those with Fallback: "true")
+        fallback_count = 0
+        fallbacks_data = data.get("Fallbacks", [])
+        if isinstance(fallbacks_data, list):
+            for item in fallbacks_data:
+                if isinstance(item, dict):
+                    fallback_value = str(item.get("Fallback", "false")).lower()
+                    if fallback_value == "true":
+                        fallback_count += 1
+
         # Build the result dictionary
         result = {
             "mode": mode,
@@ -261,6 +269,7 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             "titlecards": data.get("Titlecards", 0),
             "collections": data.get("Collections", 0),
             "errors": data.get("Errors", 0),
+            "fallbacks": fallback_count,
             "tba_skipped": data.get("TBA Skipped", 0),
             "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
             "notification_sent": str(data.get("Notification Sent", "false")).lower()

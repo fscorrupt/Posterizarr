@@ -59,6 +59,7 @@ class RuntimeDatabase:
                     titlecards INTEGER DEFAULT 0,
                     collections INTEGER DEFAULT 0,
                     errors INTEGER DEFAULT 0,
+                    fallbacks INTEGER DEFAULT 0,
                     tba_skipped INTEGER DEFAULT 0,
                     jap_chines_skipped INTEGER DEFAULT 0,
                     notification_sent INTEGER DEFAULT 0,
@@ -72,7 +73,10 @@ class RuntimeDatabase:
                     end_time TEXT,
                     log_file TEXT,
                     status TEXT DEFAULT 'completed',
-                    notes TEXT
+                    notes TEXT,
+                    textless INTEGER DEFAULT 0,
+                    truncated INTEGER DEFAULT 0,
+                    text INTEGER DEFAULT 0
                 )
             """
             )
