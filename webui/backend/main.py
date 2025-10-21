@@ -4338,7 +4338,7 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         }
 
         results = []
-        tmdb_id = None
+        tmdb_ids = []  # Changed to list to support multiple IDs
 
         # Log the incoming request for debugging
         logger.info(f"TMDB Search Request:")
@@ -4348,20 +4348,25 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         logger.info(f"   Year: {request.year}")
         logger.info(f"   Is Digit: {request.query.isdigit()}")
 
-        # Step 1: Get TMDB ID (if not already provided)
-        # Only treat as ID if it's purely numeric AND no year is provided
-        # If year is provided, always search by title (even for numeric titles like "1917", "2012")
-        if request.query.isdigit() and not request.year:
-            # Query is a TMDB ID (only if no year specified)
-            tmdb_id = request.query
-            logger.info(f"🔢 Using query as TMDB ID: {tmdb_id}")
-        else:
-            # Query is a title - search for it (including numeric titles like "1917" if year provided)
+        # Step 1: Get TMDB ID(s)
+        # For numeric queries, we'll search both by ID AND by title to cover movies like "1917"
+        if request.query.isdigit():
+            # Try to use query as TMDB ID
+            potential_id = request.query
+            logger.info(f"🔢 Query is numeric - will search by ID: {potential_id}")
+            tmdb_ids.append(("id", potential_id))
+            
+            # Also search by title for numeric queries (e.g., "1917", "2012")
+            logger.info(f"� Also searching by title for numeric query: '{request.query}'")
+        
+        # Always do a title search (unless we only got an ID without title search)
+        if not request.query.isdigit() or request.query.isdigit():
+            # Query is a title - search for it
             search_url = f"https://api.themoviedb.org/3/search/{request.media_type}"
             search_params = {"query": request.query, "page": 1}
 
             logger.info(
-                f"Searching TMDB for: '{request.query}' (media_type: {request.media_type})"
+                f"Searching TMDB by title for: '{request.query}' (media_type: {request.media_type})"
             )
 
             # Add year parameter if provided
@@ -4382,288 +4387,296 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             if search_response.status_code == 200:
                 search_data = search_response.json()
                 search_results = search_data.get("results", [])
-                logger.info(f"Found {len(search_results)} results")
-                if search_results:
-                    tmdb_id = search_results[0].get("id")
-                    result_title = search_results[0].get(
+                logger.info(f"Found {len(search_results)} title search results")
+                # Add all found IDs from title search (to get posters from multiple matches)
+                for result in search_results[:5]:  # Limit to top 5 results
+                    result_id = result.get("id")
+                    result_title = result.get(
                         "title" if request.media_type == "movie" else "name"
                     )
-                    logger.info(
-                        f"   Using first result: ID={tmdb_id}, Title='{result_title}'"
-                    )
-                else:
-                    logger.warning(f"No results found for '{request.query}'")
-                    return {
-                        "success": True,
-                        "posters": [],
-                        "count": 0,
-                        "message": "No results found",
-                    }
+                    if result_id and ("title", result_id) not in [(t, i) for t, i in tmdb_ids]:
+                        tmdb_ids.append(("title", result_id))
+                        logger.info(
+                            f"   Added result: ID={result_id}, Title='{result_title}'"
+                        )
             else:
-                logger.error(f"TMDB search error: {search_response.status_code}")
-                raise HTTPException(status_code=500, detail="TMDB search failed")
+                logger.error(f"TMDB title search error: {search_response.status_code}")
 
-        if not tmdb_id:
+        if not tmdb_ids:
+            logger.warning(f"No TMDB IDs found for '{request.query}'")
             return {
                 "success": True,
                 "posters": [],
                 "count": 0,
-                "message": "No TMDB ID found",
+                "message": "No results found",
             }
 
-        # Step 2: Get item details (for title)
+        # Step 2 & 3: Loop through all found IDs and fetch images
         media_endpoint = "movie" if request.media_type == "movie" else "tv"
-        details_url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}"
-        logger.info(f"Fetching details from: {details_url}")
-        details_response = requests.get(details_url, headers=headers, timeout=10)
-        logger.info(f"   Response Status: {details_response.status_code}")
+        seen_posters = set()  # Track unique poster paths to avoid duplicates
+        
+        for source_type, tmdb_id in tmdb_ids:
+            logger.info(f"📥 Processing TMDB ID {tmdb_id} (from {source_type} search)")
+            
+            # Get item details (for title)
+            details_url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}"
+            logger.info(f"Fetching details from: {details_url}")
+            details_response = requests.get(details_url, headers=headers, timeout=10)
+            logger.info(f"   Response Status: {details_response.status_code}")
 
-        if details_response.status_code == 200:
-            details = details_response.json()
-            base_title = (
-                details.get("title") or details.get("name") or f"TMDB ID: {tmdb_id}"
-            )
-            logger.info(f"   Title: '{base_title}'")
-        else:
-            details = {}
-            base_title = f"TMDB ID: {tmdb_id}"
-            logger.warning(
-                f"   Failed to fetch details: {details_response.status_code}"
-            )
-            if details_response.status_code == 404:
-                logger.error(
-                    f"   TMDB ID {tmdb_id} not found for media_type '{request.media_type}'"
+            if details_response.status_code == 200:
+                details = details_response.json()
+                base_title = (
+                    details.get("title") or details.get("name") or f"TMDB ID: {tmdb_id}"
                 )
-                return {
-                    "success": True,
-                    "posters": [],
-                    "count": 0,
-                    "message": f"TMDB ID {tmdb_id} not found. Make sure the media type (movie/tv) is correct.",
-                }
-
-        # Step 3: Fetch appropriate images based on poster_type
-        if request.poster_type == "titlecard":
-            # ========== TITLE CARDS (Episode Stills) ==========
-            if not request.season_number or not request.episode_number:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Season and episode numbers required for titlecards",
-                )
-
-            # Get episode stills
-            episode_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}/images"
-            episode_response = requests.get(episode_url, headers=headers, timeout=10)
-
-            if episode_response.status_code == 200:
-                episode_data = episode_response.json()
-                stills = episode_data.get("stills", [])
-
-                # Also get episode details for title
-                ep_details_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}"
-                ep_details_response = requests.get(
-                    ep_details_url, headers=headers, timeout=10
-                )
-                ep_details = (
-                    ep_details_response.json()
-                    if ep_details_response.status_code == 200
-                    else {}
-                )
-                episode_title = ep_details.get(
-                    "name", f"Episode {request.episode_number}"
-                )
-
-                title = f"{base_title} - S{request.season_number:02d}E{request.episode_number:02d}: {episode_title}"
-
-                # Filter: Only 'xx' (no language/international) for title cards
-                filtered_stills = [
-                    still
-                    for still in stills
-                    if (still.get("iso_639_1") or "xx").lower() == "xx"
-                ]
-
-                logger.info(
-                    f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering (xx only)"
-                )
-
-                for still in filtered_stills:  # Load all stills
-                    results.append(
-                        {
-                            "tmdb_id": tmdb_id,
-                            "title": title,
-                            "poster_path": still.get("file_path"),
-                            "poster_url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
-                            "original_url": f"https://image.tmdb.org/t/p/original{still.get('file_path')}",
-                            "language": still.get("iso_639_1"),
-                            "vote_average": still.get("vote_average", 0),
-                            "width": still.get("width", 0),
-                            "height": still.get("height", 0),
-                            "type": "episode_still",
-                        }
-                    )
+                logger.info(f"   Title: '{base_title}'")
             else:
                 logger.warning(
-                    f"No episode stills found for S{request.season_number}E{request.episode_number}"
+                    f"   Failed to fetch details for ID {tmdb_id}: {details_response.status_code}"
                 )
-
-        elif request.poster_type == "season":
-            # ========== SEASON POSTERS ==========
-            if not request.season_number:
-                raise HTTPException(
-                    status_code=400, detail="Season number required for season posters"
-                )
-
-            # Get season posters
-            season_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/images"
-            season_response = requests.get(season_url, headers=headers, timeout=10)
-
-            if season_response.status_code == 200:
-                season_data = season_response.json()
-                posters = season_data.get("posters", [])
-
-                # Get season details for title
-                season_details_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}"
-                season_details_response = requests.get(
-                    season_details_url, headers=headers, timeout=10
-                )
-                season_details = (
-                    season_details_response.json()
-                    if season_details_response.status_code == 200
-                    else {}
-                )
-                season_name = season_details.get(
-                    "name", f"Season {request.season_number}"
-                )
-
-                title = f"{base_title} - {season_name}"
-
-                # Filter and sort by PreferredSeasonLanguageOrder
-                filtered_posters = filter_and_sort_posters_by_language(
-                    posters, season_language_order_list
-                )
-
-                logger.info(
-                    f"Season posters: {len(posters)} total, {len(filtered_posters)} after filtering by language preferences"
-                )
-
-                for poster in filtered_posters:  # Load all posters
-                    results.append(
-                        {
-                            "tmdb_id": tmdb_id,
-                            "title": title,
-                            "poster_path": poster.get("file_path"),
-                            "poster_url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
-                            "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
-                            "language": poster.get("iso_639_1"),
-                            "vote_average": poster.get("vote_average", 0),
-                            "width": poster.get("width", 0),
-                            "height": poster.get("height", 0),
-                            "type": "season_poster",
-                        }
+                if details_response.status_code == 404:
+                    logger.error(
+                        f"   TMDB ID {tmdb_id} not found for media_type '{request.media_type}'"
                     )
-            else:
-                logger.warning(
-                    f"No season posters found for Season {request.season_number}"
-                )
+                    continue  # Skip this ID and try the next one
+                details = {}
+                base_title = f"TMDB ID: {tmdb_id}"
 
-        elif request.poster_type == "background":
-            # ========== BACKGROUND IMAGES (Backdrops 16:9) ==========
-            images_url = (
-                f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
-            )
-            images_response = requests.get(images_url, headers=headers, timeout=10)
-
-            if images_response.status_code == 200:
-                images_data = images_response.json()
-                backdrops = images_data.get("backdrops", [])
-
-                # Filter and sort by PreferredBackgroundLanguageOrder
-                # If background language order is empty or "PleaseFillMe", fall back to standard poster language order
-                if not background_language_order_list or (
-                    len(background_language_order_list) == 1
-                    and background_language_order_list[0].lower() == "pleasefillme"
-                ):
-                    logger.info(
-                        "Background language order not configured, using standard poster language order"
-                    )
-                    filtered_backdrops = filter_and_sort_posters_by_language(
-                        backdrops, language_order_list
-                    )
-                else:
-                    filtered_backdrops = filter_and_sort_posters_by_language(
-                        backdrops, background_language_order_list
+            # Fetch appropriate images based on poster_type
+            if request.poster_type == "titlecard":
+                # ========== TITLE CARDS (Episode Stills) ==========
+                if not request.season_number or not request.episode_number:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Season and episode numbers required for titlecards",
                     )
 
-                logger.info(
-                    f"Background images: {len(backdrops)} total, {len(filtered_backdrops)} after filtering by language preferences"
-                )
+                # Get episode stills
+                episode_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}/images"
+                episode_response = requests.get(episode_url, headers=headers, timeout=10)
 
-                for backdrop in filtered_backdrops:  # Load all backdrops
-                    results.append(
-                        {
-                            "tmdb_id": tmdb_id,
-                            "title": base_title,
-                            "poster_path": backdrop.get("file_path"),
-                            "poster_url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
-                            "original_url": f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}",
-                            "language": backdrop.get("iso_639_1"),
-                            "vote_average": backdrop.get("vote_average", 0),
-                            "width": backdrop.get("width", 0),
-                            "height": backdrop.get("height", 0),
-                            "type": "backdrop",
-                        }
+                if episode_response.status_code == 200:
+                    episode_data = episode_response.json()
+                    stills = episode_data.get("stills", [])
+
+                    # Also get episode details for title
+                    ep_details_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}"
+                    ep_details_response = requests.get(
+                        ep_details_url, headers=headers, timeout=10
                     )
-            else:
-                logger.warning(f"No background images found for {base_title}")
+                    ep_details = (
+                        ep_details_response.json()
+                        if ep_details_response.status_code == 200
+                        else {}
+                    )
+                    episode_title = ep_details.get(
+                        "name", f"Episode {request.episode_number}"
+                    )
 
-        else:
-            # ========== STANDARD POSTERS (Show/Movie) ==========
-            images_url = (
-                f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
-            )
-            images_response = requests.get(images_url, headers=headers, timeout=10)
+                    title = f"{base_title} - S{request.season_number:02d}E{request.episode_number:02d}: {episode_title}"
 
-            if images_response.status_code == 200:
-                images_data = images_response.json()
-                posters = images_data.get("posters", [])
-
-                # Different filtering based on poster type
-                if request.poster_type == "collection":
-                    # Collections: Only 'xx' (no language/international)
-                    filtered_posters = [
-                        p
-                        for p in posters
-                        if (p.get("iso_639_1") or "xx").lower() == "xx"
+                    # Filter: Only 'xx' (no language/international) for title cards
+                    filtered_stills = [
+                        still
+                        for still in stills
+                        if (still.get("iso_639_1") or "xx").lower() == "xx"
                     ]
+
                     logger.info(
-                        f"Collection posters: {len(posters)} total, {len(filtered_posters)} after filtering (xx only)"
-                    )
-                else:
-                    # Standard posters: Filter and sort by PreferredLanguageOrder
-                    filtered_posters = filter_and_sort_posters_by_language(
-                        posters, language_order_list
-                    )
-                    logger.info(
-                        f"Standard posters: {len(posters)} total, {len(filtered_posters)} after filtering by language preferences"
+                        f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering (xx only)"
                     )
 
-                for poster in filtered_posters:  # Load all posters
-                    results.append(
-                        {
-                            "tmdb_id": tmdb_id,
-                            "title": base_title,
-                            "poster_path": poster.get("file_path"),
-                            "poster_url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
-                            "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
-                            "language": poster.get("iso_639_1"),
-                            "vote_average": poster.get("vote_average", 0),
-                            "width": poster.get("width", 0),
-                            "height": poster.get("height", 0),
-                            "type": "show_poster",
-                        }
+                    for still in filtered_stills:  # Load all stills
+                        poster_path = still.get("file_path")
+                        if poster_path not in seen_posters:
+                            seen_posters.add(poster_path)
+                            results.append(
+                                {
+                                    "tmdb_id": tmdb_id,
+                                    "title": title,
+                                    "poster_path": poster_path,
+                                    "poster_url": f"https://image.tmdb.org/t/p/w500{poster_path}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{poster_path}",
+                                    "language": still.get("iso_639_1"),
+                                    "vote_average": still.get("vote_average", 0),
+                                    "width": still.get("width", 0),
+                                    "height": still.get("height", 0),
+                                    "type": "episode_still",
+                                }
+                            )
+                else:
+                    logger.warning(
+                        f"No episode stills found for S{request.season_number}E{request.episode_number}"
                     )
+
+            elif request.poster_type == "season":
+                # ========== SEASON POSTERS ==========
+                if not request.season_number:
+                    raise HTTPException(
+                        status_code=400, detail="Season number required for season posters"
+                    )
+
+                # Get season posters
+                season_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/images"
+                season_response = requests.get(season_url, headers=headers, timeout=10)
+
+                if season_response.status_code == 200:
+                    season_data = season_response.json()
+                    posters = season_data.get("posters", [])
+
+                    # Get season details for title
+                    season_details_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}"
+                    season_details_response = requests.get(
+                        season_details_url, headers=headers, timeout=10
+                    )
+                    season_details = (
+                        season_details_response.json()
+                        if season_details_response.status_code == 200
+                        else {}
+                    )
+                    season_name = season_details.get(
+                        "name", f"Season {request.season_number}"
+                    )
+
+                    title = f"{base_title} - {season_name}"
+
+                    # Filter and sort by PreferredSeasonLanguageOrder
+                    filtered_posters = filter_and_sort_posters_by_language(
+                        posters, season_language_order_list
+                    )
+
+                    logger.info(
+                        f"Season posters: {len(posters)} total, {len(filtered_posters)} after filtering by language preferences"
+                    )
+
+                    for poster in filtered_posters:  # Load all posters
+                        poster_path = poster.get("file_path")
+                        if poster_path not in seen_posters:
+                            seen_posters.add(poster_path)
+                            results.append(
+                                {
+                                    "tmdb_id": tmdb_id,
+                                    "title": title,
+                                    "poster_path": poster_path,
+                                    "poster_url": f"https://image.tmdb.org/t/p/w500{poster_path}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{poster_path}",
+                                    "language": poster.get("iso_639_1"),
+                                    "vote_average": poster.get("vote_average", 0),
+                                    "width": poster.get("width", 0),
+                                    "height": poster.get("height", 0),
+                                    "type": "season_poster",
+                                }
+                            )
+                else:
+                    logger.warning(
+                        f"No season posters found for Season {request.season_number}"
+                    )
+
+            elif request.poster_type == "background":
+                # ========== BACKGROUND IMAGES (Backdrops 16:9) ==========
+                images_url = (
+                    f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
+                )
+                images_response = requests.get(images_url, headers=headers, timeout=10)
+
+                if images_response.status_code == 200:
+                    images_data = images_response.json()
+                    backdrops = images_data.get("backdrops", [])
+
+                    # Filter and sort by PreferredBackgroundLanguageOrder
+                    # If background language order is empty or "PleaseFillMe", fall back to standard poster language order
+                    if not background_language_order_list or (
+                        len(background_language_order_list) == 1
+                        and background_language_order_list[0].lower() == "pleasefillme"
+                    ):
+                        logger.info(
+                            "Background language order not configured, using standard poster language order"
+                        )
+                        filtered_backdrops = filter_and_sort_posters_by_language(
+                            backdrops, language_order_list
+                        )
+                    else:
+                        filtered_backdrops = filter_and_sort_posters_by_language(
+                            backdrops, background_language_order_list
+                        )
+
+                    logger.info(
+                        f"Background images: {len(backdrops)} total, {len(filtered_backdrops)} after filtering by language preferences"
+                    )
+
+                    for backdrop in filtered_backdrops:  # Load all backdrops
+                        poster_path = backdrop.get("file_path")
+                        if poster_path not in seen_posters:
+                            seen_posters.add(poster_path)
+                            results.append(
+                                {
+                                    "tmdb_id": tmdb_id,
+                                    "title": base_title,
+                                    "poster_path": poster_path,
+                                    "poster_url": f"https://image.tmdb.org/t/p/w500{poster_path}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{poster_path}",
+                                    "language": backdrop.get("iso_639_1"),
+                                    "vote_average": backdrop.get("vote_average", 0),
+                                    "width": backdrop.get("width", 0),
+                                    "height": backdrop.get("height", 0),
+                                    "type": "backdrop",
+                                }
+                            )
+                else:
+                    logger.warning(f"No background images found for {base_title}")
+
+            else:
+                # ========== STANDARD POSTERS (Show/Movie) ==========
+                images_url = (
+                    f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
+                )
+                images_response = requests.get(images_url, headers=headers, timeout=10)
+
+                if images_response.status_code == 200:
+                    images_data = images_response.json()
+                    posters = images_data.get("posters", [])
+
+                    # Different filtering based on poster type
+                    if request.poster_type == "collection":
+                        # Collections: Only 'xx' (no language/international)
+                        filtered_posters = [
+                            p
+                            for p in posters
+                            if (p.get("iso_639_1") or "xx").lower() == "xx"
+                        ]
+                        logger.info(
+                            f"Collection posters: {len(posters)} total, {len(filtered_posters)} after filtering (xx only)"
+                        )
+                    else:
+                        # Standard posters: Filter and sort by PreferredLanguageOrder
+                        filtered_posters = filter_and_sort_posters_by_language(
+                            posters, language_order_list
+                        )
+                        logger.info(
+                            f"Standard posters: {len(posters)} total, {len(filtered_posters)} after filtering by language preferences"
+                        )
+
+                    for poster in filtered_posters:  # Load all posters
+                        poster_path = poster.get("file_path")
+                        if poster_path not in seen_posters:
+                            seen_posters.add(poster_path)
+                            results.append(
+                                {
+                                    "tmdb_id": tmdb_id,
+                                    "title": base_title,
+                                    "poster_path": poster_path,
+                                    "poster_url": f"https://image.tmdb.org/t/p/w500{poster_path}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{poster_path}",
+                                    "language": poster.get("iso_639_1"),
+                                    "vote_average": poster.get("vote_average", 0),
+                                    "width": poster.get("width", 0),
+                                    "height": poster.get("height", 0),
+                                    "type": "show_poster",
+                                }
+                            )
 
         logger.info(
-            f"TMDB search for '{request.query}' ({request.poster_type}) returned {len(results)} images"
+            f"TMDB search for '{request.query}' ({request.poster_type}) returned {len(results)} images from {len(tmdb_ids)} ID(s)"
         )
         return {"success": True, "posters": results, "count": len(results)}
 
@@ -7127,63 +7140,65 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.error(f"Error searching TVDB by title: {e}")
             return None
 
-        # Determine TMDB ID - simple approach: use provided ID or search by title
-        tmdb_id_to_use = request.tmdb_id
+        # Determine TMDB ID(s) - collect multiple IDs for dual search
+        tmdb_ids_to_use = []
 
-        # If no TMDB ID and we have title, search for it
-        if not tmdb_id_to_use and request.title and tmdb_token:
+        # If TMDB ID is provided, use it
+        if request.tmdb_id:
+            tmdb_ids_to_use.append(("provided_id", request.tmdb_id))
+            logger.info(f"Using provided TMDB ID: {request.tmdb_id}")
+
+        # If we have title, also search by title (even if ID was provided - for dual search)
+        if request.title and tmdb_token:
             logger.info(
                 f"Searching TMDB for title: '{request.title}' (year: {request.year})"
             )
-            tmdb_id_to_use = await search_tmdb_id(
+            found_id = await search_tmdb_id(
                 request.title, request.year, request.media_type
             )
-            if tmdb_id_to_use:
-                logger.info(f"Found TMDB ID: {tmdb_id_to_use}")
-            else:
-                logger.warning(f"No TMDB ID found for: '{request.title}'")
-        else:
-            logger.info(f"Using provided TMDB ID: {tmdb_id_to_use}")
+            if found_id and ("title_search", found_id) not in tmdb_ids_to_use and ("provided_id", found_id) not in tmdb_ids_to_use:
+                tmdb_ids_to_use.append(("title_search", found_id))
+                logger.info(f"Found TMDB ID from title search: {found_id}")
+            elif not found_id:
+                logger.warning(f"No TMDB ID found for title: '{request.title}'")
 
-        # Determine TVDB ID - use provided ID or search by title (for TV shows)
-        tvdb_id_to_use = request.tvdb_id
+        # Determine TVDB ID(s) - collect multiple IDs for dual search
+        tvdb_ids_to_use = []
 
-        # If no TVDB ID and we have title and it's TV, search for it
-        if (
-            not tvdb_id_to_use
-            and request.title
-            and tvdb_api_key
-            and request.media_type == "tv"
-        ):
+        # If TVDB ID is provided, use it
+        if request.tvdb_id:
+            tvdb_ids_to_use.append(("provided_id", request.tvdb_id))
+            logger.info(f"Using provided TVDB ID: {request.tvdb_id}")
+
+        # If we have title and it's TV, also search by title
+        if request.title and tvdb_api_key and request.media_type == "tv":
             logger.info(
                 f"Searching TVDB for title: '{request.title}' (year: {request.year})"
             )
-            tvdb_id_to_use = await search_tvdb_id(
+            found_id = await search_tvdb_id(
                 request.title, request.year, request.media_type
             )
-            if tvdb_id_to_use:
-                logger.info(f"Found TVDB ID: {tvdb_id_to_use}")
-            else:
-                logger.warning(f"No TVDB ID found for: '{request.title}'")
-        else:
-            if tvdb_id_to_use:
-                logger.info(f"Using provided TVDB ID: {tvdb_id_to_use}")
+            if found_id and ("title_search", found_id) not in tvdb_ids_to_use and ("provided_id", found_id) not in tvdb_ids_to_use:
+                tvdb_ids_to_use.append(("title_search", found_id))
+                logger.info(f"Found TVDB ID from title search: {found_id}")
+            elif not found_id:
+                logger.warning(f"No TVDB ID found for title: '{request.title}'")
 
         # Create async tasks for parallel fetching - AFTER IDs are resolved
         async def fetch_tmdb():
-            """Fetch TMDB assets asynchronously"""
+            """Fetch TMDB assets asynchronously from all collected IDs"""
             if not tmdb_token:
                 logger.warning("TMDB: No API token configured")
                 return []
 
-            if not tmdb_id_to_use:
-                logger.warning("TMDB: No TMDB ID available")
+            if not tmdb_ids_to_use:
+                logger.warning("TMDB: No TMDB IDs available")
                 return []
 
+            all_results = []
+            seen_urls = set()  # Track unique image URLs to avoid duplicates
+
             try:
-                logger.info(
-                    f"🎬 TMDB: Fetching {request.asset_type} for ID: {tmdb_id_to_use}"
-                )
                 headers = {
                     "Authorization": f"Bearer {tmdb_token}",
                     "Content-Type": "application/json",
@@ -7191,105 +7206,121 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                 media_endpoint = "movie" if request.media_type == "movie" else "tv"
 
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    if (
-                        request.asset_type == "titlecard"
-                        and request.season_number
-                        and request.episode_number
-                    ):
-                        # Episode stills
-                        url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/episode/{request.episode_number}/images"
-                        response = await client.get(url, headers=headers)
-                        if response.status_code == 200:
-                            data = response.json()
-                            return [
-                                {
-                                    "url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
-                                    "original_url": f"https://image.tmdb.org/t/p/original{still.get('file_path')}",
-                                    "source": "TMDB",
-                                    "type": "episode_still",
-                                    "vote_average": still.get("vote_average", 0),
-                                }
-                                for still in data.get("stills", [])
-                            ]
+                # Fetch from all collected IDs
+                for source, tmdb_id in tmdb_ids_to_use:
+                    logger.info(
+                        f"🎬 TMDB: Fetching {request.asset_type} for ID: {tmdb_id} (from {source})"
+                    )
 
-                    elif request.asset_type == "season" and request.season_number:
-                        # Season posters
-                        url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/images"
-                        response = await client.get(url, headers=headers)
-                        if response.status_code == 200:
-                            data = response.json()
-                            return [
-                                {
-                                    "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
-                                    "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
-                                    "source": "TMDB",
-                                    "type": "season_poster",
-                                    "language": poster.get("iso_639_1"),
-                                    "vote_average": poster.get("vote_average", 0),
-                                }
-                                for poster in data.get("posters", [])
-                            ]
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        if (
+                            request.asset_type == "titlecard"
+                            and request.season_number
+                            and request.episode_number
+                        ):
+                            # Episode stills
+                            url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}/images"
+                            response = await client.get(url, headers=headers)
+                            if response.status_code == 200:
+                                data = response.json()
+                                for still in data.get("stills", []):
+                                    original_url = f"https://image.tmdb.org/t/p/original{still.get('file_path')}"
+                                    if original_url not in seen_urls:
+                                        seen_urls.add(original_url)
+                                        all_results.append({
+                                            "url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
+                                            "original_url": original_url,
+                                            "source": "TMDB",
+                                            "source_type": source,  # "provided_id" or "title_search"
+                                            "type": "episode_still",
+                                            "vote_average": still.get("vote_average", 0),
+                                        })
 
-                    elif request.asset_type == "background":
-                        # Backgrounds
-                        url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
-                        response = await client.get(url, headers=headers)
-                        if response.status_code == 200:
-                            data = response.json()
-                            return [
-                                {
-                                    "url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
-                                    "original_url": f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}",
-                                    "source": "TMDB",
-                                    "type": "backdrop",
-                                    "language": backdrop.get("iso_639_1"),
-                                    "vote_average": backdrop.get("vote_average", 0),
-                                }
-                                for backdrop in data.get("backdrops", [])
-                            ]
+                        elif request.asset_type == "season" and request.season_number:
+                            # Season posters
+                            url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/images"
+                            response = await client.get(url, headers=headers)
+                            if response.status_code == 200:
+                                data = response.json()
+                                for poster in data.get("posters", []):
+                                    original_url = f"https://image.tmdb.org/t/p/original{poster.get('file_path')}"
+                                    if original_url not in seen_urls:
+                                        seen_urls.add(original_url)
+                                        all_results.append({
+                                            "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                                            "original_url": original_url,
+                                            "source": "TMDB",
+                                            "source_type": source,  # "provided_id" or "title_search"
+                                            "type": "season_poster",
+                                            "language": poster.get("iso_639_1"),
+                                            "vote_average": poster.get("vote_average", 0),
+                                        })
 
-                    else:
-                        # Standard posters
-                        url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
-                        logger.info(f"🎬 TMDB Poster URL: {url}")
-                        response = await client.get(url, headers=headers)
-                        logger.info(f"🎬 TMDB Response Status: {response.status_code}")
-                        if response.status_code == 200:
-                            data = response.json()
-                            return [
-                                {
-                                    "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
-                                    "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
-                                    "source": "TMDB",
-                                    "type": "poster",
-                                    "language": poster.get("iso_639_1"),
-                                    "vote_average": poster.get("vote_average", 0),
-                                }
-                                for poster in data.get("posters", [])
-                            ]
+                        elif request.asset_type == "background":
+                            # Backgrounds
+                            url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
+                            response = await client.get(url, headers=headers)
+                            if response.status_code == 200:
+                                data = response.json()
+                                for backdrop in data.get("backdrops", []):
+                                    original_url = f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}"
+                                    if original_url not in seen_urls:
+                                        seen_urls.add(original_url)
+                                        all_results.append({
+                                            "url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
+                                            "original_url": original_url,
+                                            "source": "TMDB",
+                                            "source_type": source,  # "provided_id" or "title_search"
+                                            "type": "backdrop",
+                                            "language": backdrop.get("iso_639_1"),
+                                            "vote_average": backdrop.get("vote_average", 0),
+                                        })
+
+                        else:
+                            # Standard posters
+                            url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
+                            logger.info(f"🎬 TMDB Poster URL: {url}")
+                            response = await client.get(url, headers=headers)
+                            logger.info(f"🎬 TMDB Response Status: {response.status_code}")
+                            if response.status_code == 200:
+                                data = response.json()
+                                for poster in data.get("posters", []):
+                                    original_url = f"https://image.tmdb.org/t/p/original{poster.get('file_path')}"
+                                    if original_url not in seen_urls:
+                                        seen_urls.add(original_url)
+                                        all_results.append({
+                                            "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                                            "original_url": original_url,
+                                            "source": "TMDB",
+                                            "source_type": source,  # "provided_id" or "title_search"
+                                            "type": "poster",
+                                            "language": poster.get("iso_639_1"),
+                                            "vote_average": poster.get("vote_average", 0),
+                                        })
+
+                logger.info(f"🎬 TMDB: Collected {len(all_results)} unique images from {len(tmdb_ids_to_use)} ID(s)")
 
             except Exception as e:
                 logger.error(f"Error fetching TMDB assets: {e}")
 
-            return []
+            return all_results
 
         async def fetch_tvdb():
-            """Fetch TVDB assets asynchronously"""
+            """Fetch TVDB assets asynchronously from all collected IDs"""
             if not tvdb_api_key:
                 logger.warning("TVDB: No API key configured")
                 return []
 
-            if not tvdb_id_to_use:
+            if not tvdb_ids_to_use:
                 logger.info(
-                    f"TVDB: No TVDB ID available (media_type={request.media_type}) - skipping"
+                    f"TVDB: No TVDB IDs available (media_type={request.media_type}) - skipping"
                 )
                 return []
 
+            all_results = []
+            seen_urls = set()  # Track unique image URLs to avoid duplicates
+
             try:
-                logger.info(
-                    f"📺 TVDB: Fetching artwork for series ID: {tvdb_id_to_use}"
-                )
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     login_url = "https://api4.thetvdb.com/v4/login"
                     body = {"apikey": tvdb_api_key}
@@ -7314,110 +7345,141 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                 "accept": "application/json",
                             }
 
-                            # Fetch artwork
-                            artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id_to_use}/artworks"
-                            artwork_params = {
-                                "lang": "eng",
-                                "type": "2",
-                            }  # type=2 for posters
-
-                            if request.asset_type == "background":
-                                artwork_params["type"] = "3"  # type=3 for backgrounds
-
-                            artwork_response = await client.get(
-                                artwork_url, headers=auth_headers, params=artwork_params
-                            )
-
-                            if artwork_response.status_code == 200:
-                                artwork_data = artwork_response.json()
-                                artworks = artwork_data.get("data", {}).get(
-                                    "artworks", []
+                            # Fetch from all collected IDs
+                            for source, tvdb_id in tvdb_ids_to_use:
+                                logger.info(
+                                    f"📺 TVDB: Fetching artwork for series ID: {tvdb_id} (from {source})"
                                 )
 
-                                return [
-                                    {
-                                        "url": artwork.get("image"),
-                                        "original_url": artwork.get("image"),
-                                        "source": "TVDB",
-                                        "type": request.asset_type,
-                                        "language": artwork.get("language"),
-                                    }
-                                    for artwork in artworks
-                                ]
+                                # Fetch artwork
+                                artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/artworks"
+                                artwork_params = {
+                                    "lang": "eng",
+                                    "type": "2",
+                                }  # type=2 for posters
+
+                                if request.asset_type == "background":
+                                    artwork_params["type"] = "3"  # type=3 for backgrounds
+
+                                artwork_response = await client.get(
+                                    artwork_url, headers=auth_headers, params=artwork_params
+                                )
+
+                                if artwork_response.status_code == 200:
+                                    artwork_data = artwork_response.json()
+                                    artworks = artwork_data.get("data", {}).get(
+                                        "artworks", []
+                                    )
+
+                                    for artwork in artworks:
+                                        image_url = artwork.get("image")
+                                        if image_url and image_url not in seen_urls:
+                                            seen_urls.add(image_url)
+                                            all_results.append({
+                                                "url": image_url,
+                                                "original_url": image_url,
+                                                "source": "TVDB",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": request.asset_type,
+                                                "language": artwork.get("language"),
+                                            })
+
+                logger.info(f"📺 TVDB: Collected {len(all_results)} unique images from {len(tvdb_ids_to_use)} ID(s)")
 
             except Exception as e:
                 logger.error(f"Error fetching TVDB assets: {e}")
 
-            return []
+            return all_results
 
         async def fetch_fanart():
-            """Fetch Fanart.tv assets asynchronously"""
+            """Fetch Fanart.tv assets asynchronously from all collected IDs"""
             if not fanart_api_key:
                 logger.warning("Fanart.tv: No API key configured")
                 return []
 
-            if not (tmdb_id_to_use or tvdb_id_to_use):
-                logger.warning("Fanart.tv: No TMDB ID or TVDB ID available")
+            if not (tmdb_ids_to_use or tvdb_ids_to_use):
+                logger.warning("Fanart.tv: No TMDB IDs or TVDB IDs available")
                 return []
 
+            all_results = []
+            seen_urls = set()  # Track unique image URLs to avoid duplicates
+
             try:
-                if request.media_type == "movie" and tmdb_id_to_use:
-                    url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id_to_use}?api_key={fanart_api_key}"
-                    logger.info(
-                        f"Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
-                    )
-                elif request.media_type == "tv" and tvdb_id_to_use:
-                    url = f"https://webservice.fanart.tv/v3/tv/{tvdb_id_to_use}?api_key={fanart_api_key}"
-                    logger.info(
-                        f"Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
-                    )
-                else:
-                    logger.warning(
-                        f"Fanart.tv: Cannot determine URL - media_type={request.media_type}, tmdb_id={tmdb_id_to_use}, tvdb_id={tvdb_id_to_use}"
-                    )
-                    return []
-
                 async with httpx.AsyncClient(timeout=10.0) as client:
-                    response = await client.get(url)
-                    logger.info(f"Fanart.tv Response Status: {response.status_code}")
-                    if response.status_code == 200:
-                        data = response.json()
-
-                        # Map asset types to fanart.tv keys
-                        if request.asset_type == "poster":
-                            fanart_keys = (
-                                ["movieposter"]
-                                if request.media_type == "movie"
-                                else ["tvposter"]
+                    # Fetch from TMDB IDs for movies
+                    if request.media_type == "movie" and tmdb_ids_to_use:
+                        for source, tmdb_id in tmdb_ids_to_use:
+                            logger.info(
+                                f"🎨 Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
                             )
-                        elif request.asset_type == "background":
-                            fanart_keys = (
-                                ["moviebackground"]
-                                if request.media_type == "movie"
-                                else ["showbackground"]
-                            )
-                        else:
-                            fanart_keys = []
+                            url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id}?api_key={fanart_api_key}"
+                            response = await client.get(url)
+                            if response.status_code == 200:
+                                data = response.json()
 
-                        items = []
-                        for key in fanart_keys:
-                            for item in data.get(key, []):
-                                items.append(
-                                    {
-                                        "url": item.get("url"),
-                                        "original_url": item.get("url"),
-                                        "source": "Fanart.tv",
-                                        "type": request.asset_type,
-                                        "language": item.get("lang"),
-                                        "likes": item.get("likes", 0),
-                                    }
-                                )
-                        return items
+                                # Map asset types to fanart.tv keys
+                                if request.asset_type == "poster":
+                                    fanart_keys = ["movieposter"]
+                                elif request.asset_type == "background":
+                                    fanart_keys = ["moviebackground"]
+                                else:
+                                    fanart_keys = []
+
+                                for key in fanart_keys:
+                                    for item in data.get(key, []):
+                                        item_url = item.get("url")
+                                        if item_url and item_url not in seen_urls:
+                                            seen_urls.add(item_url)
+                                            all_results.append({
+                                                "url": item_url,
+                                                "original_url": item_url,
+                                                "source": "Fanart.tv",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": request.asset_type,
+                                                "language": item.get("lang"),
+                                                "likes": item.get("likes", 0),
+                                            })
+
+                    # Fetch from TVDB IDs for TV shows
+                    elif request.media_type == "tv" and tvdb_ids_to_use:
+                        for source, tvdb_id in tvdb_ids_to_use:
+                            logger.info(
+                                f"🎨 Fanart.tv: Fetching TV artwork for TVDB ID: {tvdb_id} (from {source})"
+                            )
+                            url = f"https://webservice.fanart.tv/v3/tv/{tvdb_id}?api_key={fanart_api_key}"
+                            response = await client.get(url)
+                            if response.status_code == 200:
+                                data = response.json()
+
+                                # Map asset types to fanart.tv keys
+                                if request.asset_type == "poster":
+                                    fanart_keys = ["tvposter"]
+                                elif request.asset_type == "background":
+                                    fanart_keys = ["showbackground"]
+                                else:
+                                    fanart_keys = []
+
+                                for key in fanart_keys:
+                                    for item in data.get(key, []):
+                                        item_url = item.get("url")
+                                        if item_url and item_url not in seen_urls:
+                                            seen_urls.add(item_url)
+                                            all_results.append({
+                                                "url": item_url,
+                                                "original_url": item_url,
+                                                "source": "Fanart.tv",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": request.asset_type,
+                                                "language": item.get("lang"),
+                                                "likes": item.get("likes", 0),
+                                            })
+
+                logger.info(f"🎨 Fanart.tv: Collected {len(all_results)} unique images")
 
             except Exception as e:
                 logger.error(f"Error fetching Fanart.tv assets: {e}")
 
-            return []
+            return all_results
 
         # Fetch from all providers in parallel
         logger.info("Fetching assets from all providers in parallel...")
