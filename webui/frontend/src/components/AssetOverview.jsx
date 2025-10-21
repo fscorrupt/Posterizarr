@@ -514,7 +514,7 @@ const AssetOverview = () => {
     const tags = [];
 
     // 1. MISSING ASSET CHECK
-    // Missing if: DownloadSource is false/empty OR FavProviderLink is false/empty
+    // Missing Asset Badge -> if DownloadSource is empty
     const downloadSource = asset.DownloadSource;
     const providerLink = asset.FavProviderLink;
 
@@ -524,10 +524,19 @@ const AssetOverview = () => {
     const isProviderLinkMissing =
       providerLink === "false" || providerLink === false || !providerLink;
 
-    if (isDownloadMissing || isProviderLinkMissing) {
+    // Missing Asset Badge (red) - only if DownloadSource is empty
+    if (isDownloadMissing) {
       tags.push({
         label: t("assetOverview.missingAsset"),
         color: "bg-red-500/20 text-red-400 border-red-500/30",
+      });
+    }
+
+    // Missing Asset at Favorite Provider Badge (orange) - only if FavProviderLink is empty
+    if (isProviderLinkMissing) {
+      tags.push({
+        label: t("assetOverview.missingAssetAtFavProvider"),
+        color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
       });
     }
 
@@ -561,7 +570,7 @@ const AssetOverview = () => {
         if (!isDownloadFromPrimaryProvider || !isFavLinkFromPrimaryProvider) {
           tags.push({
             label: t("assetOverview.notPrimaryProvider"),
-            color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+            color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
           });
         }
       }
