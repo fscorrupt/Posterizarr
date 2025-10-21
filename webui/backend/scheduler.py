@@ -42,6 +42,12 @@ class PosterizarrScheduler:
     """Manages scheduled execution of Posterizarr script in normal mode"""
 
     def __init__(self, base_dir: Path, script_path: Path):
+        logger.info("=" * 60)
+        logger.info("INITIALIZING POSTERIZARR SCHEDULER")
+        logger.info(f"Base directory: {base_dir}")
+        logger.info(f"Script path: {script_path}")
+        logger.debug(f"Docker environment: {IS_DOCKER}")
+
         self.base_dir = base_dir
         self.script_path = script_path
         self.config_path = base_dir / "scheduler.json"
@@ -51,8 +57,12 @@ class PosterizarrScheduler:
         self._scheduler_initialized = False
         self._lock = asyncio.Lock()  # Lock for thread-safe operations
 
+        logger.debug(f"Config file path: {self.config_path}")
+        logger.debug(f"psutil available: {PSUTIL_AVAILABLE}")
+
         # Determine initial timezone (ENV has priority in Docker)
         initial_timezone = self._get_timezone()
+        logger.debug(f"Timezone determined: {initial_timezone}")
 
         # Initialize scheduler with timezone support
         jobstores = {"default": MemoryJobStore()}
@@ -63,6 +73,8 @@ class PosterizarrScheduler:
             "misfire_grace_time": 300,
         }
 
+        logger.debug(f"Job defaults: {job_defaults}")
+
         self.scheduler = AsyncIOScheduler(
             jobstores=jobstores,
             executors=executors,
@@ -71,6 +83,7 @@ class PosterizarrScheduler:
         )
 
         logger.info(f"Scheduler initialized with timezone: {initial_timezone}")
+        logger.info("=" * 60)
 
     def _get_timezone(self) -> str:
         """
@@ -80,27 +93,40 @@ class PosterizarrScheduler:
         2. Config file timezone setting
         3. Default: Europe/Berlin
         """
+        logger.debug("Determining timezone...")
+
         # 1. If Docker, try to read TZ from ENV
         if IS_DOCKER:
             env_tz = os.environ.get("TZ")
             if env_tz:
                 logger.info(f"Using timezone from ENV (Docker): {env_tz}")
+                logger.debug(f"IS_DOCKER={IS_DOCKER}, TZ environment variable found")
                 return env_tz
+            else:
+                logger.debug(
+                    f"IS_DOCKER={IS_DOCKER}, but no TZ environment variable found"
+                )
 
         # 2. Fallback: Config file
         config = self.load_config()
         config_tz = config.get("timezone")
         if config_tz:
             logger.info(f"Using timezone from config: {config_tz}")
+            logger.debug(f"Loaded from config file: {self.config_path}")
             return config_tz
+        else:
+            logger.debug("No timezone found in config file")
 
         # 3. Fallback: Default
         default_tz = "Europe/Berlin"
         logger.info(f"Using default timezone: {default_tz}")
+        logger.debug("No timezone found in ENV or config, using default")
         return default_tz
 
     def load_config(self) -> Dict:
         """Load scheduler configuration from JSON file"""
+        logger.debug(f"Loading scheduler config from: {self.config_path}")
+
         default_config = {
             "enabled": False,
             "schedules": [],
@@ -111,41 +137,62 @@ class PosterizarrScheduler:
         }
 
         if not self.config_path.exists():
+            logger.info("Config file does not exist, creating default config")
+            logger.debug(f"Default config: {default_config}")
             self.save_config(default_config)
             return default_config
 
         try:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
+            logger.debug(f"Config loaded successfully: {len(config)} keys")
+            logger.debug(
+                f"Enabled: {config.get('enabled')}, Schedules: {len(config.get('schedules', []))}"
+            )
             return {**default_config, **config}  # Merge with defaults
         except Exception as e:
             logger.error(f"Error loading scheduler config: {e}")
+            logger.exception("Full traceback:")
             return default_config
 
     def save_config(self, config: Dict) -> bool:
         """Save scheduler configuration to JSON file"""
+        logger.debug(f"Saving scheduler config to: {self.config_path}")
+        logger.debug(f"Config to save: {len(config)} keys")
+
         try:
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
+            logger.info("Scheduler config saved successfully")
+            logger.debug(f"File size: {self.config_path.stat().st_size} bytes")
             return True
         except Exception as e:
             logger.error(f"Error saving scheduler config: {e}")
+            logger.exception("Full traceback:")
             return False
 
     def update_config(self, updates: Dict) -> Dict:
         """Update specific config values"""
+        logger.info("=" * 60)
+        logger.info("UPDATING SCHEDULER CONFIG")
+        logger.info(f"Updates: {list(updates.keys())}")
+        logger.debug(f"Full updates: {updates}")
+
         config = self.load_config()
         config.update(updates)
         self.save_config(config)
 
         # Update scheduler timezone if changed
         if "timezone" in updates and self.scheduler:
+            logger.info(f"Timezone change detected: {updates['timezone']}")
             self.scheduler.configure(timezone=updates["timezone"])
             logger.info(f"Scheduler timezone updated to {updates['timezone']}")
             # Recalculate next_run with new timezone
             if config.get("schedules"):
+                logger.debug("Recalculating next_run with new timezone...")
                 self.update_next_run_from_schedules()
 
+        logger.info("=" * 60)
         return config
 
     def _is_posterizarr_actually_running(self) -> bool:

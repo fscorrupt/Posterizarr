@@ -7,9 +7,11 @@ import {
   Edit,
   FileQuestion,
   RefreshCw,
+  Loader2,
   Search,
   Replace,
   ChevronDown,
+  CheckIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
@@ -691,7 +693,7 @@ const AssetOverview = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">{t("assetOverview.loading")}</p>
         </div>
       </div>
@@ -1059,7 +1061,7 @@ const AssetOverview = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
                         title={t("assetOverview.noEditsNeededTooltip")}
                       >
-                        <Edit className="w-4 h-4 text-theme-primary" />
+                        <CheckIcon className="w-4 h-4 text-theme-primary" />
                         {t("assetOverview.noEditsNeeded")}
                       </button>
                       <button

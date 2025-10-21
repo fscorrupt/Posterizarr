@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Clock,
   RefreshCw,
+  Loader2,
   Image,
   AlertTriangle,
   Film,
@@ -169,7 +170,7 @@ function RuntimeStats() {
     return (
       <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       </div>
     );
@@ -475,7 +476,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    {t("runtimeStats.errors")}
+                    Script Errors
                   </p>
                   <p
                     className={`text-2xl font-bold ${

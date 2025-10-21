@@ -525,7 +525,8 @@
     "included": "Included",
     "clickToFetch": "Click \"Fetch Libraries\" to load libraries from your {{server}} server.",
     "noLibraries": "No movie or TV show libraries found on this server.",
-    "excludedCount": "Excluded Libraries ({{count}}):"
+    "excludedCount": "Excluded Libraries ({{count}}):",
+    "includedCount": "Included Libraries ({{count}}):"
   },
   "languageOrderSelector": {
     "noLanguages": "No languages selected. Add languages using the dropdown below.",
@@ -1148,7 +1149,11 @@
     "uppercase": "Uppercase",
     "lowercase": "Lowercase",
     "numbers": "Numbers",
-    "sample": "Sample"
+    "sample": "Sample",
+    "autoSave": "Auto-Save",
+    "autoSaveDescription": "Automatically save changes after 5 seconds of inactivity",
+    "autoSaved": "Auto-saved {{count}} change(s)",
+    "savedSuccessfully": "Configuration saved successfully! ({{count}} change(s))"
   },
   "assetsStats": {
     "title": "Assets Overview",
@@ -1248,7 +1253,7 @@
     "viewSource": "View Source",
     "replace": "Replace",
     "replaceTooltip": "Replace this asset",
-    "noEditsNeeded": "No Edits Needed",
+    "noEditsNeeded": "Mark as resolved",
     "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list",
     "markedAsReviewed": "{{title}} marked as reviewed and hidden from list",
     "updateFailed": "Failed to update {{title}}",

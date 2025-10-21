@@ -79,8 +79,8 @@ COPY <<'EOF' /app/start.sh
 #!/bin/sh
 set -e
 export PYTHONPATH=/app
-# Start FastAPI backend (serves API and frontend)
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --log-level warning &
+# Start FastAPI backend (serves API and frontend) - NO CONSOLE LOGGING
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --log-level critical --no-access-log &
 # Start Posterizarr PowerShell automation
 exec /usr/bin/catatonit -- pwsh -NoProfile /app/Start.ps1
 EOF

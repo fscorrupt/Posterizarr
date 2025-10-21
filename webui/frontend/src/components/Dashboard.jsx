@@ -743,34 +743,41 @@ function Dashboard() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  const newAutoScrollState = !autoScroll;
-                  setAutoScroll(newAutoScrollState);
-                  userHasScrolled.current = false;
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-sm font-medium text-theme-text">
+                  {t("dashboard.autoScroll")}
+                </span>
+                <button
+                  onClick={() => {
+                    const newAutoScrollState = !autoScroll;
+                    setAutoScroll(newAutoScrollState);
+                    userHasScrolled.current = false;
 
-                  if (newAutoScrollState && logContainerRef.current) {
-                    setTimeout(() => {
-                      if (logContainerRef.current) {
-                        logContainerRef.current.scrollTop =
-                          logContainerRef.current.scrollHeight;
-                      }
-                    }, 100);
+                    if (newAutoScrollState && logContainerRef.current) {
+                      setTimeout(() => {
+                        if (logContainerRef.current) {
+                          logContainerRef.current.scrollTop =
+                            logContainerRef.current.scrollHeight;
+                        }
+                      }, 100);
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    autoScroll ? "bg-theme-primary" : "bg-theme-hover"
+                  }`}
+                  title={
+                    autoScroll
+                      ? t("dashboard.autoScrollEnabled")
+                      : t("dashboard.autoScrollDisabled")
                   }
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  autoScroll
-                    ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
-                    : "bg-theme-hover text-theme-muted border border-theme"
-                }`}
-                title={
-                  autoScroll
-                    ? t("dashboard.autoScrollEnabled")
-                    : t("dashboard.autoScrollDisabled")
-                }
-              >
-                <span>{t("dashboard.autoScroll")}</span>
-              </button>
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      autoScroll ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </label>
             </div>
           </div>
 

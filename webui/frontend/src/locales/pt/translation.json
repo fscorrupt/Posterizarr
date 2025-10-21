@@ -524,7 +524,8 @@
     "included": "Incluído",
     "clickToFetch": "Clique em \"Buscar bibliotecas\" para carregar bibliotecas do seu servidor {{server}}.",
     "noLibraries": "Nenhuma biblioteca de filmes ou séries encontrada neste servidor.",
-    "excludedCount": "Bibliotecas excluídas ({{count}}):"
+    "excludedCount": "Bibliotecas excluídas ({{count}}):",
+    "includedCount": "Bibliotecas incluídas ({{count}}):"
   },
   "languageOrderSelector": {
     "noLanguages": "Nenhum idioma selecionado. Adicione idiomas usando o menu suspenso abaixo.",
@@ -1147,7 +1148,11 @@
     "uppercase": "Maiúsculas",
     "lowercase": "Minúsculas",
     "numbers": "Números",
-    "sample": "Amostra"
+    "sample": "Amostra",
+    "autoSave": "Salvamento automático",
+    "autoSaveDescription": "Salvar automaticamente as alterações após 5 segundos de inatividade",
+    "autoSaved": "{{count}} alteração(ões) salva(s) automaticamente",
+    "savedSuccessfully": "Configuração salva com sucesso! ({{count}} alteração(ões))"
   },
   "assetsStats": {
     "title": "Visão geral dos ativos",
@@ -1247,7 +1252,7 @@
     "viewSource": "Ver fonte",
     "replace": "Substituir",
     "replaceTooltip": "Substituir este ativo",
-    "noEditsNeeded": "Nenhuma edição necessária",
+    "noEditsNeeded": "Marcar como resolvido",
     "noEditsNeededTooltip": "Marcar este ativo como revisado e ocultá-lo da lista",
     "markedAsReviewed": "{{title}} marcado como revisado e oculto da lista",
     "updateFailed": "Falha ao atualizar {{title}}",

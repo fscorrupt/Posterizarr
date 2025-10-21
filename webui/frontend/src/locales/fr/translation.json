@@ -524,7 +524,8 @@
     "included": "Inclus",
     "clickToFetch": "Cliquez sur \"Récupérer les bibliothèques\" pour charger les bibliothèques depuis votre serveur {{server}}.",
     "noLibraries": "Aucune bibliothèque de films ou de séries TV trouvée sur ce serveur.",
-    "excludedCount": "Bibliothèques exclues ({{count}}) :"
+    "excludedCount": "Bibliothèques exclues ({{count}}) :",
+    "includedCount": "Bibliothèques incluses ({{count}}) :"
   },
   "languageOrderSelector": {
     "noLanguages": "Aucune langue sélectionnée. Ajoutez des langues à l'aide du menu déroulant ci-dessous.",
@@ -1147,7 +1148,11 @@
     "uppercase": "Majuscules",
     "lowercase": "Minuscules",
     "numbers": "Chiffres",
-    "sample": "Exemple"
+    "sample": "Exemple",
+    "autoSave": "Enregistrement automatique",
+    "autoSaveDescription": "Enregistrer automatiquement les modifications après 5 secondes d'inactivité",
+    "autoSaved": "{{count}} modification(s) enregistrée(s) automatiquement",
+    "savedSuccessfully": "Configuration enregistrée avec succès ! ({{count}} modification(s))"
   },
   "assetsStats": {
     "title": "Aperçu des ressources",
@@ -1247,7 +1252,7 @@
     "viewSource": "Voir la source",
     "replace": "Remplacer",
     "replaceTooltip": "Remplacer cette ressource",
-    "noEditsNeeded": "Aucune modification nécessaire",
+    "noEditsNeeded": "Marquer comme résolu",
     "noEditsNeededTooltip": "Marquer cette ressource comme vérifiée et la masquer de la liste",
     "markedAsReviewed": "{{title}} marqué comme vérifié et masqué de la liste",
     "updateFailed": "Échec de la mise à jour de {{title}}",

@@ -45,6 +45,8 @@ const getConfigTooltips = (language) => {
         "Username for Basic Authentication. Change this from the default 'admin' for better security (Default: admin)",
       basicAuthPassword:
         "Password for Basic Authentication. IMPORTANT: Change this from the default 'posterizarr' before enabling auth! (Default: posterizarr)",
+      webuiLogLevel:
+        "Set the log level for the WebUI backend server. DEBUG: Most detailed logging; INFO: General information (default); WARNING: Only warnings and errors; ERROR: Only errors; CRITICAL: Only critical errors",
       // ApiPart
       tvdbapi:
         "Your TVDB Project API key. If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format YourApiKey#YourPin",
@@ -449,6 +451,8 @@ const getConfigTooltips = (language) => {
         "Benutzername für Basis-Authentifizierung. Ändern Sie dies vom Standard 'admin' für bessere Sicherheit (Standard: admin)",
       basicAuthPassword:
         "Passwort für Basis-Authentifizierung. WICHTIG: Ändern Sie dies vom Standard 'posterizarr', bevor Sie die Authentifizierung aktivieren! (Standard: posterizarr)",
+      webuiLogLevel:
+        "Legen Sie die Log-Stufe für den WebUI-Backend-Server fest. DEBUG: Detaillierteste Protokollierung; INFO: Allgemeine Informationen (Standard); WARNING: Nur Warnungen und Fehler; ERROR: Nur Fehler; CRITICAL: Nur kritische Fehler",
       // ApiPart
       tvdbapi:
         "Ihr TVDB Project API-Schlüssel. Wenn Sie ein TVDB-Abonnent sind, können Sie Ihre PIN am Ende Ihres API-Schlüssels im Format IhrApiKey#IhrPin anhängen",
@@ -882,6 +886,12 @@ function ConfigEditor() {
   const hasInitializedGroups = useRef(false);
   const initialAuthStatus = useRef(null); // Track initial auth status when config is loaded
 
+  // Auto-save state
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const lastSavedConfigRef = useRef(null);
+
   // UI-only state for Sync toggles (not saved to config)
   const [useJellySync, setUseJellySync] = useState(false);
   const [useEmbySync, setUseEmbySync] = useState(false);
@@ -924,13 +934,20 @@ function ConfigEditor() {
   const [favProviderDropdownOpen, setFavProviderDropdownOpen] = useState(false);
   const [tmdbSortingDropdownOpen, setTmdbSortingDropdownOpen] = useState(false);
   const [logLevelDropdownOpen, setLogLevelDropdownOpen] = useState(false);
+  const [webuiLogLevelDropdownOpen, setWebuiLogLevelDropdownOpen] =
+    useState(false);
   const [favProviderDropdownUp, setFavProviderDropdownUp] = useState(false);
   const [tmdbSortingDropdownUp, setTmdbSortingDropdownUp] = useState(false);
   const [logLevelDropdownUp, setLogLevelDropdownUp] = useState(false);
+  const [webuiLogLevelDropdownUp, setWebuiLogLevelDropdownUp] = useState(false);
 
   const favProviderDropdownRef = useRef(null);
   const tmdbSortingDropdownRef = useRef(null);
   const logLevelDropdownRef = useRef(null);
+  const webuiLogLevelDropdownRef = useRef(null);
+
+  // WebUI Log Level state
+  const [webuiLogLevel, setWebuiLogLevel] = useState("INFO");
 
   // List of overlay file fields
   const OVERLAY_FILE_FIELDS = [
@@ -1060,6 +1077,7 @@ function ConfigEditor() {
     fetchConfig();
     fetchOverlayFiles();
     fetchFontFiles();
+    fetchWebuiLogLevel();
   }, []);
 
   // Add keyboard shortcut for saving (Ctrl+Enter or Cmd+Enter)
@@ -1117,6 +1135,36 @@ function ConfigEditor() {
     }
   }, [searchQuery, activeTab]);
 
+  // Auto-save when config changes (with 5 second debounce)
+  useEffect(() => {
+    if (!config || !autoSaveEnabled || !lastSavedConfigRef.current) return;
+
+    const currentConfigStr = JSON.stringify(config);
+    const hasChanges = currentConfigStr !== lastSavedConfigRef.current;
+
+    if (hasChanges) {
+      setHasUnsavedChanges(true);
+
+      // Clear existing timer
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+
+      // Set new timer for auto-save after 5 seconds of inactivity
+      autoSaveTimerRef.current = setTimeout(() => {
+        console.log("Auto-saving config after 5 seconds of inactivity...");
+        saveConfig(true); // true = auto-save
+      }, 5000);
+    }
+
+    // Cleanup timer on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [config, autoSaveEnabled]);
+
   // Function to calculate dropdown position
   const calculateDropdownPosition = (ref) => {
     if (!ref || !ref.current) return false;
@@ -1159,6 +1207,12 @@ function ConfigEditor() {
       ) {
         setLogLevelDropdownOpen(false);
       }
+      if (
+        webuiLogLevelDropdownRef.current &&
+        !webuiLogLevelDropdownRef.current.contains(event.target)
+      ) {
+        setWebuiLogLevelDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -1176,6 +1230,10 @@ function ConfigEditor() {
         setUiGroups(data.ui_groups || null);
         setDisplayNames(data.display_names || {});
         setUsingFlatStructure(data.using_flat_structure || false);
+
+        // Store config for change detection
+        lastSavedConfigRef.current = JSON.stringify(data.config);
+        setHasUnsavedChanges(false);
 
         // Store initial auth status when config is first loaded
         if (initialAuthStatus.current === null) {
@@ -1270,6 +1328,51 @@ function ConfigEditor() {
     }
   };
 
+  // Fetch WebUI backend log level
+  const fetchWebuiLogLevel = async () => {
+    try {
+      const response = await fetch(`${API_URL}/webui-settings`);
+      const data = await response.json();
+
+      if (data.success && data.settings.log_level) {
+        setWebuiLogLevel(data.settings.log_level);
+        console.log(`WebUI Log Level loaded: ${data.settings.log_level}`);
+      }
+    } catch (err) {
+      console.error("Failed to load WebUI log level:", err);
+    }
+  };
+
+  // Update WebUI backend log level
+  const updateWebuiLogLevel = async (level) => {
+    try {
+      const response = await fetch(`${API_URL}/webui-settings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          settings: {
+            log_level: level,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setWebuiLogLevel(level);
+        showSuccess(`WebUI Backend Log Level set to ${level}`);
+        console.log(`WebUI Log Level updated to: ${level}`);
+      } else {
+        showError(data.detail || "Failed to update log level");
+      }
+    } catch (err) {
+      console.error("Failed to update WebUI log level:", err);
+      showError("Failed to update log level");
+    }
+  };
+
   const handleFontFileUpload = async (file) => {
     if (!file) return;
 
@@ -1300,7 +1403,7 @@ function ConfigEditor() {
     }
   };
 
-  const saveConfig = async () => {
+  const saveConfig = async (isAutoSave = false) => {
     setSaving(true);
     setError(null);
 
@@ -1315,11 +1418,13 @@ function ConfigEditor() {
     // Check if auth status is changing
     const authChanging = oldAuthEnabled !== Boolean(newAuthEnabled);
 
-    console.log("Auth status check:", {
-      oldAuthEnabled,
-      newAuthEnabled: Boolean(newAuthEnabled),
-      authChanging,
-    });
+    if (!isAutoSave) {
+      console.log("Auth status check:", {
+        oldAuthEnabled,
+        newAuthEnabled: Boolean(newAuthEnabled),
+        authChanging,
+      });
+    }
 
     try {
       const response = await fetch(`${API_URL}/config`, {
@@ -1333,6 +1438,10 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
+        // Update saved config reference
+        lastSavedConfigRef.current = JSON.stringify(config);
+        setHasUnsavedChanges(false);
+
         // If Auth status is changing, immediately reload without showing messages
         if (authChanging) {
           console.log("Auth status changed - reloading page...");
@@ -1348,12 +1457,29 @@ function ConfigEditor() {
 
         // Normal save without auth change - update initial auth status
         initialAuthStatus.current = Boolean(newAuthEnabled);
-        showSuccess("Configuration saved successfully!");
+
+        // Show success message
+        if (isAutoSave) {
+          console.log(`Auto-saved config (${data.changes_count || 0} changes)`);
+          showInfo(
+            t("configEditor.autoSaved", { count: data.changes_count || 0 })
+          );
+        } else {
+          showSuccess(
+            t("configEditor.savedSuccessfully", {
+              count: data.changes_count || 0,
+            })
+          );
+        }
       } else {
         showError("Failed to save configuration");
       }
     } catch (err) {
-      showError(`Error: ${err.message}`);
+      if (!isAutoSave) {
+        showError(`Error: ${err.message}`);
+      } else {
+        console.error("Auto-save error:", err.message);
+      }
     } finally {
       // Only reset saving state if not reloading
       if (!authChanging) {
@@ -1718,7 +1844,7 @@ function ConfigEditor() {
       textGroups.includes(groupName) &&
       textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
     ) {
-      console.log(`📝 Text field detected: ${keyLower} in ${groupName}`);
+      console.log(`Text field detected: ${keyLower} in ${groupName}`);
       const addText = getGroupValue(groupName, "AddText");
       console.log(`   AddText = ${addText}, returning ${!addText}`);
       if (!addText) return true;
@@ -1731,7 +1857,7 @@ function ConfigEditor() {
       strokeGroups.includes(groupName) &&
       strokeFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
     ) {
-      console.log(`✏️ Stroke field detected: ${keyLower} in ${groupName}`);
+      console.log(`Stroke field detected: ${keyLower} in ${groupName}`);
       const addTextStroke = getGroupValue(groupName, "AddTextStroke");
       console.log(
         `   AddTextStroke = ${addTextStroke}, returning ${!addTextStroke}`
@@ -1838,9 +1964,11 @@ function ConfigEditor() {
                   } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
                 >
                   <button
-                    onClick={() => {
-                      updateValue(fieldKey, "");
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       closeDropdown(dropdownKey);
+                      updateValue(fieldKey, "");
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !stringValue
@@ -1853,9 +1981,11 @@ function ConfigEditor() {
                   {overlayFiles.map((file) => (
                     <button
                       key={file.name}
-                      onClick={() => {
-                        updateValue(fieldKey, file.name);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         closeDropdown(dropdownKey);
+                        updateValue(fieldKey, file.name);
                       }}
                       className={`w-full px-4 py-2 text-sm transition-all text-left ${
                         stringValue === file.name
@@ -1969,9 +2099,11 @@ function ConfigEditor() {
                   } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
                 >
                   <button
-                    onClick={() => {
-                      updateValue(fieldKey, "");
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       closeDropdown(dropdownKey);
+                      updateValue(fieldKey, "");
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !stringValue
@@ -1984,9 +2116,11 @@ function ConfigEditor() {
                   {fontFiles.map((file) => (
                     <button
                       key={file}
-                      onClick={() => {
-                        updateValue(fieldKey, file);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         closeDropdown(dropdownKey);
+                        updateValue(fieldKey, file);
                       }}
                       className={`w-full px-4 py-2 text-sm transition-all text-left ${
                         stringValue === file
@@ -2088,6 +2222,7 @@ function ConfigEditor() {
           mediaServerType="plex"
           config={config}
           disabled={disabled}
+          showIncluded={true}
         />
       );
     }
@@ -2103,6 +2238,7 @@ function ConfigEditor() {
           mediaServerType="jellyfin"
           config={config}
           disabled={disabled}
+          showIncluded={true}
         />
       );
     }
@@ -2118,6 +2254,7 @@ function ConfigEditor() {
           mediaServerType="emby"
           config={config}
           disabled={disabled}
+          showIncluded={true}
         />
       );
     }
@@ -2413,9 +2550,11 @@ function ConfigEditor() {
                 {providerOptions.map((option) => (
                   <button
                     key={option}
-                    onClick={() => {
-                      updateValue(fieldKey, option);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       setFavProviderDropdownOpen(false);
+                      updateValue(fieldKey, option);
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       stringValue.toLowerCase() === option
@@ -2477,9 +2616,11 @@ function ConfigEditor() {
                 {sortingOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => {
-                      updateValue(fieldKey, option.value);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       setTmdbSortingDropdownOpen(false);
+                      updateValue(fieldKey, option.value);
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       stringValue === option.value
@@ -3040,9 +3181,11 @@ function ConfigEditor() {
                 {logLevelOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => {
-                      updateValue(fieldKey, option.value);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       setLogLevelDropdownOpen(false);
+                      updateValue(fieldKey, option.value);
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       numValue === option.value
@@ -3119,9 +3262,11 @@ function ConfigEditor() {
                 {gravityOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => {
-                      updateValue(fieldKey, option.value);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       closeDropdown(dropdownKey);
+                      updateValue(fieldKey, option.value);
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       gravityValue === option.value
@@ -3380,9 +3525,11 @@ function ConfigEditor() {
                   } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
                 >
                   <button
-                    onClick={() => {
-                      updateValue(fieldKey, "");
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
                       closeDropdown(`color-${fieldKey}`);
+                      updateValue(fieldKey, "");
                     }}
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       !stringValue
@@ -3395,9 +3542,11 @@ function ConfigEditor() {
                   {colorNames.map((color) => (
                     <button
                       key={color}
-                      onClick={() => {
-                        updateValue(fieldKey, color);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         closeDropdown(`color-${fieldKey}`);
+                        updateValue(fieldKey, color);
                       }}
                       className={`w-full px-4 py-2 text-sm transition-all text-left flex items-center gap-2 ${
                         stringValue.toLowerCase() === color
@@ -3658,7 +3807,18 @@ function ConfigEditor() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        {/* Left side - Unsaved changes indicator */}
+        <div className="flex items-center gap-4">
+          {hasUnsavedChanges && (
+            <span className="flex items-center gap-1 text-xs text-yellow-500">
+              <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+              Unsaved changes
+            </span>
+          )}
+        </div>
+
+        {/* Right side - Buttons */}
         <div className="flex gap-3">
           <button
             onClick={fetchConfig}
@@ -3675,15 +3835,23 @@ function ConfigEditor() {
             </span>
           </button>
           <button
-            onClick={saveConfig}
+            onClick={() => saveConfig(false)}
             disabled={saving}
-            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg text-theme-text transition-all shadow-sm"
+            className={`flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border ${
+              hasUnsavedChanges
+                ? "border-yellow-500 animate-pulse"
+                : "border-theme"
+            } hover:border-theme-primary/50 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg text-theme-text transition-all shadow-sm`}
             title={t("configEditor.saveConfigTitle")}
           >
             {saving ? (
               <Loader2 className="w-4 h-4 text-theme-primary animate-spin" />
             ) : (
-              <Save className="w-4 h-4 text-theme-primary" />
+              <Save
+                className={`w-4 h-4 ${
+                  hasUnsavedChanges ? "text-yellow-500" : "text-theme-primary"
+                }`}
+              />
             )}
             <span className="text-sm">
               {saving
@@ -3695,6 +3863,40 @@ function ConfigEditor() {
                 (Ctrl+↵)
               </span>
             )}
+          </button>
+        </div>
+      </div>
+
+      {/* Auto-Save Toggle */}
+      <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-theme-primary/10">
+              <Save className="w-5 h-5 text-theme-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-theme-text">
+                {t("configEditor.autoSave")}
+              </h3>
+              <p className="text-xs text-theme-muted mt-0.5">
+                {t("configEditor.autoSaveDescription")}
+              </p>
+            </div>
+          </div>
+
+          {/* Toggle Switch */}
+          <button
+            onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
+              autoSaveEnabled ? "bg-theme-primary" : "bg-gray-600"
+            }`}
+            aria-label={t("configEditor.autoSave")}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                autoSaveEnabled ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
           </button>
         </div>
       </div>
@@ -3866,6 +4068,99 @@ function ConfigEditor() {
                           </label>
                         </div>
                       );
+
+                      // Insert WebUI Log Level dropdown after basicAuthPassword in WebUI Settings
+                      if (
+                        key === "basicAuthPassword" &&
+                        groupName === "WebUI Settings"
+                      ) {
+                        fieldsToRender.push(
+                          <div key="webuiLogLevel-ui" className="space-y-3">
+                            <label className="block">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-theme-primary">
+                                    WebUI Backend Log Level
+                                  </span>
+                                  {CONFIG_TOOLTIPS["webuiLogLevel"] && (
+                                    <Tooltip
+                                      text={CONFIG_TOOLTIPS["webuiLogLevel"]}
+                                    >
+                                      <HelpCircle className="w-4 h-4 text-theme-muted hover:text-theme-primary cursor-help transition-colors" />
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* WebUI Log Level Dropdown */}
+                              <div
+                                className="relative"
+                                ref={webuiLogLevelDropdownRef}
+                              >
+                                <button
+                                  onClick={() => {
+                                    const shouldOpenUp =
+                                      calculateDropdownPosition(
+                                        webuiLogLevelDropdownRef
+                                      );
+                                    setWebuiLogLevelDropdownUp(shouldOpenUp);
+                                    setWebuiLogLevelDropdownOpen(
+                                      !webuiLogLevelDropdownOpen
+                                    );
+                                  }}
+                                  className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between"
+                                >
+                                  <span className="text-theme-text">
+                                    {webuiLogLevel}
+                                  </span>
+                                  <ChevronDown
+                                    className={`w-5 h-5 text-theme-muted transition-transform ${
+                                      webuiLogLevelDropdownOpen
+                                        ? "rotate-180"
+                                        : ""
+                                    }`}
+                                  />
+                                </button>
+
+                                {webuiLogLevelDropdownOpen && (
+                                  <div
+                                    className={`absolute z-50 left-0 right-0 ${
+                                      webuiLogLevelDropdownUp
+                                        ? "bottom-full mb-2"
+                                        : "top-full mt-2"
+                                    } bg-theme-card border border-theme-primary rounded-lg shadow-xl`}
+                                  >
+                                    {[
+                                      "DEBUG",
+                                      "INFO",
+                                      "WARNING",
+                                      "ERROR",
+                                      "CRITICAL",
+                                    ].map((level) => (
+                                      <button
+                                        key={level}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          setWebuiLogLevelDropdownOpen(false);
+                                          updateWebuiLogLevel(level);
+                                        }}
+                                        className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                                          webuiLogLevel === level
+                                            ? "bg-theme-primary text-white"
+                                            : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
+                                        }`}
+                                      >
+                                        {level}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </label>
+                          </div>
+                        );
+                      }
 
                       // Insert UseJellySync after UseJellyfin
                       if (

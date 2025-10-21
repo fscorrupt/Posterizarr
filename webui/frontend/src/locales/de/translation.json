@@ -524,7 +524,8 @@
     "included": "Eingeschlossen",
     "clickToFetch": "Klicken Sie auf \"Bibliotheken abrufen\", um Bibliotheken von Ihrem {{server}}-Server zu laden.",
     "noLibraries": "Keine Film- oder Serienbibliotheken auf diesem Server gefunden.",
-    "excludedCount": "Ausgeschlossene Bibliotheken ({{count}}):"
+    "excludedCount": "Ausgeschlossene Bibliotheken ({{count}}):",
+    "includedCount": "Eingeschlossene Bibliotheken ({{count}}):"
   },
   "languageOrderSelector": {
     "noLanguages": "Keine Sprachen ausgewählt. Fügen Sie Sprachen über das Dropdown-Menü unten hinzu.",
@@ -1147,7 +1148,11 @@
     "uppercase": "Großbuchstaben",
     "lowercase": "Kleinbuchstaben",
     "numbers": "Zahlen",
-    "sample": "Beispiel"
+    "sample": "Beispiel",
+    "autoSave": "Automatisches Speichern",
+    "autoSaveDescription": "Änderungen nach 5 Sekunden Inaktivität automatisch speichern",
+    "autoSaved": "{{count}} Änderung(en) automatisch gespeichert",
+    "savedSuccessfully": "Konfiguration erfolgreich gespeichert! ({{count}} Änderung(en))"
   },
   "assetsStats": {
     "title": "Assets-Übersicht",
@@ -1299,7 +1304,7 @@
     "viewSource": "Quelle anzeigen",
     "replace": "Ersetzen",
     "replaceTooltip": "Dieses Asset ersetzen",
-    "noEditsNeeded": "Keine Änderungen nötig",
+    "noEditsNeeded": "Als gelöst markieren",
     "noEditsNeededTooltip": "Dieses Asset als überprüft markieren und aus der Liste ausblenden",
     "markedAsReviewed": "{{title}} als überprüft markiert und aus der Liste ausgeblendet",
     "updateFailed": "Aktualisierung von {{title}} fehlgeschlagen",
