@@ -2222,6 +2222,7 @@ function ConfigEditor() {
           mediaServerType="plex"
           config={config}
           disabled={disabled}
+          showIncluded={true}
         />
       );
     }
@@ -2237,6 +2238,7 @@ function ConfigEditor() {
           mediaServerType="jellyfin"
           config={config}
           disabled={disabled}
+          showIncluded={true}
         />
       );
     }
@@ -2252,6 +2254,7 @@ function ConfigEditor() {
           mediaServerType="emby"
           config={config}
           disabled={disabled}
+          showIncluded={true}
         />
       );
     }

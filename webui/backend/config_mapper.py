@@ -16,7 +16,9 @@ Usage in Backend:
     # Get tooltip for a config key
     tooltip = get_tooltip("tmdbtoken")
 """
+
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Import tooltips from separate file
