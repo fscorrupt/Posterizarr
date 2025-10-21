@@ -10185,6 +10185,9 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -10194,6 +10197,9 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -10205,12 +10211,19 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        if ($global:FavProvider -ne 'PLEX') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 if ($global:ImageProcessing -eq 'true') {
@@ -10602,6 +10615,9 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -10611,6 +10627,9 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -10622,12 +10641,19 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        if ($global:FavProvider -ne 'PLEX') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 if ($global:ImageProcessing -eq 'true') {
@@ -11107,6 +11133,9 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TMDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                     if ($global:PosterWithText) {
@@ -11116,6 +11145,9 @@ Elseif ($Tautulli) {
                                     Else {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:FANARTAssetTextLang
+                                    }
+                                    if ($global:FavProvider -ne 'FANART') {
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -11127,9 +11159,15 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TVDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TVDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    if ($global:FavProvider -ne 'PLEX') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -11536,6 +11574,9 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TMDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                     if ($global:PosterWithText) {
@@ -11545,6 +11586,9 @@ Elseif ($Tautulli) {
                                     Else {
                                         Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:FANARTAssetTextLang
+                                    }
+                                    if ($global:FavProvider -ne 'FANART') {
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -11556,12 +11600,19 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TVDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TVDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    if ($global:FavProvider -ne 'PLEX') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:IsFallback = $true
                                 }
                             }
                             if ($global:ImageProcessing -eq 'true') {
@@ -12110,9 +12161,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $PosterUnknownCount++
-                                            if ($global:FavProvider -ne 'IMDB') {
-                                                $global:IsFallback = $true
-                                            }
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
@@ -12278,9 +12327,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $PosterUnknownCount++
-                                            if ($global:FavProvider -ne 'IMDB') {
-                                                $global:IsFallback = $true
-                                            }
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
@@ -14473,6 +14520,9 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TMDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TMDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                             if ($global:PosterWithText) {
@@ -14482,6 +14532,9 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:FANARTAssetTextLang
+                                            }
+                                            if ($global:FavProvider -ne 'FANART') {
+                                                $global:IsFallback = $true
                                             }
                                         }
                                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -14493,9 +14546,13 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TVDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TVDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:IsFallback = $true
                                         }
                                         try {
                                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
@@ -14860,6 +14917,9 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TMDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TMDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                             if ($global:PosterWithText) {
@@ -14869,6 +14929,9 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:FANARTAssetTextLang
+                                            }
+                                            if ($global:FavProvider -ne 'FANART') {
+                                                $global:IsFallback = $true
                                             }
                                         }
                                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -14880,9 +14943,13 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TVDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TVDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         Else {
                                             Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:IsFallback = $true
                                         }
                                         try {
                                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage -ErrorAction Stop
@@ -15328,6 +15395,9 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -15338,6 +15408,9 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                         if ($global:PosterWithText) {
@@ -15347,6 +15420,9 @@ Elseif ($ArrTrigger) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     Else {
@@ -15728,6 +15804,9 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -15737,6 +15816,9 @@ Elseif ($ArrTrigger) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -15748,9 +15830,13 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                     try {
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage -ErrorAction Stop
@@ -16264,9 +16350,7 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $PosterUnknownCount++
-                                                if ($global:FavProvider -ne 'IMDB') {
-                                                    $global:IsFallback = $true
-                                                }
+                                                $global:IsFallback = $true
                                             }
                                             try {
                                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
@@ -18403,6 +18487,9 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TMDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TMDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                             if ($global:PosterWithText) {
@@ -18412,6 +18499,9 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:FANARTAssetTextLang
+                                            }
+                                            if ($global:FavProvider -ne 'FANART') {
+                                                $global:IsFallback = $true
                                             }
                                         }
                                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -18423,12 +18513,19 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TVDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TVDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         elseif ($global:posterurl -like "$PlexUrl*") {
                                             Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            if ($global:FavProvider -ne 'PLEX') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     if ($global:ImageProcessing -eq 'true') {
@@ -18820,6 +18917,9 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TMDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TMDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                             if ($global:PosterWithText) {
@@ -18829,6 +18929,9 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:FANARTAssetTextLang
+                                            }
+                                            if ($global:FavProvider -ne 'FANART') {
+                                                $global:IsFallback = $true
                                             }
                                         }
                                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -18840,12 +18943,19 @@ Elseif ($ArrTrigger) {
                                                 Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:TVDBAssetTextLang
                                             }
+                                            if ($global:FavProvider -ne 'TVDB') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         elseif ($global:posterurl -like "$PlexUrl*") {
                                             Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            if ($global:FavProvider -ne 'PLEX') {
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                         Else {
                                             Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     if ($global:ImageProcessing -eq 'true') {
@@ -19325,6 +19435,9 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -19334,6 +19447,9 @@ Elseif ($ArrTrigger) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -19345,9 +19461,15 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        if ($global:FavProvider -ne 'PLEX') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -19754,6 +19876,9 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -19763,6 +19888,9 @@ Elseif ($ArrTrigger) {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -19774,12 +19902,19 @@ Elseif ($ArrTrigger) {
                                             Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        if ($global:FavProvider -ne 'PLEX') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 if ($global:ImageProcessing -eq 'true') {
@@ -20328,9 +20463,7 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $PosterUnknownCount++
-                                                if ($global:FavProvider -ne 'IMDB') {
-                                                    $global:IsFallback = $true
-                                                }
+                                                $global:IsFallback = $true
                                             }
                                         }
                                         if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
@@ -20475,7 +20608,6 @@ Elseif ($ArrTrigger) {
                                             elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                                 Write-Entry -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:AssetTextLang = $global:FANARTAssetTextLang
-                                                $PosterUnknownCount++
                                                 if ($global:FavProvider -ne 'FANART') {
                                                     $global:IsFallback = $true
                                                 }
@@ -20496,9 +20628,7 @@ Elseif ($ArrTrigger) {
                                             Else {
                                                 Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $PosterUnknownCount++
-                                                if ($global:FavProvider -ne 'IMDB') {
-                                                    $global:IsFallback = $true
-                                                }
+                                                $global:IsFallback = $true
                                             }
                                         }
                                         if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
@@ -24090,6 +24220,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -24099,6 +24232,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -24110,9 +24246,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                     try {
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
@@ -24477,6 +24617,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -24486,6 +24629,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -24497,9 +24643,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                     try {
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage -ErrorAction Stop
@@ -24945,6 +25095,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TMDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                     if ($global:PosterWithText) {
@@ -24955,6 +25108,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:FANARTAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'FANART') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                     if ($global:PosterWithText) {
@@ -24964,6 +25120,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     Else {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    if ($global:FavProvider -ne 'TVDB') {
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 Else {
@@ -25345,6 +25504,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TMDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                     if ($global:PosterWithText) {
@@ -25354,6 +25516,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     Else {
                                         Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:FANARTAssetTextLang
+                                    }
+                                    if ($global:FavProvider -ne 'FANRT') {
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -25365,9 +25530,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TVDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TVDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:IsFallback = $true
                                 }
                                 try {
                                     $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage -ErrorAction Stop
@@ -25895,9 +26064,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $PosterUnknownCount++
-                                            if ($global:FavProvider -ne 'IMDB') {
-                                                $global:IsFallback = $true
-                                            }
+                                            $global:IsFallback = $true
                                         }
                                         try {
                                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
@@ -28556,6 +28723,9 @@ else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -28565,6 +28735,9 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -28576,12 +28749,19 @@ else {
                                             Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        if ($global:FavProvider -ne 'PLEX') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 if ($global:ImageProcessing -eq 'true') {
@@ -29006,6 +29186,9 @@ else {
                                             Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         if ($global:PosterWithText) {
@@ -29015,6 +29198,9 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:FANARTAssetTextLang
+                                        }
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -29026,12 +29212,19 @@ else {
                                             Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TVDBAssetTextLang
                                         }
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        if ($global:FavProvider -ne 'PLEX') {
+                                            $global:IsFallback = $true
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 if ($global:ImageProcessing -eq 'true') {
@@ -29549,6 +29742,9 @@ else {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TMDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                     if ($global:PosterWithText) {
@@ -29558,6 +29754,9 @@ else {
                                     Else {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:FANARTAssetTextLang
+                                    }
+                                    if ($global:FavProvider -ne 'Fanart') {
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -29569,9 +29768,15 @@ else {
                                         Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TVDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TVDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    if ($global:FavProvider -ne 'PLEX') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -30008,6 +30213,9 @@ else {
                                         Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TMDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                     if ($global:PosterWithText) {
@@ -30017,6 +30225,9 @@ else {
                                     Else {
                                         Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:FANARTAssetTextLang
+                                    }
+                                    if ($global:FavProvider -ne 'FANART') {
+                                        $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
@@ -30028,12 +30239,19 @@ else {
                                         Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:AssetTextLang = $global:TVDBAssetTextLang
                                     }
+                                    if ($global:FavProvider -ne 'TVDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    if ($global:FavProvider -ne 'PLEX') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:IsFallback = $true
                                 }
                             }
                             if ($global:ImageProcessing -eq 'true') {
@@ -30614,9 +30832,7 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $PosterUnknownCount++
-                                            if ($global:FavProvider -ne 'IMDB') {
-                                                $global:IsFallback = $true
-                                            }
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
@@ -30782,9 +30998,7 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $PosterUnknownCount++
-                                            if ($global:FavProvider -ne 'IMDB') {
-                                                $global:IsFallback = $true
-                                            }
+                                            $global:IsFallback = $true
                                         }
                                     }
                                     if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
