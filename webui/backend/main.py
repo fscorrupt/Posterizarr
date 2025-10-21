@@ -77,9 +77,9 @@ for subdir in SUBDIRS_TO_CREATE:
         test_file.touch()
         test_file.unlink()
     except PermissionError as e:
-        print(f"WARNING: No write permission for {subdir}: {e}", file=sys.stderr)
+        pass  # Silent - no console output
     except Exception as e:
-        print(f"WARNING: Could not create directory {subdir}: {e}", file=sys.stderr)
+        pass  # Silent - no console output
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
@@ -101,9 +101,9 @@ import glob
 for log_file in glob.glob(str(UI_LOGS_DIR / "*.log")):
     try:
         os.remove(log_file)
-        print(f"Cleared old log file: {log_file}", file=sys.stderr)
+        pass  # Silent - no console output
     except Exception as e:
-        print(f"Failed to remove log file {log_file}: {e}", file=sys.stderr)
+        pass  # Silent - no console output
 
 # Determine log level from config file or environment variable or default to INFO
 LOG_LEVEL_MAP = {
@@ -134,7 +134,7 @@ def load_webui_settings():
                 settings = json.load(f)
                 return {**default_settings, **settings}
     except Exception as e:
-        print(f"[STARTUP] Error loading WebUI settings: {e}", file=sys.stderr)
+        pass  # Silent - no console output
 
     return default_settings
 
@@ -146,7 +146,7 @@ def save_webui_settings(settings: dict):
             json.dump(settings, f, indent=2, ensure_ascii=False)
         return True
     except Exception as e:
-        print(f"[STARTUP] Error saving WebUI settings: {e}", file=sys.stderr)
+        pass  # Silent - no console output
         return False
 
 
@@ -158,17 +158,14 @@ def load_log_level_config():
                 config = json.load(f)
                 level = config.get("log_level", "").upper()
                 if level:
-                    print(
-                        f"[STARTUP] Log level loaded from WebUI settings: {level}",
-                        file=sys.stderr,
-                    )
+                    # Silent - no console output
                     return level
     except Exception as e:
-        print(f"[STARTUP] Error loading WebUI settings: {e}", file=sys.stderr)
+        pass  # Silent - no console output
 
     # Fallback to environment variable or default
     env_level = os.getenv("WEBUI_LOG_LEVEL", "INFO").upper()
-    print(f"[STARTUP] Using log level: {env_level} (from env/default)", file=sys.stderr)
+    # Silent - no console output
     return env_level
 
 
@@ -179,7 +176,7 @@ def save_log_level_config(level: str):
         settings["log_level"] = level.upper()
         return save_webui_settings(settings)
     except Exception as e:
-        print(f"[ERROR] Failed to save log config: {e}", file=sys.stderr)
+        pass  # Silent - no console output
         return False
 
 
@@ -187,7 +184,7 @@ def save_log_level_config(level: str):
 LOG_LEVEL_ENV = load_log_level_config()
 LOG_LEVEL = LOG_LEVEL_MAP.get(LOG_LEVEL_ENV, logging.INFO)
 
-print(f"[STARTUP] WebUI Log Level: {LOG_LEVEL_ENV} ({LOG_LEVEL})", file=sys.stderr)
+# Silent - no console output
 
 # Setup logging with configurable log level
 logging.basicConfig(
@@ -1004,8 +1001,10 @@ def find_poster_in_assets(
                     relative_path = image_file.relative_to(ASSETS_DIR)
                     # Create URL path with forward slashes
                     url_path = str(relative_path).replace("\\", "/")
-                    logger.info(f"Found image: {url_path}")
-                    return f"/poster_assets/{url_path}"
+                    # Add cache busting parameter using file modification time
+                    mtime = int(image_file.stat().st_mtime)
+                    logger.info(f"Found image: {url_path} (mtime: {mtime})")
+                    return f"/poster_assets/{url_path}?t={mtime}"
 
         logger.warning(
             f"No image found for rootfolder: {rootfolder}, type: {asset_type}"
@@ -6831,7 +6830,12 @@ async def get_recent_assets():
         recent_assets = []
         max_assets = 100  # Limit to 100 most recent assets
 
-        for record in db_records[:max_assets]:  # Only process the first 100
+        # Process records until we have 100 valid assets (not just first 100 records)
+        for record in db_records:
+            # Stop once we have enough valid assets
+            if len(recent_assets) >= max_assets:
+                break
+
             # Convert database record (sqlite3.Row) to dict
             asset_dict = dict(record)
 
