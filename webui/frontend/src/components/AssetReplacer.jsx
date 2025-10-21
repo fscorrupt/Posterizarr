@@ -413,12 +413,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   // Initialize season number from metadata
   useEffect(() => {
     if (metadata.season_number) {
-      // For season posters, format as "Season XX"
+      // For season posters, just use the number (e.g., "17")
+      // User can manually add "Season " prefix if they want it
       if (metadata.asset_type === "season") {
         const seasonNum = String(metadata.season_number).padStart(2, "0");
         setManualForm((prev) => ({
           ...prev,
-          seasonPosterName: `Season ${seasonNum}`,
+          seasonPosterName: seasonNum,
         }));
         // Also set for manual search
         setManualSearchForm((prev) => ({

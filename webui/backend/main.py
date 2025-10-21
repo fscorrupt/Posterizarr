@@ -7869,10 +7869,14 @@ async def replace_asset_from_url(
                         season_match = re.match(r"^Season(\d+)\.jpg$", filename)
                         if season_match:
                             extracted_season = season_match.group(1)
-                            # Use provided season_number or fall back to extracted
-                            season_poster_name = f"Season {season_number if season_number else extracted_season}"
+                            # Use provided season_number as-is (user controls the text)
+                            # If not provided, fall back to extracted season number only
+                            season_poster_name = (
+                                season_number if season_number else extracted_season
+                            )
                         elif season_number:
-                            season_poster_name = f"Season {season_number}"
+                            # Use whatever the user provided as-is
+                            season_poster_name = season_number
                         else:
                             raise ValueError(
                                 f"Could not determine season number for: {filename}"
