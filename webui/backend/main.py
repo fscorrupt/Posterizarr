@@ -4445,11 +4445,13 @@ async def get_runtime_history(
             }
 
         history = runtime_db.get_runtime_history(limit=limit, offset=offset, mode=mode)
+        total = runtime_db.get_runtime_history_total_count(mode=mode)
 
         return {
             "success": True,
             "history": history,
             "count": len(history),
+            "total": total,
             "limit": limit,
             "offset": offset,
             "mode_filter": mode,

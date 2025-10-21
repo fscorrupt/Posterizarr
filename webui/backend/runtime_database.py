@@ -514,6 +514,44 @@ class RuntimeDatabase:
             logger.error(f"Error getting runtime history: {e}")
             return []
 
+    def get_runtime_history_total_count(self, mode: str = None) -> int:
+        """
+        Get total count of runtime history entries
+
+        Args:
+            mode: Filter by mode (optional)
+
+        Returns:
+            Total count of entries
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            if mode:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats 
+                    WHERE mode = ?
+                """,
+                    (mode,),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats
+                """
+                )
+
+            total = cursor.fetchone()[0]
+            conn.close()
+
+            return total
+
+        except Exception as e:
+            logger.error(f"Error getting runtime history total count: {e}")
+            return 0
+
     def get_runtime_stats_summary(self, days: int = 30) -> Dict:
         """
         Get summary statistics for the last N days
