@@ -12,10 +12,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -180,14 +182,41 @@ const AssetOverview = () => {
       // Rootfolder contains: "Man-Thing (2005) {tmdb-18882}"
       // Determine filename based on asset type (same as actual file structure)
       const assetType = (asset.Type || "").toLowerCase();
+      const title = asset.Title || "";
       let filename = "poster.jpg"; // Default
 
       if (assetType.includes("background")) {
         filename = "background.jpg";
       } else if (assetType.includes("season")) {
-        filename = "season.jpg";
-      } else if (assetType.includes("titlecard")) {
-        filename = "titlecard.jpg";
+        // Extract season number from Title (e.g., "Show Name | Season04" or "Show Name | Season05")
+        // NOT from Type field which only contains "Season"
+        const seasonMatch = title.match(/season\s*(\d+)/i);
+        if (seasonMatch) {
+          const seasonNum = seasonMatch[1].padStart(2, "0");
+          filename = `Season${seasonNum}.jpg`;
+          console.log(`Season filename from title '${title}': ${filename}`);
+        } else {
+          filename = "Season01.jpg"; // Fallback to Season01 if no number found
+          console.warn(
+            `Could not extract season number from title '${title}', using Season01.jpg as fallback`
+          );
+        }
+      } else if (
+        assetType.includes("titlecard") ||
+        assetType.includes("episode")
+      ) {
+        // Extract episode code from Title (e.g., "S04E01 | Episode Title")
+        const episodeMatch = title.match(/(S\d+E\d+)/i);
+        if (episodeMatch) {
+          const episodeCode = episodeMatch[1].toUpperCase();
+          filename = `${episodeCode}.jpg`;
+          console.log(`Episode filename from title '${title}': ${filename}`);
+        } else {
+          filename = "S01E01.jpg"; // Fallback
+          console.warn(
+            `Could not extract episode code from title '${title}', using S01E01.jpg as fallback`
+          );
+        }
       }
 
       // Construct path like Gallery does: "LibraryName/Rootfolder/filename"
@@ -288,6 +317,90 @@ const AssetOverview = () => {
   const handleCloseReplacer = () => {
     setShowReplacer(false);
     setSelectedAsset(null);
+  };
+
+  // Handle marking asset as "No Edits Needed"
+  const handleNoEditsNeeded = async (asset) => {
+    console.log(`[AssetOverview] Marking asset as "No Edits Needed":`, {
+      id: asset.id,
+      title: asset.Title,
+      type: asset.Type,
+      library: asset.LibraryName,
+    });
+
+    try {
+      // Build the complete record with all required fields
+      const updateRecord = {
+        Title: asset.Title,
+        Type: asset.Type || null,
+        Rootfolder: asset.Rootfolder || null,
+        LibraryName: asset.LibraryName || null,
+        Language: asset.Language || null,
+        Fallback: asset.Fallback || null,
+        TextTruncated: asset.TextTruncated || null,
+        DownloadSource: asset.DownloadSource || null,
+        FavProviderLink: asset.FavProviderLink || null,
+        Manual: "true", // Mark as manually reviewed
+      };
+
+      console.log(
+        `[AssetOverview] Sending PUT request to /api/imagechoices/${asset.id}`,
+        {
+          method: "PUT",
+          payload: updateRecord,
+        }
+      );
+
+      const response = await fetch(`/api/imagechoices/${asset.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateRecord),
+      });
+
+      const responseData = await response.json();
+      console.log(`[AssetOverview] PUT response:`, {
+        ok: response.ok,
+        status: response.status,
+        data: responseData,
+      });
+
+      if (response.ok) {
+        console.log(
+          `[AssetOverview] ✅ Asset ${asset.id} marked as Manual=true (No Edits Needed)`
+        );
+        showSuccess(
+          t("assetOverview.markedAsReviewed", { title: asset.Title })
+        );
+
+        // Refresh the data to update the UI
+        await fetchData();
+
+        // Trigger event to update sidebar badge count
+        window.dispatchEvent(new Event("assetReplaced"));
+      } else {
+        console.error(
+          `[AssetOverview] ❌ Failed to update asset Manual field:`,
+          {
+            status: response.status,
+            statusText: response.statusText,
+            error: responseData,
+          }
+        );
+        showError(t("assetOverview.updateFailed", { title: asset.Title }));
+      }
+    } catch (error) {
+      console.error(`[AssetOverview] ❌ Error updating asset:`, {
+        error: error.message,
+        stack: error.stack,
+        asset: {
+          id: asset.id,
+          title: asset.Title,
+        },
+      });
+      showError(t("assetOverview.updateError", { error: error.message }));
+    }
   };
 
   // Get all assets from all categories
@@ -693,7 +806,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedType === type
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {type === "All Types" ? t("assetOverview.allTypes") : type}
@@ -742,7 +855,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedLibrary === lib
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {lib === "All Libraries"
@@ -791,7 +904,7 @@ const AssetOverview = () => {
                   className={`w-full px-4 py-3 text-left text-sm transition-all ${
                     selectedCategory === "All Categories"
                       ? "bg-theme-primary text-white"
-                      : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                      : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                   }`}
                 >
                   {t("assetOverview.allCategories")}
@@ -806,7 +919,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedCategory === card.label
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {card.label}
@@ -917,8 +1030,16 @@ const AssetOverview = () => {
                       </div>
                     </div>
 
-                    {/* Replace Button */}
-                    <div className="flex items-start">
+                    {/* Action Buttons */}
+                    <div className="flex items-start gap-2">
+                      <button
+                        onClick={() => handleNoEditsNeeded(asset)}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+                        title={t("assetOverview.noEditsNeededTooltip")}
+                      >
+                        <Edit className="w-4 h-4 text-theme-primary" />
+                        {t("assetOverview.noEditsNeeded")}
+                      </button>
                       <button
                         onClick={() => handleReplace(asset)}
                         className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"

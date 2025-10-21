@@ -540,9 +540,12 @@ const SchedulerSettings = () => {
             <h3 className="text-sm font-semibold text-blue-300 mb-2">
               {t("schedulerSettings.containerUsersOnly")}
             </h3>
-            <p className="text-sm text-blue-200 leading-relaxed">
-              {t("schedulerSettings.containerUsersInfo")}
-            </p>
+            <p
+              className="text-sm text-blue-200 leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: t("schedulerSettings.containerUsersInfo"),
+              }}
+            />
           </div>
         </div>
       </div>
@@ -654,7 +657,7 @@ const SchedulerSettings = () => {
                     className={`w-full px-4 py-2 text-sm transition-all text-left ${
                       timezone === tz
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {tz}

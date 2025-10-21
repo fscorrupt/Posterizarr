@@ -56,7 +56,7 @@ const LanguageSwitcher = ({ compact = false }) => {
                 className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
                   i18n.language === lang.code
                     ? "bg-theme-primary text-white"
-                    : "text-theme-text hover:bg-theme-primary/20"
+                    : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ const LanguageSwitcher = ({ compact = false }) => {
               className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
                 i18n.language === lang.code
                   ? "bg-theme-primary text-white"
-                  : "text-theme-text hover:bg-theme-primary/20"
+                  : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
               }`}
             >
               <div className="flex items-center gap-3">

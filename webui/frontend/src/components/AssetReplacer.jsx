@@ -61,6 +61,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const [activeTab, setActiveTab] = useState("upload");
   const [processWithOverlays, setProcessWithOverlays] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null); // Store the actual file
+  const [imageDimensions, setImageDimensions] = useState(null); // Store {width, height}
+  const [isDimensionValid, setIsDimensionValid] = useState(false); // Track if dimensions are valid
   const [activeProviderTab, setActiveProviderTab] = useState("tmdb"); // Provider tabs: tmdb, tvdb, fanart
 
   // Manual form for editable parameters (overlay processing)
@@ -256,8 +259,54 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     const mediaType = isTV ? "tv" : "movie";
 
     // Extract season/episode numbers
-    const seasonMatch = asset.path?.match(/Season(\d+)/);
-    const episodeMatch = asset.path?.match(/S(\d+)E(\d+)/);
+    // Priority 1: From DB Title field (if asset comes from AssetOverview)
+    // Priority 2: From asset path
+    let seasonNumber = null;
+    let episodeNumber = null;
+
+    // Check if we have DB data (from AssetOverview)
+    const dbTitle = asset._dbData?.Title || "";
+
+    if (dbTitle) {
+      // Extract from DB Title field
+      // Format: "Show Name | Season04" or "S04E01 | Episode Title"
+      const dbSeasonMatch = dbTitle.match(/Season\s*(\d+)/i);
+      const dbEpisodeMatch = dbTitle.match(/S(\d+)E(\d+)/i);
+
+      if (dbSeasonMatch) {
+        seasonNumber = parseInt(dbSeasonMatch[1]);
+        console.log(
+          `Season number from DB Title '${dbTitle}': ${seasonNumber}`
+        );
+      }
+
+      if (dbEpisodeMatch) {
+        seasonNumber = parseInt(dbEpisodeMatch[1]);
+        episodeNumber = parseInt(dbEpisodeMatch[2]);
+        console.log(
+          `Episode info from DB Title '${dbTitle}': S${seasonNumber}E${episodeNumber}`
+        );
+      }
+    }
+
+    // Fallback: Extract from path if not found in DB
+    if (seasonNumber === null || episodeNumber === null) {
+      const pathSeasonMatch = asset.path?.match(/Season(\d+)/i);
+      const pathEpisodeMatch = asset.path?.match(/S(\d+)E(\d+)/i);
+
+      if (pathSeasonMatch && seasonNumber === null) {
+        seasonNumber = parseInt(pathSeasonMatch[1]);
+      }
+
+      if (pathEpisodeMatch) {
+        if (seasonNumber === null) {
+          seasonNumber = parseInt(pathEpisodeMatch[1]);
+        }
+        if (episodeNumber === null) {
+          episodeNumber = parseInt(pathEpisodeMatch[2]);
+        }
+      }
+    }
 
     return {
       // NO ID extraction - users will search manually
@@ -269,12 +318,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       library_name: libraryName,
       media_type: mediaType,
       asset_type: assetType,
-      season_number: seasonMatch
-        ? parseInt(seasonMatch[1])
-        : episodeMatch
-        ? parseInt(episodeMatch[1])
-        : null,
-      episode_number: episodeMatch ? parseInt(episodeMatch[2]) : null,
+      season_number: seasonNumber,
+      episode_number: episodeNumber,
     };
   };
 
@@ -400,9 +445,23 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   useEffect(() => {
     if (metadata.episode_number) {
       const episodeNum = String(metadata.episode_number).padStart(2, "0");
+
+      // Extract episode title from DB if available
+      // Format: "S04E01 | Episode Title"
+      let episodeTitleName = "";
+      const dbTitle = asset._dbData?.Title || "";
+      if (dbTitle && dbTitle.includes("|")) {
+        const parts = dbTitle.split("|");
+        if (parts.length >= 2) {
+          episodeTitleName = parts[1].trim();
+          console.log(`Episode title from DB: '${episodeTitleName}'`);
+        }
+      }
+
       setManualForm((prev) => ({
         ...prev,
         episodeNumber: episodeNum,
+        episodeTitleName: episodeTitleName || prev.episodeTitleName,
       }));
       // Also set for manual search
       setManualSearchForm((prev) => ({
@@ -410,7 +469,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         episodeNumber: String(metadata.episode_number),
       }));
     }
-  }, [metadata.episode_number]);
+  }, [metadata.episode_number, asset._dbData]);
 
   // Initialize title text from metadata
   useEffect(() => {
@@ -487,8 +546,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           year: searchYear ? parseInt(searchYear) : null,
           tmdb_id: null,
           tvdb_id: null,
+          // Include season/episode numbers from manual search form
+          season_number: manualSearchForm.seasonNumber
+            ? parseInt(manualSearchForm.seasonNumber)
+            : metadata.season_number,
+          episode_number: manualSearchForm.episodeNumber
+            ? parseInt(manualSearchForm.episodeNumber)
+            : metadata.episode_number,
         };
       }
+
+      // Debug logging
+      console.log("Fetching previews with metadata:", {
+        asset_path: asset.path,
+        title: metadata.title,
+        year: metadata.year,
+        media_type: metadata.media_type,
+        asset_type: metadata.asset_type,
+        season_number: metadata.season_number,
+        episode_number: metadata.episode_number,
+        manual_search: manualSearch,
+      });
 
       const response = await fetch(`${API_URL}/assets/fetch-replacements`, {
         method: "POST",
@@ -562,12 +640,64 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       return;
     }
 
-    // Show preview of uploaded image
+    // Store the file for later upload
+    setUploadedFile(file);
+
+    // Show preview of uploaded image and check dimensions
     const reader = new FileReader();
     reader.onloadend = () => {
       setUploadedImage(reader.result);
+
+      // Create an Image object to get dimensions
+      const img = new Image();
+      img.onload = () => {
+        const width = img.width;
+        const height = img.height;
+        setImageDimensions({ width, height });
+
+        // Determine required dimensions based on asset type
+        let minWidth, minHeight;
+        if (
+          metadata.asset_type === "poster" ||
+          metadata.asset_type === "season"
+        ) {
+          minWidth = 2000;
+          minHeight = 3000;
+        } else {
+          // background or titlecard
+          minWidth = 3840;
+          minHeight = 2160;
+        }
+
+        // Check if dimensions are valid
+        const isValid = width >= minWidth && height >= minHeight;
+        setIsDimensionValid(isValid);
+
+        if (!isValid) {
+          showError(
+            t("assetReplacer.imageDimensionsTooSmall", {
+              width,
+              height,
+              minWidth,
+              minHeight,
+            })
+          );
+        } else {
+          showSuccess(
+            t("assetReplacer.imageDimensionsValid", { width, height })
+          );
+        }
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!uploadedFile || !isDimensionValid) {
+      showError(t("assetReplacer.selectValidImage"));
+      return;
+    }
 
     setUploading(true);
     showError(null);
@@ -639,7 +769,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       }
 
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", uploadedFile);
 
       const response = await fetch(url, {
         method: "POST",
@@ -1337,6 +1467,22 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
               {/* Upload Section */}
               <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+                {/* Recommended Size Info */}
+                <div className="mb-4 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <p className="text-xs text-blue-400 flex items-center gap-2">
+                    <span className="font-semibold">ℹ️ Recommended sizes:</span>
+                    {metadata.asset_type === "poster" ||
+                    metadata.asset_type === "season" ? (
+                      <span>Posters: 2000×3000px or higher (2:3 ratio)</span>
+                    ) : (
+                      <span>
+                        Backgrounds/Title Cards: 3840×2160px or higher (16:9
+                        ratio)
+                      </span>
+                    )}
+                  </p>
+                </div>
+
                 <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   {/* Upload Area */}
                   <div className="flex-1 w-full">
@@ -1383,9 +1529,48 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                           className="w-full h-full object-cover"
                         />
                       </div>
+
+                      {/* Dimension Info */}
+                      {imageDimensions && (
+                        <div
+                          className={`mt-2 text-xs text-center p-2 rounded ${
+                            isDimensionValid
+                              ? "bg-green-500/10 text-green-400 border border-green-500/30"
+                              : "bg-red-500/10 text-red-400 border border-red-500/30"
+                          }`}
+                        >
+                          {imageDimensions.width}x{imageDimensions.height}px
+                          {isDimensionValid ? " ✓" : " ✗"}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
+
+                {/* Upload Asset Button */}
+                {uploadedImage && (
+                  <div className="mt-4">
+                    <button
+                      onClick={handleConfirmUpload}
+                      disabled={!isDimensionValid || uploading}
+                      className={`w-full px-4 py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                        isDimensionValid && !uploading
+                          ? "bg-theme-primary hover:bg-theme-primary/90 text-white cursor-pointer shadow-lg hover:shadow-xl"
+                          : "bg-gray-500/20 text-gray-500 cursor-not-allowed border border-gray-500/30"
+                      }`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      {uploading
+                        ? t("assetReplacer.uploadingAsset")
+                        : t("assetReplacer.uploadAssetButton")}
+                    </button>
+                    {!isDimensionValid && (
+                      <p className="mt-2 text-xs text-red-400 text-center">
+                        {t("assetReplacer.dimensionRequirement")}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Divider */}

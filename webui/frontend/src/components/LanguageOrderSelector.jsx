@@ -270,13 +270,15 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
                   <button
                     key={lang.code}
                     onClick={() => addLanguage(lang.code)}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-theme-primary/20 transition-all text-left border-b border-theme last:border-b-0"
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-theme-hover transition-all text-left border-b border-theme last:border-b-0"
                   >
                     <span className="font-mono text-sm text-theme-primary font-semibold w-8">
                       {lang.code}
                     </span>
                     <span className="text-sm text-theme-muted">•</span>
-                    <span className="text-sm text-theme-text">{lang.name}</span>
+                    <span className="text-sm text-theme-text hover:text-theme-primary">
+                      {lang.name}
+                    </span>
                   </button>
                 ))}
               </div>

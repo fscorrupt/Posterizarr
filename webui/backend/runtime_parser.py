@@ -128,9 +128,6 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
         if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
             total_images = posters + seasons + backgrounds + titlecards
 
-        # Add fallback images to error count
-        total_errors = errors + fallback_images
-
         return {
             "mode": mode,
             "runtime_seconds": runtime_seconds,
@@ -140,7 +137,8 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
             "seasons": seasons,
             "backgrounds": backgrounds,
             "titlecards": titlecards,
-            "errors": total_errors,
+            "errors": errors,
+            "fallbacks": fallback_images,
             "log_file": log_path.name,
         }
 
@@ -151,16 +149,46 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
 
 def save_runtime_to_db(log_path: Path, mode: str = "normal"):
     """
-    Parse runtime from log file and save to database
+    Parse runtime from JSON file (preferred) or log file and save to database
 
     Args:
-        log_path: Path to the log file
+        log_path: Path to the log file (used to determine JSON file location)
         mode: The run mode
     """
     try:
         from runtime_database import runtime_db
 
-        runtime_data = parse_runtime_from_log(log_path, mode)
+        runtime_data = None
+
+        # Map mode to JSON filename
+        mode_json_map = {
+            "normal": "normal.json",
+            "testing": "testing.json",
+            "manual": "manual.json",
+            "backup": "backup.json",
+            "syncjelly": "syncjelly.json",
+            "syncemby": "syncemby.json",
+            "scheduled": "normal.json",  # Scheduler uses normal.json
+            "tautulli": "tautulli.json",
+            "arr": "arr.json",
+            "replace": "replace.json",
+        }
+
+        # Try to find and parse JSON file first (preferred)
+        json_filename = mode_json_map.get(mode)
+        if json_filename:
+            json_path = log_path.parent / json_filename
+            if json_path.exists():
+                runtime_data = parse_runtime_from_json(json_path, mode)
+                if runtime_data:
+                    logger.info(f"Parsed runtime data from {json_filename}")
+
+        # Fallback to log file if JSON not found or failed
+        if not runtime_data:
+            logger.info(
+                f"JSON file not found, falling back to log file: {log_path.name}"
+            )
+            runtime_data = parse_runtime_from_log(log_path, mode)
 
         if runtime_data:
             runtime_db.add_runtime_entry(**runtime_data)
@@ -179,13 +207,12 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
     Supported JSON files:
     - normal.json
     - manual.json
-    - test.json
+    - testing.json
     - tautulli.json
     - arr.json
-    - jellysync.json
-    - embysync.json
+    - syncjelly.json
+    - syncemby.json
     - backup.json
-    - replace.json
 
     Args:
         json_path: Path to the JSON file
@@ -220,6 +247,16 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             + data.get("Seasons", 0)
         )
 
+        # Count fallback images (only those with Fallback: "true")
+        fallback_count = 0
+        fallbacks_data = data.get("Fallbacks", [])
+        if isinstance(fallbacks_data, list):
+            for item in fallbacks_data:
+                if isinstance(item, dict):
+                    fallback_value = str(item.get("Fallback", "false")).lower()
+                    if fallback_value == "true":
+                        fallback_count += 1
+
         # Build the result dictionary
         result = {
             "mode": mode,
@@ -232,10 +269,12 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             "titlecards": data.get("Titlecards", 0),
             "collections": data.get("Collections", 0),
             "errors": data.get("Errors", 0),
+            "fallbacks": fallback_count,
             "tba_skipped": data.get("TBA Skipped", 0),
             "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
-            "notification_sent": data.get("Notification Sent", False),
-            "uptime_kuma": str(data.get("Uptime Kuma", "")),
+            "notification_sent": str(data.get("Notification Sent", "false")).lower()
+            == "true",
+            "uptime_kuma": str(data.get("Uptime Kuma", "false")).lower() == "true",
             "images_cleared": data.get("Images cleared", 0),
             "folders_cleared": data.get("Folders Cleared", 0),
             "space_saved": data.get("Space saved", ""),
@@ -316,13 +355,12 @@ def import_json_to_db(logs_dir: Path = None):
     This function looks for:
     - normal.json
     - manual.json
-    - test.json
+    - testing.json
     - tautulli.json
     - arr.json
-    - jellysync.json
-    - embysync.json
+    - syncjelly.json
+    - syncemby.json
     - backup.json
-    - replace.json
 
     Args:
         logs_dir: Path to Logs directory (auto-detected if not provided)
@@ -348,13 +386,12 @@ def import_json_to_db(logs_dir: Path = None):
         json_files = [
             ("normal.json", "normal"),
             ("manual.json", "manual"),
-            ("test.json", "testing"),
+            ("testing.json", "testing"),
             ("tautulli.json", "tautulli"),
             ("arr.json", "arr"),
-            ("jellysync.json", "syncjelly"),
-            ("embysync.json", "syncemby"),
+            ("syncjelly.json", "syncjelly"),
+            ("syncemby.json", "syncemby"),
             ("backup.json", "backup"),
-            ("replace.json", "replace"),
         ]
 
         imported_count = 0

@@ -223,9 +223,12 @@ const LibraryExclusionSelector = ({
         librariesFetched &&
         availableLibraries.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm text-theme-muted">
-              {t("libraryExclusion.selectToExclude")}
-            </p>
+            <p
+              className="text-sm text-theme-muted"
+              dangerouslySetInnerHTML={{
+                __html: t("libraryExclusion.selectToExclude"),
+              }}
+            />
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {availableLibraries.map((library) => {
                 const isExcluded = excludedLibraries.includes(library.name);
