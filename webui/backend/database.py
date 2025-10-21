@@ -24,12 +24,15 @@ class ImageChoicesDB:
 
     def connect(self):
         """Establish database connection"""
+        logger.debug(f"Attempting to connect to database: {self.db_path}")
         try:
             self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
             logger.info(f"Connected to database: {self.db_path}")
+            logger.debug(f"Connection object: {type(self.connection)}")
         except sqlite3.Error as e:
             logger.error(f"Error connecting to database: {e}")
+            logger.exception("Full traceback:")
             raise
 
     def close(self):
@@ -40,6 +43,7 @@ class ImageChoicesDB:
 
     def create_tables(self):
         """Create the imagechoices table if it doesn't exist"""
+        logger.debug("Creating tables if they don't exist...")
         try:
             cursor = self.connection.cursor()
             cursor.execute(
@@ -63,16 +67,27 @@ class ImageChoicesDB:
             )
             self.connection.commit()
             logger.info("Table 'imagechoices' created or already exists")
+            logger.debug("Table creation/verification complete")
         except sqlite3.Error as e:
             logger.error(f"Error creating table: {e}")
+            logger.exception("Full traceback:")
             raise
 
     def initialize(self):
         """Initialize the database (connect and create tables)"""
+        logger.info("=" * 60)
+        logger.info("INITIALIZING IMAGE CHOICES DATABASE")
+
         db_exists = self.db_path.exists()
+        logger.debug(f"Database path: {self.db_path}")
+        logger.debug(f"Database exists: {db_exists}")
 
         if db_exists:
             logger.info(f"Database already exists: {self.db_path}")
+            file_size = self.db_path.stat().st_size
+            logger.debug(
+                f"Database file size: {file_size} bytes ({file_size/1024:.2f} KB)"
+            )
         else:
             logger.info(f"Creating new empty database: {self.db_path}")
 
@@ -81,6 +96,8 @@ class ImageChoicesDB:
 
         if not db_exists:
             logger.info(f"New empty database created successfully: {self.db_path}")
+
+        logger.info("=" * 60)
 
     def insert_choice(
         self,

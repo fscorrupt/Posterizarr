@@ -33,17 +33,25 @@ class RuntimeDatabase:
 
     def init_database(self):
         """Initialize the database and create tables if they don't exist"""
+        logger.info("=" * 60)
+        logger.info("INITIALIZING RUNTIME DATABASE")
+        logger.debug(f"Database path: {self.db_path}")
+
         try:
             # Check if database is being created for the first time
             is_new_database = not self.db_path.exists()
+            logger.debug(f"Is new database: {is_new_database}")
 
             # Ensure database directory exists
+            logger.debug(f"Ensuring directory exists: {self.db_path.parent}")
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+            logger.debug("Connecting to database...")
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
 
             # Create runtime_stats table
+            logger.debug("Creating runtime_stats table if not exists...")
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS runtime_stats (
@@ -82,10 +90,12 @@ class RuntimeDatabase:
             )
 
             # Add migration for new columns (for existing databases)
+            logger.debug("Checking for column migrations...")
             try:
                 # Check if columns exist, if not add them
                 cursor.execute("PRAGMA table_info(runtime_stats)")
                 existing_columns = [row[1] for row in cursor.fetchall()]
+                logger.debug(f"Existing columns: {len(existing_columns)}")
 
                 new_columns = {
                     "collections": "INTEGER DEFAULT 0",
@@ -108,6 +118,7 @@ class RuntimeDatabase:
 
                 for col_name, col_type in new_columns.items():
                     if col_name not in existing_columns:
+                        logger.debug(f"Adding missing column: {col_name}")
                         cursor.execute(
                             f"ALTER TABLE runtime_stats ADD COLUMN {col_name} {col_type}"
                         )
@@ -116,6 +127,7 @@ class RuntimeDatabase:
                 logger.debug(f"Column migration check: {e}")
 
             # Create index for faster queries
+            logger.debug("Creating timestamp index if not exists...")
             cursor.execute(
                 """
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
@@ -124,6 +136,7 @@ class RuntimeDatabase:
             )
 
             # Create migration tracking table
+            logger.debug("Creating migration_info table if not exists...")
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS migration_info (
@@ -136,22 +149,34 @@ class RuntimeDatabase:
 
             conn.commit()
             conn.close()
+            logger.debug("Database initialization committed and connection closed")
 
             if is_new_database:
                 logger.info(f"Runtime database created at {self.db_path}")
+                file_size = self.db_path.stat().st_size
+                logger.debug(f"New database file size: {file_size} bytes")
                 # Auto-run migration for new database
                 self._auto_migrate()
             else:
                 logger.info(f"Runtime database initialized at {self.db_path}")
+                file_size = self.db_path.stat().st_size
+                logger.debug(
+                    f"Database file size: {file_size} bytes ({file_size/1024:.2f} KB)"
+                )
                 # Check if migration was already done
                 if not self._is_migrated():
                     logger.info(
                         "Migration not yet performed, running auto-migration..."
                     )
                     self._auto_migrate()
+                else:
+                    logger.debug("Migration already completed, skipping")
+
+            logger.info("=" * 60)
 
         except Exception as e:
             logger.error(f"Error initializing runtime database: {e}")
+            logger.exception("Full traceback:")
             raise
 
     def _is_migrated(self) -> bool:
@@ -254,7 +279,7 @@ class RuntimeDatabase:
                             imported_count += 1
                             logger.info(f"Imported from {json_file}")
                     except Exception as e:
-                        logger.debug(f"  ⏭️  Skipped {json_file}: {e}")
+                        logger.debug(f"  [SKIP]  Skipped {json_file}: {e}")
                         skipped_count += 1
 
             # Fallback: Import from log files if no JSON files found

@@ -101,18 +101,118 @@ import glob
 for log_file in glob.glob(str(UI_LOGS_DIR / "*.log")):
     try:
         os.remove(log_file)
+        print(f"Cleared old log file: {log_file}", file=sys.stderr)
     except Exception as e:
-        pass  # Ignore errors during cleanup
+        print(f"Failed to remove log file {log_file}: {e}", file=sys.stderr)
 
-# Setup logging
+# Determine log level from config file or environment variable or default to INFO
+LOG_LEVEL_MAP = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "CRITICAL": logging.CRITICAL,
+}
+
+WEBUI_SETTINGS_PATH = UI_LOGS_DIR / "webui_settings.json"
+
+# Global queue listener for thread-safe logging
+queue_listener = None
+
+
+def load_webui_settings():
+    """Load WebUI settings from JSON file"""
+    default_settings = {
+        "log_level": "INFO",
+        "theme": "dark",
+        "auto_refresh_interval": 180,
+    }
+
+    try:
+        if WEBUI_SETTINGS_PATH.exists():
+            with open(WEBUI_SETTINGS_PATH, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+                return {**default_settings, **settings}
+    except Exception as e:
+        print(f"[STARTUP] Error loading WebUI settings: {e}", file=sys.stderr)
+
+    return default_settings
+
+
+def save_webui_settings(settings: dict):
+    """Save WebUI settings to JSON file"""
+    try:
+        with open(WEBUI_SETTINGS_PATH, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"[STARTUP] Error saving WebUI settings: {e}", file=sys.stderr)
+        return False
+
+
+def load_log_level_config():
+    """Load log level from webui_settings.json or environment variable"""
+    try:
+        if WEBUI_SETTINGS_PATH.exists():
+            with open(WEBUI_SETTINGS_PATH, "r", encoding="utf-8") as f:
+                config = json.load(f)
+                level = config.get("log_level", "").upper()
+                if level:
+                    print(
+                        f"[STARTUP] Log level loaded from WebUI settings: {level}",
+                        file=sys.stderr,
+                    )
+                    return level
+    except Exception as e:
+        print(f"[STARTUP] Error loading WebUI settings: {e}", file=sys.stderr)
+
+    # Fallback to environment variable or default
+    env_level = os.getenv("WEBUI_LOG_LEVEL", "INFO").upper()
+    print(f"[STARTUP] Using log level: {env_level} (from env/default)", file=sys.stderr)
+    return env_level
+
+
+def save_log_level_config(level: str):
+    """DEPRECATED: Use save_webui_settings instead. Kept for backward compatibility."""
+    try:
+        settings = load_webui_settings()
+        settings["log_level"] = level.upper()
+        return save_webui_settings(settings)
+    except Exception as e:
+        print(f"[ERROR] Failed to save log config: {e}", file=sys.stderr)
+        return False
+
+
+# Get log level from config file, environment variable, or default to INFO
+LOG_LEVEL_ENV = load_log_level_config()
+LOG_LEVEL = LOG_LEVEL_MAP.get(LOG_LEVEL_ENV, logging.INFO)
+
+print(f"[STARTUP] WebUI Log Level: {LOG_LEVEL_ENV} ({LOG_LEVEL})", file=sys.stderr)
+
+# Setup logging with configurable log level
 logging.basicConfig(
-    level=logging.INFO,
+    level=LOG_LEVEL,  # Configurable log level
     filename=UI_LOGS_DIR / "BackendServer.log",  # Main backend server log file
     filemode="w",  # Overwrite the log file on each startup
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="[%(asctime)s] [%(levelname)-8s] [%(name)s:%(funcName)s:%(lineno)d] - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
-logging.getLogger("httpx").setLevel(logging.INFO)
+
+# Set httpx to WARNING to reduce noise, but keep our app at DEBUG
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.INFO)
+logging.getLogger("uvicorn.error").setLevel(logging.INFO)
+
 logger = logging.getLogger(__name__)
+logger.info("=" * 80)
+logger.info("POSTERIZARR WEB UI BACKEND INITIALIZING")
+logger.info("=" * 80)
+logger.info(f"Log Level: {LOG_LEVEL_ENV} ({LOG_LEVEL})")
+logger.debug(f"Python version: {sys.version}")
+logger.debug(f"Working directory: {os.getcwd()}")
+logger.debug(f"Base directory: {BASE_DIR}")
+logger.debug(f"Docker mode: {IS_DOCKER}")
 
 # Create Overlayfiles directory if it doesn't exist
 OVERLAYFILES_DIR.mkdir(exist_ok=True)
@@ -121,48 +221,87 @@ OVERLAYFILES_DIR.mkdir(exist_ok=True)
 UPLOADS_DIR.mkdir(exist_ok=True)
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
-    logger.warning(f"config.json not found, using config.example.json as fallback")
+    logger.warning(f"Config file not found at {CONFIG_PATH}")
+    logger.warning(f"Using fallback config.example.json: {CONFIG_EXAMPLE_PATH}")
     CONFIG_PATH = CONFIG_EXAMPLE_PATH
+else:
+    logger.debug(f"Config path set to: {CONFIG_PATH}")
+    logger.debug(f"Config exists: {CONFIG_PATH.exists()}")
 
 
 def setup_backend_ui_logger():
     """Setup backend logger to also write to FrontendUI.log"""
+    global queue_listener
+    logger.info("Initializing backend UI logger")
     try:
         # Create UILogs directory if not exists
         UI_LOGS_DIR.mkdir(exist_ok=True)
+        logger.debug(f"UILogs directory: {UI_LOGS_DIR}")
+        logger.debug(f"UILogs directory exists: {UI_LOGS_DIR.exists()}")
 
         # CLEANUP: Delete old log files on startup
         backend_log_path = UI_LOGS_DIR / "FrontendUI.log"
         if backend_log_path.exists():
+            logger.debug(f"Removing existing FrontendUI.log: {backend_log_path}")
             backend_log_path.unlink()
             logger.info(f"Cleared old FrontendUI.log")
+        else:
+            logger.debug("No existing FrontendUI.log to clear")
 
-        # Create File Handler for FrontendUI.log
-        backend_ui_handler = logging.FileHandler(
+        # Create File Handler for FrontendUI.log with thread-safe queue
+        logger.debug(f"Creating file handler for: {backend_log_path}")
+        backend_ui_file_handler = logging.FileHandler(
             backend_log_path, encoding="utf-8", mode="w"
         )
-        backend_ui_handler.setLevel(logging.DEBUG)  # All levels
-        backend_ui_handler.setFormatter(
+        backend_ui_file_handler.setLevel(LOG_LEVEL)  # Use configurable log level
+        backend_ui_file_handler.setFormatter(
             logging.Formatter(
-                "[%(asctime)s] [%(levelname)-8s] |BACKEND| %(message)s",
+                "[%(asctime)s] [%(levelname)-8s] [BACKEND:%(name)s:%(funcName)s:%(lineno)d] - %(message)s",
                 datefmt="%Y-%m-%d %H:%M:%S",
             )
         )
+        logger.debug("File handler formatter configured")
 
-        # Add handler to root logger (so all backend logs are captured)
-        logging.getLogger().addHandler(backend_ui_handler)
+        # Use QueueHandler for thread-safe logging
+        from queue import Queue
+        from logging.handlers import QueueHandler, QueueListener
 
-        logger.info(f"Backend logger initialized: {backend_log_path}")
-        logger.info("Backend logging to FrontendUI.log enabled")
+        log_queue = Queue(-1)  # Unlimited queue size
+        queue_handler = QueueHandler(log_queue)
 
+        # Start queue listener in background thread
+        queue_listener = QueueListener(
+            log_queue, backend_ui_file_handler, respect_handler_level=True
+        )
+        queue_listener.start()
+        logger.debug("Queue listener started for thread-safe logging")
+
+        # Add queue handler to root logger (so all backend logs are captured)
+        logging.getLogger().addHandler(queue_handler)
+        logger.info(f"Backend logger initialized successfully: {backend_log_path}")
+        logger.info(
+            f"Backend logging to FrontendUI.log enabled with {LOG_LEVEL_ENV} level"
+        )
+        logger.debug(
+            "All backend logs will be captured in both BackendServer.log and FrontendUI.log"
+        )
+
+    except PermissionError as e:
+        logger.error(f"Permission denied initializing backend UI logger: {e}")
+    except OSError as e:
+        logger.error(f"OS error initializing backend UI logger: {e}")
     except Exception as e:
-        logger.warning(f"Could not initialize backend UI logger: {e}")
+        logger.error(f"Unexpected error initializing backend UI logger: {e}")
+        logger.debug(f"Exception type: {type(e).__name__}", exc_info=True)
 
 
 # Initialize Backend UI Logger on startup
+logger.info("Setting up backend UI logger...")
 setup_backend_ui_logger()
 
+logger.info("Loading modules...")
 try:
+    logger.debug("Attempting to import config_mapper module")
     from config_mapper import (
         flatten_config,
         unflatten_config,
@@ -173,17 +312,24 @@ try:
     )
 
     # Import tooltips
+    logger.debug("Importing config_tooltips")
     from config_tooltips import CONFIG_TOOLTIPS
 
     CONFIG_MAPPER_AVAILABLE = True
     logger.info("Config mapper loaded successfully")
+    logger.debug(f"UI_GROUPS available: {len(UI_GROUPS) if UI_GROUPS else 0}")
+    logger.debug(
+        f"CONFIG_TOOLTIPS available: {len(CONFIG_TOOLTIPS) if CONFIG_TOOLTIPS else 0}"
+    )
 except ImportError as e:
     CONFIG_MAPPER_AVAILABLE = False
     CONFIG_TOOLTIPS = {}  # Fallback if config_tooltips not available
     logger.warning(f"Config mapper not available: {e}. Using grouped config structure.")
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
 # Import scheduler module
 try:
+    logger.debug("Attempting to import scheduler module")
     from scheduler import PosterizarrScheduler
 
     SCHEDULER_AVAILABLE = True
@@ -193,9 +339,11 @@ except ImportError as e:
     logger.warning(
         f"Scheduler not available: {e}. Scheduler features will be disabled."
     )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
 # Import auth middleware for Basic Authentication
 try:
+    logger.debug("Attempting to import auth_middleware module")
     from auth_middleware import BasicAuthMiddleware, load_auth_config
 
     AUTH_MIDDLEWARE_AVAILABLE = True
@@ -203,9 +351,11 @@ try:
 except ImportError as e:
     AUTH_MIDDLEWARE_AVAILABLE = False
     logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
 # Import database module
 try:
+    logger.debug("Attempting to import database module")
     from database import init_database, ImageChoicesDB
 
     DATABASE_AVAILABLE = True
@@ -215,9 +365,11 @@ except ImportError as e:
     logger.warning(
         f"Database module not available: {e}. Database features will be disabled."
     )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
 # Import config database module
 try:
+    logger.debug("Attempting to import config_database module")
     from config_database import ConfigDB
 
     CONFIG_DATABASE_AVAILABLE = True
@@ -227,9 +379,11 @@ except ImportError as e:
     logger.warning(
         f"Config database not available: {e}. Config database will be disabled."
     )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
 # Import runtime database module
 try:
+    logger.debug("Attempting to import runtime_database and runtime_parser modules")
     from runtime_database import runtime_db
     from runtime_parser import parse_runtime_from_log, save_runtime_to_db
 
@@ -241,6 +395,15 @@ except ImportError as e:
     logger.warning(
         f"Runtime database not available: {e}. Runtime tracking will be disabled."
     )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
+logger.info("Module loading completed")
+logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
+logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
+logger.debug(f"Auth Middleware: {AUTH_MIDDLEWARE_AVAILABLE}")
+logger.debug(f"Database: {DATABASE_AVAILABLE}")
+logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
+logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -1162,6 +1325,16 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+    # Stop queue listener for thread-safe logging
+    global queue_listener
+    if queue_listener:
+        try:
+            logger.info("Stopping queue listener for FrontendUI.log")
+            queue_listener.stop()
+            logger.info("Queue listener stopped")
+        except Exception as e:
+            logger.error(f"Error stopping queue listener: {e}")
+
     # Stop background cache refresh
     stop_cache_refresh_background()
 
@@ -1357,24 +1530,42 @@ async def check_auth():
 @app.get("/api/config")
 async def get_config():
     """Get current config.json - returns FLAT structure for UI when config_mapper available"""
+    logger.info("=" * 60)
+    logger.info("CONFIG READ REQUEST")
+    logger.debug(f"Config path: {CONFIG_PATH}")
+    logger.debug(f"Config mapper available: {CONFIG_MAPPER_AVAILABLE}")
+
     try:
         if not CONFIG_PATH.exists():
+            logger.error(f"Config file not found at: {CONFIG_PATH}")
+            logger.debug(f"Base directory: {BASE_DIR}")
             error_msg = f"Config file not found at: {CONFIG_PATH}\n"
             error_msg += f"Base directory: {BASE_DIR}\n"
             error_msg += "Please create config.json from config.example.json"
             raise HTTPException(status_code=404, detail=error_msg)
 
+        logger.debug("Reading config file...")
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             grouped_config = json.load(f)
 
+        logger.debug(f"Config loaded: {len(grouped_config)} top-level keys")
+        logger.debug(f"Top-level keys: {list(grouped_config.keys())}")
+
         # If config_mapper is available, transform to flat structure
         if CONFIG_MAPPER_AVAILABLE:
+            logger.debug("Flattening config structure...")
+            logger.debug("Flattening config structure...")
             flat_config = flatten_config(grouped_config)
+            logger.debug(f"Flat config: {len(flat_config)} keys")
 
             # Build display names for all keys in the config
+            logger.debug("Building display names dictionary...")
             display_names_dict = {}
             for key in flat_config.keys():
                 display_names_dict[key] = get_display_name(key)
+
+            logger.info(f"Config read successful: {len(flat_config)} settings")
+            logger.info("=" * 60)
 
             return {
                 "success": True,
@@ -1386,6 +1577,10 @@ async def get_config():
             }
         else:
             # Fallback: return grouped structure as-is
+            logger.info(
+                f"Config read successful (grouped): {len(grouped_config)} sections"
+            )
+            logger.info("=" * 60)
             return {
                 "success": True,
                 "config": grouped_config,
@@ -1396,31 +1591,85 @@ async def get_config():
         raise
     except Exception as e:
         logger.error(f"Error reading config: {e}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/config")
 async def update_config(data: ConfigUpdate):
     """Update config.json - accepts FLAT structure and saves as GROUPED when config_mapper available"""
+    logger.info("=" * 60)
+    logger.info("CONFIG UPDATE REQUEST")
+    logger.debug(f"Number of config keys to update: {len(data.config)}")
+    logger.debug(f"Config mapper available: {CONFIG_MAPPER_AVAILABLE}")
+
     try:
+        # Load current config to detect changes
+        logger.debug("Loading current config to detect changes...")
+        current_config = {}
+        if CONFIG_PATH.exists():
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                current_config = json.load(f)
+
+        # Flatten current config if needed for comparison
+        if CONFIG_MAPPER_AVAILABLE and current_config:
+            current_flat = flatten_config(current_config)
+        else:
+            current_flat = current_config
+
+        # Detect and log changes
+        changes_detected = []
+        for key, new_value in data.config.items():
+            old_value = current_flat.get(key)
+            if old_value != new_value:
+                # Mask sensitive values in logs
+                if any(
+                    sensitive in key.lower()
+                    for sensitive in ["password", "token", "key", "api"]
+                ):
+                    old_display = "***" if old_value else None
+                    new_display = "***" if new_value else None
+                else:
+                    old_display = old_value
+                    new_display = new_value
+
+                changes_detected.append(
+                    {"key": key, "old": old_display, "new": new_display}
+                )
+                logger.info(f"CONFIG CHANGE: {key}")
+                logger.info(f"  Old value: {old_display}")
+                logger.info(f"  New value: {new_display}")
+
+        if changes_detected:
+            logger.info(f"Total changes detected: {len(changes_detected)}")
+            logger.debug(f"Changed keys: {[c['key'] for c in changes_detected]}")
+        else:
+            logger.info("No changes detected in config")
+
         logger.info("Saving config changes to config.json...")
 
         # If config_mapper is available, transform flat config back to grouped structure
         if CONFIG_MAPPER_AVAILABLE:
+            logger.debug("Transforming flat config back to grouped structure...")
             grouped_config = unflatten_config(data.config)
+            logger.debug(f"Grouped config: {len(grouped_config)} sections")
 
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 json.dump(grouped_config, f, indent=2, ensure_ascii=False)
 
-            logger.info(
-                "Config saved successfully to config.json (flat -> grouped transformation applied)"
-            )
+            file_size = CONFIG_PATH.stat().st_size
+            logger.info(f"Config saved successfully to config.json (flat -> grouped)")
+            logger.debug(f"File size: {file_size} bytes")
         else:
             # Fallback: save as-is (assuming grouped structure)
+            logger.debug("Saving config as grouped structure (no mapper)...")
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 json.dump(data.config, f, indent=2, ensure_ascii=False)
 
+            file_size = CONFIG_PATH.stat().st_size
             logger.info("Config saved successfully to config.json (grouped structure)")
+            logger.debug(f"File size: {file_size} bytes")
 
         # Also update config database if available
         if CONFIG_DATABASE_AVAILABLE and config_db:
@@ -1429,14 +1678,28 @@ async def update_config(data: ConfigUpdate):
                 # Sync the updated config to database
                 config_db.import_from_json()
                 logger.info("Config database synced successfully with config.json")
+
+                # Log changes to database as well
+                if changes_detected:
+                    logger.debug(
+                        f"Database now contains {len(changes_detected)} updated values"
+                    )
             except Exception as db_error:
                 logger.warning(f"Could not sync config database: {db_error}")
+                logger.debug(f"Database sync error details: {str(db_error)}")
         else:
             logger.info("Config database not available, skipping database sync")
 
-        return {"success": True, "message": "Config updated successfully"}
+        logger.info("=" * 60)
+        return {
+            "success": True,
+            "message": "Config updated successfully",
+            "changes_count": len(changes_detected),
+        }
     except Exception as e:
         logger.error(f"Error updating config: {e}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1628,14 +1891,23 @@ async def get_overlay_files():
 @app.post("/api/overlayfiles/upload")
 async def upload_overlay_file(file: UploadFile = File(...)):
     """Upload a new overlay file to Overlayfiles directory"""
+    logger.info("=" * 60)
+    logger.info("OVERLAY FILE UPLOAD STARTED")
+    logger.info(f"Filename: {file.filename}")
+    logger.info(f"Content-Type: {file.content_type}")
+    logger.debug(f"Target directory: {OVERLAYFILES_DIR}")
+
     try:
         # Ensure directory exists with permission check
+        logger.debug("Checking directory existence and permissions...")
         try:
             OVERLAYFILES_DIR.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Directory exists: {OVERLAYFILES_DIR.exists()}")
             # Test write permissions
             test_file = OVERLAYFILES_DIR / ".write_test"
             test_file.touch()
             test_file.unlink()
+            logger.debug("Write permission check: OK")
         except PermissionError:
             logger.error(
                 f"No write permission for Overlayfiles directory: {OVERLAYFILES_DIR}"
@@ -1652,6 +1924,7 @@ async def upload_overlay_file(file: UploadFile = File(...)):
             )
 
         # Validate file type - images and fonts
+        logger.debug("Validating file type...")
         allowed_extensions = {
             ".png",
             ".jpg",
@@ -1662,60 +1935,84 @@ async def upload_overlay_file(file: UploadFile = File(...)):
             ".woff2",
         }
         file_ext = Path(file.filename).suffix.lower()
+        logger.debug(f"File extension: {file_ext}")
 
         if file_ext not in allowed_extensions:
+            logger.warning(f"Invalid file type rejected: {file_ext}")
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid file type. Only PNG, JPG, JPEG, TTF, OTF, WOFF, and WOFF2 files are allowed.",
             )
 
         # Sanitize filename (remove dangerous characters)
+        logger.debug("Sanitizing filename...")
         safe_filename = "".join(
             c for c in file.filename if c.isalnum() or c in "._- "
         ).strip()
+        logger.debug(f"Sanitized filename: {safe_filename}")
 
         if not safe_filename:
+            logger.error("Filename sanitization resulted in empty filename")
             raise HTTPException(status_code=400, detail="Invalid filename")
 
         # Save file
         file_path = OVERLAYFILES_DIR / safe_filename
+        logger.debug(f"Target file path: {file_path}")
 
         # Check if file already exists
         if file_path.exists():
+            logger.warning(f"File already exists: {safe_filename}")
             raise HTTPException(
                 status_code=400,
                 detail=f"File '{safe_filename}' already exists. Please rename or delete the existing file first.",
             )
 
         # Write file with better error handling
+        logger.info("Writing file to disk...")
         try:
             content = await file.read()
-            if len(content) == 0:
+            content_size = len(content)
+            logger.info(f"File size: {content_size} bytes ({content_size/1024:.2f} KB)")
+
+            if content_size == 0:
+                logger.error("Uploaded file is empty")
                 raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
             with open(file_path, "wb") as f:
                 f.write(content)
 
             # Verify file was written
+            logger.debug("Verifying file was written correctly...")
             if not file_path.exists() or file_path.stat().st_size == 0:
+                logger.error(
+                    f"File verification failed - exists: {file_path.exists()}, size: {file_path.stat().st_size if file_path.exists() else 0}"
+                )
                 raise HTTPException(
                     status_code=500, detail="File was not saved successfully"
                 )
 
+            actual_size = file_path.stat().st_size
+            logger.debug(
+                f"File written successfully - size on disk: {actual_size} bytes"
+            )
+
         except PermissionError as e:
             logger.error(f"Permission denied writing overlay file: {e}")
+            logger.exception("Full traceback:")
             raise HTTPException(
                 status_code=500,
                 detail=f"Permission denied: Unable to write file. Check folder permissions on your system (Docker/NAS/Unraid).",
             )
         except OSError as e:
             logger.error(f"OS error writing overlay file: {e}")
+            logger.exception("Full traceback:")
             raise HTTPException(
                 status_code=500,
                 detail=f"File system error: {str(e)}. Check disk space and permissions.",
             )
 
-        logger.info(f"Uploaded overlay file: {safe_filename} ({len(content)} bytes)")
+        logger.info(f"Uploaded overlay file: {safe_filename} ({content_size} bytes)")
+        logger.info("=" * 60)
 
         return {
             "success": True,
@@ -2168,18 +2465,24 @@ async def validate_plex(request: PlexValidationRequest):
     """Validate Plex connection"""
     logger.info("=" * 60)
     logger.info("PLEX VALIDATION STARTED")
-    logger.info(f"📍 URL: {request.url}")
+    logger.info(f"[URL] URL: {request.url}")
     logger.info(
-        f"🔑 Token: {request.token[:10]}...{request.token[-4:] if len(request.token) > 14 else ''}"
+        f"[KEY] Token: {request.token[:10]}...{request.token[-4:] if len(request.token) > 14 else ''}"
     )
+    logger.debug(f"Full request object: {request.model_dump()}")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             url = f"{request.url}/library/sections/?X-Plex-Token={request.token}"
-            logger.info(f"🌐 Sending request to Plex API...")
+            logger.info(f"[REQUEST] Sending request to Plex API...")
+            logger.debug(
+                f"Full request URL: {url[:50]}...{url[-20:] if len(url) > 70 else url}"
+            )
 
             response = await client.get(url)
             logger.info(f"Response received - Status: {response.status_code}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
+            logger.debug(f"Response size: {len(response.content)} bytes")
 
             if response.status_code == 200:
                 # Parse XML to check for libraries
@@ -2187,6 +2490,7 @@ async def validate_plex(request: PlexValidationRequest):
                 lib_count = int(root.get("size", 0))
                 server_name = root.get("friendlyName", "Unknown")
 
+                logger.debug(f"Parsed XML root attributes: {root.attrib}")
                 logger.info(f"Plex validation successful!")
                 logger.info(f"   Server: {server_name}")
                 logger.info(f"   Libraries: {lib_count}")
@@ -2198,7 +2502,7 @@ async def validate_plex(request: PlexValidationRequest):
                     "details": {"library_count": lib_count, "server_name": server_name},
                 }
             elif response.status_code == 401:
-                logger.warning(f"❌Plex validation failed: Invalid token (401)")
+                logger.warning(f"[FAILED]Plex validation failed: Invalid token (401)")
                 logger.info("=" * 60)
                 return {
                     "valid": False,
@@ -2214,7 +2518,7 @@ async def validate_plex(request: PlexValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except httpx.TimeoutException:
-        logger.error(f"⏱️  Plex validation timeout - URL unreachable")
+        logger.error(f"[TIMEOUT]  Plex validation timeout - URL unreachable")
         logger.info("=" * 60)
         return {
             "valid": False,
@@ -2222,7 +2526,7 @@ async def validate_plex(request: PlexValidationRequest):
             "details": {"error": "timeout"},
         }
     except Exception as e:
-        logger.error(f"💥 Plex validation error: {str(e)}")
+        logger.error(f"[ERROR] Plex validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2237,21 +2541,26 @@ async def validate_jellyfin(request: JellyfinValidationRequest):
     """Validate Jellyfin connection"""
     logger.info("=" * 60)
     logger.info("JELLYFIN VALIDATION STARTED")
-    logger.info(f"📍 URL: {request.url}")
+    logger.info(f"[URL] URL: {request.url}")
     logger.info(
-        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+        f"[KEY] API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
     )
+    logger.debug(f"Full request object: {request.model_dump()}")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             url = f"{request.url}/System/Info?api_key={request.api_key}"
-            logger.info(f"🌐 Sending request to Jellyfin API...")
+            logger.info(f"[REQUEST] Sending request to Jellyfin API...")
+            logger.debug(f"Full request URL (without key): {request.url}/System/Info")
 
             response = await client.get(url)
             logger.info(f"Response received - Status: {response.status_code}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
+            logger.debug(f"Response size: {len(response.content)} bytes")
 
             if response.status_code == 200:
                 data = response.json()
+                logger.debug(f"Response JSON keys: {list(data.keys())}")
                 version = data.get("Version", "Unknown")
                 server_name = data.get("ServerName", "Unknown")
 
@@ -2284,7 +2593,7 @@ async def validate_jellyfin(request: JellyfinValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except httpx.TimeoutException:
-        logger.error(f"⏱️  Jellyfin validation timeout - URL unreachable")
+        logger.error(f"[TIMEOUT]  Jellyfin validation timeout - URL unreachable")
         logger.info("=" * 60)
         return {
             "valid": False,
@@ -2292,7 +2601,7 @@ async def validate_jellyfin(request: JellyfinValidationRequest):
             "details": {"error": "timeout"},
         }
     except Exception as e:
-        logger.error(f"💥 Jellyfin validation error: {str(e)}")
+        logger.error(f"[ERROR] Jellyfin validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2307,21 +2616,26 @@ async def validate_emby(request: EmbyValidationRequest):
     """Validate Emby connection"""
     logger.info("=" * 60)
     logger.info("EMBY VALIDATION STARTED")
-    logger.info(f"📍 URL: {request.url}")
+    logger.info(f"[URL] URL: {request.url}")
     logger.info(
-        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+        f"[KEY] API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
     )
+    logger.debug(f"Full request object: {request.model_dump()}")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             url = f"{request.url}/System/Info?api_key={request.api_key}"
-            logger.info(f"🌐 Sending request to Emby API...")
+            logger.info(f"[REQUEST] Sending request to Emby API...")
+            logger.debug(f"Full request URL (without key): {request.url}/System/Info")
 
             response = await client.get(url)
             logger.info(f"Response received - Status: {response.status_code}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
+            logger.debug(f"Response size: {len(response.content)} bytes")
 
             if response.status_code == 200:
                 data = response.json()
+                logger.debug(f"Response JSON keys: {list(data.keys())}")
                 version = data.get("Version", "Unknown")
                 server_name = data.get("ServerName", "Unknown")
 
@@ -2352,7 +2666,7 @@ async def validate_emby(request: EmbyValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except httpx.TimeoutException:
-        logger.error(f"⏱️  Emby validation timeout - URL unreachable")
+        logger.error(f"[TIMEOUT]  Emby validation timeout - URL unreachable")
         logger.info("=" * 60)
         return {
             "valid": False,
@@ -2360,7 +2674,7 @@ async def validate_emby(request: EmbyValidationRequest):
             "details": {"error": "timeout"},
         }
     except Exception as e:
-        logger.error(f"💥 Emby validation error: {str(e)}")
+        logger.error(f"[ERROR] Emby validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2376,8 +2690,9 @@ async def validate_tmdb(request: TMDBValidationRequest):
     logger.info("=" * 60)
     logger.info("TMDB VALIDATION STARTED")
     logger.info(
-        f"🔑 Token: {request.token[:15]}...{request.token[-8:] if len(request.token) > 23 else ''}"
+        f"[KEY] Token: {request.token[:15]}...{request.token[-8:] if len(request.token) > 23 else ''}"
     )
+    logger.debug(f"Full request object: {request.model_dump()}")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -2385,12 +2700,16 @@ async def validate_tmdb(request: TMDBValidationRequest):
                 "Authorization": f"Bearer {request.token}",
                 "Content-Type": "application/json",
             }
-            logger.info(f"🌐 Sending request to TMDB API...")
+            logger.info(f"[REQUEST] Sending request to TMDB API...")
+            logger.debug(
+                f"Request headers (without token): Content-Type=application/json"
+            )
 
             response = await client.get(
                 "https://api.themoviedb.org/3/configuration", headers=headers
             )
             logger.info(f"Response received - Status: {response.status_code}")
+            logger.debug(f"Response size: {len(response.content)} bytes")
 
             if response.status_code == 200:
                 logger.info(f"TMDB validation successful!")
@@ -2417,7 +2736,7 @@ async def validate_tmdb(request: TMDBValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except Exception as e:
-        logger.error(f"💥 TMDB validation error: {str(e)}")
+        logger.error(f"[ERROR] TMDB validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2433,31 +2752,38 @@ async def validate_tvdb(request: TVDBValidationRequest):
     logger.info("=" * 60)
     logger.info("TVDB VALIDATION STARTED")
     logger.info(
-        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+        f"[KEY] API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
     )
     if request.pin:
-        logger.info(f"📌 PIN provided: {request.pin}")
+        logger.info(f" PIN provided: {request.pin}")
+    logger.debug(f"Full request object: {request.model_dump()}")
 
     max_retries = 6
     retry_count = 0
     success = False
+    logger.debug(f"TVDB validation configured with max_retries={max_retries}")
 
     while not success and retry_count < max_retries:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 login_url = "https://api4.thetvdb.com/v4/login"
+                logger.debug(f"TVDB API endpoint: {login_url}")
 
                 # Request body with or without PIN
                 if request.pin:
                     body = {"apikey": request.api_key, "pin": request.pin}
                     logger.info(
-                        f"🌐 Attempting TVDB login with API Key + PIN (Attempt {retry_count + 1}/{max_retries})..."
+                        f"[REQUEST] Attempting TVDB login with API Key + PIN (Attempt {retry_count + 1}/{max_retries})..."
+                    )
+                    logger.debug(
+                        f"Request body includes: apikey (hidden), pin={request.pin}"
                     )
                 else:
                     body = {"apikey": request.api_key}
                     logger.info(
-                        f"🌐 Attempting TVDB login with API Key only (Attempt {retry_count + 1}/{max_retries})..."
+                        f"[REQUEST] Attempting TVDB login with API Key only (Attempt {retry_count + 1}/{max_retries})..."
                     )
+                    logger.debug(f"Request body includes: apikey (hidden) only")
 
                 headers = {
                     "accept": "application/json",
@@ -2481,7 +2807,7 @@ async def validate_tvdb(request: TVDBValidationRequest):
                         success = True
                         pin_msg = f" (with PIN: {request.pin})" if request.pin else ""
                         logger.info(
-                            f"🎟️  Successfully received TVDB token: {token[:15]}...{token[-8:]}"
+                            f"[TOKEN]  Successfully received TVDB token: {token[:15]}...{token[-8:]}"
                         )
                         logger.info(f"TVDB validation successful!{pin_msg}")
                         logger.info(f"   Token is valid and working")
@@ -2500,7 +2826,7 @@ async def validate_tvdb(request: TVDBValidationRequest):
                         logger.warning(f" No token in response data")
                         retry_count += 1
                         if retry_count < max_retries:
-                            logger.info(f"⏳ Waiting 10 seconds before retry...")
+                            logger.info(f"[WAIT] Waiting 10 seconds before retry...")
                             await asyncio.sleep(10)
 
                 elif login_response.status_code == 401:
@@ -2521,24 +2847,24 @@ async def validate_tvdb(request: TVDBValidationRequest):
                     )
                     retry_count += 1
                     if retry_count < max_retries:
-                        logger.info(f"⏳ Waiting 10 seconds before retry...")
+                        logger.info(f"[WAIT] Waiting 10 seconds before retry...")
                         await asyncio.sleep(10)
 
         except httpx.TimeoutException:
             logger.warning(
-                f"⏱️  TVDB login timeout (Attempt {retry_count + 1}/{max_retries})"
+                f"[TIMEOUT]  TVDB login timeout (Attempt {retry_count + 1}/{max_retries})"
             )
             retry_count += 1
             if retry_count < max_retries:
-                logger.info(f"⏳ Waiting 10 seconds before retry...")
+                logger.info(f"[WAIT] Waiting 10 seconds before retry...")
                 await asyncio.sleep(10)
 
         except Exception as e:
-            logger.error(f"💥 TVDB validation error: {str(e)}")
+            logger.error(f"[ERROR] TVDB validation error: {str(e)}")
             logger.exception("Full traceback:")
             retry_count += 1
             if retry_count < max_retries:
-                logger.info(f"⏳ Waiting 10 seconds before retry...")
+                logger.info(f"[WAIT] Waiting 10 seconds before retry...")
                 await asyncio.sleep(10)
 
     # If all retries failed
@@ -2561,7 +2887,7 @@ async def validate_fanart(request: FanartValidationRequest):
     logger.info("=" * 60)
     logger.info("FANART.TV VALIDATION STARTED")
     logger.info(
-        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+        f"[KEY] API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
     )
 
     try:
@@ -2570,7 +2896,7 @@ async def validate_fanart(request: FanartValidationRequest):
                 f"https://webservice.fanart.tv/v3/movies/603?api_key={request.api_key}"
             )
             logger.info(
-                f"🌐 Sending test request to Fanart.tv API (Movie ID: 603 - The Matrix)..."
+                f"[REQUEST] Sending test request to Fanart.tv API (Movie ID: 603 - The Matrix)..."
             )
 
             response = await client.get(test_url)
@@ -2603,7 +2929,7 @@ async def validate_fanart(request: FanartValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except Exception as e:
-        logger.error(f"💥 Fanart.tv validation error: {str(e)}")
+        logger.error(f"[ERROR] Fanart.tv validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2618,15 +2944,15 @@ async def validate_discord(request: DiscordValidationRequest):
     """Validate Discord webhook"""
     logger.info("=" * 60)
     logger.info("DISCORD WEBHOOK VALIDATION STARTED")
-    logger.info(f"📍 Webhook URL: {request.webhook_url[:50]}...")
+    logger.info(f"[URL] Webhook URL: {request.webhook_url[:50]}...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             payload = {
-                "content": "✓ Posterizarr WebUI - Discord webhook validation successful!",
+                "content": "[SUCCESS] Posterizarr WebUI - Discord webhook validation successful!",
                 "username": "Posterizarr",
             }
-            logger.info(f"🌐 Sending test message to Discord webhook...")
+            logger.info(f"[REQUEST] Sending test message to Discord webhook...")
 
             response = await client.post(request.webhook_url, json=payload)
             logger.info(f"Response received - Status: {response.status_code}")
@@ -2662,7 +2988,7 @@ async def validate_discord(request: DiscordValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except Exception as e:
-        logger.error(f"💥 Discord webhook validation error: {str(e)}")
+        logger.error(f"[ERROR] Discord webhook validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2677,7 +3003,7 @@ async def validate_apprise(request: AppriseValidationRequest):
     """Validate Apprise URL (basic format check)"""
     logger.info("=" * 60)
     logger.info("APPRISE URL VALIDATION STARTED")
-    logger.info(f"📍 URL: {request.url}")
+    logger.info(f"[URL] URL: {request.url}")
 
     try:
         valid_prefixes = [
@@ -2722,7 +3048,7 @@ async def validate_apprise(request: AppriseValidationRequest):
                 "details": {"format_check": False},
             }
     except Exception as e:
-        logger.error(f"💥 Apprise URL validation error: {str(e)}")
+        logger.error(f"[ERROR] Apprise URL validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2737,11 +3063,11 @@ async def validate_uptimekuma(request: UptimeKumaValidationRequest):
     """Validate Uptime Kuma push URL"""
     logger.info("=" * 60)
     logger.info("UPTIME KUMA VALIDATION STARTED")
-    logger.info(f"📍 Push URL: {request.url[:50]}...")
+    logger.info(f"[URL] Push URL: {request.url[:50]}...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            logger.info(f"🌐 Sending test push to Uptime Kuma...")
+            logger.info(f"[REQUEST] Sending test push to Uptime Kuma...")
 
             response = await client.get(
                 request.url,
@@ -2784,7 +3110,7 @@ async def validate_uptimekuma(request: UptimeKumaValidationRequest):
                     "details": {"status_code": response.status_code},
                 }
     except Exception as e:
-        logger.error(f"💥 Uptime Kuma validation error: {str(e)}")
+        logger.error(f"[ERROR] Uptime Kuma validation error: {str(e)}")
         logger.exception("Full traceback:")
         logger.info("=" * 60)
         return {
@@ -2833,7 +3159,7 @@ async def get_plex_libraries(request: PlexValidationRequest):
                     "error": f"Failed to fetch libraries (Status: {response.status_code})",
                 }
     except Exception as e:
-        logger.error(f"💥 Error fetching Plex libraries: {str(e)}")
+        logger.error(f"[ERROR] Error fetching Plex libraries: {str(e)}")
         return {"success": False, "error": str(e)}
 
 
@@ -2877,7 +3203,7 @@ async def get_jellyfin_libraries(request: JellyfinValidationRequest):
                     "error": f"Failed to fetch libraries (Status: {response.status_code})",
                 }
     except Exception as e:
-        logger.error(f"💥 Error fetching Jellyfin libraries: {str(e)}")
+        logger.error(f"[ERROR] Error fetching Jellyfin libraries: {str(e)}")
         return {"success": False, "error": str(e)}
 
 
@@ -2918,7 +3244,7 @@ async def get_emby_libraries(request: EmbyValidationRequest):
                     "error": f"Failed to fetch libraries (Status: {response.status_code})",
                 }
     except Exception as e:
-        logger.error(f"💥 Error fetching Emby libraries: {str(e)}")
+        logger.error(f"[ERROR] Error fetching Emby libraries: {str(e)}")
         return {"success": False, "error": str(e)}
 
 
@@ -2983,7 +3309,7 @@ async def get_plex_library_items(request: LibraryItemsRequest):
                     "error": f"Failed to fetch items (Status: {response.status_code})",
                 }
     except Exception as e:
-        logger.error(f"💥 Error fetching Plex library items: {str(e)}")
+        logger.error(f"[ERROR] Error fetching Plex library items: {str(e)}")
         logger.exception("Full traceback:")
         return {"success": False, "error": str(e)}
 
@@ -3080,7 +3406,7 @@ async def get_assets_folders(library_name: Optional[str] = None):
                 return {"success": False, "error": str(e)}
 
     except Exception as e:
-        logger.error(f"💥 Error getting assets folders: {str(e)}")
+        logger.error(f"[ERROR] Error getting assets folders: {str(e)}")
         logger.exception("Full traceback:")
         return {"success": False, "error": str(e)}
 
@@ -3557,6 +3883,131 @@ async def get_system_info():
     return system_info
 
 
+# ============================================================================
+# LOG LEVEL MANAGEMENT ENDPOINTS
+# ============================================================================
+
+
+# DEPRECATED: Old /api/log-level endpoints removed
+# Use /api/webui-settings instead for centralized settings management
+
+
+# ============================================================================
+# WEBUI SETTINGS ENDPOINTS (separate from config.json)
+# ============================================================================
+
+
+@app.get("/api/webui-settings")
+async def get_webui_settings():
+    """Get WebUI settings (log level, theme, etc.)"""
+    logger.info("=" * 60)
+    logger.info("WEBUI SETTINGS REQUEST")
+
+    try:
+        settings = load_webui_settings()
+
+        # Add current log level from runtime
+        current_level = logging.getLogger().level
+        current_level_name = logging.getLevelName(current_level)
+        settings["current_log_level"] = current_level_name
+
+        logger.info(f"WebUI settings loaded: {len(settings)} keys")
+        logger.debug(f"Settings: {settings}")
+        logger.info("=" * 60)
+
+        return {
+            "success": True,
+            "settings": settings,
+            "available_log_levels": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            "config_file": str(WEBUI_SETTINGS_PATH),
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting WebUI settings: {e}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/webui-settings")
+async def update_webui_settings(data: dict):
+    """
+    Update WebUI settings (persistent)
+
+    Request body:
+    {
+        "log_level": "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL",
+        "theme": "dark" | "light",
+        "auto_refresh_interval": 180
+    }
+    """
+    logger.info("=" * 60)
+    logger.info("WEBUI SETTINGS UPDATE REQUEST")
+    logger.debug(f"Request data: {data}")
+
+    try:
+        # Load current settings
+        current_settings = load_webui_settings()
+        logger.debug(f"Current settings: {current_settings}")
+
+        # Update settings
+        updates = data.get("settings", {})
+        current_settings.update(updates)
+
+        # Save settings
+        logger.info(f"Saving updated settings: {list(updates.keys())}")
+        save_success = save_webui_settings(current_settings)
+
+        if not save_success:
+            raise HTTPException(status_code=500, detail="Failed to save settings")
+
+        # If log_level was updated, apply it immediately
+        if "log_level" in updates:
+            new_level_name = updates["log_level"].upper()
+
+            if new_level_name in LOG_LEVEL_MAP:
+                new_level = LOG_LEVEL_MAP[new_level_name]
+                old_level_name = logging.getLevelName(logging.getLogger().level)
+
+                logger.info(
+                    f"Applying log level change: {old_level_name} -> {new_level_name}"
+                )
+
+                # Update root logger
+                logging.getLogger().setLevel(new_level)
+
+                # Update all handlers
+                for handler in logging.getLogger().handlers:
+                    handler.setLevel(new_level)
+
+                # Update global variables
+                global LOG_LEVEL, LOG_LEVEL_ENV
+                LOG_LEVEL = new_level
+                LOG_LEVEL_ENV = new_level_name
+
+                # Also save to old log_config.json for backward compatibility
+                save_log_level_config(new_level_name)
+
+                logger.info(f"Log level changed: {old_level_name} -> {new_level_name}")
+
+        logger.info(f"WebUI settings saved successfully")
+        logger.info("=" * 60)
+
+        return {
+            "success": True,
+            "message": "Settings updated successfully",
+            "settings": current_settings,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating WebUI settings: {e}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/upload-diagnostics")
 async def get_upload_diagnostics():
     """
@@ -3830,8 +4281,14 @@ async def get_runtime_stats():
     """
     Get last runtime statistics from database
     """
+    logger.info("=" * 60)
+    logger.info("RUNTIME STATS REQUEST")
+    logger.debug(f"Runtime DB available: {RUNTIME_DB_AVAILABLE}")
+    logger.debug(f"Scheduler available: {SCHEDULER_AVAILABLE}")
+
     try:
         if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            logger.warning("Runtime database not available")
             return {
                 "success": False,
                 "message": "Runtime database not available",
@@ -3845,9 +4302,11 @@ async def get_runtime_stats():
                 "errors": 0,
             }
 
+        logger.debug("Fetching latest runtime entry from database...")
         latest = runtime_db.get_latest_runtime()
 
         if not latest:
+            logger.info("No runtime data found in database")
             return {
                 "success": False,
                 "message": "No runtime data available. Please run the script or import JSON files.",
@@ -3861,6 +4320,10 @@ async def get_runtime_stats():
                 "errors": 0,
             }
 
+        logger.debug(
+            f"Latest runtime entry: ID={latest.get('id')}, Mode={latest.get('mode')}, Timestamp={latest.get('timestamp')}"
+        )
+
         # Get scheduler information if available
         scheduler_info = {
             "enabled": False,
@@ -3871,6 +4334,7 @@ async def get_runtime_stats():
 
         if SCHEDULER_AVAILABLE and scheduler:
             try:
+                logger.debug("Fetching scheduler status...")
                 status = scheduler.get_status()
                 scheduler_info = {
                     "enabled": status.get("enabled", False),
@@ -3878,8 +4342,16 @@ async def get_runtime_stats():
                     "next_run": status.get("next_run"),
                     "timezone": status.get("timezone"),
                 }
+                logger.debug(
+                    f"Scheduler: enabled={scheduler_info['enabled']}, schedules={len(scheduler_info['schedules'])}"
+                )
             except Exception as e:
                 logger.warning(f"Could not get scheduler info: {e}")
+
+        logger.info(
+            f"Runtime stats retrieved: {latest.get('total_images', 0)} images, {latest.get('errors', 0)} errors"
+        )
+        logger.info("=" * 60)
 
         return {
             "success": True,
@@ -3914,6 +4386,8 @@ async def get_runtime_stats():
 
     except Exception as e:
         logger.error(f"Error getting runtime stats: {e}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
         return {
             "success": False,
             "message": str(e),
@@ -4353,12 +4827,14 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         if request.query.isdigit():
             # Try to use query as TMDB ID
             potential_id = request.query
-            logger.info(f"🔢 Query is numeric - will search by ID: {potential_id}")
+            logger.info(f" Query is numeric - will search by ID: {potential_id}")
             tmdb_ids.append(("id", potential_id))
-            
+
             # Also search by title for numeric queries (e.g., "1917", "2012")
-            logger.info(f"� Also searching by title for numeric query: '{request.query}'")
-        
+            logger.info(
+                f" Also searching by title for numeric query: '{request.query}'"
+            )
+
         # Always do a title search (unless we only got an ID without title search)
         if not request.query.isdigit() or request.query.isdigit():
             # Query is a title - search for it
@@ -4394,7 +4870,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
                     result_title = result.get(
                         "title" if request.media_type == "movie" else "name"
                     )
-                    if result_id and ("title", result_id) not in [(t, i) for t, i in tmdb_ids]:
+                    if result_id and ("title", result_id) not in [
+                        (t, i) for t, i in tmdb_ids
+                    ]:
                         tmdb_ids.append(("title", result_id))
                         logger.info(
                             f"   Added result: ID={result_id}, Title='{result_title}'"
@@ -4414,10 +4892,10 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         # Step 2 & 3: Loop through all found IDs and fetch images
         media_endpoint = "movie" if request.media_type == "movie" else "tv"
         seen_posters = set()  # Track unique poster paths to avoid duplicates
-        
+
         for source_type, tmdb_id in tmdb_ids:
-            logger.info(f"📥 Processing TMDB ID {tmdb_id} (from {source_type} search)")
-            
+            logger.info(f" Processing TMDB ID {tmdb_id} (from {source_type} search)")
+
             # Get item details (for title)
             details_url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}"
             logger.info(f"Fetching details from: {details_url}")
@@ -4453,7 +4931,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
 
                 # Get episode stills
                 episode_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}/images"
-                episode_response = requests.get(episode_url, headers=headers, timeout=10)
+                episode_response = requests.get(
+                    episode_url, headers=headers, timeout=10
+                )
 
                 if episode_response.status_code == 200:
                     episode_data = episode_response.json()
@@ -4513,7 +4993,8 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
                 # ========== SEASON POSTERS ==========
                 if not request.season_number:
                     raise HTTPException(
-                        status_code=400, detail="Season number required for season posters"
+                        status_code=400,
+                        detail="Season number required for season posters",
                     )
 
                 # Get season posters
@@ -6380,7 +6861,9 @@ async def get_recent_assets():
 
                 # Skip fallback assets - they should only appear in assets overview
                 if is_fallback:
-                    logger.debug(f"⏭️  Skipping fallback asset in recent view: {title}")
+                    logger.debug(
+                        f"[SKIP]  Skipping fallback asset in recent view: {title}"
+                    )
                     continue
 
                 poster_url = find_poster_in_assets(
@@ -6410,7 +6893,7 @@ async def get_recent_assets():
                     }
                     recent_assets.append(asset)
                 else:
-                    logger.debug(f"⏭️  Skipping asset (poster not found): {title}")
+                    logger.debug(f"[SKIP]  Skipping asset (poster not found): {title}")
 
         logger.info(
             f"Returning {len(recent_assets)} most recent assets with existing images from database"
@@ -6423,7 +6906,7 @@ async def get_recent_assets():
         }
 
     except Exception as e:
-        logger.error(f"💥 Error getting recent assets from database: {e}")
+        logger.error(f"[ERROR] Error getting recent assets from database: {e}")
         import traceback
 
         logger.error(traceback.format_exc())
@@ -7042,7 +7525,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 elif year and media_type == "tv":
                     params["first_air_date_year"] = year
 
-                logger.info(f"🔎 TMDB API Request: {url}")
+                logger.info(f" TMDB API Request: {url}")
                 logger.info(f"   Params: {params}")
 
                 response = requests.get(url, headers=headers, params=params, timeout=10)
@@ -7109,7 +7592,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                             if year:
                                 params["year"] = year
 
-                            logger.info(f"🔎 TVDB API Request: {search_url}")
+                            logger.info(f" TVDB API Request: {search_url}")
                             logger.info(f"   Params: {params}")
 
                             search_response = await client.get(
@@ -7156,7 +7639,11 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             found_id = await search_tmdb_id(
                 request.title, request.year, request.media_type
             )
-            if found_id and ("title_search", found_id) not in tmdb_ids_to_use and ("provided_id", found_id) not in tmdb_ids_to_use:
+            if (
+                found_id
+                and ("title_search", found_id) not in tmdb_ids_to_use
+                and ("provided_id", found_id) not in tmdb_ids_to_use
+            ):
                 tmdb_ids_to_use.append(("title_search", found_id))
                 logger.info(f"Found TMDB ID from title search: {found_id}")
             elif not found_id:
@@ -7178,7 +7665,11 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             found_id = await search_tvdb_id(
                 request.title, request.year, request.media_type
             )
-            if found_id and ("title_search", found_id) not in tvdb_ids_to_use and ("provided_id", found_id) not in tvdb_ids_to_use:
+            if (
+                found_id
+                and ("title_search", found_id) not in tvdb_ids_to_use
+                and ("provided_id", found_id) not in tvdb_ids_to_use
+            ):
                 tvdb_ids_to_use.append(("title_search", found_id))
                 logger.info(f"Found TVDB ID from title search: {found_id}")
             elif not found_id:
@@ -7209,7 +7700,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 # Fetch from all collected IDs
                 for source, tmdb_id in tmdb_ids_to_use:
                     logger.info(
-                        f"🎬 TMDB: Fetching {request.asset_type} for ID: {tmdb_id} (from {source})"
+                        f" TMDB: Fetching {request.asset_type} for ID: {tmdb_id} (from {source})"
                     )
 
                     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -7227,14 +7718,18 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     original_url = f"https://image.tmdb.org/t/p/original{still.get('file_path')}"
                                     if original_url not in seen_urls:
                                         seen_urls.add(original_url)
-                                        all_results.append({
-                                            "url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
-                                            "original_url": original_url,
-                                            "source": "TMDB",
-                                            "source_type": source,  # "provided_id" or "title_search"
-                                            "type": "episode_still",
-                                            "vote_average": still.get("vote_average", 0),
-                                        })
+                                        all_results.append(
+                                            {
+                                                "url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
+                                                "original_url": original_url,
+                                                "source": "TMDB",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": "episode_still",
+                                                "vote_average": still.get(
+                                                    "vote_average", 0
+                                                ),
+                                            }
+                                        )
 
                         elif request.asset_type == "season" and request.season_number:
                             # Season posters
@@ -7246,15 +7741,19 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     original_url = f"https://image.tmdb.org/t/p/original{poster.get('file_path')}"
                                     if original_url not in seen_urls:
                                         seen_urls.add(original_url)
-                                        all_results.append({
-                                            "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
-                                            "original_url": original_url,
-                                            "source": "TMDB",
-                                            "source_type": source,  # "provided_id" or "title_search"
-                                            "type": "season_poster",
-                                            "language": poster.get("iso_639_1"),
-                                            "vote_average": poster.get("vote_average", 0),
-                                        })
+                                        all_results.append(
+                                            {
+                                                "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                                                "original_url": original_url,
+                                                "source": "TMDB",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": "season_poster",
+                                                "language": poster.get("iso_639_1"),
+                                                "vote_average": poster.get(
+                                                    "vote_average", 0
+                                                ),
+                                            }
+                                        )
 
                         elif request.asset_type == "background":
                             # Backgrounds
@@ -7266,39 +7765,51 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     original_url = f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}"
                                     if original_url not in seen_urls:
                                         seen_urls.add(original_url)
-                                        all_results.append({
-                                            "url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
-                                            "original_url": original_url,
-                                            "source": "TMDB",
-                                            "source_type": source,  # "provided_id" or "title_search"
-                                            "type": "backdrop",
-                                            "language": backdrop.get("iso_639_1"),
-                                            "vote_average": backdrop.get("vote_average", 0),
-                                        })
+                                        all_results.append(
+                                            {
+                                                "url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
+                                                "original_url": original_url,
+                                                "source": "TMDB",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": "backdrop",
+                                                "language": backdrop.get("iso_639_1"),
+                                                "vote_average": backdrop.get(
+                                                    "vote_average", 0
+                                                ),
+                                            }
+                                        )
 
                         else:
                             # Standard posters
                             url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
-                            logger.info(f"🎬 TMDB Poster URL: {url}")
+                            logger.info(f" TMDB Poster URL: {url}")
                             response = await client.get(url, headers=headers)
-                            logger.info(f"🎬 TMDB Response Status: {response.status_code}")
+                            logger.info(
+                                f" TMDB Response Status: {response.status_code}"
+                            )
                             if response.status_code == 200:
                                 data = response.json()
                                 for poster in data.get("posters", []):
                                     original_url = f"https://image.tmdb.org/t/p/original{poster.get('file_path')}"
                                     if original_url not in seen_urls:
                                         seen_urls.add(original_url)
-                                        all_results.append({
-                                            "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
-                                            "original_url": original_url,
-                                            "source": "TMDB",
-                                            "source_type": source,  # "provided_id" or "title_search"
-                                            "type": "poster",
-                                            "language": poster.get("iso_639_1"),
-                                            "vote_average": poster.get("vote_average", 0),
-                                        })
+                                        all_results.append(
+                                            {
+                                                "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                                                "original_url": original_url,
+                                                "source": "TMDB",
+                                                "source_type": source,  # "provided_id" or "title_search"
+                                                "type": "poster",
+                                                "language": poster.get("iso_639_1"),
+                                                "vote_average": poster.get(
+                                                    "vote_average", 0
+                                                ),
+                                            }
+                                        )
 
-                logger.info(f"🎬 TMDB: Collected {len(all_results)} unique images from {len(tmdb_ids_to_use)} ID(s)")
+                logger.info(
+                    f" TMDB: Collected {len(all_results)} unique images from {len(tmdb_ids_to_use)} ID(s)"
+                )
 
             except Exception as e:
                 logger.error(f"Error fetching TMDB assets: {e}")
@@ -7348,7 +7859,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                             # Fetch from all collected IDs
                             for source, tvdb_id in tvdb_ids_to_use:
                                 logger.info(
-                                    f"📺 TVDB: Fetching artwork for series ID: {tvdb_id} (from {source})"
+                                    f" TVDB: Fetching artwork for series ID: {tvdb_id} (from {source})"
                                 )
 
                                 # Fetch artwork
@@ -7359,10 +7870,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                 }  # type=2 for posters
 
                                 if request.asset_type == "background":
-                                    artwork_params["type"] = "3"  # type=3 for backgrounds
+                                    artwork_params["type"] = (
+                                        "3"  # type=3 for backgrounds
+                                    )
 
                                 artwork_response = await client.get(
-                                    artwork_url, headers=auth_headers, params=artwork_params
+                                    artwork_url,
+                                    headers=auth_headers,
+                                    params=artwork_params,
                                 )
 
                                 if artwork_response.status_code == 200:
@@ -7375,16 +7890,20 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         image_url = artwork.get("image")
                                         if image_url and image_url not in seen_urls:
                                             seen_urls.add(image_url)
-                                            all_results.append({
-                                                "url": image_url,
-                                                "original_url": image_url,
-                                                "source": "TVDB",
-                                                "source_type": source,  # "provided_id" or "title_search"
-                                                "type": request.asset_type,
-                                                "language": artwork.get("language"),
-                                            })
+                                            all_results.append(
+                                                {
+                                                    "url": image_url,
+                                                    "original_url": image_url,
+                                                    "source": "TVDB",
+                                                    "source_type": source,  # "provided_id" or "title_search"
+                                                    "type": request.asset_type,
+                                                    "language": artwork.get("language"),
+                                                }
+                                            )
 
-                logger.info(f"📺 TVDB: Collected {len(all_results)} unique images from {len(tvdb_ids_to_use)} ID(s)")
+                logger.info(
+                    f" TVDB: Collected {len(all_results)} unique images from {len(tvdb_ids_to_use)} ID(s)"
+                )
 
             except Exception as e:
                 logger.error(f"Error fetching TVDB assets: {e}")
@@ -7410,7 +7929,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                     if request.media_type == "movie" and tmdb_ids_to_use:
                         for source, tmdb_id in tmdb_ids_to_use:
                             logger.info(
-                                f"🎨 Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
+                                f" Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
                             )
                             url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id}?api_key={fanart_api_key}"
                             response = await client.get(url)
@@ -7430,21 +7949,23 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         item_url = item.get("url")
                                         if item_url and item_url not in seen_urls:
                                             seen_urls.add(item_url)
-                                            all_results.append({
-                                                "url": item_url,
-                                                "original_url": item_url,
-                                                "source": "Fanart.tv",
-                                                "source_type": source,  # "provided_id" or "title_search"
-                                                "type": request.asset_type,
-                                                "language": item.get("lang"),
-                                                "likes": item.get("likes", 0),
-                                            })
+                                            all_results.append(
+                                                {
+                                                    "url": item_url,
+                                                    "original_url": item_url,
+                                                    "source": "Fanart.tv",
+                                                    "source_type": source,  # "provided_id" or "title_search"
+                                                    "type": request.asset_type,
+                                                    "language": item.get("lang"),
+                                                    "likes": item.get("likes", 0),
+                                                }
+                                            )
 
                     # Fetch from TVDB IDs for TV shows
                     elif request.media_type == "tv" and tvdb_ids_to_use:
                         for source, tvdb_id in tvdb_ids_to_use:
                             logger.info(
-                                f"🎨 Fanart.tv: Fetching TV artwork for TVDB ID: {tvdb_id} (from {source})"
+                                f" Fanart.tv: Fetching TV artwork for TVDB ID: {tvdb_id} (from {source})"
                             )
                             url = f"https://webservice.fanart.tv/v3/tv/{tvdb_id}?api_key={fanart_api_key}"
                             response = await client.get(url)
@@ -7464,17 +7985,19 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         item_url = item.get("url")
                                         if item_url and item_url not in seen_urls:
                                             seen_urls.add(item_url)
-                                            all_results.append({
-                                                "url": item_url,
-                                                "original_url": item_url,
-                                                "source": "Fanart.tv",
-                                                "source_type": source,  # "provided_id" or "title_search"
-                                                "type": request.asset_type,
-                                                "language": item.get("lang"),
-                                                "likes": item.get("likes", 0),
-                                            })
+                                            all_results.append(
+                                                {
+                                                    "url": item_url,
+                                                    "original_url": item_url,
+                                                    "source": "Fanart.tv",
+                                                    "source_type": source,  # "provided_id" or "title_search"
+                                                    "type": request.asset_type,
+                                                    "language": item.get("lang"),
+                                                    "likes": item.get("likes", 0),
+                                                }
+                                            )
 
-                logger.info(f"🎨 Fanart.tv: Collected {len(all_results)} unique images")
+                logger.info(f" Fanart.tv: Collected {len(all_results)} unique images")
 
             except Exception as e:
                 logger.error(f"Error fetching Fanart.tv assets: {e}")
@@ -7504,7 +8027,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
         # Apply language filtering based on asset type
         logger.info(
-            f"🔤 Applying language filtering for asset_type: {request.asset_type}"
+            f" Applying language filtering for asset_type: {request.asset_type}"
         )
 
         if request.asset_type == "season":
