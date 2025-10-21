@@ -524,7 +524,8 @@
     "included": "Inclus",
     "clickToFetch": "Cliquez sur \"Récupérer les bibliothèques\" pour charger les bibliothèques depuis votre serveur {{server}}.",
     "noLibraries": "Aucune bibliothèque de films ou de séries TV trouvée sur ce serveur.",
-    "excludedCount": "Bibliothèques exclues ({{count}}) :"
+    "excludedCount": "Bibliothèques exclues ({{count}}) :",
+    "includedCount": "Bibliothèques incluses ({{count}}) :"
   },
   "languageOrderSelector": {
     "noLanguages": "Aucune langue sélectionnée. Ajoutez des langues à l'aide du menu déroulant ci-dessous.",

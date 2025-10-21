@@ -525,7 +525,8 @@
     "included": "Included",
     "clickToFetch": "Click \"Fetch Libraries\" to load libraries from your {{server}} server.",
     "noLibraries": "No movie or TV show libraries found on this server.",
-    "excludedCount": "Excluded Libraries ({{count}}):"
+    "excludedCount": "Excluded Libraries ({{count}}):",
+    "includedCount": "Included Libraries ({{count}}):"
   },
   "languageOrderSelector": {
     "noLanguages": "No languages selected. Add languages using the dropdown below.",
