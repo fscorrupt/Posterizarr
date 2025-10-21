@@ -7054,6 +7054,79 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.error(f"Error searching TMDB by title: {e}")
             return None
 
+        # Helper function to search for TVDB ID by title and year
+        async def search_tvdb_id(
+            title: str, year: Optional[int], media_type: str
+        ) -> Optional[str]:
+            if not tvdb_api_key or not title:
+                return None
+            try:
+                # First, login to get token
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    login_url = "https://api4.thetvdb.com/v4/login"
+                    body = {"apikey": tvdb_api_key}
+                    if tvdb_pin:
+                        body["pin"] = tvdb_pin
+
+                    headers_tvdb = {
+                        "accept": "application/json",
+                        "Content-Type": "application/json",
+                    }
+
+                    login_response = await client.post(
+                        login_url, json=body, headers=headers_tvdb
+                    )
+
+                    if login_response.status_code == 200:
+                        token = login_response.json().get("data", {}).get("token")
+
+                        if token:
+                            auth_headers = {
+                                "Authorization": f"Bearer {token}",
+                                "accept": "application/json",
+                            }
+
+                            # Search for series/movie
+                            search_url = "https://api4.thetvdb.com/v4/search"
+                            params = {
+                                "query": title,
+                                "type": "series" if media_type == "tv" else "movie",
+                            }
+
+                            if year:
+                                params["year"] = year
+
+                            logger.info(f"🔎 TVDB API Request: {search_url}")
+                            logger.info(f"   Params: {params}")
+
+                            search_response = await client.get(
+                                search_url, headers=auth_headers, params=params
+                            )
+                            logger.info(
+                                f"   Response Status: {search_response.status_code}"
+                            )
+
+                            if search_response.status_code == 200:
+                                data = search_response.json()
+                                results = data.get("data", [])
+                                logger.info(f"   Results Count: {len(results)}")
+
+                                if results:
+                                    # Get the first result
+                                    result_id = str(results[0].get("tvdb_id"))
+                                    result_name = results[0].get("name")
+                                    logger.info(
+                                        f"   First Result: ID={result_id}, Name='{result_name}'"
+                                    )
+                                    return result_id
+                                else:
+                                    logger.warning(
+                                        f"   No results found in TVDB response"
+                                    )
+            except Exception as e:
+                logger.error(f"Error searching TVDB by title: {e}")
+            return None
+
         # Determine TMDB ID - simple approach: use provided ID or search by title
         tmdb_id_to_use = request.tmdb_id
 
@@ -7071,6 +7144,30 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.warning(f"No TMDB ID found for: '{request.title}'")
         else:
             logger.info(f"Using provided TMDB ID: {tmdb_id_to_use}")
+
+        # Determine TVDB ID - use provided ID or search by title (for TV shows)
+        tvdb_id_to_use = request.tvdb_id
+
+        # If no TVDB ID and we have title and it's TV, search for it
+        if (
+            not tvdb_id_to_use
+            and request.title
+            and tvdb_api_key
+            and request.media_type == "tv"
+        ):
+            logger.info(
+                f"Searching TVDB for title: '{request.title}' (year: {request.year})"
+            )
+            tvdb_id_to_use = await search_tvdb_id(
+                request.title, request.year, request.media_type
+            )
+            if tvdb_id_to_use:
+                logger.info(f"Found TVDB ID: {tvdb_id_to_use}")
+            else:
+                logger.warning(f"No TVDB ID found for: '{request.title}'")
+        else:
+            if tvdb_id_to_use:
+                logger.info(f"Using provided TVDB ID: {tvdb_id_to_use}")
 
         # Create async tasks for parallel fetching - AFTER IDs are resolved
         async def fetch_tmdb():
@@ -7183,15 +7280,15 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.warning("TVDB: No API key configured")
                 return []
 
-            if not request.tvdb_id:
+            if not tvdb_id_to_use:
                 logger.info(
-                    f"TVDB: No TVDB ID provided (media_type={request.media_type}) - skipping"
+                    f"TVDB: No TVDB ID available (media_type={request.media_type}) - skipping"
                 )
                 return []
 
             try:
                 logger.info(
-                    f"📺 TVDB: Fetching artwork for series ID: {request.tvdb_id}"
+                    f"📺 TVDB: Fetching artwork for series ID: {tvdb_id_to_use}"
                 )
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     login_url = "https://api4.thetvdb.com/v4/login"
@@ -7218,7 +7315,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                             }
 
                             # Fetch artwork
-                            artwork_url = f"https://api4.thetvdb.com/v4/series/{request.tvdb_id}/artworks"
+                            artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id_to_use}/artworks"
                             artwork_params = {
                                 "lang": "eng",
                                 "type": "2",
@@ -7259,7 +7356,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.warning("Fanart.tv: No API key configured")
                 return []
 
-            if not (tmdb_id_to_use or request.tvdb_id):
+            if not (tmdb_id_to_use or tvdb_id_to_use):
                 logger.warning("Fanart.tv: No TMDB ID or TVDB ID available")
                 return []
 
@@ -7269,14 +7366,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                     logger.info(
                         f"Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
                     )
-                elif request.media_type == "tv" and request.tvdb_id:
-                    url = f"https://webservice.fanart.tv/v3/tv/{request.tvdb_id}?api_key={fanart_api_key}"
+                elif request.media_type == "tv" and tvdb_id_to_use:
+                    url = f"https://webservice.fanart.tv/v3/tv/{tvdb_id_to_use}?api_key={fanart_api_key}"
                     logger.info(
                         f"Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
                     )
                 else:
                     logger.warning(
-                        f"Fanart.tv: Cannot determine URL - media_type={request.media_type}, tmdb_id={tmdb_id_to_use}, tvdb_id={request.tvdb_id}"
+                        f"Fanart.tv: Cannot determine URL - media_type={request.media_type}, tmdb_id={tmdb_id_to_use}, tvdb_id={tvdb_id_to_use}"
                     )
                     return []
 
