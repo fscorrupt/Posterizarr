@@ -1147,7 +1147,11 @@
     "uppercase": "Maiúsculas",
     "lowercase": "Minúsculas",
     "numbers": "Números",
-    "sample": "Amostra"
+    "sample": "Amostra",
+    "autoSave": "Salvamento automático",
+    "autoSaveDescription": "Salvar automaticamente as alterações após 5 segundos de inatividade",
+    "autoSaved": "{{count}} alteração(ões) salva(s) automaticamente",
+    "savedSuccessfully": "Configuração salva com sucesso! ({{count}} alteração(ões))"
   },
   "assetsStats": {
     "title": "Visão geral dos ativos",

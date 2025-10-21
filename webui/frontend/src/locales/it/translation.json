@@ -1147,7 +1147,11 @@
     "uppercase": "Maiuscole",
     "lowercase": "Minuscole",
     "numbers": "Numeri",
-    "sample": "Esempio"
+    "sample": "Esempio",
+    "autoSave": "Salvataggio automatico",
+    "autoSaveDescription": "Salva automaticamente le modifiche dopo 5 secondi di inattività",
+    "autoSaved": "{{count}} modifica(he) salvata(e) automaticamente",
+    "savedSuccessfully": "Configurazione salvata con successo! ({{count}} modifica(he))"
   },
   "assetsStats": {
     "title": "Panoramica asset",

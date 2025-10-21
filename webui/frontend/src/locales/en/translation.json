@@ -1148,7 +1148,11 @@
     "uppercase": "Uppercase",
     "lowercase": "Lowercase",
     "numbers": "Numbers",
-    "sample": "Sample"
+    "sample": "Sample",
+    "autoSave": "Auto-Save",
+    "autoSaveDescription": "Automatically save changes after 5 seconds of inactivity",
+    "autoSaved": "Auto-saved {{count}} change(s)",
+    "savedSuccessfully": "Configuration saved successfully! ({{count}} change(s))"
   },
   "assetsStats": {
     "title": "Assets Overview",

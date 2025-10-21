@@ -1147,7 +1147,11 @@
     "uppercase": "Majuscules",
     "lowercase": "Minuscules",
     "numbers": "Chiffres",
-    "sample": "Exemple"
+    "sample": "Exemple",
+    "autoSave": "Enregistrement automatique",
+    "autoSaveDescription": "Enregistrer automatiquement les modifications après 5 secondes d'inactivité",
+    "autoSaved": "{{count}} modification(s) enregistrée(s) automatiquement",
+    "savedSuccessfully": "Configuration enregistrée avec succès ! ({{count}} modification(s))"
   },
   "assetsStats": {
     "title": "Aperçu des ressources",
