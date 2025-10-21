@@ -186,20 +186,42 @@ LOG_LEVEL = LOG_LEVEL_MAP.get(LOG_LEVEL_ENV, logging.INFO)
 
 # Silent - no console output
 
-# Setup logging with configurable log level
-logging.basicConfig(
-    level=LOG_LEVEL,  # Configurable log level
-    filename=UI_LOGS_DIR / "BackendServer.log",  # Main backend server log file
-    filemode="w",  # Overwrite the log file on each startup
-    format="[%(asctime)s] [%(levelname)-8s] [%(name)s:%(funcName)s:%(lineno)d] - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+# Setup logging with configurable log level - FILE ONLY, NO CONSOLE OUTPUT
+# Remove any existing handlers first
+logging.root.handlers.clear()
+
+# Create file handler for BackendServer.log
+file_handler = logging.FileHandler(
+    UI_LOGS_DIR / "BackendServer.log", mode="w", encoding="utf-8"
 )
+file_handler.setLevel(LOG_LEVEL)
+file_handler.setFormatter(
+    logging.Formatter(
+        "[%(asctime)s] [%(levelname)-8s] [%(name)s:%(funcName)s:%(lineno)d] - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+)
+
+# Configure root logger - ONLY file handler, no console
+logging.root.setLevel(LOG_LEVEL)
+logging.root.addHandler(file_handler)
 
 # Set httpx to WARNING to reduce noise, but keep our app at DEBUG
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("uvicorn.access").setLevel(logging.INFO)
-logging.getLogger("uvicorn.error").setLevel(logging.INFO)
+
+# DISABLE uvicorn console output completely
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.handlers.clear()
+uvicorn_access_logger.propagate = False  # Don't propagate to root logger
+
+uvicorn_error_logger = logging.getLogger("uvicorn.error")
+uvicorn_error_logger.handlers.clear()
+uvicorn_error_logger.propagate = False  # Don't propagate to root logger
+
+uvicorn_logger = logging.getLogger("uvicorn")
+uvicorn_logger.handlers.clear()
+uvicorn_logger.propagate = False  # Don't propagate to root logger
 
 logger = logging.getLogger(__name__)
 logger.info("=" * 80)
