@@ -10,6 +10,7 @@ import {
   Search,
   Replace,
   ChevronDown,
+  CheckIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
@@ -1059,7 +1060,7 @@ const AssetOverview = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
                         title={t("assetOverview.noEditsNeededTooltip")}
                       >
-                        <Edit className="w-4 h-4 text-theme-primary" />
+                        <CheckIcon className="w-4 h-4 text-theme-primary" />
                         {t("assetOverview.noEditsNeeded")}
                       </button>
                       <button
