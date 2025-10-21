@@ -7423,6 +7423,16 @@ async def upload_asset_replacement(
     Optionally process with overlays using Manual Run
     """
     try:
+        # Check if Posterizarr is currently running
+        if RUNNING_FILE.exists():
+            logger.warning(
+                f"Asset replacement blocked: Posterizarr is currently running"
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot replace assets while Posterizarr is running. Please wait until all processing is completed before using the replace or manual update options.",
+            )
+
         logger.info(f"Asset replacement upload request received")
         logger.info(f"  Asset path: {asset_path}")
         logger.info(f"  File: {file.filename}")
@@ -7792,6 +7802,16 @@ async def replace_asset_from_url(
     Optionally process with overlays using Manual Run
     """
     try:
+        # Check if Posterizarr is currently running
+        if RUNNING_FILE.exists():
+            logger.warning(
+                f"Asset replacement blocked: Posterizarr is currently running"
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot replace assets while Posterizarr is running. Please wait until all processing is completed before using the replace or manual update options.",
+            )
+
         # Validate asset path exists
         full_asset_path = ASSETS_DIR / asset_path
         if not full_asset_path.exists():

@@ -289,26 +289,39 @@ const AssetOverview = () => {
 
   // Handle successful replacement
   const handleReplaceSuccess = async () => {
+    console.log("handleReplaceSuccess called for asset ID:", selectedAsset?.id);
+
     // Delete the DB entry after successful replacement
     try {
+      console.log(
+        "Sending DELETE request to /api/imagechoices/" + selectedAsset.id
+      );
       const response = await fetch(`/api/imagechoices/${selectedAsset.id}`, {
         method: "DELETE",
       });
 
+      console.log("DELETE response status:", response.status);
+
       if (response.ok) {
-        console.log("DB entry deleted after successful replacement");
+        console.log("DB entry deleted successfully after replacement");
+
         // Refresh the data to update the UI
+        console.log("Refreshing asset data...");
         await fetchData();
+        console.log("Asset data refreshed");
 
         // Trigger event to update sidebar badge count
+        console.log("Dispatching assetReplaced event");
         window.dispatchEvent(new Event("assetReplaced"));
       } else {
-        console.error("Failed to delete DB entry");
+        const errorText = await response.text();
+        console.error("Failed to delete DB entry:", response.status, errorText);
       }
     } catch (error) {
       console.error("Error deleting DB entry:", error);
     }
 
+    console.log("Closing replacer modal");
     setShowReplacer(false);
     setSelectedAsset(null);
   };

@@ -8,10 +8,12 @@ import {
   Check,
   Star,
   Image as ImageIcon,
+  AlertCircle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
+import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 
@@ -50,6 +52,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isPosterizarrRunning, setIsPosterizarrRunning] = useState(false);
   const [previews, setPreviews] = useState({ tmdb: [], tvdb: [], fanart: [] });
   const [selectedPreview, setSelectedPreview] = useState(null);
   const [languageOrder, setLanguageOrder] = useState({
@@ -65,6 +68,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const [imageDimensions, setImageDimensions] = useState(null); // Store {width, height}
   const [isDimensionValid, setIsDimensionValid] = useState(false); // Track if dimensions are valid
   const [activeProviderTab, setActiveProviderTab] = useState("tmdb"); // Provider tabs: tmdb, tvdb, fanart
+
+  // Confirmation dialog states
+  const [showUploadConfirm, setShowUploadConfirm] = useState(false);
+  const [showPreviewConfirm, setShowPreviewConfirm] = useState(false);
+  const [showFetchConfirm, setShowFetchConfirm] = useState(false);
+  const [pendingPreview, setPendingPreview] = useState(null);
+  const [pendingFetchParams, setPendingFetchParams] = useState(null);
 
   // Manual form for editable parameters (overlay processing)
   const [manualForm, setManualForm] = useState({
@@ -342,6 +352,32 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const [searchTitle, setSearchTitle] = useState("");
   const [searchYear, setSearchYear] = useState("");
 
+  // Check if Posterizarr is running on component mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/status`);
+        if (response.ok) {
+          const data = await response.json();
+          setIsPosterizarrRunning(data.running || false);
+
+          if (data.running) {
+            console.log(
+              "Posterizarr is currently running, replacement operations will be blocked"
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error checking Posterizarr status:", error);
+      }
+    };
+
+    checkStatus();
+    // Poll status every 3 seconds while component is mounted
+    const interval = setInterval(checkStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Update search fields when metadata changes (when switching assets)
   useEffect(() => {
     setSearchTitle(metadata.title || "");
@@ -542,37 +578,47 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     return asset.name || "Unknown Asset";
   };
 
+  const handleFetchClick = () => {
+    // Validation
+    let metadata = extractMetadata();
+
+    if (manualSearch) {
+      if (!searchTitle.trim()) {
+        showError(t("assetReplacer.enterTitleError"));
+        return;
+      }
+
+      metadata = {
+        ...metadata,
+        title: searchTitle.trim(),
+        year: searchYear ? parseInt(searchYear) : null,
+        tmdb_id: null,
+        tvdb_id: null,
+        season_number: manualSearchForm.seasonNumber
+          ? parseInt(manualSearchForm.seasonNumber)
+          : metadata.season_number,
+        episode_number: manualSearchForm.episodeNumber
+          ? parseInt(manualSearchForm.episodeNumber)
+          : metadata.episode_number,
+      };
+    }
+
+    // Store params and show confirmation
+    setPendingFetchParams({ metadata, manualSearch });
+    setShowFetchConfirm(true);
+  };
+
   const fetchPreviews = async () => {
+    setShowFetchConfirm(false);
+
+    if (!pendingFetchParams) return;
+
+    const { metadata, manualSearch: isManualSearch } = pendingFetchParams;
+
     setLoading(true);
     showError(null);
 
     try {
-      let metadata = extractMetadata();
-
-      // Override with manual search if enabled
-      if (manualSearch) {
-        if (!searchTitle.trim()) {
-          showError(t("assetReplacer.enterTitleError"));
-          setLoading(false);
-          return;
-        }
-
-        metadata = {
-          ...metadata,
-          title: searchTitle.trim(),
-          year: searchYear ? parseInt(searchYear) : null,
-          tmdb_id: null,
-          tvdb_id: null,
-          // Include season/episode numbers from manual search form
-          season_number: manualSearchForm.seasonNumber
-            ? parseInt(manualSearchForm.seasonNumber)
-            : metadata.season_number,
-          episode_number: manualSearchForm.episodeNumber
-            ? parseInt(manualSearchForm.episodeNumber)
-            : metadata.episode_number,
-        };
-      }
-
       // Debug logging
       console.log("Fetching previews with metadata:", {
         asset_path: asset.path,
@@ -582,7 +628,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         asset_type: metadata.asset_type,
         season_number: metadata.season_number,
         episode_number: metadata.episode_number,
-        manual_search: manualSearch,
+        manual_search: isManualSearch,
       });
 
       const response = await fetch(`${API_URL}/assets/fetch-replacements`, {
@@ -710,12 +756,24 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     reader.readAsDataURL(file);
   };
 
-  const handleConfirmUpload = async () => {
+  const handleUploadClick = () => {
     if (!uploadedFile || !isDimensionValid) {
       showError(t("assetReplacer.selectValidImage"));
       return;
     }
 
+    // Check if Posterizarr is running
+    if (isPosterizarrRunning) {
+      showError(t("assetReplacer.posterizarrRunningError"));
+      return;
+    }
+
+    // Show confirmation dialog
+    setShowUploadConfirm(true);
+  };
+
+  const handleConfirmUpload = async () => {
+    setShowUploadConfirm(false);
     setUploading(true);
     showError(null);
 
@@ -821,7 +879,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           showSuccess(t("assetReplacer.replacedAndQueued"));
 
           // Call onSuccess to delete DB entry before navigating
-          onSuccess?.();
+          console.log(
+            "Calling onSuccess callback to delete DB entry (upload path)"
+          );
+          if (onSuccess) {
+            await onSuccess();
+          }
 
           console.log("Waiting for log file: Manuallog.log");
 
@@ -839,8 +902,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
-          setTimeout(() => {
-            onSuccess?.();
+          setTimeout(async () => {
+            console.log(
+              "Calling onSuccess callback to delete DB entry (upload no-queue path)"
+            );
+            if (onSuccess) {
+              await onSuccess();
+            }
             onClose();
           }, 2000);
         }
@@ -855,7 +923,24 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     }
   };
 
-  const handleSelectPreview = async (preview) => {
+  const handlePreviewClick = (preview) => {
+    // Check if Posterizarr is running
+    if (isPosterizarrRunning) {
+      showError(t("assetReplacer.posterizarrRunningError"));
+      return;
+    }
+
+    // Store the preview and show confirmation
+    setPendingPreview(preview);
+    setShowPreviewConfirm(true);
+  };
+
+  const handleSelectPreview = async () => {
+    setShowPreviewConfirm(false);
+    const preview = pendingPreview;
+
+    if (!preview) return;
+
     setUploading(true);
     showError(null);
 
@@ -1039,7 +1124,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           showSuccess(t("assetReplacer.replacedAndQueued"));
 
           // Call onSuccess to delete DB entry before navigating
-          onSuccess?.();
+          console.log(
+            "Calling onSuccess callback to delete DB entry (preview path)"
+          );
+          if (onSuccess) {
+            await onSuccess();
+          }
 
           console.log("Waiting for log file: Manuallog.log");
 
@@ -1057,8 +1147,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
-          setTimeout(() => {
-            onSuccess?.();
+          setTimeout(async () => {
+            console.log(
+              "Calling onSuccess callback to delete DB entry (preview no-queue path)"
+            );
+            if (onSuccess) {
+              await onSuccess();
+            }
             onClose();
           }, 2000);
         }
@@ -1091,6 +1186,25 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4">
       <div className="bg-theme-card rounded-none sm:rounded-xl border-0 sm:border border-theme max-w-6xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Posterizarr Running Warning */}
+        {isPosterizarrRunning && (
+          <div className="bg-orange-900/30 border-b-4 border-orange-500 p-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-orange-400 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-orange-200">
+                  Posterizarr is Currently Running
+                </p>
+                <p className="text-sm text-orange-300/80">
+                  Asset replacement is disabled while Posterizarr is processing.
+                  Please wait until all operations are completed before using
+                  the replace or manual update options.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="border-b border-theme p-4 sm:p-6">
           <div className="flex items-start justify-between gap-3">
@@ -1468,7 +1582,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                     {/* Fetch Button inside Manual Search */}
                     <div className="pt-3 border-t border-theme">
                       <button
-                        onClick={fetchPreviews}
+                        onClick={handleFetchClick}
                         disabled={loading}
                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
                       >
@@ -1568,10 +1682,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 {uploadedImage && (
                   <div className="mt-4">
                     <button
-                      onClick={handleConfirmUpload}
-                      disabled={!isDimensionValid || uploading}
+                      onClick={handleUploadClick}
+                      disabled={
+                        !isDimensionValid || uploading || isPosterizarrRunning
+                      }
                       className={`w-full px-4 py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                        isDimensionValid && !uploading
+                        isDimensionValid && !uploading && !isPosterizarrRunning
                           ? "bg-theme-primary hover:bg-theme-primary/90 text-white cursor-pointer shadow-lg hover:shadow-xl"
                           : "bg-gray-500/20 text-gray-500 cursor-not-allowed border border-gray-500/30"
                       }`}
@@ -1579,11 +1695,19 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       <Upload className="w-4 h-4" />
                       {uploading
                         ? t("assetReplacer.uploadingAsset")
+                        : isPosterizarrRunning
+                        ? "Upload Disabled (Running)"
                         : t("assetReplacer.uploadAssetButton")}
                     </button>
-                    {!isDimensionValid && (
+                    {!isDimensionValid && !isPosterizarrRunning && (
                       <p className="mt-2 text-xs text-red-400 text-center">
                         {t("assetReplacer.dimensionRequirement")}
+                      </p>
+                    )}
+                    {isPosterizarrRunning && (
+                      <p className="mt-2 text-xs text-orange-400 text-center">
+                        Asset replacement is disabled while Posterizarr is
+                        running
                       </p>
                     )}
                   </div>
@@ -1607,7 +1731,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
               {/* Fetch Previews Button */}
               <div className="text-center">
                 <button
-                  onClick={fetchPreviews}
+                  onClick={handleFetchClick}
                   disabled={loading}
                   className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm sm:text-base w-full sm:w-auto"
                 >
@@ -1636,7 +1760,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                     {t("assetReplacer.noPreviewsLoaded")}
                   </p>
                   <button
-                    onClick={fetchPreviews}
+                    onClick={handleFetchClick}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all shadow-sm"
                   >
                     <Download className="w-5 h-5 text-theme-primary" />
@@ -1742,8 +1866,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                               <PreviewCard
                                 key={`tmdb-${index}`}
                                 preview={preview}
-                                onSelect={() => handleSelectPreview(preview)}
-                                disabled={uploading}
+                                onSelect={() => handlePreviewClick(preview)}
+                                disabled={uploading || isPosterizarrRunning}
                                 isHorizontal={useHorizontalLayout}
                               />
                             ))}
@@ -1774,8 +1898,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                               <PreviewCard
                                 key={`tvdb-${index}`}
                                 preview={preview}
-                                onSelect={() => handleSelectPreview(preview)}
-                                disabled={uploading}
+                                onSelect={() => handlePreviewClick(preview)}
+                                disabled={uploading || isPosterizarrRunning}
                                 isHorizontal={useHorizontalLayout}
                               />
                             ))}
@@ -1809,8 +1933,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                               <PreviewCard
                                 key={`fanart-${index}`}
                                 preview={preview}
-                                onSelect={() => handleSelectPreview(preview)}
-                                disabled={uploading}
+                                onSelect={() => handlePreviewClick(preview)}
+                                disabled={uploading || isPosterizarrRunning}
                                 isHorizontal={useHorizontalLayout}
                               />
                             ))}
@@ -1832,6 +1956,45 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           )}
         </div>
       </div>
+
+      {/* Upload Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showUploadConfirm}
+        onClose={() => setShowUploadConfirm(false)}
+        onConfirm={handleConfirmUpload}
+        title={t("assetReplacer.confirmReplaceTitle")}
+        message={t("assetReplacer.confirmReplaceMessage")}
+        confirmText={t("assetReplacer.confirmReplaceButton")}
+        type="warning"
+      />
+
+      {/* Preview Selection Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showPreviewConfirm}
+        onClose={() => {
+          setShowPreviewConfirm(false);
+          setPendingPreview(null);
+        }}
+        onConfirm={handleSelectPreview}
+        title={t("assetReplacer.confirmReplaceTitle")}
+        message={t("assetReplacer.confirmReplaceMessage")}
+        confirmText={t("assetReplacer.confirmReplaceButton")}
+        type="warning"
+      />
+
+      {/* Fetch Previews Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showFetchConfirm}
+        onClose={() => {
+          setShowFetchConfirm(false);
+          setPendingFetchParams(null);
+        }}
+        onConfirm={fetchPreviews}
+        title={t("assetReplacer.confirmFetchTitle")}
+        message={t("assetReplacer.confirmFetchMessage")}
+        confirmText={t("assetReplacer.confirmFetchButton")}
+        type="info"
+      />
     </div>
   );
 }
