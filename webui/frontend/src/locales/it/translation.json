@@ -1251,7 +1251,7 @@
     "viewSource": "Visualizza fonte",
     "replace": "Sostituisci",
     "replaceTooltip": "Sostituisci questo asset",
-    "noEditsNeeded": "Nessuna modifica necessaria",
+    "noEditsNeeded": "Contrassegna come risolto",
     "noEditsNeededTooltip": "Contrassegna questo asset come verificato e nascondilo dall'elenco",
     "markedAsReviewed": "{{title}} contrassegnato come verificato e nascosto dall'elenco",
     "updateFailed": "Aggiornamento di {{title}} non riuscito",

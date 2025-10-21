@@ -1251,7 +1251,7 @@
     "viewSource": "Ver fonte",
     "replace": "Substituir",
     "replaceTooltip": "Substituir este ativo",
-    "noEditsNeeded": "Nenhuma edição necessária",
+    "noEditsNeeded": "Marcar como resolvido",
     "noEditsNeededTooltip": "Marcar este ativo como revisado e ocultá-lo da lista",
     "markedAsReviewed": "{{title}} marcado como revisado e oculto da lista",
     "updateFailed": "Falha ao atualizar {{title}}",

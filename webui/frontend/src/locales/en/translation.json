@@ -1252,7 +1252,7 @@
     "viewSource": "View Source",
     "replace": "Replace",
     "replaceTooltip": "Replace this asset",
-    "noEditsNeeded": "No Edits Needed",
+    "noEditsNeeded": "Mark as resolved",
     "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list",
     "markedAsReviewed": "{{title}} marked as reviewed and hidden from list",
     "updateFailed": "Failed to update {{title}}",
