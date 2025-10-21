@@ -3165,11 +3165,10 @@ async def get_plex_libraries(request: PlexValidationRequest):
                     lib_type = directory.get("type", "")
                     lib_key = directory.get("key", "")
 
-                    # Only include movie and show libraries
-                    if lib_type in ["movie", "show"]:
-                        libraries.append(
-                            {"name": lib_title, "type": lib_type, "key": lib_key}
-                        )
+                    # Include all library types (movie, show, music, photo, etc.)
+                    libraries.append(
+                        {"name": lib_title, "type": lib_type, "key": lib_key}
+                    )
 
                 logger.info(f"Found {len(libraries)} Plex libraries")
                 return {"success": True, "libraries": libraries}
