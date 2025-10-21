@@ -414,7 +414,9 @@
     "lastEntries": "Ultime {{count}} voci",
     "noActiveLog": "Nessun log attivo",
     "statusCards": "Schede di stato",
-    "customizeDescription": "Mostra o nascondi sezioni del pannello di controllo • Trascina per riordinare"
+    "customizeDescription": "Mostra o nascondi sezioni del pannello di controllo • Trascina per riordinare",
+    "hideScrollbars": "Nascondi barre di scorrimento",
+    "hideScrollbarsDesc": "Nascondi le barre di scorrimento in tutta l'interfaccia"
   },
   "config": {
     "title": "Configurazione",

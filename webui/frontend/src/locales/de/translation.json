@@ -414,7 +414,9 @@
     "lastEntries": "Letzte {{count}} Einträge",
     "noActiveLog": "Kein aktives Log",
     "statusCards": "Status-Karten",
-    "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen"
+    "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen",
+    "hideScrollbars": "Scrollleisten ausblenden",
+    "hideScrollbarsDesc": "Scrollleisten in der gesamten Benutzeroberfläche ausblenden"
   },
   "config": {
     "title": "Konfiguration",

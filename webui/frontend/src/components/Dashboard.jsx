@@ -106,6 +106,12 @@ function Dashboard() {
         };
   });
 
+  // Scrollbar visibility settings
+  const [hideScrollbars, setHideScrollbars] = useState(() => {
+    const saved = localStorage.getItem("hide_scrollbars");
+    return saved ? JSON.parse(saved) : false;
+  });
+
   // Card order settings
   const [cardOrder, setCardOrder] = useState(() => {
     const saved = localStorage.getItem("dashboard_card_order");
@@ -447,6 +453,17 @@ function Dashboard() {
       [cardKey]: !visibleCards[cardKey],
     };
     saveVisibilitySettings(newSettings);
+  };
+
+  // Toggle scrollbar visibility
+  const toggleScrollbarVisibility = () => {
+    const newValue = !hideScrollbars;
+    console.log("Toggling scrollbars:", newValue);
+    setHideScrollbars(newValue);
+    localStorage.setItem("hide_scrollbars", JSON.stringify(newValue));
+
+    // Dispatch custom event to notify App.jsx
+    window.dispatchEvent(new Event("scrollbarToggle"));
   };
 
   // Save card order to localStorage
@@ -1002,6 +1019,33 @@ function Dashboard() {
                   </label>
                 </label>
               ))}
+
+              {/* Scrollbar Visibility Toggle */}
+              <div className="pt-4 border-t border-theme">
+                <div className="flex items-center justify-between p-3 bg-theme-hover rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Settings className="w-5 h-5 text-theme-primary flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="font-medium text-theme-text">
+                        {t("dashboard.hideScrollbars") || "Hide Scrollbars"}
+                      </span>
+                      <span className="text-xs text-theme-muted">
+                        {t("dashboard.hideScrollbarsDesc") ||
+                          "Hide scrollbars throughout the UI"}
+                      </span>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hideScrollbars}
+                      onChange={toggleScrollbarVisibility}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
+                  </label>
+                </div>
+              </div>
             </div>
 
             {/* Modal Footer */}

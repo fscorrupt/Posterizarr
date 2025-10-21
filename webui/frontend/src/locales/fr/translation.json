@@ -414,7 +414,9 @@
     "lastEntries": "Dernières {{count}} entrées",
     "noActiveLog": "Aucun journal actif",
     "statusCards": "Cartes de statut",
-    "customizeDescription": "Afficher ou masquer les sections du tableau de bord • Glisser pour réorganiser"
+    "customizeDescription": "Afficher ou masquer les sections du tableau de bord • Glisser pour réorganiser",
+    "hideScrollbars": "Masquer les barres de défilement",
+    "hideScrollbarsDesc": "Masquer les barres de défilement dans toute l'interface"
   },
   "config": {
     "title": "Configuration",

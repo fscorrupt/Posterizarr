@@ -414,7 +414,9 @@
     "lastEntries": "Last {{count}} entries",
     "noActiveLog": "No active log",
     "statusCards": "Status Cards",
-    "customizeDescription": "Show or hide dashboard sections • Drag to reorder"
+    "customizeDescription": "Show or hide dashboard sections • Drag to reorder",
+    "hideScrollbars": "Hide Scrollbars",
+    "hideScrollbarsDesc": "Hide scrollbars throughout the UI"
   },
   "config": {
     "title": "Configuration",
