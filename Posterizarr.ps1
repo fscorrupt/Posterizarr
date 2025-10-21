@@ -5316,14 +5316,7 @@ function MassDownloadPlexArtwork {
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
                     $checkedItems += $hashtestpath
-                    if ($entry.PlexPosterUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $entry.PlexPosterUrl
-                        }
-                    }
+
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
                         $SkipingText = 'false'
@@ -5343,7 +5336,16 @@ function MassDownloadPlexArtwork {
                         $global:Fallback = $null
                         $global:IsFallback = $null
                         $global:ImageMagickError = $null
+                        $Arturl = $null
 
+                        if ($entry.PlexPosterUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $entry.PlexPosterUrl
+                            }
+                        }
                         Write-Entry -Message "Searching on Plex for $Titletext - Poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                         if ($fontAllCaps -eq 'true') {
@@ -5440,14 +5442,7 @@ function MassDownloadPlexArtwork {
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     $checkedItems += $hashtestpath
-                    if ($entry.PlexBackgroundUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                        }
-                    }
+
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
                         $SkipingText = 'false'
@@ -5467,7 +5462,16 @@ function MassDownloadPlexArtwork {
                         $global:TVDBAssetChangeUrl = $null
                         $global:ImageMagickError = $null
                         $global:TextlessPoster = $null
+                        $Arturl = $null
 
+                        if ($entry.PlexBackgroundUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                            }
+                        }
                         Write-Entry -Message "Searching on Plex for $Titletext - Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                         if ($BackgroundfontAllCaps -eq 'true') {
@@ -5631,18 +5635,21 @@ function MassDownloadPlexArtwork {
 
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-            if ($entry.PlexPosterUrl){
-                if ($PlexToken) {
-                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                }
-                Else {
-                    $Arturl = $plexurl + $entry.PlexPosterUrl
-                }
-            }
+
             # Now we can start the Poster Part
             if ($global:Posters -eq 'true') {
                 $checkedItems += $hashtestpath
+
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                    $Arturl = $null
+                    if ($entry.PlexPosterUrl -like "/library/*") {
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                        }
+                        Else {
+                            $Arturl = $plexurl + $entry.PlexPosterUrl
+                        }
+                    }
                     Write-Entry -Message "Searching on Plex for $Titletext - Poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                     GetPlexArtworkUrl -ArtUrl $Arturl -TempImage $PosterImage
 
@@ -5750,14 +5757,7 @@ function MassDownloadPlexArtwork {
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                 $checkedItems += $hashtestpath
-                if ($entry.PlexBackgroundUrl){
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                    }
-                }
+
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                     # Define Global Variables
                     $SkipingText = 'false'
@@ -5778,7 +5778,15 @@ function MassDownloadPlexArtwork {
                     $global:TVDBAssetChangeUrl = $null
                     $global:TextlessPoster = $null
                     $global:ImageMagickError = $null
-
+                    $Arturl = $null
+                    if ($entry.PlexBackgroundUrl -like "/library/*") {
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                        }
+                        Else {
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                        }
+                    }
                     Write-Entry -Message "Searching on Plex for $Titletext - Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                     GetPlexArtworkUrl -ArtUrl $Arturl -TempImage $backgroundImage
 
@@ -5922,15 +5930,17 @@ function MassDownloadPlexArtwork {
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     $checkedItems += $hashtestpath
-                    if ($global:PlexSeasonUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $global:PlexSeasonUrl
-                        }
-                    }
+
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                        $Arturl = $null
+                        if ($global:PlexSeasonUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $global:PlexSeasonUrl
+                            }
+                        }
                         if (!$Seasonpostersearchtext) {
                             Write-Entry -Message "Searching on Plex for $Titletext - Season" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $Seasonpostersearchtext = $true
@@ -6087,15 +6097,17 @@ function MassDownloadPlexArtwork {
 
                             $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                             $checkedItems += $hashtestpath
-                            if ($global:PlexTitleCardUrl){
-                                if ($PlexToken) {
-                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                }
-                                Else {
-                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                }
-                            }
+
                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                $Arturl = $null
+                                if ($global:PlexTitleCardUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                    }
+                                }
                                 Write-Entry -Message "Searching on Plex for $global:show_name | $global:SeasonEPNumber - Titlecard" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 GetPlexArtworkUrl -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                 if ($global:posterurl) {
@@ -10021,14 +10033,7 @@ Elseif ($Tautulli) {
                     $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     # Now we can start the Poster Part
                     if ($global:Posters -eq 'true') {
-                        if ($entry.PlexPosterUrl){
-                            if ($PlexToken) {
-                                $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $entry.PlexPosterUrl
-                            }
-                        }
+
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
                             $SkipingText = 'false'
@@ -10049,7 +10054,16 @@ Elseif ($Tautulli) {
                             $global:ImageMagickError = $null
                             $TakeLocal = $null
                             $LocalAssetMissing = $null
+                            $Arturl = $null
 
+                            if ($entry.PlexPosterUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl
+                                }
+                            }
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -10474,14 +10488,7 @@ Elseif ($Tautulli) {
 
                         $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                         $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                        if ($entry.PlexBackgroundUrl){
-                            if ($PlexToken) {
-                                $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                            }
-                        }
+
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
                             $SkipingText = 'false'
@@ -10504,6 +10511,16 @@ Elseif ($Tautulli) {
                             $global:fanartfallbackposterurl = $null
                             $TakeLocal = $null
                             $LocalAssetMissing = $null
+                            $Arturl = $null
+
+                            if ($entry.PlexBackgroundUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                                }
+                            }
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -11010,17 +11027,19 @@ Elseif ($Tautulli) {
 
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                if ($entry.PlexPosterUrl){
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl
-                    }
-                }
+
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                        $Arturl = $null
+                        if ($entry.PlexPosterUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $entry.PlexPosterUrl
+                            }
+                        }
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
                             if (Test-Path -LiteralPath $filePath) {
@@ -11435,14 +11454,7 @@ Elseif ($Tautulli) {
 
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    if ($entry.PlexBackgroundUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                        }
-                    }
+
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
                         $SkipingText = 'false'
@@ -11467,6 +11479,16 @@ Elseif ($Tautulli) {
                         $global:fanartfallbackposterurl = $null
                         $TakeLocal = $null
                         $LocalAssetMissing = $null
+                        $Arturl = $null
+
+                        if ($entry.PlexBackgroundUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                            }
+                        }
 
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
@@ -11925,15 +11947,17 @@ Elseif ($Tautulli) {
 
                         $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                        if ($global:PlexSeasonUrl){
-                            if ($PlexToken) {
-                                $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $global:PlexSeasonUrl
-                            }
-                        }
+
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                            $Arturl = $null
+                            if ($global:PlexSeasonUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $global:PlexSeasonUrl
+                                }
+                            }
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -12599,15 +12623,17 @@ Elseif ($Tautulli) {
                                         $SkipJapTitleCount++
                                     }
                                     Else {
-                                        if ($global:PlexTitleCardUrl){
-                                            if ($PlexToken) {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                            }
-                                            Else {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                            }
-                                        }
+
                                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                            $Arturl = $null
+                                            if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                if ($PlexToken) {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                }
+                                                Else {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                }
+                                            }
                                             foreach ($ext in $allowedExtensions) {
                                                 $filePath = "$ManualTestPath$ext"
                                                 if (Test-Path -LiteralPath $filePath) {
@@ -13132,15 +13158,17 @@ Elseif ($Tautulli) {
                                         $SkipJapTitleCount++
                                     }
                                     Else {
-                                        if ($global:PlexTitleCardUrl){
-                                            if ($PlexToken) {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                            }
-                                            Else {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                            }
-                                        }
+
                                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                            $Arturl = $null
+                                            if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                if ($PlexToken) {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                }
+                                                Else {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                }
+                                            }
                                             foreach ($ext in $allowedExtensions) {
                                                 $filePath = "$ManualTestPath$ext"
                                                 if (Test-Path -LiteralPath $filePath) {
@@ -18345,14 +18373,7 @@ Elseif ($ArrTrigger) {
                         $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         # Now we can start the Poster Part
                         if ($global:Posters -eq 'true') {
-                            if ($entry.PlexPosterUrl){
-                                if ($PlexToken) {
-                                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                                }
-                                Else {
-                                    $Arturl = $plexurl + $entry.PlexPosterUrl
-                                }
-                            }
+
                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                 # Define Global Variables
                                 $SkipingText = 'false'
@@ -18373,6 +18394,16 @@ Elseif ($ArrTrigger) {
                                 $global:ImageMagickError = $null
                                 $TakeLocal = $null
                                 $LocalAssetMissing = $null
+                                $Arturl = $null
+
+                                if ($entry.PlexPosterUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $entry.PlexPosterUrl
+                                    }
+                                }
 
                                 foreach ($ext in $allowedExtensions) {
                                     $filePath = "$ManualTestPath$ext"
@@ -18798,14 +18829,7 @@ Elseif ($ArrTrigger) {
 
                             $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                             $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                            if ($entry.PlexBackgroundUrl){
-                                if ($PlexToken) {
-                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                                }
-                                Else {
-                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                                }
-                            }
+
                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                 # Define Global Variables
                                 $SkipingText = 'false'
@@ -18828,6 +18852,16 @@ Elseif ($ArrTrigger) {
                                 $global:fanartfallbackposterurl = $null
                                 $TakeLocal = $null
                                 $LocalAssetMissing = $null
+                                $Arturl = $null
+
+                                if ($entry.PlexBackgroundUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                                    }
+                                }
 
                                 foreach ($ext in $allowedExtensions) {
                                     $filePath = "$ManualTestPath$ext"
@@ -19334,17 +19368,19 @@ Elseif ($ArrTrigger) {
 
                     $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                     $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    if ($entry.PlexPosterUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $entry.PlexPosterUrl
-                        }
-                    }
+
                     # Now we can start the Poster Part
                     if ($global:Posters -eq 'true') {
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                            $Arturl = $null
+                            if ($entry.PlexPosterUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl
+                                }
+                            }
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -19759,14 +19795,7 @@ Elseif ($ArrTrigger) {
 
                         $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                         $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                        if ($entry.PlexBackgroundUrl){
-                            if ($PlexToken) {
-                                $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                            }
-                        }
+
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
                             $SkipingText = 'false'
@@ -19791,6 +19820,16 @@ Elseif ($ArrTrigger) {
                             $global:fanartfallbackposterurl = $null
                             $TakeLocal = $null
                             $LocalAssetMissing = $null
+                            $Arturl = $null
+
+                            if ($entry.PlexBackgroundUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                                }
+                            }
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -20249,15 +20288,17 @@ Elseif ($ArrTrigger) {
 
                             $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                            if ($global:PlexSeasonUrl){
-                                if ($PlexToken) {
-                                    $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
-                                }
-                                Else {
-                                    $Arturl = $plexurl + $global:PlexSeasonUrl
-                                }
-                            }
+
                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                $Arturl = $null
+                                if ($global:PlexSeasonUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $global:PlexSeasonUrl
+                                    }
+                                }
                                 foreach ($ext in $allowedExtensions) {
                                     $filePath = "$ManualTestPath$ext"
                                     if (Test-Path -LiteralPath $filePath) {
@@ -20922,15 +20963,17 @@ Elseif ($ArrTrigger) {
                                             $SkipJapTitleCount++
                                         }
                                         Else {
-                                            if ($global:PlexTitleCardUrl){
-                                                if ($PlexToken) {
-                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                                }
-                                                Else {
-                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                                }
-                                            }
+
                                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                                $Arturl = $null
+                                                if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                    if ($PlexToken) {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                    }
+                                                    Else {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                    }
+                                                }
                                                 foreach ($ext in $allowedExtensions) {
                                                     $filePath = "$ManualTestPath$ext"
                                                     if (Test-Path -LiteralPath $filePath) {
@@ -21455,15 +21498,17 @@ Elseif ($ArrTrigger) {
                                             $SkipJapTitleCount++
                                         }
                                         Else {
-                                            if ($global:PlexTitleCardUrl){
-                                                if ($PlexToken) {
-                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                                }
-                                                Else {
-                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                                }
-                                            }
+
                                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                                $Arturl = $null
+                                                if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                    if ($PlexToken) {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                    }
+                                                    Else {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                    }
+                                                }
                                                 foreach ($ext in $allowedExtensions) {
                                                     $filePath = "$ManualTestPath$ext"
                                                     if (Test-Path -LiteralPath $filePath) {
@@ -23048,7 +23093,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                     $global:posterurl = $null
                     $global:PosterWithText = $null
                     if ($null -ne $entry.PlexPosterUrl) {
-                        if ($entry.PlexPosterUrl){
+                        if ($entry.PlexPosterUrl -like "/library/*") {
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
                             }
@@ -23103,7 +23148,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                     $global:PosterWithText = $null
                     # check if Background url id exists.
                     if ($null -ne $entry.PlexBackgroundUrl) {
-                        if ($entry.PlexBackgroundUrl){
+                        if ($entry.PlexBackgroundUrl -like "/library/*") {
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
                             }
@@ -23174,7 +23219,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
                     if ($null -ne $entry.PlexPosterUrl) {
-                        if ($entry.PlexPosterUrl){
+                        if ($entry.PlexPosterUrl -like "/library/*") {
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
                             }
@@ -23225,7 +23270,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 # Now we can start the Background Poster Part
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($null -ne $entry.PlexBackgroundUrl) {
-                        if ($entry.PlexBackgroundUrl){
+                        if ($entry.PlexBackgroundUrl -like "/library/*") {
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
                             }
@@ -23282,7 +23327,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $global:SeasonNumber = $global:seasonNumbers[$i]
                         $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                         if ($null -ne $global:PlexSeasonUrl) {
-                            if ($global:PlexSeasonUrl){
+                            if ($global:PlexSeasonUrl -like "/library/*") {
                                 if ($PlexToken) {
                                     $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
                                 }
@@ -23350,7 +23395,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                                 $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
                                 $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                 if ($null -ne $global:PlexTitleCardUrl) {
-                                    if ($global:PlexTitleCardUrl){
+                                    if ($global:PlexTitleCardUrl -like "/library/*") {
                                         if ($PlexToken) {
                                             $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
                                         }
@@ -28609,14 +28654,7 @@ else {
                     Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                     $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    if ($entry.PlexPosterUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $entry.PlexPosterUrl
-                        }
-                    }
+
                     # Now we can start the Poster Part
                     if ($global:Posters -eq 'true') {
                         $checkedItems += $hashtestpath
@@ -28641,6 +28679,16 @@ else {
                             $global:ImageMagickError = $null
                             $TakeLocal = $null
                             $LocalAssetMissing = $null
+                            $Arturl = $null
+
+                            if ($entry.PlexPosterUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl
+                                }
+                            }
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -29097,14 +29145,6 @@ else {
                         $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                         $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         $checkedItems += $hashtestpath
-                        if ($entry.PlexBackgroundUrl){
-                            if ($PlexToken) {
-                                $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                            }
-                        }
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
                             $SkipingText = 'false'
@@ -29128,6 +29168,16 @@ else {
                             $global:fanartfallbackposterurl = $null
                             $TakeLocal = $null
                             $LocalAssetMissing = $null
+                            $Arturl = $null
+
+                            if ($entry.PlexBackgroundUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                                }
+                            }
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -29665,18 +29715,20 @@ else {
 
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                if ($entry.PlexPosterUrl){
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl
-                    }
-                }
+
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
                     $checkedItems += $hashtestpath
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                        $Arturl = $null
+                        if ($entry.PlexPosterUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $entry.PlexPosterUrl
+                            }
+                        }
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
                             if (Test-Path -LiteralPath $filePath) {
@@ -30129,14 +30181,7 @@ else {
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     $checkedItems += $hashtestpath
-                    if ($entry.PlexBackgroundUrl){
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                        }
-                    }
+
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
                         $SkipingText = 'false'
@@ -30161,6 +30206,16 @@ else {
                         $global:fanartfallbackposterurl = $null
                         $TakeLocal = $null
                         $LocalAssetMissing = $null
+                        $Arturl = $null
+
+                        if ($entry.PlexBackgroundUrl -like "/library/*") {
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                            }
+                            Else {
+                                $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                            }
+                        }
 
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
@@ -30645,15 +30700,17 @@ else {
                         $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         $checkedItems += $hashtestpath
-                        if ($global:PlexSeasonUrl){
-                            if ($PlexToken) {
-                                $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $global:PlexSeasonUrl
-                            }
-                        }
+
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                            $Arturl = $null
+                            if ($global:PlexSeasonUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $global:PlexSeasonUrl
+                                }
+                            }
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -31355,15 +31412,17 @@ else {
                                     }
                                     Else {
                                         $checkedItems += $hashtestpath
-                                        if ($global:PlexTitleCardUrl){
-                                            if ($PlexToken) {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                            }
-                                            Else {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                            }
-                                        }
+
                                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                            $Arturl = $
+                                            if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                if ($PlexToken) {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                }
+                                                Else {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                }
+                                            }
                                             foreach ($ext in $allowedExtensions) {
                                                 $filePath = "$ManualTestPath$ext"
                                                 if (Test-Path -LiteralPath $filePath) {
@@ -31917,15 +31976,17 @@ else {
                                     }
                                     Else {
                                         $checkedItems += $hashtestpath
-                                        if ($global:PlexTitleCardUrl){
-                                            if ($PlexToken) {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                            }
-                                            Else {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                            }
-                                        }
+
                                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                                            $Arturl = $null
+                                            if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                if ($PlexToken) {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                }
+                                                Else {
+                                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                }
+                                            }
                                             foreach ($ext in $allowedExtensions) {
                                                 $filePath = "$ManualTestPath$ext"
                                                 if (Test-Path -LiteralPath $filePath) {
