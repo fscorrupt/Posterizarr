@@ -587,9 +587,52 @@ class RuntimeDatabase:
             )
             mode_counts = {row[0]: row[1] for row in cursor.fetchall()}
 
+            # Get latest run details
+            cursor.execute(
+                """
+                SELECT * FROM runtime_stats 
+                ORDER BY timestamp DESC 
+                LIMIT 1
+            """
+            )
+            latest_row = cursor.fetchone()
+            latest_run = None
+
+            if latest_row:
+                columns = [desc[0] for desc in cursor.description]
+                latest_run_dict = dict(zip(columns, latest_row))
+                latest_run = {
+                    "total_images": latest_run_dict.get("total_images", 0),
+                    "posters": latest_run_dict.get("posters", 0),
+                    "seasons": latest_run_dict.get("seasons", 0),
+                    "backgrounds": latest_run_dict.get("backgrounds", 0),
+                    "titlecards": latest_run_dict.get("titlecards", 0),
+                    "collections": latest_run_dict.get("collections", 0),
+                    "errors": latest_run_dict.get("errors", 0),
+                    "fallbacks": latest_run_dict.get("fallbacks", 0),
+                    "textless": latest_run_dict.get("textless", 0),
+                    "truncated": latest_run_dict.get("truncated", 0),
+                    "text": latest_run_dict.get("text", 0),
+                    "tba_skipped": latest_run_dict.get("tba_skipped", 0),
+                    "jap_chines_skipped": latest_run_dict.get("jap_chines_skipped", 0),
+                    "notification_sent": bool(
+                        latest_run_dict.get("notification_sent", 0)
+                    ),
+                    "uptime_kuma": bool(latest_run_dict.get("uptime_kuma", 0)),
+                    "images_cleared": latest_run_dict.get("images_cleared", 0),
+                    "folders_cleared": latest_run_dict.get("folders_cleared", 0),
+                    "space_saved": latest_run_dict.get("space_saved"),
+                    "script_version": latest_run_dict.get("script_version"),
+                    "im_version": latest_run_dict.get("im_version"),
+                    "start_time": latest_run_dict.get("start_time"),
+                    "end_time": latest_run_dict.get("end_time"),
+                    "runtime_formatted": latest_run_dict.get("runtime_formatted"),
+                    "mode": latest_run_dict.get("mode"),
+                }
+
             conn.close()
 
-            return {
+            summary = {
                 "total_runs": total_runs,
                 "total_images": total_images,
                 "average_runtime_seconds": int(avg_runtime),
@@ -598,6 +641,12 @@ class RuntimeDatabase:
                 "mode_counts": mode_counts,
                 "days": days,
             }
+
+            # Only include latest_run if we found one
+            if latest_run:
+                summary["latest_run"] = latest_run
+
+            return summary
 
         except Exception as e:
             logger.error(f"Error getting runtime summary: {e}")

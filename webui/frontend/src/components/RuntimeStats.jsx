@@ -476,7 +476,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    {t("runtimeStats.errors")}
+                    Script Errors
                   </p>
                   <p
                     className={`text-2xl font-bold ${
