@@ -267,7 +267,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     const hasSeason = asset.path?.match(/Season\d+/i);
     const hasEpisode = asset.path?.match(/S\d+E\d+/i);
     const hasTVFolder = asset.path?.match(/[\/\\](TV|Series)[\/\\]/i);
-    const isTV = hasSeason || hasEpisode || hasTVFolder || asset.type === "tv";
+    // Also check for TVDB/TMDB IDs in brackets which indicate TV shows
+    const hasTVDBId = asset.path?.match(/\[tvdb-\d+\]/i);
+    const isTV =
+      hasSeason ||
+      hasEpisode ||
+      hasTVFolder ||
+      hasTVDBId ||
+      asset.type === "tv";
     const mediaType = isTV ? "tv" : "movie";
 
     // Extract season/episode numbers

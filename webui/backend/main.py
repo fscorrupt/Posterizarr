@@ -7378,7 +7378,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
     """
     try:
         # DEBUG: Log incoming request
-        logger.info(f"Asset replacement request:")
+        logger.info("=" * 80)
+        logger.info(f"FETCH ASSET REPLACEMENTS REQUEST:")
         logger.info(f"  Asset Path: {request.asset_path}")
         logger.info(f"  Media Type: {request.media_type}")
         logger.info(f"  Asset Type: {request.asset_type}")
@@ -7386,6 +7387,9 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         logger.info(f"  Year: {request.year}")
         logger.info(f"  TMDB ID: {request.tmdb_id}")
         logger.info(f"  TVDB ID: {request.tvdb_id}")
+        logger.info(f"  Season Number: {request.season_number}")
+        logger.info(f"  Episode Number: {request.episode_number}")
+        logger.info("=" * 80)
 
         # Load config to get API keys and language preferences
         if not CONFIG_PATH.exists():
@@ -7699,6 +7703,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.info(f"Found TVDB ID from title search: {found_id}")
             elif not found_id:
                 logger.warning(f"No TVDB ID found for title: '{request.title}'")
+        elif request.media_type == "tv" and not tvdb_api_key:
+            logger.warning(
+                f"TVDB: Cannot search for TV show '{request.title}' - no TVDB API key configured"
+            )
+        elif request.media_type == "tv" and not request.title:
+            logger.warning(f"TVDB: Cannot search - no title provided for TV show")
 
         # Create async tasks for parallel fetching - AFTER IDs are resolved
         async def fetch_tmdb():
@@ -7848,11 +7858,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 return []
 
             if not tvdb_ids_to_use:
-                logger.info(
-                    f"TVDB: No TVDB IDs available (media_type={request.media_type}) - skipping"
+                logger.warning(
+                    f"TVDB: No TVDB IDs available (media_type={request.media_type}, asset_type={request.asset_type}) - skipping TVDB fetch"
                 )
                 return []
 
+            logger.info(
+                f"TVDB: Starting fetch for {len(tvdb_ids_to_use)} ID(s): {tvdb_ids_to_use}"
+            )
             all_results = []
             seen_urls = set()  # Track unique image URLs to avoid duplicates
 
@@ -7899,16 +7912,25 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         "3"  # type=3 for backgrounds
                                     )
 
+                                logger.info(
+                                    f" TVDB: Requesting {artwork_url} with params {artwork_params}"
+                                )
                                 artwork_response = await client.get(
                                     artwork_url,
                                     headers=auth_headers,
                                     params=artwork_params,
                                 )
 
+                                logger.info(
+                                    f" TVDB: Response status: {artwork_response.status_code}"
+                                )
                                 if artwork_response.status_code == 200:
                                     artwork_data = artwork_response.json()
                                     artworks = artwork_data.get("data", {}).get(
                                         "artworks", []
+                                    )
+                                    logger.info(
+                                        f" TVDB: Found {len(artworks)} artworks in response"
                                     )
 
                                     for artwork in artworks:
@@ -7925,6 +7947,10 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                     "language": artwork.get("language"),
                                                 }
                                             )
+                                else:
+                                    logger.warning(
+                                        f" TVDB: Non-200 response: {artwork_response.status_code} - {artwork_response.text[:200]}"
+                                    )
 
                 logger.info(
                     f" TVDB: Collected {len(all_results)} unique images from {len(tvdb_ids_to_use)} ID(s)"
@@ -7988,12 +8014,18 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                     # Fetch from TVDB IDs for TV shows
                     elif request.media_type == "tv" and tvdb_ids_to_use:
+                        logger.info(
+                            f" Fanart.tv: Processing {len(tvdb_ids_to_use)} TVDB IDs for TV show"
+                        )
                         for source, tvdb_id in tvdb_ids_to_use:
                             logger.info(
                                 f" Fanart.tv: Fetching TV artwork for TVDB ID: {tvdb_id} (from {source})"
                             )
                             url = f"https://webservice.fanart.tv/v3/tv/{tvdb_id}?api_key={fanart_api_key}"
                             response = await client.get(url)
+                            logger.info(
+                                f" Fanart.tv: Response status: {response.status_code}"
+                            )
                             if response.status_code == 200:
                                 data = response.json()
 
@@ -8005,8 +8037,15 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                 else:
                                     fanart_keys = []
 
+                                logger.info(
+                                    f" Fanart.tv: Looking for keys: {fanart_keys}"
+                                )
                                 for key in fanart_keys:
-                                    for item in data.get(key, []):
+                                    items = data.get(key, [])
+                                    logger.info(
+                                        f" Fanart.tv: Found {len(items)} items for key '{key}'"
+                                    )
+                                    for item in items:
                                         item_url = item.get("url")
                                         if item_url and item_url not in seen_urls:
                                             seen_urls.add(item_url)
@@ -8021,6 +8060,15 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                     "likes": item.get("likes", 0),
                                                 }
                                             )
+                            else:
+                                logger.warning(
+                                    f" Fanart.tv: Non-200 response: {response.status_code}"
+                                )
+                    else:
+                        if request.media_type == "tv" and not tvdb_ids_to_use:
+                            logger.warning(
+                                f" Fanart.tv: TV show requested but no TVDB IDs available"
+                            )
 
                 logger.info(f" Fanart.tv: Collected {len(all_results)} unique images")
 
@@ -8492,6 +8540,121 @@ async def upload_asset_replacement(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+async def update_asset_db_entry_as_manual(
+    asset_path: str,
+    image_url: str,
+    library_name: Optional[str] = None,
+    folder_name: Optional[str] = None,
+    title_text: Optional[str] = None,
+):
+    """
+    Create or update a database entry for a manually replaced asset.
+    This ensures the asset appears in Recently Assets with Manual=Yes flag.
+
+    Args:
+        asset_path: Path to the asset (e.g., "4K/Movie Name (2024)/poster.jpg")
+        image_url: URL where the image was downloaded from
+        library_name: Optional library name override
+        folder_name: Optional folder name override
+        title_text: Optional title text override
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        logger.warning(
+            "Database not available, skipping DB entry for manual replacement"
+        )
+        return
+
+    try:
+        # Parse asset path to extract metadata
+        path_parts = Path(asset_path).parts
+
+        if len(path_parts) < 2:
+            logger.warning(f"Asset path too short to extract metadata: {asset_path}")
+            return
+
+        # Extract library name (first part of path)
+        extracted_library_name = path_parts[0] if len(path_parts) > 0 else ""
+        # Extract folder name (second part of path)
+        extracted_folder_name = path_parts[1] if len(path_parts) > 1 else ""
+        # Extract filename
+        filename = path_parts[-1] if len(path_parts) > 0 else ""
+
+        # Use provided values or fall back to extracted values
+        final_library_name = library_name or extracted_library_name
+        final_folder_name = folder_name or extracted_folder_name
+
+        # Extract title from folder name if not provided
+        # Remove year and ID tags like (2024) {tmdb-12345}
+        if not title_text:
+            # Match patterns like "Movie Name (2024) {tmdb-12345}"
+            title_match = re.match(r"^(.+?)\s*\(\d{4}\)", final_folder_name)
+            if title_match:
+                title_text = title_match.group(1).strip()
+            else:
+                # Fallback: use folder name as-is
+                title_text = final_folder_name
+
+        # Determine asset type from filename
+        asset_type = "Poster"
+        if "background" in filename.lower():
+            asset_type = "Background"
+        elif re.match(r"^Season\d+\.jpg$", filename, re.IGNORECASE):
+            asset_type = "Season"
+        elif re.match(r"^S\d+E\d+\.jpg$", filename, re.IGNORECASE):
+            asset_type = "TitleCard"
+
+        # Check if entry already exists for this asset
+        # We match on Title, Rootfolder, and Type (same as CSV import logic)
+        cursor = db.connection.cursor()
+        cursor.execute(
+            "SELECT id, Manual FROM imagechoices WHERE Title = ? AND Rootfolder = ? AND Type = ?",
+            (title_text, final_folder_name, asset_type),
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            # Update existing entry to mark as Manual (only update Manual field, nothing else)
+            record_id = existing["id"]
+            current_manual = existing["Manual"]
+
+            # Only update Manual field if not already set to "true"
+            if current_manual != "true":
+                db.update_choice(
+                    record_id,
+                    Manual="true",  # Use lowercase "true" for consistency
+                )
+                logger.info(
+                    f"Updated DB entry #{record_id}: Manual=true for: {title_text} ({asset_type})"
+                )
+            else:
+                logger.info(
+                    f"DB entry #{record_id} already has Manual=true for: {title_text} ({asset_type})"
+                )
+        else:
+            # Create new entry with Manual="true"
+            record_id = db.insert_choice(
+                title=title_text,
+                type_=asset_type,
+                rootfolder=final_folder_name,
+                library_name=final_library_name,
+                language="N/A",  # Not known for manual replacements
+                fallback="false",
+                text_truncated="false",
+                download_source=image_url,
+                fav_provider_link="N/A",
+                manual="true",  # Use lowercase "true" for consistency
+            )
+            logger.info(
+                f"Created new DB entry #{record_id} with Manual=true for: {title_text} ({asset_type})"
+            )
+
+    except Exception as e:
+        logger.error(f"Error updating database entry for manual replacement: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+
+
 @app.post("/api/assets/replace-from-url")
 async def replace_asset_from_url(
     asset_path: str = Query(...),
@@ -8549,6 +8712,14 @@ async def replace_asset_from_url(
         logger.info(
             f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes)"
         )
+
+        # Add/Update database entry for this replaced asset (mark as Manual)
+        try:
+            await update_asset_db_entry_as_manual(
+                asset_path, image_url, library_name, folder_name, title_text
+            )
+        except Exception as e:
+            logger.warning(f"Could not update database entry for replaced asset: {e}")
 
         result = {
             "success": True,
