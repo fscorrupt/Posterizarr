@@ -55,7 +55,7 @@
       "noResults": "Nessuna locandina trovata. Prova un termine di ricerca diverso.",
       "posterSelected": "URL della locandina impostato! ",
       "clickToSelect": "Clicca su una locandina per selezionarla per la creazione manuale della tua locandina",
-      "results": "Risultati locandine TMDB",
+      "results": "Risultati locandine",
       "seasonResults": "Locandine stagione {{season}}",
       "episodeResults": "Immagini episodio {{season}}x{{episode}}",
       "loadMore": "Carica altro ({{remaining}} rimanenti)",
@@ -115,7 +115,7 @@
       "libraryName": "Nome libreria",
       "seasonPosterName": "Nome locandina stagione",
       "seasonPlaceholder": "Stagione 1",
-      "seasonHint": "Nome della stagione (es. \"Stagione 1\", \"Staffel 2\", \"Speciali\")",
+      "seasonHint": "Nome della stagione (es. \"Stagione 1\", \"Staffel 2\", \"Speciali\"). Nota: Stagione 0 o Stagione 00 sarà gestita come Speciali.",
       "episodeTitle": "Titolo episodio",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Nome del titolo dell'episodio (es. \"Ozymandias\", \"Pilota\")",
@@ -127,7 +127,7 @@
       "episodeNumberHint": "Numero dell'episodio (es. \"14\", \"1\")",
       "runButton": "Esegui modalità manuale",
       "processing": "Elaborazione...",
-      "tmdbSearchTitle": "Ricerca {{type}} TMDB",
+      "tmdbSearchTitle": "Ricerca {{type}}",
       "tmdbTypeSeasonPosters": "Locandine stagione",
       "tmdbTypeEpisodeImages": "Immagini episodio",
       "tmdbTypeTvPosters": "Locandine Serie TV",
@@ -414,7 +414,9 @@
     "lastEntries": "Ultime {{count}} voci",
     "noActiveLog": "Nessun log attivo",
     "statusCards": "Schede di stato",
-    "customizeDescription": "Mostra o nascondi sezioni del pannello di controllo • Trascina per riordinare"
+    "customizeDescription": "Mostra o nascondi sezioni del pannello di controllo • Trascina per riordinare",
+    "hideScrollbars": "Nascondi barre di scorrimento",
+    "hideScrollbarsDesc": "Nascondi le barre di scorrimento in tutta l'interfaccia"
   },
   "config": {
     "title": "Configurazione",
@@ -1206,7 +1208,15 @@
     "dimensionRequirement": "Le dimensioni dell'immagine devono soddisfare i requisiti minimi per il caricamento",
     "imageDimensionsValid": "Dimensioni dell'immagine ({{width}}x{{height}}) sono valide!",
     "imageDimensionsTooSmall": "Dimensioni dell'immagine ({{width}}x{{height}}) sono troppo piccole. Minimo richiesto: {{minWidth}}x{{minHeight}} pixel.",
-    "selectValidImage": "Seleziona prima un'immagine valida con le dimensioni corrette."
+    "selectValidImage": "Seleziona prima un'immagine valida con le dimensioni corrette.",
+    "seasonNumberHint": "Qualsiasi nome di stagione che termina con 0 o 00 (es. \"Stagione 0\", \"Staffel 00\") o che corrisponde a una parola chiave come \"Speciali\" sarà gestito come stagione Speciali.",
+    "posterizarrRunningError": "Impossibile sostituire gli asset mentre Posterizarr è in esecuzione. Attendere il completamento di tutte le elaborazioni prima di utilizzare le opzioni di sostituzione o aggiornamento manuale.",
+    "confirmReplaceTitle": "Conferma sostituzione asset",
+    "confirmReplaceMessage": "Sei sicuro di voler sostituire questo asset? Questa azione sovrascriverà il file esistente (verrà creato un backup).",
+    "confirmReplaceButton": "Sostituisci asset",
+    "confirmFetchTitle": "Conferma recupero opzioni di sostituzione",
+    "confirmFetchMessage": "Questo cercherà opzioni di sostituzione su TMDB, TVDB e Fanart.tv. Continuare?",
+    "confirmFetchButton": "Recupera sostituzioni"
   },
   "assetOverview": {
     "title": "Panoramica asset",
@@ -1220,6 +1230,7 @@
     "nonPrimaryProvider": "Provider non primario",
     "truncatedTextCategory": "Testo troncato",
     "missingAsset": "Asset mancante",
+    "missingAssetAtFavProvider": "Asset mancante dal provider preferito",
     "notPrimaryLanguage": "Lingua non primaria",
     "notPrimaryProvider": "Provider non primario",
     "truncatedText": "Testo troncato",
@@ -1462,7 +1473,8 @@
     "deleteAllAssetsMessage": "Sei sicuro di voler eliminare TUTTI gli asset in {{count}} cartella/e selezionata/e? Questo eliminerà tutte le locandine, sfondi, stagioni e schede titolo all'interno di queste cartelle.",
     "deleteMultipleMessage": "Sei sicuro di voler eliminare {{count}} asset selezionato/i?",
     "deleteAssetMessage": "Sei sicuro di voler eliminare questo asset?",
-    "deleteButton": "Elimina"
+    "deleteButton": "Elimina",
+    "assetReplaced": "Asset sostituito con successo!"
   },
   "autoTriggers": {
     "header": {

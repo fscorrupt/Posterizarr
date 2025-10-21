@@ -55,7 +55,7 @@
       "noResults": "Keine Poster gefunden. Versuche einen anderen Suchbegriff.",
       "posterSelected": "Poster URL gesetzt! ",
       "clickToSelect": "Klicke auf ein Poster, um es für deine manuelle Postererstellung auszuwählen",
-      "results": "TMDB Poster-Ergebnisse",
+      "results": "Poster-Ergebnisse",
       "seasonResults": "Season {{season}} Poster",
       "episodeResults": "Episode {{season}}x{{episode}} Bilder",
       "loadMore": "Mehr laden ({{remaining}} verbleibend)",
@@ -115,7 +115,7 @@
       "libraryName": "Bibliotheksname",
       "seasonPosterName": "Season Poster Name",
       "seasonPlaceholder": "Season 1",
-      "seasonHint": "Season-Name (z.B. \"Season 1\", \"Staffel 2\", \"Specials\")",
+      "seasonHint": "Season-Name (z.B. \"Season 1\", \"Staffel 2\", \"Specials\"). Hinweis: Season 0 oder Season 00 werden als Specials behandelt.",
       "episodeTitle": "Episodentitel",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Episodentitel (z.B. \"Ozymandias\", \"Pilot\")",
@@ -127,7 +127,7 @@
       "episodeNumberHint": "Episodennummer (z.B. \"14\", \"1\")",
       "runButton": "Manuellen Modus ausführen",
       "processing": "Wird verarbeitet...",
-      "tmdbSearchTitle": "TMDB {{type}} Suche",
+      "tmdbSearchTitle": "{{type}} Suche",
       "tmdbTypeSeasonPosters": "Staffel-Poster",
       "tmdbTypeEpisodeImages": "Episoden-Bilder",
       "tmdbTypeTvPosters": "TV-Serien-Poster",
@@ -414,7 +414,9 @@
     "lastEntries": "Letzte {{count}} Einträge",
     "noActiveLog": "Kein aktives Log",
     "statusCards": "Status-Karten",
-    "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen"
+    "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen",
+    "hideScrollbars": "Scrollleisten ausblenden",
+    "hideScrollbarsDesc": "Scrollleisten in der gesamten Benutzeroberfläche ausblenden"
   },
   "config": {
     "title": "Konfiguration",
@@ -1207,6 +1209,7 @@
     "imageDimensionsValid": "Bildabmessungen ({{width}}x{{height}}) sind gültig!",
     "imageDimensionsTooSmall": "Bildabmessungen ({{width}}x{{height}}) sind zu klein. Mindestens erforderlich: {{minWidth}}x{{minHeight}} Pixel.",
     "selectValidImage": "Bitte wählen Sie zuerst ein gültiges Bild mit den richtigen Abmessungen aus.",
+    "seasonNumberHint": "Jeder Season-Name, der auf 0 oder 00 endet (z.B. \"Season 0\", \"Staffel 00\") oder ein Schlüsselwort wie \"Specials\" enthält, wird als Specials-Season behandelt.",
     "titleLabel": "Titel",
     "titleRequired": "Titel *",
     "titlePlaceholder": "Film-/Serientitel eingeben...",
@@ -1258,7 +1261,14 @@
       "fanart": "Fanart.tv"
     },
     "selectImage": "Bild auswählen",
-    "processing": "Wird verarbeitet..."
+    "processing": "Wird verarbeitet...",
+    "posterizarrRunningError": "Assets können nicht ersetzt werden, während Posterizarr läuft. Bitte warten Sie, bis alle Verarbeitungen abgeschlossen sind, bevor Sie die Ersetzungs- oder manuellen Aktualisierungsoptionen verwenden.",
+    "confirmReplaceTitle": "Asset-Ersetzung bestätigen",
+    "confirmReplaceMessage": "Sind Sie sicher, dass Sie dieses Asset ersetzen möchten? Diese Aktion überschreibt die vorhandene Datei (es wird ein Backup erstellt).",
+    "confirmReplaceButton": "Asset ersetzen",
+    "confirmFetchTitle": "Abrufen von Ersetzungsoptionen bestätigen",
+    "confirmFetchMessage": "Dies wird TMDB, TVDB und Fanart.tv nach Ersetzungsoptionen durchsuchen. Fortfahren?",
+    "confirmFetchButton": "Ersetzungen abrufen"
   },
   "assetOverview": {
     "title": "Asset-Übersicht",
@@ -1272,6 +1282,7 @@
     "nonPrimaryProvider": "Nicht-Primäranbieter",
     "truncatedTextCategory": "Gekürzter Text",
     "missingAsset": "Fehlendes Asset",
+    "missingAssetAtFavProvider": "Fehlendes Asset bei Lieblings-Anbieter",
     "notPrimaryLanguage": "Nicht-Primärsprache",
     "notPrimaryProvider": "Nicht-Primäranbieter",
     "truncatedText": "Gekürzter Text",
@@ -1514,7 +1525,8 @@
     "deleteAllAssetsMessage": "Sind Sie sicher, dass Sie ALLE Assets in {{count}} ausgewählten Ordner(n) löschen möchten? Dies löscht alle Poster, Hintergründe, Staffeln und Titelkarten in diesen Ordnern.",
     "deleteMultipleMessage": "Sind Sie sicher, dass Sie {{count}} ausgewählte(s) Asset(s) löschen möchten?",
     "deleteAssetMessage": "Sind Sie sicher, dass Sie dieses Asset löschen möchten?",
-    "deleteButton": "Löschen"
+    "deleteButton": "Löschen",
+    "assetReplaced": "Asset erfolgreich ersetzt!"
   },
   "autoTriggers": {
     "header": {

@@ -55,7 +55,7 @@
       "noResults": "Nenhum cartaz encontrado. Tente um termo de pesquisa diferente.",
       "posterSelected": "URL do cartaz definido! ",
       "clickToSelect": "Clique em um cartaz para selecioná-lo para a criação manual do seu cartaz",
-      "results": "Resultados de cartazes do TMDB",
+      "results": "Resultados de cartazes",
       "seasonResults": "Cartazes da temporada {{season}}",
       "episodeResults": "Imagens do episódio {{season}}x{{episode}}",
       "loadMore": "Carregar mais ({{remaining}} restantes)",
@@ -115,7 +115,7 @@
       "libraryName": "Nome da biblioteca",
       "seasonPosterName": "Nome do cartaz da temporada",
       "seasonPlaceholder": "Temporada 1",
-      "seasonHint": "Nome da temporada (ex: \"Temporada 1\", \"Staffel 2\", \"Especiais\")",
+      "seasonHint": "Nome da temporada (ex: \"Temporada 1\", \"Staffel 2\", \"Especiais\"). Nota: Temporada 0 ou Temporada 00 será tratada como Especiais.",
       "episodeTitle": "Título do episódio",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Nome do título do episódio (ex: \"Ozymandias\", \"Piloto\")",
@@ -127,7 +127,7 @@
       "episodeNumberHint": "Número do episódio (ex: \"14\", \"1\")",
       "runButton": "Executar modo manual",
       "processing": "Processando...",
-      "tmdbSearchTitle": "Pesquisa de {{type}} no TMDB",
+      "tmdbSearchTitle": "Pesquisa de {{type}}",
       "tmdbTypeSeasonPosters": "Cartazes de temporada",
       "tmdbTypeEpisodeImages": "Imagens de episódio",
       "tmdbTypeTvPosters": "Cartazes de Séries",
@@ -414,7 +414,9 @@
     "lastEntries": "Últimas {{count}} entradas",
     "noActiveLog": "Nenhum log ativo",
     "statusCards": "Cartões de status",
-    "customizeDescription": "Mostrar ou ocultar seções do painel • Arraste para reordenar"
+    "customizeDescription": "Mostrar ou ocultar seções do painel • Arraste para reordenar",
+    "hideScrollbars": "Ocultar barras de rolagem",
+    "hideScrollbarsDesc": "Ocultar barras de rolagem em toda a interface"
   },
   "config": {
     "title": "Configuração",
@@ -1206,7 +1208,15 @@
     "dimensionRequirement": "As dimensões da imagem devem atender aos requisitos mínimos para fazer upload",
     "imageDimensionsValid": "Dimensões da imagem ({{width}}x{{height}}) são válidas!",
     "imageDimensionsTooSmall": "Dimensões da imagem ({{width}}x{{height}}) são muito pequenas. Mínimo necessário: {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Por favor, selecione primeiro uma imagem válida com as dimensões corretas."
+    "selectValidImage": "Por favor, selecione primeiro uma imagem válida com as dimensões corretas.",
+    "seasonNumberHint": "Qualquer nome de temporada que termine em 0 ou 00 (ex: \"Temporada 0\", \"Staffel 00\") ou que corresponda a uma palavra-chave como \"Especiais\" será tratado como temporada Especiais.",
+    "posterizarrRunningError": "Não é possível substituir ativos enquanto o Posterizarr está em execução. Aguarde até que todo o processamento seja concluído antes de usar as opções de substituição ou atualização manual.",
+    "confirmReplaceTitle": "Confirmar substituição de ativo",
+    "confirmReplaceMessage": "Tem certeza de que deseja substituir este ativo? Esta ação substituirá o arquivo existente (um backup será criado).",
+    "confirmReplaceButton": "Substituir ativo",
+    "confirmFetchTitle": "Confirmar busca de opções de substituição",
+    "confirmFetchMessage": "Isso buscará opções de substituição no TMDB, TVDB e Fanart.tv. Continuar?",
+    "confirmFetchButton": "Buscar substituições"
   },
   "assetOverview": {
     "title": "Visão geral dos ativos",
@@ -1220,6 +1230,7 @@
     "nonPrimaryProvider": "Provedor não primário",
     "truncatedTextCategory": "Texto truncado",
     "missingAsset": "Ativo ausente",
+    "missingAssetAtFavProvider": "Ativo ausente no provedor favorito",
     "notPrimaryLanguage": "Idioma não primário",
     "notPrimaryProvider": "Provedor não primário",
     "truncatedText": "Texto truncado",
@@ -1462,7 +1473,8 @@
     "deleteAllAssetsMessage": "Tem certeza de que deseja excluir TODOS os ativos em {{count}} pasta(s) selecionada(s)? Isso excluirá todos os cartazes, fundos, temporadas e cartões de título dentro dessas pastas.",
     "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} ativo(s) selecionado(s)?",
     "deleteAssetMessage": "Tem certeza de que deseja excluir este ativo?",
-    "deleteButton": "Excluir"
+    "deleteButton": "Excluir",
+    "assetReplaced": "Ativo substituído com sucesso!"
   },
   "autoTriggers": {
     "header": {

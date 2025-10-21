@@ -247,15 +247,37 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             + data.get("Seasons", 0)
         )
 
-        # Count fallback images (only those with Fallback: "true")
+        # Parse fallback count - support both old and new formats
+        # New format: "Fallbacks": 5 (direct number)
+        # Old format: "Fallbacks": [{...}] (array, count items with Fallback: "true")
         fallback_count = 0
-        fallbacks_data = data.get("Fallbacks", [])
-        if isinstance(fallbacks_data, list):
+        fallbacks_data = data.get("Fallbacks", 0)
+        if isinstance(fallbacks_data, int):
+            # New format: direct number
+            fallback_count = fallbacks_data
+        elif isinstance(fallbacks_data, list):
+            # Old format: count items with Fallback: "true"
             for item in fallbacks_data:
                 if isinstance(item, dict):
                     fallback_value = str(item.get("Fallback", "false")).lower()
                     if fallback_value == "true":
                         fallback_count += 1
+
+        # Parse textless count - support both formats
+        textless_count = 0
+        textless_data = data.get("Textless", 0)
+        if isinstance(textless_data, int):
+            textless_count = textless_data
+        elif isinstance(textless_data, list):
+            for item in textless_data:
+                if isinstance(item, dict):
+                    textless_value = str(item.get("Textless", "false")).lower()
+                    if textless_value == "true":
+                        textless_count += 1
+
+        # Parse truncated and text counts (direct numbers in new format)
+        truncated_count = data.get("Truncated", 0)
+        text_count = data.get("Text", 0)
 
         # Build the result dictionary
         result = {
@@ -270,6 +292,9 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             "collections": data.get("Collections", 0),
             "errors": data.get("Errors", 0),
             "fallbacks": fallback_count,
+            "textless": textless_count,
+            "truncated": truncated_count,
+            "text": text_count,
             "tba_skipped": data.get("TBA Skipped", 0),
             "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
             "notification_sent": str(data.get("Notification Sent", "false")).lower()
