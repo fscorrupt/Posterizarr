@@ -10,6 +10,7 @@ import {
   FileImage,
   ExternalLink,
   RefreshCw,
+  Loader2,
   ImageOff,
   ChevronLeft,
   ChevronRight,
@@ -359,7 +360,7 @@ function RecentAssets() {
       {/* Content */}
       {loading && assets.length === 0 ? (
         <div className="flex justify-center items-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin text-theme-primary" />
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       ) : error && assets.length === 0 ? (
         <div className="text-center py-8 text-red-400">

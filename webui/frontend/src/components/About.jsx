@@ -7,6 +7,7 @@ import {
   AlertCircle,
   CheckCircle,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ReleasesSection from "./ReleasesSection";
@@ -67,7 +68,7 @@ function About() {
       return (
         <div className="flex items-center gap-2">
           <span className="text-theme-text">{t("common.loading")}</span>
-          <RefreshCw className="w-4 h-4 text-theme-muted animate-spin" />
+          <Loader2 className="w-4 h-4 text-theme-muted animate-spin" />
         </div>
       );
     }

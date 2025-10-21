@@ -11,6 +11,7 @@ import {
   Download,
   Type,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
@@ -254,7 +255,7 @@ const OverlayAssets = () => {
             <div className="flex flex-col items-center gap-3">
               <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center">
                 {uploading ? (
-                  <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                  <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
                 ) : (
                   <Upload className="w-8 h-8 text-theme-primary" />
                 )}
@@ -336,7 +337,7 @@ const OverlayAssets = () => {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+            <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
           </div>
         ) : filteredFiles.length === 0 ? (
           <div className="text-center py-12">

@@ -6,6 +6,7 @@ import {
   ImageIcon,
   Trash2,
   RefreshCw,
+  Loader2,
   Search,
   Film,
   Tv,
@@ -676,7 +677,7 @@ function FolderView() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
             <p className="text-theme-muted">{t("folderView.loading")}</p>
           </div>
         </div>

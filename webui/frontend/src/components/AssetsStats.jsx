@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Image, FolderOpen, HardDrive, Layers, RefreshCw } from "lucide-react";
+import {
+  Image,
+  FolderOpen,
+  HardDrive,
+  Layers,
+  RefreshCw,
+  Loader2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const API_URL = "/api";
@@ -75,7 +82,7 @@ function AssetsStats({ onSuccess, onError }) {
           {t("assetsStats.title")}
         </h2>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       </div>
     );

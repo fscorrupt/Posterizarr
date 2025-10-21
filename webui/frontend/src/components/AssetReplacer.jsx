@@ -4,6 +4,7 @@ import {
   X,
   Upload,
   RefreshCw,
+  Loader2,
   Download,
   Check,
   Star,
@@ -1748,7 +1749,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             <div>
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
+                  <Loader2 className="w-12 h-12 animate-spin text-theme-primary mb-4" />
                   <p className="text-theme-muted">
                     {t("assetReplacer.fetchingPreviews")}
                   </p>
@@ -2016,7 +2017,7 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
       >
         {!imageLoaded && !imageError && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-theme-muted" />
+            <Loader2 className="w-8 h-8 animate-spin text-theme-muted" />
           </div>
         )}
         {imageError ? (

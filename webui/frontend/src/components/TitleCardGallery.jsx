@@ -4,6 +4,7 @@ import {
   Folder,
   Trash2,
   RefreshCw,
+  Loader2,
   Search,
   ChevronDown,
   ImageIcon,
@@ -468,7 +469,7 @@ function TitleCardGallery() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mb-4" />
           <p className="text-theme-muted">
             {t("titleCardGallery.loadingFolders")}
           </p>
@@ -513,7 +514,7 @@ function TitleCardGallery() {
         </div>
       ) : imagesLoading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mb-4" />
           <p className="text-theme-muted">
             {t("titleCardGallery.loadingTitleCards")}
           </p>

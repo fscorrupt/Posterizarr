@@ -6,6 +6,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -174,7 +175,7 @@ function AppContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <Loader2 className="w-16 h-16 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">Loading...</p>
         </div>
       </div>
