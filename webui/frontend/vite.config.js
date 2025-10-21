@@ -24,7 +24,7 @@ export default defineConfig({
             // All other node_modules go into vendor chunk
             return "vendor";
           }
-          
+
           // Split large components
           if (id.includes("/components/")) {
             if (id.includes("Dashboard")) {
