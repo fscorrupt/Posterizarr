@@ -115,7 +115,7 @@
       "libraryName": "Nome da biblioteca",
       "seasonPosterName": "Nome do cartaz da temporada",
       "seasonPlaceholder": "Temporada 1",
-      "seasonHint": "Nome da temporada (ex: \"Temporada 1\", \"Staffel 2\", \"Especiais\")",
+      "seasonHint": "Nome da temporada (ex: \"Temporada 1\", \"Staffel 2\", \"Especiais\"). Nota: Temporada 0 ou Temporada 00 será tratada como Especiais.",
       "episodeTitle": "Título do episódio",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Nome do título do episódio (ex: \"Ozymandias\", \"Piloto\")",
@@ -1206,7 +1206,8 @@
     "dimensionRequirement": "As dimensões da imagem devem atender aos requisitos mínimos para fazer upload",
     "imageDimensionsValid": "Dimensões da imagem ({{width}}x{{height}}) são válidas!",
     "imageDimensionsTooSmall": "Dimensões da imagem ({{width}}x{{height}}) são muito pequenas. Mínimo necessário: {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Por favor, selecione primeiro uma imagem válida com as dimensões corretas."
+    "selectValidImage": "Por favor, selecione primeiro uma imagem válida com as dimensões corretas.",
+    "seasonNumberHint": "Qualquer nome de temporada que termine em 0 ou 00 (ex: \"Temporada 0\", \"Staffel 00\") ou que corresponda a uma palavra-chave como \"Especiais\" será tratado como temporada Especiais."
   },
   "assetOverview": {
     "title": "Visão geral dos ativos",

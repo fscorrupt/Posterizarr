@@ -115,7 +115,7 @@
       "libraryName": "Nom de la bibliothèque",
       "seasonPosterName": "Nom de l'affiche de saison",
       "seasonPlaceholder": "Saison 1",
-      "seasonHint": "Nom de la saison (par ex., \"Saison 1\", \"Staffel 2\", \"Specials\")",
+      "seasonHint": "Nom de la saison (par ex., \"Saison 1\", \"Staffel 2\", \"Specials\"). Note : Saison 0 ou Saison 00 sera traitée comme Specials.",
       "episodeTitle": "Titre de l'épisode",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Nom du titre de l'épisode (par ex., \"Ozymandias\", \"Pilote\")",
@@ -1206,7 +1206,8 @@
     "dimensionRequirement": "Les dimensions de l'image doivent respecter les exigences minimales pour le téléchargement",
     "imageDimensionsValid": "Dimensions de l'image ({{width}}x{{height}}) sont valides !",
     "imageDimensionsTooSmall": "Dimensions de l'image ({{width}}x{{height}}) sont trop petites. Minimum requis : {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Veuillez d'abord sélectionner une image valide avec les bonnes dimensions."
+    "selectValidImage": "Veuillez d'abord sélectionner une image valide avec les bonnes dimensions.",
+    "seasonNumberHint": "Tout nom de saison se terminant par 0 ou 00 (par ex., \"Saison 0\", \"Staffel 00\") ou correspondant à un mot-clé comme \"Specials\" sera traité comme une saison Specials."
   },
   "assetOverview": {
     "title": "Aperçu des ressources",

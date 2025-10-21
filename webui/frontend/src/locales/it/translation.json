@@ -115,7 +115,7 @@
       "libraryName": "Nome libreria",
       "seasonPosterName": "Nome locandina stagione",
       "seasonPlaceholder": "Stagione 1",
-      "seasonHint": "Nome della stagione (es. \"Stagione 1\", \"Staffel 2\", \"Speciali\")",
+      "seasonHint": "Nome della stagione (es. \"Stagione 1\", \"Staffel 2\", \"Speciali\"). Nota: Stagione 0 o Stagione 00 sarà gestita come Speciali.",
       "episodeTitle": "Titolo episodio",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Nome del titolo dell'episodio (es. \"Ozymandias\", \"Pilota\")",
@@ -1206,7 +1206,8 @@
     "dimensionRequirement": "Le dimensioni dell'immagine devono soddisfare i requisiti minimi per il caricamento",
     "imageDimensionsValid": "Dimensioni dell'immagine ({{width}}x{{height}}) sono valide!",
     "imageDimensionsTooSmall": "Dimensioni dell'immagine ({{width}}x{{height}}) sono troppo piccole. Minimo richiesto: {{minWidth}}x{{minHeight}} pixel.",
-    "selectValidImage": "Seleziona prima un'immagine valida con le dimensioni corrette."
+    "selectValidImage": "Seleziona prima un'immagine valida con le dimensioni corrette.",
+    "seasonNumberHint": "Qualsiasi nome di stagione che termina con 0 o 00 (es. \"Stagione 0\", \"Staffel 00\") o che corrisponde a una parola chiave come \"Speciali\" sarà gestito come stagione Speciali."
   },
   "assetOverview": {
     "title": "Panoramica asset",

@@ -252,6 +252,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     }
 
     // Determine media type - check for TV indicators (Season folders, episode patterns, or TV in path)
+    // Support Season 0/00 (Special Seasons) as well as regular seasons
     const hasSeason = asset.path?.match(/Season\d+/i);
     const hasEpisode = asset.path?.match(/S\d+E\d+/i);
     const hasTVFolder = asset.path?.match(/[\/\\](TV|Series)[\/\\]/i);
@@ -261,6 +262,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     // Extract season/episode numbers
     // Priority 1: From DB Title field (if asset comes from AssetOverview)
     // Priority 2: From asset path
+    // Note: Season 0 or 00 represents Special Seasons
     let seasonNumber = null;
     let episodeNumber = null;
 
@@ -270,13 +272,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     if (dbTitle) {
       // Extract from DB Title field
       // Format: "Show Name | Season04" or "S04E01 | Episode Title"
+      // Support Season 0/00 (Special Seasons) - match 0+ digits to allow Season0, Season00, etc.
       const dbSeasonMatch = dbTitle.match(/Season\s*(\d+)/i);
       const dbEpisodeMatch = dbTitle.match(/S(\d+)E(\d+)/i);
 
       if (dbSeasonMatch) {
         seasonNumber = parseInt(dbSeasonMatch[1]);
         console.log(
-          `Season number from DB Title '${dbTitle}': ${seasonNumber}`
+          `Season number from DB Title '${dbTitle}': ${seasonNumber}${seasonNumber === 0 ? ' (Special Season)' : ''}`
         );
       }
 
@@ -284,13 +287,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         seasonNumber = parseInt(dbEpisodeMatch[1]);
         episodeNumber = parseInt(dbEpisodeMatch[2]);
         console.log(
-          `Episode info from DB Title '${dbTitle}': S${seasonNumber}E${episodeNumber}`
+          `Episode info from DB Title '${dbTitle}': S${seasonNumber}E${episodeNumber}${seasonNumber === 0 ? ' (Special Season)' : ''}`
         );
       }
     }
 
     // Fallback: Extract from path if not found in DB
     if (seasonNumber === null || episodeNumber === null) {
+      // Support Season 0/00 (Special Seasons) - match 0+ digits to allow Season0, Season00, etc.
       const pathSeasonMatch = asset.path?.match(/Season(\d+)/i);
       const pathEpisodeMatch = asset.path?.match(/S(\d+)E(\d+)/i);
 
@@ -499,14 +503,15 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     }
 
     // Add season/episode info
-    if (metadata.season_number && metadata.episode_number) {
+    if (metadata.season_number !== null && metadata.episode_number) {
       parts.push(
         `S${String(metadata.season_number).padStart(2, "0")}E${String(
           metadata.episode_number
         ).padStart(2, "0")}`
       );
-    } else if (metadata.season_number) {
-      parts.push(`Season ${metadata.season_number}`);
+    } else if (metadata.season_number !== null) {
+      // Season 0 is "Specials"
+      parts.push(metadata.season_number === 0 ? "Specials" : `Season ${metadata.season_number}`);
     }
 
     // Add asset type
@@ -514,7 +519,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       {
         poster: "Poster",
         background: "Background",
-        season: "Season Poster",
+        season: metadata.season_number === 0 ? "Special Season Poster" : "Season Poster",
         titlecard: "Title Card",
       }[metadata.asset_type] || "Asset";
 
@@ -1279,7 +1284,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                                 seasonPosterName: e.target.value,
                               })
                             }
-                            placeholder="e.g., Season 01"
+                            placeholder="e.g., Season 01 or Season 00 (Specials)"
                             className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                           />
                         </div>
@@ -1308,7 +1313,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
                           <div>
                             <label className="block text-xs font-medium text-theme-text mb-1">
-                              Season Number *
+                              Season Number * (0 = Specials)
                             </label>
                             <input
                               type="text"
@@ -1319,7 +1324,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                                   seasonPosterName: e.target.value,
                                 })
                               }
-                              placeholder="e.g., 01"
+                              placeholder="e.g., 01 or 00 (Specials)"
                               className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                             />
                           </div>
@@ -1409,7 +1414,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       <>
                         <div>
                           <label className="block text-xs font-medium text-theme-text mb-1">
-                            Season Number *
+                            Season Number * (0 = Specials)
                           </label>
                           <input
                             type="number"
@@ -1420,7 +1425,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                                 seasonNumber: e.target.value,
                               })
                             }
-                            placeholder="1"
+                            placeholder="1 (or 0 for Specials)"
                             min="0"
                             className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                           />

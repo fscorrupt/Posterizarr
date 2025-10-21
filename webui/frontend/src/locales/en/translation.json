@@ -115,7 +115,7 @@
       "libraryName": "Library Name",
       "seasonPosterName": "Season Poster Name",
       "seasonPlaceholder": "Season 1",
-      "seasonHint": "Season name (e.g., \"Season 1\", \"Staffel 2\", \"Specials\")",
+      "seasonHint": "Season name (e.g., \"Season 1\", \"Staffel 2\", \"Specials\"). Note: Season 0 or Season 00 will be handled as Specials.",
       "episodeTitle": "Episode Title",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Episode title name (e.g., \"Ozymandias\", \"Pilot\")",
@@ -1207,7 +1207,8 @@
     "dimensionRequirement": "Image dimensions must meet minimum requirements to upload",
     "imageDimensionsValid": "Image dimensions ({{width}}x{{height}}) are valid!",
     "imageDimensionsTooSmall": "Image dimensions ({{width}}x{{height}}) are too small. Minimum required: {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Please select a valid image with correct dimensions first."
+    "selectValidImage": "Please select a valid image with correct dimensions first.",
+    "seasonNumberHint": "Any season name ending in 0 or 00 (e.g., \"Season 0\", \"Staffel 00\") or matching a keyword like \"Specials\" will be handled as a Specials season."
   },
   "assetOverview": {
     "title": "Asset Overview",
