@@ -1463,7 +1463,8 @@
     "deleteAllAssetsMessage": "Êtes-vous sûr de vouloir supprimer TOUTES les ressources dans les {{count}} dossier(s) sélectionné(s) ? Cela supprimera toutes les affiches, arrière-plans, saisons et cartons de titre dans ces dossiers.",
     "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} ressource(s) sélectionnée(s) ?",
     "deleteAssetMessage": "Êtes-vous sûr de vouloir supprimer cette ressource ?",
-    "deleteButton": "Supprimer"
+    "deleteButton": "Supprimer",
+    "assetReplaced": "Ressource remplacée avec succès !"
   },
   "autoTriggers": {
     "header": {

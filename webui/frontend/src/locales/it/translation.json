@@ -1463,7 +1463,8 @@
     "deleteAllAssetsMessage": "Sei sicuro di voler eliminare TUTTI gli asset in {{count}} cartella/e selezionata/e? Questo eliminerà tutte le locandine, sfondi, stagioni e schede titolo all'interno di queste cartelle.",
     "deleteMultipleMessage": "Sei sicuro di voler eliminare {{count}} asset selezionato/i?",
     "deleteAssetMessage": "Sei sicuro di voler eliminare questo asset?",
-    "deleteButton": "Elimina"
+    "deleteButton": "Elimina",
+    "assetReplaced": "Asset sostituito con successo!"
   },
   "autoTriggers": {
     "header": {

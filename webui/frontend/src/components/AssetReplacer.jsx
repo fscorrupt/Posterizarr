@@ -279,7 +279,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (dbSeasonMatch) {
         seasonNumber = parseInt(dbSeasonMatch[1]);
         console.log(
-          `Season number from DB Title '${dbTitle}': ${seasonNumber}${seasonNumber === 0 ? ' (Special Season)' : ''}`
+          `Season number from DB Title '${dbTitle}': ${seasonNumber}${
+            seasonNumber === 0 ? " (Special Season)" : ""
+          }`
         );
       }
 
@@ -287,7 +289,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         seasonNumber = parseInt(dbEpisodeMatch[1]);
         episodeNumber = parseInt(dbEpisodeMatch[2]);
         console.log(
-          `Episode info from DB Title '${dbTitle}': S${seasonNumber}E${episodeNumber}${seasonNumber === 0 ? ' (Special Season)' : ''}`
+          `Episode info from DB Title '${dbTitle}': S${seasonNumber}E${episodeNumber}${
+            seasonNumber === 0 ? " (Special Season)" : ""
+          }`
         );
       }
     }
@@ -511,7 +515,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       );
     } else if (metadata.season_number !== null) {
       // Season 0 is "Specials"
-      parts.push(metadata.season_number === 0 ? "Specials" : `Season ${metadata.season_number}`);
+      parts.push(
+        metadata.season_number === 0
+          ? "Specials"
+          : `Season ${metadata.season_number}`
+      );
     }
 
     // Add asset type
@@ -519,7 +527,10 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       {
         poster: "Poster",
         background: "Background",
-        season: metadata.season_number === 0 ? "Special Season Poster" : "Season Poster",
+        season:
+          metadata.season_number === 0
+            ? "Special Season Poster"
+            : "Season Poster",
         titlecard: "Title Card",
       }[metadata.asset_type] || "Asset";
 

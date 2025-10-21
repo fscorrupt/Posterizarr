@@ -1515,7 +1515,8 @@
     "deleteAllAssetsMessage": "Sind Sie sicher, dass Sie ALLE Assets in {{count}} ausgewählten Ordner(n) löschen möchten? Dies löscht alle Poster, Hintergründe, Staffeln und Titelkarten in diesen Ordnern.",
     "deleteMultipleMessage": "Sind Sie sicher, dass Sie {{count}} ausgewählte(s) Asset(s) löschen möchten?",
     "deleteAssetMessage": "Sind Sie sicher, dass Sie dieses Asset löschen möchten?",
-    "deleteButton": "Löschen"
+    "deleteButton": "Löschen",
+    "assetReplaced": "Asset erfolgreich ersetzt!"
   },
   "autoTriggers": {
     "header": {

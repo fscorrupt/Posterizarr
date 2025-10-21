@@ -1464,7 +1464,8 @@
     "deleteAllAssetsMessage": "Are you sure you want to delete ALL assets in {{count}} selected folder(s)? This will delete all posters, backgrounds, seasons, and title cards within these folders.",
     "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected asset(s)?",
     "deleteAssetMessage": "Are you sure you want to delete this asset?",
-    "deleteButton": "Delete"
+    "deleteButton": "Delete",
+    "assetReplaced": "Asset replaced successfully!"
   },
   "autoTriggers": {
     "header": {

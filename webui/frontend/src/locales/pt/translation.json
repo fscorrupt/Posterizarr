@@ -1463,7 +1463,8 @@
     "deleteAllAssetsMessage": "Tem certeza de que deseja excluir TODOS os ativos em {{count}} pasta(s) selecionada(s)? Isso excluirá todos os cartazes, fundos, temporadas e cartões de título dentro dessas pastas.",
     "deleteMultipleMessage": "Tem certeza de que deseja excluir {{count}} ativo(s) selecionado(s)?",
     "deleteAssetMessage": "Tem certeza de que deseja excluir este ativo?",
-    "deleteButton": "Excluir"
+    "deleteButton": "Excluir",
+    "assetReplaced": "Ativo substituído com sucesso!"
   },
   "autoTriggers": {
     "header": {
