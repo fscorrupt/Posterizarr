@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.98"
+$CurrentScriptVersion = "1.9.99"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -13568,6 +13568,20 @@ Elseif ($ArrTrigger) {
                 $seriesItem = $seriesSearch.Items | Where-Object { $_.ProductionYear -eq $seriesYear } | Select-Object -First 1
                 if (-not $seriesItem) {
                     Write-Entry -Message "Series '$seriesTitle' ($seriesYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Series '$seriesTitle' ($seriesYear) not found in Jellyfin"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found series: $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13577,6 +13591,20 @@ Elseif ($ArrTrigger) {
                 $seasonItem = $seasons.Items | Where-Object { $_.IndexNumber -eq $seasonIndex }
                 if (-not $seasonItem) {
                     Write-Entry -Message "Season $seasonIndex not found for series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Season $seasonIndex not found for series $($seriesItem.Name)"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found season $seasonIndex" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13586,6 +13614,20 @@ Elseif ($ArrTrigger) {
                 $episodeItem = $episodes.Items | Where-Object { $_.IndexNumber -eq $episodeIndex }
                 if (-not $episodeItem) {
                     Write-Entry -Message "Episode $episodeIndex not found in season $seasonIndex of series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Episode $episodeIndex not found in season $seasonIndex of series $($seriesItem.Name)"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found episode $($episodeIndex): $($episodeItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13602,6 +13644,20 @@ Elseif ($ArrTrigger) {
 
                 if ($null -eq $shows -or $shows.Count -eq 0) {
                     Write-Entry -Message "No shows found matching '$seriesTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "No shows found matching '$seriesTitle'"
+                    }
                     Exit
                 }
 
@@ -13636,6 +13692,20 @@ Elseif ($ArrTrigger) {
                 $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
                 if (-not $movieItem) {
                     Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Movie '$movieTitle' ($movieYear) not found in Jellyfin"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13647,6 +13717,20 @@ Elseif ($ArrTrigger) {
                 $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
                 if (-not $movieItem) {
                     Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Movie '$movieTitle' ($movieYear) not found in Jellyfin"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13661,6 +13745,20 @@ Elseif ($ArrTrigger) {
 
                 if ($null -eq $movies -or $movies.Count -eq 0) {
                     Write-Entry -Message "No movies found matching '$movieTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "No movies found matching '$movieTitle'"
+                    }
                     Exit
                 }
 
