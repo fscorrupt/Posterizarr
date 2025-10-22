@@ -168,7 +168,7 @@ def save_runtime_to_db(log_path: Path, mode: str = "normal"):
             "backup": "backup.json",
             "syncjelly": "syncjelly.json",
             "syncemby": "syncemby.json",
-            "scheduled": "normal.json",  # Scheduler uses normal.json
+            "scheduled": "scheduled.json",
             "tautulli": "tautulli.json",
             "arr": "arr.json",
             "replace": "replace.json",
@@ -213,6 +213,7 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
     - syncjelly.json
     - syncemby.json
     - backup.json
+    - scheduled.json
 
     Args:
         json_path: Path to the JSON file
@@ -386,6 +387,7 @@ def import_json_to_db(logs_dir: Path = None):
     - syncjelly.json
     - syncemby.json
     - backup.json
+    - scheduled.json
 
     Args:
         logs_dir: Path to Logs directory (auto-detected if not provided)
@@ -417,6 +419,7 @@ def import_json_to_db(logs_dir: Path = None):
             ("syncjelly.json", "syncjelly"),
             ("syncemby.json", "syncemby"),
             ("backup.json", "backup"),
+            ("scheduled.json", "scheduled"),
         ]
 
         imported_count = 0

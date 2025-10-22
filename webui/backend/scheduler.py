@@ -287,7 +287,7 @@ class PosterizarrScheduler:
             else:
                 ps_command = "pwsh"
 
-            command = [ps_command, "-File", str(self.script_path)]
+            command = [ps_command, "-File", str(self.script_path), "-UISchedule"]
 
             logger.info(f"Executing scheduled run: {' '.join(command)}")
 
@@ -323,6 +323,25 @@ class PosterizarrScheduler:
             returncode = await loop.run_in_executor(None, run_in_thread)
 
             logger.info(f"Scheduled run finished with return code: {returncode}")
+
+            # Import schedule.json to runtime database after successful run
+            if returncode == 0:
+                try:
+                    from runtime_parser import save_runtime_to_db
+
+                    # schedule.json is created in Logs directory
+                    logs_dir = self.base_dir / "Logs"
+                    schedule_json = logs_dir / "scheduled.json"
+
+                    if schedule_json.exists():
+                        # Use the Scriptlog.log path as base, mode will determine JSON file
+                        log_path = logs_dir / "Scriptlog.log"
+                        save_runtime_to_db(log_path, "scheduled")
+                        logger.info("scheduled.json runtime data saved to database")
+                    else:
+                        logger.warning("scheduled.json not found after scheduled run")
+                except Exception as e:
+                    logger.error(f"Error saving schedule runtime to database: {e}")
 
         except Exception as e:
             # Better error logging with full stack trace

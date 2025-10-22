@@ -13,6 +13,8 @@ param (
     [switch]$MoviePosterCard,
     [switch]$ShowPosterCard,
     [switch]$BackgroundCard,
+    [switch]$UISchedule,
+    [switch]$ContainerSchedule,
     [string]$PicturePath,
     [string]$Titletext,
     [string]$FolderName,
@@ -23602,7 +23604,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $PosterUnknownCount = 0
     $SkipTBACount = 0
     $SkipJapTitleCount = 0
-    $Mode = "normal"
+
+    if ($UISchedule -or $ContainerSchedule){
+        $Mode = "scheduled"
+    }
+    Else {
+        $Mode = "normal"
+    }
 
     Write-Entry -Message "Query Jellyfin/Emby..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -28031,7 +28039,12 @@ ElseIf ($PosterReset) {
 }
 #region Normal Mode
 else {
-    $Mode = "normal"
+    if ($UISchedule -or $ContainerSchedule){
+        $Mode = "scheduled"
+    }
+    Else {
+        $Mode = "normal"
+    }
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Libsoverview = @()
     foreach ($lib in $Libs.MediaContainer.Directory) {
