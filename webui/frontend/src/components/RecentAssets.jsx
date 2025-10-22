@@ -10,6 +10,7 @@ import {
   FileImage,
   ExternalLink,
   RefreshCw,
+  Loader2,
   ImageOff,
   ChevronLeft,
   ChevronRight,
@@ -113,13 +114,17 @@ function RecentAssets() {
     }
 
     // Background refresh every 2 minutes (silent)
-    const interval = setInterval(() => fetchRecentAssets(true), 2 * 60 * 1000);
+    const interval = setInterval(() => {
+      console.log("Auto-refreshing recent assets...");
+      fetchRecentAssets(true);
+    }, 2 * 60 * 1000);
 
     return () => {
       clearInterval(interval);
       // Don't finish loading on unmount - that happens when data is fetched
     };
-  }, [startLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10
@@ -355,7 +360,7 @@ function RecentAssets() {
       {/* Content */}
       {loading && assets.length === 0 ? (
         <div className="flex justify-center items-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin text-theme-primary" />
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       ) : error && assets.length === 0 ? (
         <div className="text-center py-8 text-red-400">

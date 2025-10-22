@@ -7,15 +7,20 @@ import {
   Edit,
   FileQuestion,
   RefreshCw,
+  Loader2,
   Search,
   Replace,
   ChevronDown,
+  CheckIcon,
+  Star,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -287,26 +292,39 @@ const AssetOverview = () => {
 
   // Handle successful replacement
   const handleReplaceSuccess = async () => {
+    console.log("handleReplaceSuccess called for asset ID:", selectedAsset?.id);
+
     // Delete the DB entry after successful replacement
     try {
+      console.log(
+        "Sending DELETE request to /api/imagechoices/" + selectedAsset.id
+      );
       const response = await fetch(`/api/imagechoices/${selectedAsset.id}`, {
         method: "DELETE",
       });
 
+      console.log("DELETE response status:", response.status);
+
       if (response.ok) {
-        console.log("DB entry deleted after successful replacement");
+        console.log("DB entry deleted successfully after replacement");
+
         // Refresh the data to update the UI
+        console.log("Refreshing asset data...");
         await fetchData();
+        console.log("Asset data refreshed");
 
         // Trigger event to update sidebar badge count
+        console.log("Dispatching assetReplaced event");
         window.dispatchEvent(new Event("assetReplaced"));
       } else {
-        console.error("Failed to delete DB entry");
+        const errorText = await response.text();
+        console.error("Failed to delete DB entry:", response.status, errorText);
       }
     } catch (error) {
       console.error("Error deleting DB entry:", error);
     }
 
+    console.log("Closing replacer modal");
     setShowReplacer(false);
     setSelectedAsset(null);
   };
@@ -315,6 +333,90 @@ const AssetOverview = () => {
   const handleCloseReplacer = () => {
     setShowReplacer(false);
     setSelectedAsset(null);
+  };
+
+  // Handle marking asset as "No Edits Needed"
+  const handleNoEditsNeeded = async (asset) => {
+    console.log(`[AssetOverview] Marking asset as "No Edits Needed":`, {
+      id: asset.id,
+      title: asset.Title,
+      type: asset.Type,
+      library: asset.LibraryName,
+    });
+
+    try {
+      // Build the complete record with all required fields
+      const updateRecord = {
+        Title: asset.Title,
+        Type: asset.Type || null,
+        Rootfolder: asset.Rootfolder || null,
+        LibraryName: asset.LibraryName || null,
+        Language: asset.Language || null,
+        Fallback: asset.Fallback || null,
+        TextTruncated: asset.TextTruncated || null,
+        DownloadSource: asset.DownloadSource || null,
+        FavProviderLink: asset.FavProviderLink || null,
+        Manual: "true", // Mark as manually reviewed
+      };
+
+      console.log(
+        `[AssetOverview] Sending PUT request to /api/imagechoices/${asset.id}`,
+        {
+          method: "PUT",
+          payload: updateRecord,
+        }
+      );
+
+      const response = await fetch(`/api/imagechoices/${asset.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateRecord),
+      });
+
+      const responseData = await response.json();
+      console.log(`[AssetOverview] PUT response:`, {
+        ok: response.ok,
+        status: response.status,
+        data: responseData,
+      });
+
+      if (response.ok) {
+        console.log(
+          `[AssetOverview] ✅ Asset ${asset.id} marked as Manual=true (No Edits Needed)`
+        );
+        showSuccess(
+          t("assetOverview.markedAsReviewed", { title: asset.Title })
+        );
+
+        // Refresh the data to update the UI
+        await fetchData();
+
+        // Trigger event to update sidebar badge count
+        window.dispatchEvent(new Event("assetReplaced"));
+      } else {
+        console.error(
+          `[AssetOverview] ❌ Failed to update asset Manual field:`,
+          {
+            status: response.status,
+            statusText: response.statusText,
+            error: responseData,
+          }
+        );
+        showError(t("assetOverview.updateFailed", { title: asset.Title }));
+      }
+    } catch (error) {
+      console.error(`[AssetOverview] ❌ Error updating asset:`, {
+        error: error.message,
+        stack: error.stack,
+        asset: {
+          id: asset.id,
+          title: asset.Title,
+        },
+      });
+      showError(t("assetOverview.updateError", { error: error.message }));
+    }
   };
 
   // Get all assets from all categories
@@ -415,7 +517,7 @@ const AssetOverview = () => {
     const tags = [];
 
     // 1. MISSING ASSET CHECK
-    // Missing if: DownloadSource is false/empty OR FavProviderLink is false/empty
+    // Missing Asset Badge -> if DownloadSource is empty
     const downloadSource = asset.DownloadSource;
     const providerLink = asset.FavProviderLink;
 
@@ -425,10 +527,19 @@ const AssetOverview = () => {
     const isProviderLinkMissing =
       providerLink === "false" || providerLink === false || !providerLink;
 
-    if (isDownloadMissing || isProviderLinkMissing) {
+    // Missing Asset Badge (red) - only if DownloadSource is empty
+    if (isDownloadMissing) {
       tags.push({
         label: t("assetOverview.missingAsset"),
         color: "bg-red-500/20 text-red-400 border-red-500/30",
+      });
+    }
+
+    // Missing Asset at Favorite Provider Badge (orange) - only if FavProviderLink is empty
+    if (isProviderLinkMissing) {
+      tags.push({
+        label: t("assetOverview.missingAssetAtFavProvider"),
+        color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
       });
     }
 
@@ -462,7 +573,7 @@ const AssetOverview = () => {
         if (!isDownloadFromPrimaryProvider || !isFavLinkFromPrimaryProvider) {
           tags.push({
             label: t("assetOverview.notPrimaryProvider"),
-            color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+            color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
           });
         }
       }
@@ -547,6 +658,16 @@ const AssetOverview = () => {
         hoverBorderColor: "hover:border-red-500/50",
       },
       {
+        key: "missing_assets_fav_provider",
+        label: t("assetOverview.missingAssetsAtFavProvider"),
+        count: data.categories.missing_assets_fav_provider.count,
+        icon: Star,
+        color: "text-orange-400",
+        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
+        borderColor: "border-orange-900/40",
+        hoverBorderColor: "hover:border-orange-500/50",
+      },
+      {
         key: "non_primary_lang",
         label: t("assetOverview.nonPrimaryLang"),
         count: data.categories.non_primary_lang.count,
@@ -583,7 +704,7 @@ const AssetOverview = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">{t("assetOverview.loading")}</p>
         </div>
       </div>
@@ -631,7 +752,7 @@ const AssetOverview = () => {
       </div>
 
       {/* Category Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {categoryCards.map((card) => {
           const Icon = card.icon;
           const isSelected = selectedCategory === card.label;
@@ -944,8 +1065,16 @@ const AssetOverview = () => {
                       </div>
                     </div>
 
-                    {/* Replace Button */}
-                    <div className="flex items-start">
+                    {/* Action Buttons */}
+                    <div className="flex items-start gap-2">
+                      <button
+                        onClick={() => handleNoEditsNeeded(asset)}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+                        title={t("assetOverview.noEditsNeededTooltip")}
+                      >
+                        <CheckIcon className="w-4 h-4 text-theme-primary" />
+                        {t("assetOverview.noEditsNeeded")}
+                      </button>
                       <button
                         onClick={() => handleReplace(asset)}
                         className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"

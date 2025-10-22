@@ -55,12 +55,24 @@
       "noResults": "Keine Poster gefunden. Versuche einen anderen Suchbegriff.",
       "posterSelected": "Poster URL gesetzt! ",
       "clickToSelect": "Klicke auf ein Poster, um es für deine manuelle Postererstellung auszuwählen",
-      "results": "TMDB Poster-Ergebnisse",
+      "results": "Poster-Ergebnisse",
       "seasonResults": "Season {{season}} Poster",
       "episodeResults": "Episode {{season}}x{{episode}} Bilder",
       "loadMore": "Mehr laden ({{remaining}} verbleibend)",
       "episodeStill": "EPISODE STILL",
-      "seasonPoster": "SEASON POSTER"
+      "seasonPoster": "SEASON POSTER",
+      "searchTips": {
+        "title": "💡 Such-Tipps:",
+        "byTitle": "Nach Titel:",
+        "byTitleExample": "z.B. \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "Nach TMDB ID:",
+        "byTmdbIdExample": "z.B. \"tmdb-286217\" oder \"tmdb:286217\"",
+        "byTvdbId": "Nach TVDB ID:",
+        "byTvdbIdExample": "z.B. \"tvdb-456\" oder \"tvdb:456\"",
+        "byImdbId": "Nach IMDB ID:",
+        "byImdbIdExample": "z.B. \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Ohne Präfix wird nach Titel gesucht."
+      }
     },
     "quickRun": {
       "title": "Schnellstart-Modi",
@@ -115,7 +127,7 @@
       "libraryName": "Bibliotheksname",
       "seasonPosterName": "Season Poster Name",
       "seasonPlaceholder": "Season 1",
-      "seasonHint": "Season-Name (z.B. \"Season 1\", \"Staffel 2\", \"Specials\")",
+      "seasonHint": "Season-Name (z.B. \"Season 1\", \"Staffel 2\", \"Specials\"). Hinweis: Season 0 oder Season 00 werden als Specials behandelt.",
       "episodeTitle": "Episodentitel",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Episodentitel (z.B. \"Ozymandias\", \"Pilot\")",
@@ -127,7 +139,7 @@
       "episodeNumberHint": "Episodennummer (z.B. \"14\", \"1\")",
       "runButton": "Manuellen Modus ausführen",
       "processing": "Wird verarbeitet...",
-      "tmdbSearchTitle": "TMDB {{type}} Suche",
+      "tmdbSearchTitle": "{{type}} Suche",
       "tmdbTypeSeasonPosters": "Staffel-Poster",
       "tmdbTypeEpisodeImages": "Episoden-Bilder",
       "tmdbTypeTvPosters": "TV-Serien-Poster",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Suche nach TV-Serien auf TMDB, um Staffel-Poster zu finden",
       "tmdbHintTitleCard": "Suche nach TV-Serien auf TMDB, um Episoden-Standbilder zu finden",
       "tmdbHintStandard": "Suche nach Filmen oder TV-Serien auf TMDB, um Poster zu finden",
-      "tmdbSearchPlaceholder": "Titel oder TMDB ID eingeben...",
+      "tmdbSearchPlaceholder": "Titel oder prefix-id...",
       "tmdbIdPlaceholder": "TMDB ID eingeben (z.B. 530915 für '1917')...",
       "searchByIdLabel": "Nach TMDB ID suchen",
       "searchByIdHint": "Jahr nicht erforderlich bei ID-Suche",
@@ -414,7 +426,20 @@
     "lastEntries": "Letzte {{count}} Einträge",
     "noActiveLog": "Kein aktives Log",
     "statusCards": "Status-Karten",
-    "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen"
+    "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen",
+    "hideScrollbars": "Scrollleisten ausblenden",
+    "hideScrollbarsDesc": "Scrollleisten in der gesamten Benutzeroberfläche ausblenden",
+    "schedulerJobs": "Geplante Aufgaben",
+    "active": "Aktiv",
+    "configured": "Konfiguriert",
+    "disabled": "Deaktiviert",
+    "schedulesConfigured": "Zeitplan(e)",
+    "executing": "Wird ausgeführt",
+    "nextRun": "Nächster",
+    "configureNow": "Jetzt konfigurieren",
+    "noSchedulesRegistered": "Keine Zeitpläne registriert",
+    "cores": "Kerne",
+    "free": "Frei"
   },
   "config": {
     "title": "Konfiguration",
@@ -522,7 +547,8 @@
     "included": "Eingeschlossen",
     "clickToFetch": "Klicken Sie auf \"Bibliotheken abrufen\", um Bibliotheken von Ihrem {{server}}-Server zu laden.",
     "noLibraries": "Keine Film- oder Serienbibliotheken auf diesem Server gefunden.",
-    "excludedCount": "Ausgeschlossene Bibliotheken ({{count}}):"
+    "excludedCount": "Ausgeschlossene Bibliotheken ({{count}}):",
+    "includedCount": "Eingeschlossene Bibliotheken ({{count}}):"
   },
   "languageOrderSelector": {
     "noLanguages": "Keine Sprachen ausgewählt. Fügen Sie Sprachen über das Dropdown-Menü unten hinzu.",
@@ -1145,7 +1171,11 @@
     "uppercase": "Großbuchstaben",
     "lowercase": "Kleinbuchstaben",
     "numbers": "Zahlen",
-    "sample": "Beispiel"
+    "sample": "Beispiel",
+    "autoSave": "Automatisches Speichern",
+    "autoSaveDescription": "Änderungen nach 5 Sekunden Inaktivität automatisch speichern",
+    "autoSaved": "{{count}} Änderung(en) automatisch gespeichert",
+    "savedSuccessfully": "Konfiguration erfolgreich gespeichert! ({{count}} Änderung(en))"
   },
   "assetsStats": {
     "title": "Assets-Übersicht",
@@ -1199,6 +1229,15 @@
     "noPreviewsLoaded": "Noch keine Vorschauen geladen",
     "fetchPreviews": "Vorschauen abrufen",
     "select": "Auswählen",
+    "uploadAssetButton": "ASSET HOCHLADEN",
+    "uploadingAsset": "Wird hochgeladen...",
+    "dimensionValid": "Abmessungen gültig",
+    "dimensionInvalid": "Abmessungen zu klein",
+    "dimensionRequirement": "Bildabmessungen müssen die Mindestanforderungen erfüllen, um hochgeladen zu werden",
+    "imageDimensionsValid": "Bildabmessungen ({{width}}x{{height}}) sind gültig!",
+    "imageDimensionsTooSmall": "Bildabmessungen ({{width}}x{{height}}) sind zu klein. Mindestens erforderlich: {{minWidth}}x{{minHeight}} Pixel.",
+    "selectValidImage": "Bitte wählen Sie zuerst ein gültiges Bild mit den richtigen Abmessungen aus.",
+    "seasonNumberHint": "Jeder Season-Name, der auf 0 oder 00 endet (z.B. \"Season 0\", \"Staffel 00\") oder ein Schlüsselwort wie \"Specials\" enthält, wird als Specials-Season behandelt.",
     "titleLabel": "Titel",
     "titleRequired": "Titel *",
     "titlePlaceholder": "Film-/Serientitel eingeben...",
@@ -1250,7 +1289,14 @@
       "fanart": "Fanart.tv"
     },
     "selectImage": "Bild auswählen",
-    "processing": "Wird verarbeitet..."
+    "processing": "Wird verarbeitet...",
+    "posterizarrRunningError": "Assets können nicht ersetzt werden, während Posterizarr läuft. Bitte warten Sie, bis alle Verarbeitungen abgeschlossen sind, bevor Sie die Ersetzungs- oder manuellen Aktualisierungsoptionen verwenden.",
+    "confirmReplaceTitle": "Asset-Ersetzung bestätigen",
+    "confirmReplaceMessage": "Sind Sie sicher, dass Sie dieses Asset ersetzen möchten? Diese Aktion überschreibt die vorhandene Datei (es wird ein Backup erstellt).",
+    "confirmReplaceButton": "Asset ersetzen",
+    "confirmFetchTitle": "Abrufen von Ersetzungsoptionen bestätigen",
+    "confirmFetchMessage": "Dies wird TMDB, TVDB und Fanart.tv nach Ersetzungsoptionen durchsuchen. Fortfahren?",
+    "confirmFetchButton": "Ersetzungen abrufen"
   },
   "assetOverview": {
     "title": "Asset-Übersicht",
@@ -1260,10 +1306,12 @@
     "errorLoadingData": "Fehler beim Laden der Daten",
     "assetsWithIssues": "Assets mit Problemen",
     "missingAssets": "Fehlende Assets",
+    "missingAssetsAtFavProvider": "Fehlt bei Lieblings-Anbieter",
     "nonPrimaryLang": "Nicht-Primärsprache",
     "nonPrimaryProvider": "Nicht-Primäranbieter",
     "truncatedTextCategory": "Gekürzter Text",
     "missingAsset": "Fehlendes Asset",
+    "missingAssetAtFavProvider": "Fehlendes Asset bei Lieblings-Anbieter",
     "notPrimaryLanguage": "Nicht-Primärsprache",
     "notPrimaryProvider": "Nicht-Primäranbieter",
     "truncatedText": "Gekürzter Text",
@@ -1279,7 +1327,12 @@
     "source": "Quelle",
     "viewSource": "Quelle anzeigen",
     "replace": "Ersetzen",
-    "replaceTooltip": "Dieses Asset ersetzen"
+    "replaceTooltip": "Dieses Asset ersetzen",
+    "noEditsNeeded": "Als gelöst markieren",
+    "noEditsNeededTooltip": "Dieses Asset als überprüft markieren und aus der Liste ausblenden",
+    "markedAsReviewed": "{{title}} als überprüft markiert und aus der Liste ausgeblendet",
+    "updateFailed": "Aktualisierung von {{title}} fehlgeschlagen",
+    "updateError": "Fehler beim Aktualisieren des Assets: {{error}}"
   },
   "common": {
     "save": "Speichern",
@@ -1407,6 +1460,10 @@
     "executionTime": "Ausführungszeit",
     "totalImages": "Bilder gesamt",
     "errors": "Fehler",
+    "fallbacks": "Fallbacks",
+    "textless": "Textlos",
+    "truncated": "Gekürzt",
+    "text": "Text",
     "additionalInfo": "Zusätzliche Informationen",
     "tbaSkipped": "TBA übersprungen",
     "japChinesSkipped": "JP/CN übersprungen",
@@ -1497,7 +1554,8 @@
     "deleteAllAssetsMessage": "Sind Sie sicher, dass Sie ALLE Assets in {{count}} ausgewählten Ordner(n) löschen möchten? Dies löscht alle Poster, Hintergründe, Staffeln und Titelkarten in diesen Ordnern.",
     "deleteMultipleMessage": "Sind Sie sicher, dass Sie {{count}} ausgewählte(s) Asset(s) löschen möchten?",
     "deleteAssetMessage": "Sind Sie sicher, dass Sie dieses Asset löschen möchten?",
-    "deleteButton": "Löschen"
+    "deleteButton": "Löschen",
+    "assetReplaced": "Asset erfolgreich ersetzt!"
   },
   "autoTriggers": {
     "header": {

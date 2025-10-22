@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Clock,
   RefreshCw,
+  Loader2,
   Image,
   AlertTriangle,
   Film,
@@ -14,6 +15,11 @@ import {
   ChevronDown,
   X,
   Info,
+  ImageOff,
+  Type,
+  Scissors,
+  FileText,
+  Globe,
 } from "lucide-react";
 import {
   formatDateToLocale,
@@ -42,7 +48,8 @@ function RuntimeHistory() {
   const [migrating, setMigrating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [limit] = useState(20);
+  const [limit] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [modeFilter, setModeFilter] = useState(null);
   const [summaryDays, setSummaryDays] = useState(30);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -77,6 +84,7 @@ function RuntimeHistory() {
       if (data.success) {
         cachedHistory = data.history;
         setHistory(data.history);
+        setTotalCount(data.total || 0);
         lastFetchTime = Date.now();
       }
     } catch (error) {
@@ -289,7 +297,7 @@ function RuntimeHistory() {
     return (
       <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       </div>
     );
@@ -485,6 +493,381 @@ function RuntimeHistory() {
         </div>
       )}
 
+      {/* Runtime Stats Section */}
+      {summary && summary.latest_run && (
+        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-theme-primary/10">
+                <Clock className="w-5 h-5 text-theme-primary" />
+              </div>
+              {t("dashboard.runtimeStats")}
+            </h2>
+            <p className="text-sm text-theme-muted ml-11">
+              Latest run statistics
+            </p>
+          </div>
+
+          {/* Runtime Card */}
+          {summary.latest_run.runtime_formatted && (
+            <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-sm mb-1 font-medium">
+                    {t("runtimeStats.executionTime")}
+                  </p>
+                  <p className="text-3xl font-bold text-theme-primary">
+                    {summary.latest_run.runtime_formatted}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-theme-primary/10">
+                  <Clock className="w-12 h-12 text-purple-400" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {/* Total Images */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.totalImages")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.total_images || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Image className="w-8 h-8 text-blue-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Posters */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("assets.posters")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.posters || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <Film className="w-8 h-8 text-green-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Seasons */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("assets.seasons")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.seasons || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-orange-500/10">
+                  <Tv className="w-8 h-8 text-orange-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Backgrounds */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("assets.backgrounds")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.backgrounds || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <Image className="w-8 h-8 text-purple-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* TitleCards */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("assets.titleCards")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.titlecards || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-cyan-500/10">
+                  <Tv className="w-8 h-8 text-cyan-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Collections */}
+            {summary.latest_run.collections > 0 && (
+              <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-theme-muted text-xs mb-1 font-medium">
+                      {t("assets.collections")}
+                    </p>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {summary.latest_run.collections}
+                    </p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-yellow-500/10">
+                    <Film className="w-8 h-8 text-yellow-400" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Fallbacks */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.fallbacks")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.fallbacks || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <ImageOff className="w-8 h-8 text-amber-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Textless */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.textless")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.textless || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-indigo-500/10">
+                  <Image className="w-8 h-8 text-indigo-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Truncated */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.truncated")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.truncated || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-pink-500/10">
+                  <Scissors className="w-8 h-8 text-pink-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Text */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.text")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.text || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-teal-500/10">
+                  <Type className="w-8 h-8 text-teal-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* TBA Skipped */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.tbaSkipped")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.tba_skipped || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-500/10">
+                  <Film className="w-8 h-8 text-slate-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Jap/Chines Skipped */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    {t("runtimeStats.japChinesSkipped")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {summary.latest_run.jap_chines_skipped || 0}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-gray-500/10">
+                  <Globe className="w-8 h-8 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Script Errors */}
+            <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-theme-muted text-xs mb-1 font-medium">
+                    Script Errors
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      summary.latest_run.errors > 0
+                        ? "text-red-400"
+                        : "text-green-400"
+                    }`}
+                  >
+                    {summary.latest_run.errors || 0}
+                  </p>
+                </div>
+                <div
+                  className={`p-2 rounded-lg ${
+                    summary.latest_run.errors > 0
+                      ? "bg-red-500/10"
+                      : "bg-green-500/10"
+                  }`}
+                >
+                  <AlertTriangle
+                    className={`w-8 h-8 ${
+                      summary.latest_run.errors > 0
+                        ? "text-red-400"
+                        : "text-green-400"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Info Section */}
+          <div className="mt-6 bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+            <h3 className="text-lg font-semibold text-theme-text mb-4">
+              {t("runtimeStats.additionalInfo")}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-3 bg-theme-hover rounded-lg">
+                <p className="text-theme-muted text-xs mb-1">
+                  {t("runtimeStats.notificationSent")}
+                </p>
+                <p
+                  className={`text-xl font-bold ${
+                    summary.latest_run.notification_sent
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {summary.latest_run.notification_sent
+                    ? t("common.yes").toUpperCase()
+                    : t("common.no").toUpperCase()}
+                </p>
+              </div>
+              <div className="p-3 bg-theme-hover rounded-lg">
+                <p className="text-theme-muted text-xs mb-1">Uptime Kuma</p>
+                <p
+                  className={`text-xl font-bold ${
+                    summary.latest_run.uptime_kuma
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {summary.latest_run.uptime_kuma
+                    ? t("common.yes").toUpperCase()
+                    : t("common.no").toUpperCase()}
+                </p>
+              </div>
+              <div className="p-3 bg-theme-hover rounded-lg">
+                <p className="text-theme-muted text-xs mb-1">
+                  {t("runtimeStats.imagesCleared")}
+                </p>
+                <p className="text-xl font-bold text-theme-text">
+                  {summary.latest_run.images_cleared || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-theme-hover rounded-lg">
+                <p className="text-theme-muted text-xs mb-1">
+                  {t("runtimeStats.foldersCleared")}
+                </p>
+                <p className="text-xl font-bold text-theme-text">
+                  {summary.latest_run.folders_cleared || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-theme-hover rounded-lg">
+                <p className="text-theme-muted text-xs mb-1">
+                  {t("runtimeStats.spaceSaved")}
+                </p>
+                <p className="text-xl font-bold text-green-400">
+                  {summary.latest_run.space_saved || "0"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Version Information */}
+          {(summary.latest_run.script_version ||
+            summary.latest_run.im_version) && (
+            <div className="mt-6 bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <h3 className="text-lg font-semibold text-theme-text mb-4">
+                {t("runtimeStats.versionInfo")}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {summary.latest_run.script_version && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.scriptVersion")}
+                    </p>
+                    <p className="text-lg font-bold text-theme-primary">
+                      {summary.latest_run.script_version}
+                    </p>
+                  </div>
+                )}
+                {summary.latest_run.im_version && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.imVersion")}
+                    </p>
+                    <p className="text-lg font-bold text-theme-primary">
+                      {summary.latest_run.im_version}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* History Table */}
       <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
         <div className="flex items-center justify-between mb-6">
@@ -619,7 +1002,7 @@ function RuntimeHistory() {
                   {t("runtimeHistory.table.collections")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  {t("runtimeHistory.table.errors")}
+                  Script Errors
                 </th>
               </tr>
             </thead>
@@ -693,10 +1076,8 @@ function RuntimeHistory() {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-theme">
           <p className="text-theme-muted text-sm">
-            {t("runtimeHistory.pagination.page", {
-              page: currentPage + 1,
-              count: history.length,
-            })}
+            Page {currentPage + 1} • Showing {history.length} of {totalCount}{" "}
+            entries
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -879,6 +1260,72 @@ function RuntimeHistory() {
                   )}
                   <div className="p-3 bg-theme-card rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
+                      <ImageOff className="w-4 h-4 text-amber-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.fallbacks")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.fallbacks || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Image className="w-4 h-4 text-indigo-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.textless")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.textless || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Scissors className="w-4 h-4 text-pink-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.truncated")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.truncated || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Type className="w-4 h-4 text-teal-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.text")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.text || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Film className="w-4 h-4 text-slate-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.tbaSkipped")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.tba_skipped || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-gray-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.japChinesSkipped")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.jap_chines_skipped || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle
                         className={`w-4 h-4 ${
                           selectedEntry.errors > 0
@@ -904,79 +1351,67 @@ function RuntimeHistory() {
               </div>
 
               {/* Additional Information */}
-              {(selectedEntry.tba_skipped > 0 ||
-                selectedEntry.jap_chines_skipped > 0 ||
-                selectedEntry.images_cleared > 0 ||
-                selectedEntry.folders_cleared > 0 ||
-                selectedEntry.space_saved) && (
-                <div className="bg-theme-hover rounded-lg p-4 border border-theme">
-                  <h3 className="text-lg font-semibold text-theme-text mb-3">
-                    {t("runtimeStats.additionalInfo")}
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {selectedEntry.tba_skipped > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.tbaSkipped")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.tba_skipped}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.jap_chines_skipped > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.japChinesSkipped")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.jap_chines_skipped}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.images_cleared > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.imagesCleared")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.images_cleared}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.folders_cleared > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.foldersCleared")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.folders_cleared}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.space_saved && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.spaceSaved")}
-                        </p>
-                        <p className="text-xl font-bold text-green-400">
-                          {selectedEntry.space_saved}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.notification_sent && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.notificationSent")}
-                        </p>
-                        <p className="text-xl font-bold text-green-400">
-                          {t("common.yes")}
-                        </p>
-                      </div>
-                    )}
+              <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                <h3 className="text-lg font-semibold text-theme-text mb-3">
+                  {t("runtimeStats.additionalInfo")}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.notificationSent")}
+                    </p>
+                    <p
+                      className={`text-xl font-bold ${
+                        selectedEntry.notification_sent
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {selectedEntry.notification_sent
+                        ? t("common.yes").toUpperCase()
+                        : t("common.no").toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">Uptime Kuma</p>
+                    <p
+                      className={`text-xl font-bold ${
+                        selectedEntry.uptime_kuma
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {selectedEntry.uptime_kuma
+                        ? t("common.yes").toUpperCase()
+                        : t("common.no").toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.imagesCleared")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {selectedEntry.images_cleared || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.foldersCleared")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {selectedEntry.folders_cleared || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.spaceSaved")}
+                    </p>
+                    <p className="text-xl font-bold text-green-400">
+                      {selectedEntry.space_saved || "0"}
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Version Information */}
               {(selectedEntry.script_version || selectedEntry.im_version) && (

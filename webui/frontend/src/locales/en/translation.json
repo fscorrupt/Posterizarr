@@ -55,12 +55,24 @@
       "noResults": "No posters found. Try a different search term.",
       "posterSelected": "Poster URL set! ",
       "clickToSelect": "Click on a poster to select it for your manual poster creation",
-      "results": "TMDB Poster Results",
+      "results": "Poster Results",
       "seasonResults": "Season {{season}} Posters",
       "episodeResults": "Episode {{season}}x{{episode}} Images",
       "loadMore": "Load More ({{remaining}} remaining)",
       "episodeStill": "EPISODE STILL",
-      "seasonPoster": "SEASON POSTER"
+      "seasonPoster": "SEASON POSTER",
+      "searchTips": {
+        "title": "💡 Search Tips:",
+        "byTitle": "By Title:",
+        "byTitleExample": "e.g., \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "By TMDB ID:",
+        "byTmdbIdExample": "e.g., \"tmdb-286217\" or \"tmdb:286217\"",
+        "byTvdbId": "By TVDB ID:",
+        "byTvdbIdExample": "e.g., \"tvdb-456\" or \"tvdb:456\"",
+        "byImdbId": "By IMDB ID:",
+        "byImdbIdExample": "e.g., \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Without a prefix, search is performed by title."
+      }
     },
     "quickRun": {
       "title": "Quick Run Modes",
@@ -115,7 +127,7 @@
       "libraryName": "Library Name",
       "seasonPosterName": "Season Poster Name",
       "seasonPlaceholder": "Season 1",
-      "seasonHint": "Season name (e.g., \"Season 1\", \"Staffel 2\", \"Specials\")",
+      "seasonHint": "Season name (e.g., \"Season 1\", \"Staffel 2\", \"Specials\"). Note: Season 0 or Season 00 will be handled as Specials.",
       "episodeTitle": "Episode Title",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Episode title name (e.g., \"Ozymandias\", \"Pilot\")",
@@ -127,7 +139,7 @@
       "episodeNumberHint": "Episode number (e.g., \"14\", \"1\")",
       "runButton": "Run Manual Mode",
       "processing": "Processing...",
-      "tmdbSearchTitle": "TMDB {{type}} Search",
+      "tmdbSearchTitle": "{{type}} Search",
       "tmdbTypeSeasonPosters": "Season Posters",
       "tmdbTypeEpisodeImages": "Episode Images",
       "tmdbTypeTvPosters": "TV Show Posters",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Search for TV shows on TMDB to find season posters",
       "tmdbHintTitleCard": "Search for TV shows on TMDB to find episode stills",
       "tmdbHintStandard": "Search for movies or TV shows on TMDB to find posters",
-      "tmdbSearchPlaceholder": "Enter title or TMDB ID...",
+      "tmdbSearchPlaceholder": "Enter title or prefix-id....",
       "tmdbIdPlaceholder": "Enter TMDB ID (e.g., 530915 for '1917')...",
       "searchByIdLabel": "Search by TMDB ID",
       "searchByIdHint": "Year not required when searching by ID",
@@ -414,7 +426,20 @@
     "lastEntries": "Last {{count}} entries",
     "noActiveLog": "No active log",
     "statusCards": "Status Cards",
-    "customizeDescription": "Show or hide dashboard sections • Drag to reorder"
+    "customizeDescription": "Show or hide dashboard sections • Drag to reorder",
+    "hideScrollbars": "Hide Scrollbars",
+    "hideScrollbarsDesc": "Hide scrollbars throughout the UI",
+    "schedulerJobs": "Scheduler Jobs",
+    "active": "Active",
+    "configured": "Configured",
+    "disabled": "Disabled",
+    "schedulesConfigured": "schedule(s)",
+    "executing": "Executing",
+    "nextRun": "Next",
+    "configureNow": "Configure Now",
+    "noSchedulesRegistered": "No schedules registered",
+    "cores": "Cores",
+    "free": "Free"
   },
   "config": {
     "title": "Configuration",
@@ -523,7 +548,8 @@
     "included": "Included",
     "clickToFetch": "Click \"Fetch Libraries\" to load libraries from your {{server}} server.",
     "noLibraries": "No movie or TV show libraries found on this server.",
-    "excludedCount": "Excluded Libraries ({{count}}):"
+    "excludedCount": "Excluded Libraries ({{count}}):",
+    "includedCount": "Included Libraries ({{count}}):"
   },
   "languageOrderSelector": {
     "noLanguages": "No languages selected. Add languages using the dropdown below.",
@@ -1146,7 +1172,11 @@
     "uppercase": "Uppercase",
     "lowercase": "Lowercase",
     "numbers": "Numbers",
-    "sample": "Sample"
+    "sample": "Sample",
+    "autoSave": "Auto-Save",
+    "autoSaveDescription": "Automatically save changes after 5 seconds of inactivity",
+    "autoSaved": "Auto-saved {{count}} change(s)",
+    "savedSuccessfully": "Configuration saved successfully! ({{count}} change(s))"
   },
   "assetsStats": {
     "title": "Assets Overview",
@@ -1199,7 +1229,23 @@
     "fetchingPreviews": "Fetching previews from services...",
     "noPreviewsLoaded": "No previews loaded yet",
     "fetchPreviews": "Fetch Previews",
-    "select": "Select"
+    "select": "Select",
+    "uploadAssetButton": "UPLOAD ASSET",
+    "uploadingAsset": "Uploading...",
+    "dimensionValid": "Dimensions valid",
+    "dimensionInvalid": "Dimensions too small",
+    "dimensionRequirement": "Image dimensions must meet minimum requirements to upload",
+    "imageDimensionsValid": "Image dimensions ({{width}}x{{height}}) are valid!",
+    "imageDimensionsTooSmall": "Image dimensions ({{width}}x{{height}}) are too small. Minimum required: {{minWidth}}x{{minHeight}} pixels.",
+    "selectValidImage": "Please select a valid image with correct dimensions first.",
+    "seasonNumberHint": "Any season name ending in 0 or 00 (e.g., \"Season 0\", \"Staffel 00\") or matching a keyword like \"Specials\" will be handled as a Specials season.",
+    "posterizarrRunningError": "Cannot replace assets while Posterizarr is running. Please wait until all processing is completed before using the replace or manual update options.",
+    "confirmReplaceTitle": "Confirm Asset Replacement",
+    "confirmReplaceMessage": "Are you sure you want to replace this asset? This action will overwrite the existing file (a backup will be created).",
+    "confirmReplaceButton": "Replace Asset",
+    "confirmFetchTitle": "Confirm Fetch Replacement Options",
+    "confirmFetchMessage": "This will search TMDB, TVDB, and Fanart.tv for replacement options. Continue?",
+    "confirmFetchButton": "Fetch Replacements"
   },
   "assetOverview": {
     "title": "Asset Overview",
@@ -1209,10 +1255,12 @@
     "errorLoadingData": "Error Loading Data",
     "assetsWithIssues": "Assets with Issues",
     "missingAssets": "Missing Assets",
+    "missingAssetsAtFavProvider": "Missing at Fav Provider",
     "nonPrimaryLang": "Non-Primary Lang",
     "nonPrimaryProvider": "Non-Primary Provider",
     "truncatedTextCategory": "Truncated Text",
     "missingAsset": "Missing Asset",
+    "missingAssetAtFavProvider": "Missing Asset at Favorite Provider",
     "notPrimaryLanguage": "Not Primary Language",
     "notPrimaryProvider": "Not Primary Provider",
     "truncatedText": "Truncated Text",
@@ -1228,7 +1276,12 @@
     "source": "Source",
     "viewSource": "View Source",
     "replace": "Replace",
-    "replaceTooltip": "Replace this asset"
+    "replaceTooltip": "Replace this asset",
+    "noEditsNeeded": "Mark as resolved",
+    "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list",
+    "markedAsReviewed": "{{title}} marked as reviewed and hidden from list",
+    "updateFailed": "Failed to update {{title}}",
+    "updateError": "Error updating asset: {{error}}"
   },
   "common": {
     "save": "Save",
@@ -1356,6 +1409,10 @@
     "executionTime": "Execution Time",
     "totalImages": "Total Images",
     "errors": "Errors",
+    "fallbacks": "Fallbacks",
+    "textless": "Textless",
+    "truncated": "Truncated",
+    "text": "Text",
     "additionalInfo": "Additional Information",
     "tbaSkipped": "TBA Skipped",
     "japChinesSkipped": "JP/CN Skipped",
@@ -1446,7 +1503,8 @@
     "deleteAllAssetsMessage": "Are you sure you want to delete ALL assets in {{count}} selected folder(s)? This will delete all posters, backgrounds, seasons, and title cards within these folders.",
     "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected asset(s)?",
     "deleteAssetMessage": "Are you sure you want to delete this asset?",
-    "deleteButton": "Delete"
+    "deleteButton": "Delete",
+    "assetReplaced": "Asset replaced successfully!"
   },
   "autoTriggers": {
     "header": {

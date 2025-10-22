@@ -55,12 +55,24 @@
       "noResults": "Aucune affiche trouvée. Essayez un autre terme de recherche.",
       "posterSelected": "URL de l'affiche définie ! ",
       "clickToSelect": "Cliquez sur une affiche pour la sélectionner pour votre création manuelle d'affiche",
-      "results": "Résultats d'affiche TMDB",
+      "results": "Résultats d'affiche",
       "seasonResults": "Affiches de la saison {{season}}",
       "episodeResults": "Images de l'épisode {{season}}x{{episode}}",
       "loadMore": "Charger plus ({{remaining}} restant(s))",
       "episodeStill": "CAPTURE D'ÉPISODE",
-      "seasonPoster": "AFFICHE DE SAISON"
+      "seasonPoster": "AFFICHE DE SAISON",
+      "searchTips": {
+        "title": "💡 Conseils de recherche :",
+        "byTitle": "Par titre :",
+        "byTitleExample": "ex. \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "Par ID TMDB :",
+        "byTmdbIdExample": "ex. \"tmdb-286217\" ou \"tmdb:286217\"",
+        "byTvdbId": "Par ID TVDB :",
+        "byTvdbIdExample": "ex. \"tvdb-456\" ou \"tvdb:456\"",
+        "byImdbId": "Par ID IMDB :",
+        "byImdbIdExample": "ex. \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Sans préfixe, la recherche s'effectue par titre."
+      }
     },
     "quickRun": {
       "title": "Modes d'exécution rapide",
@@ -115,7 +127,7 @@
       "libraryName": "Nom de la bibliothèque",
       "seasonPosterName": "Nom de l'affiche de saison",
       "seasonPlaceholder": "Saison 1",
-      "seasonHint": "Nom de la saison (par ex., \"Saison 1\", \"Staffel 2\", \"Specials\")",
+      "seasonHint": "Nom de la saison (par ex., \"Saison 1\", \"Staffel 2\", \"Specials\"). Note : Saison 0 ou Saison 00 sera traitée comme Specials.",
       "episodeTitle": "Titre de l'épisode",
       "episodeTitlePlaceholder": "Ozymandias",
       "episodeTitleHint": "Nom du titre de l'épisode (par ex., \"Ozymandias\", \"Pilote\")",
@@ -127,7 +139,7 @@
       "episodeNumberHint": "Numéro de l'épisode (par ex., \"14\", \"1\")",
       "runButton": "Exécuter le mode manuel",
       "processing": "Traitement en cours...",
-      "tmdbSearchTitle": "Recherche TMDB de {{type}}",
+      "tmdbSearchTitle": "Recherche de {{type}}",
       "tmdbTypeSeasonPosters": "Affiches de saison",
       "tmdbTypeEpisodeImages": "Images d'épisode",
       "tmdbTypeTvPosters": "Affiches de séries TV",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Recherchez des séries TV sur TMDB pour trouver des affiches de saison",
       "tmdbHintTitleCard": "Recherchez des séries TV sur TMDB pour trouver des captures d'épisode",
       "tmdbHintStandard": "Recherchez des films ou des séries TV sur TMDB pour trouver des affiches",
-      "tmdbSearchPlaceholder": "Entrez un titre ou un ID TMDB...",
+      "tmdbSearchPlaceholder": "Entrez un titre ou un ID-prefix...",
       "tmdbIdPlaceholder": "Entrez l'ID TMDB (ex : 530915 pour '1917')...",
       "searchByIdLabel": "Rechercher par ID TMDB",
       "searchByIdHint": "Année non requise lors de la recherche par ID",
@@ -366,8 +378,18 @@
     "clearLogs": "Vider les journaux",
     "autoScroll": "Défilement auto",
     "scriptStatus": "Statut du script",
+    "schedulerJobs": "Tâches programmées",
+    "active": "Actif",
+    "configured": "Configuré",
+    "disabled": "Désactivé",
+    "executing": "En cours d'exécution",
+    "nextRun": "Prochaine exécution",
+    "configureNow": "Configurer maintenant",
+    "noSchedulesRegistered": "Aucun horaire enregistré",
     "scriptFile": "Fichier script",
     "configFile": "Fichier de config",
+    "cores": "Cœurs",
+    "free": "Libre",
     "configExists": "Config existe",
     "scriptExists": "Script existe",
     "currentMode": "Mode actuel",
@@ -414,7 +436,9 @@
     "lastEntries": "Dernières {{count}} entrées",
     "noActiveLog": "Aucun journal actif",
     "statusCards": "Cartes de statut",
-    "customizeDescription": "Afficher ou masquer les sections du tableau de bord • Glisser pour réorganiser"
+    "customizeDescription": "Afficher ou masquer les sections du tableau de bord • Glisser pour réorganiser",
+    "hideScrollbars": "Masquer les barres de défilement",
+    "hideScrollbarsDesc": "Masquer les barres de défilement dans toute l'interface"
   },
   "config": {
     "title": "Configuration",
@@ -522,7 +546,8 @@
     "included": "Inclus",
     "clickToFetch": "Cliquez sur \"Récupérer les bibliothèques\" pour charger les bibliothèques depuis votre serveur {{server}}.",
     "noLibraries": "Aucune bibliothèque de films ou de séries TV trouvée sur ce serveur.",
-    "excludedCount": "Bibliothèques exclues ({{count}}) :"
+    "excludedCount": "Bibliothèques exclues ({{count}}) :",
+    "includedCount": "Bibliothèques incluses ({{count}}) :"
   },
   "languageOrderSelector": {
     "noLanguages": "Aucune langue sélectionnée. Ajoutez des langues à l'aide du menu déroulant ci-dessous.",
@@ -1145,7 +1170,11 @@
     "uppercase": "Majuscules",
     "lowercase": "Minuscules",
     "numbers": "Chiffres",
-    "sample": "Exemple"
+    "sample": "Exemple",
+    "autoSave": "Enregistrement automatique",
+    "autoSaveDescription": "Enregistrer automatiquement les modifications après 5 secondes d'inactivité",
+    "autoSaved": "{{count}} modification(s) enregistrée(s) automatiquement",
+    "savedSuccessfully": "Configuration enregistrée avec succès ! ({{count}} modification(s))"
   },
   "assetsStats": {
     "title": "Aperçu des ressources",
@@ -1198,7 +1227,23 @@
     "fetchingPreviews": "Récupération des aperçus depuis les services...",
     "noPreviewsLoaded": "Aucun aperçu chargé pour le moment",
     "fetchPreviews": "Récupérer les aperçus",
-    "select": "Sélectionner"
+    "select": "Sélectionner",
+    "uploadAssetButton": "TÉLÉCHARGER LA RESSOURCE",
+    "uploadingAsset": "Téléchargement en cours...",
+    "dimensionValid": "Dimensions valides",
+    "dimensionInvalid": "Dimensions trop petites",
+    "dimensionRequirement": "Les dimensions de l'image doivent respecter les exigences minimales pour le téléchargement",
+    "imageDimensionsValid": "Dimensions de l'image ({{width}}x{{height}}) sont valides !",
+    "imageDimensionsTooSmall": "Dimensions de l'image ({{width}}x{{height}}) sont trop petites. Minimum requis : {{minWidth}}x{{minHeight}} pixels.",
+    "selectValidImage": "Veuillez d'abord sélectionner une image valide avec les bonnes dimensions.",
+    "seasonNumberHint": "Tout nom de saison se terminant par 0 ou 00 (par ex., \"Saison 0\", \"Staffel 00\") ou correspondant à un mot-clé comme \"Specials\" sera traité comme une saison Specials.",
+    "posterizarrRunningError": "Impossible de remplacer les ressources pendant que Posterizarr est en cours d'exécution. Veuillez attendre que tous les traitements soient terminés avant d'utiliser les options de remplacement ou de mise à jour manuelle.",
+    "confirmReplaceTitle": "Confirmer le remplacement de la ressource",
+    "confirmReplaceMessage": "Êtes-vous sûr de vouloir remplacer cette ressource ? Cette action écrasera le fichier existant (une sauvegarde sera créée).",
+    "confirmReplaceButton": "Remplacer la ressource",
+    "confirmFetchTitle": "Confirmer la récupération des options de remplacement",
+    "confirmFetchMessage": "Cela recherchera des options de remplacement sur TMDB, TVDB et Fanart.tv. Continuer ?",
+    "confirmFetchButton": "Récupérer les remplacements"
   },
   "assetOverview": {
     "title": "Aperçu des ressources",
@@ -1208,10 +1253,12 @@
     "errorLoadingData": "Erreur lors du chargement des données",
     "assetsWithIssues": "Ressources avec problèmes",
     "missingAssets": "Ressources manquantes",
+    "missingAssetsAtFavProvider": "Manquant chez fournisseur favori",
     "nonPrimaryLang": "Langue non principale",
     "nonPrimaryProvider": "Fournisseur non principal",
     "truncatedTextCategory": "Texte tronqué",
     "missingAsset": "Ressource manquante",
+    "missingAssetAtFavProvider": "Ressource manquante chez le fournisseur favori",
     "notPrimaryLanguage": "Langue non principale",
     "notPrimaryProvider": "Fournisseur non principal",
     "truncatedText": "Texte tronqué",
@@ -1227,7 +1274,12 @@
     "source": "Source",
     "viewSource": "Voir la source",
     "replace": "Remplacer",
-    "replaceTooltip": "Remplacer cette ressource"
+    "replaceTooltip": "Remplacer cette ressource",
+    "noEditsNeeded": "Marquer comme résolu",
+    "noEditsNeededTooltip": "Marquer cette ressource comme vérifiée et la masquer de la liste",
+    "markedAsReviewed": "{{title}} marqué comme vérifié et masqué de la liste",
+    "updateFailed": "Échec de la mise à jour de {{title}}",
+    "updateError": "Erreur lors de la mise à jour de la ressource : {{error}}"
   },
   "common": {
     "save": "Enregistrer",
@@ -1355,6 +1407,10 @@
     "executionTime": "Temps d'exécution",
     "totalImages": "Total d'images",
     "errors": "Erreurs",
+    "fallbacks": "Fallbacks",
+    "textless": "Sans texte",
+    "truncated": "Tronqué",
+    "text": "Texte",
     "additionalInfo": "Informations supplémentaires",
     "tbaSkipped": "TBA ignorés",
     "japChinesSkipped": "JP/CN ignorés",
@@ -1445,7 +1501,8 @@
     "deleteAllAssetsMessage": "Êtes-vous sûr de vouloir supprimer TOUTES les ressources dans les {{count}} dossier(s) sélectionné(s) ? Cela supprimera toutes les affiches, arrière-plans, saisons et cartons de titre dans ces dossiers.",
     "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} ressource(s) sélectionnée(s) ?",
     "deleteAssetMessage": "Êtes-vous sûr de vouloir supprimer cette ressource ?",
-    "deleteButton": "Supprimer"
+    "deleteButton": "Supprimer",
+    "assetReplaced": "Ressource remplacée avec succès !"
   },
   "autoTriggers": {
     "header": {
