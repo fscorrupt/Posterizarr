@@ -385,7 +385,9 @@ function Dashboard() {
   };
 
   const connectDashboardWebSocket = () => {
+    // Prevent multiple simultaneous connections
     if (wsRef.current) {
+      console.log("Dashboard WebSocket already exists, skipping connection");
       return;
     }
 
@@ -398,6 +400,9 @@ function Dashboard() {
       console.log(`🔌 Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
+      
+      // Store reference immediately to prevent race conditions
+      wsRef.current = ws;
 
       ws.onopen = () => {
         console.log(`Dashboard WebSocket connected to ${logFile}`);
@@ -436,17 +441,18 @@ function Dashboard() {
         setWsConnected(false);
         wsRef.current = null;
 
+        // Only reconnect if still running and not manually disconnected
         reconnectTimeoutRef.current = setTimeout(() => {
-          if (status.running) {
+          if (status.running && !document.hidden) {
+            console.log("WebSocket closed, attempting reconnect...");
             connectDashboardWebSocket();
           }
         }, 3000);
       };
-
-      wsRef.current = ws;
     } catch (error) {
       console.error("Failed to create WebSocket:", error);
       setWsConnected(false);
+      wsRef.current = null;
     }
   };
 
@@ -481,17 +487,42 @@ function Dashboard() {
       24 * 60 * 60 * 1000
     );
 
+    // Page Visibility API: Refresh data when tab becomes visible again
+    // This ensures data is fresh when switching back to the dashboard tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Dashboard tab became visible, refreshing data...");
+        // Fetch latest status first
+        fetchStatus(true).then(() => {
+          // After status is updated, check if WebSocket needs reconnection
+          // This will be handled by the status.running useEffect below
+        });
+        fetchSchedulerStatus(true);
+        fetchSystemInfo(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearInterval(statusInterval);
       clearInterval(versionInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       disconnectDashboardWebSocket();
     };
   }, [startLoading]);
 
   useEffect(() => {
+    // Skip WebSocket management when tab is hidden to prevent unnecessary connections
+    if (document.hidden) {
+      return;
+    }
+
     if (status.running && !wsRef.current) {
+      console.log("Script is running, connecting WebSocket...");
       connectDashboardWebSocket();
     } else if (!status.running && wsRef.current) {
+      console.log("Script stopped, disconnecting WebSocket...");
       disconnectDashboardWebSocket();
     }
 
@@ -506,14 +537,25 @@ function Dashboard() {
   }, [status.running]);
 
   useEffect(() => {
-    if (status.running && status.current_mode && wsRef.current) {
+    // Skip if tab is hidden or not running
+    if (document.hidden || !status.running || !status.current_mode) {
+      return;
+    }
+
+    // Only reconnect if we have an active connection
+    if (wsRef.current) {
       const expectedLogFile = getLogFileForMode(status.current_mode);
       console.log(
         `Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
       );
 
+      // Disconnect and reconnect with new log file
       disconnectDashboardWebSocket();
-      setTimeout(() => connectDashboardWebSocket(), 300);
+      setTimeout(() => {
+        if (!document.hidden && status.running) {
+          connectDashboardWebSocket();
+        }
+      }, 300);
     }
   }, [status.current_mode]);
 
