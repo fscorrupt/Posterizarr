@@ -60,6 +60,9 @@ class ImageChoicesDB:
                     DownloadSource TEXT,
                     FavProviderLink TEXT,
                     Manual TEXT,
+                    tmdbid TEXT,
+                    tvdbid TEXT,
+                    imdbid TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -72,6 +75,160 @@ class ImageChoicesDB:
             logger.error(f"Error creating table: {e}")
             logger.exception("Full traceback:")
             raise
+
+    def migrate_add_id_columns(self):
+        """Add tmdbid, tvdbid, and imdbid columns if they don't exist and set default value 'false'
+        Returns True if columns were added (needs ID extraction), False if already existed
+        """
+        logger.info("Checking for ID columns migration...")
+        try:
+            cursor = self.connection.cursor()
+
+            # Check if columns already exist
+            cursor.execute("PRAGMA table_info(imagechoices)")
+            columns = [column[1] for column in cursor.fetchall()]
+
+            columns_to_add = []
+            if "tmdbid" not in columns:
+                columns_to_add.append("tmdbid")
+            if "tvdbid" not in columns:
+                columns_to_add.append("tvdbid")
+            if "imdbid" not in columns:
+                columns_to_add.append("imdbid")
+
+            if columns_to_add:
+                logger.info(f"Adding new columns: {', '.join(columns_to_add)}")
+
+                for column in columns_to_add:
+                    # Add column with DEFAULT 'false'
+                    cursor.execute(
+                        f"ALTER TABLE imagechoices ADD COLUMN {column} TEXT DEFAULT 'false'"
+                    )
+                    logger.info(f"Added column: {column} with default value 'false'")
+
+                # Update all existing NULL values to 'false' (for safety)
+                for column in columns_to_add:
+                    cursor.execute(
+                        f"UPDATE imagechoices SET {column} = 'false' WHERE {column} IS NULL"
+                    )
+                    updated_count = cursor.rowcount
+                    if updated_count > 0:
+                        logger.info(
+                            f"Set {column} = 'false' for {updated_count} existing records"
+                        )
+
+                self.connection.commit()
+
+                # Get total record count
+                cursor.execute("SELECT COUNT(*) FROM imagechoices")
+                total_records = cursor.fetchone()[0]
+                logger.info(
+                    f"ID columns migration completed successfully ({total_records} records updated)"
+                )
+
+                # Return True to indicate that ID extraction should run
+                return True
+            else:
+                logger.debug("All ID columns already exist, no migration needed")
+                # Return False - columns already existed, no need to extract IDs
+                return False
+
+        except sqlite3.Error as e:
+            logger.error(f"Error during ID columns migration: {e}")
+            logger.exception("Full traceback:")
+            raise
+
+    def extract_ids_from_rootfolders(self):
+        """Extract tmdbid, tvdbid, and imdbid from existing Rootfolder values"""
+        logger.info("Extracting IDs from existing Rootfolder values...")
+        try:
+            import re
+
+            cursor = self.connection.cursor()
+
+            # Get all records that have Rootfolder but IDs are still 'false'
+            cursor.execute(
+                """
+                SELECT id, Rootfolder 
+                FROM imagechoices 
+                WHERE Rootfolder IS NOT NULL 
+                AND Rootfolder != ''
+                AND (tmdbid = 'false' OR tvdbid = 'false' OR imdbid = 'false')
+            """
+            )
+            records = cursor.fetchall()
+
+            if not records:
+                logger.debug("No records need ID extraction")
+                return
+
+            logger.info(f"Extracting IDs from {len(records)} records...")
+            updated_count = 0
+
+            for record in records:
+                record_id = record[0]
+                rootfolder = record[1]
+
+                # Extract IDs using regex
+                # Supports multiple bracket formats: {}, [], (), and no brackets
+                # Examples: [tmdb-12345], {tmdb-12345}, (tmdb-12345), tmdb-12345
+                tmdbid = None
+                tvdbid = None
+                imdbid = None
+
+                # TMDB: Match any bracket type or no brackets
+                tmdb_match = re.search(
+                    r"[\[{(]?tmdb-(\d+)[\]})]?", rootfolder, re.IGNORECASE
+                )
+                if tmdb_match:
+                    tmdbid = tmdb_match.group(1)
+
+                # TVDB: Match any bracket type or no brackets
+                tvdb_match = re.search(
+                    r"[\[{(]?tvdb-(\d+)[\]})]?", rootfolder, re.IGNORECASE
+                )
+                if tvdb_match:
+                    tvdbid = tvdb_match.group(1)
+
+                # IMDB: Match any bracket type or no brackets
+                imdb_match = re.search(
+                    r"[\[{(]?imdb-(tt\d+)[\]})]?", rootfolder, re.IGNORECASE
+                )
+                if imdb_match:
+                    imdbid = imdb_match.group(1)
+
+                # Update record if any ID was found
+                if tmdbid or tvdbid or imdbid:
+                    update_fields = []
+                    update_values = []
+
+                    if tmdbid:
+                        update_fields.append("tmdbid = ?")
+                        update_values.append(tmdbid)
+
+                    if tvdbid:
+                        update_fields.append("tvdbid = ?")
+                        update_values.append(tvdbid)
+
+                    if imdbid:
+                        update_fields.append("imdbid = ?")
+                        update_values.append(imdbid)
+
+                    if update_fields:
+                        update_values.append(record_id)
+                        query = f"UPDATE imagechoices SET {', '.join(update_fields)} WHERE id = ?"
+                        cursor.execute(query, update_values)
+                        updated_count += 1
+
+            self.connection.commit()
+            logger.info(
+                f"ID extraction completed: {updated_count} records updated with extracted IDs"
+            )
+
+        except Exception as e:
+            logger.error(f"Error during ID extraction: {e}")
+            logger.exception("Full traceback:")
+            # Don't raise - this is optional enhancement
 
     def initialize(self):
         """Initialize the database (connect and create tables)"""
@@ -94,6 +251,42 @@ class ImageChoicesDB:
         self.connect()
         self.create_tables()
 
+        # Run migrations for existing databases
+        if db_exists:
+            # migrate_add_id_columns returns True if columns were just added (need extraction)
+            columns_just_added = self.migrate_add_id_columns()
+
+            if columns_just_added:
+                logger.info(
+                    "New ID columns detected - extracting IDs from existing Rootfolder values (one-time migration)"
+                )
+                self.extract_ids_from_rootfolders()
+            else:
+                # Even if columns existed, check if there are any records with 'false' that need extraction
+                # This handles cases where previous extraction failed or was interrupted
+                cursor = self.connection.cursor()
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) 
+                    FROM imagechoices 
+                    WHERE Rootfolder IS NOT NULL 
+                    AND Rootfolder != ''
+                    AND (tmdbid = 'false' OR tvdbid = 'false' OR imdbid = 'false')
+                    AND (Rootfolder LIKE '%tmdb-%' OR Rootfolder LIKE '%tvdb-%' OR Rootfolder LIKE '%imdb-%')
+                """
+                )
+                pending_extraction = cursor.fetchone()[0]
+
+                if pending_extraction > 0:
+                    logger.info(
+                        f"Found {pending_extraction} records with IDs in Rootfolder that need extraction - running extraction"
+                    )
+                    self.extract_ids_from_rootfolders()
+                else:
+                    logger.debug(
+                        "ID columns already existed and all IDs extracted - skipping (CSV imports will have IDs)"
+                    )
+
         if not db_exists:
             logger.info(f"New empty database created successfully: {self.db_path}")
 
@@ -111,6 +304,9 @@ class ImageChoicesDB:
         download_source: str = None,
         fav_provider_link: str = None,
         manual: str = None,
+        tmdbid: str = None,
+        tvdbid: str = None,
+        imdbid: str = None,
     ):
         """
         Insert a new image choice record
@@ -126,6 +322,9 @@ class ImageChoicesDB:
             download_source: Download source
             fav_provider_link: Favorite provider link
             manual: Manual selection flag
+            tmdbid: TMDB ID (numeric string or "false")
+            tvdbid: TVDB ID (numeric string or "false")
+            imdbid: IMDB ID (string like "tt1234567" or "false")
 
         Returns:
             int: ID of the inserted record
@@ -136,8 +335,9 @@ class ImageChoicesDB:
                 """
                 INSERT INTO imagechoices 
                 (Title, Type, Rootfolder, LibraryName, Language, Fallback, 
-                 TextTruncated, DownloadSource, FavProviderLink, Manual)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 TextTruncated, DownloadSource, FavProviderLink, Manual,
+                 tmdbid, tvdbid, imdbid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     title,
@@ -150,6 +350,9 @@ class ImageChoicesDB:
                     download_source,
                     fav_provider_link,
                     manual,
+                    tmdbid,
+                    tvdbid,
+                    imdbid,
                 ),
             )
             self.connection.commit()
@@ -234,6 +437,9 @@ class ImageChoicesDB:
                     "DownloadSource",
                     "FavProviderLink",
                     "Manual",
+                    "tmdbid",
+                    "tvdbid",
+                    "imdbid",
                 ]:
                     fields.append(f"{key} = ?")
                     values.append(value)
@@ -353,6 +559,35 @@ class ImageChoicesDB:
                             ):
                                 manual = "true"
 
+                        # Get IDs from CSV if present (after script update), otherwise extract from Rootfolder
+                        tmdbid = row.get("tmdbid", "").strip('"').strip() or "false"
+                        tvdbid = row.get("tvdbid", "").strip('"').strip() or "false"
+                        imdbid = row.get("imdbid", "").strip('"').strip() or "false"
+
+                        # If IDs not in CSV, extract from rootfolder name (backward compatibility)
+                        # Format: "Movie Name (2024) {tmdb-12345}" or "{tvdb-67890}" or "{imdb-tt1234567}"
+                        if (
+                            tmdbid == "false"
+                            and tvdbid == "false"
+                            and imdbid == "false"
+                        ) and rootfolder:
+                            import re
+
+                            # Extract tmdb ID
+                            tmdb_match = re.search(r"\{tmdb-(\d+)\}", rootfolder)
+                            if tmdb_match:
+                                tmdbid = tmdb_match.group(1)
+
+                            # Extract tvdb ID
+                            tvdb_match = re.search(r"\{tvdb-(\d+)\}", rootfolder)
+                            if tvdb_match:
+                                tvdbid = tvdb_match.group(1)
+
+                            # Extract imdb ID
+                            imdb_match = re.search(r"\{imdb-(tt\d+)\}", rootfolder)
+                            if imdb_match:
+                                imdbid = imdb_match.group(1)
+
                         self.insert_choice(
                             title=title,
                             type_=type_,
@@ -364,6 +599,9 @@ class ImageChoicesDB:
                             download_source=download_source,
                             fav_provider_link=fav_provider_link,
                             manual=manual,
+                            tmdbid=tmdbid,
+                            tvdbid=tvdbid,
+                            imdbid=imdbid,
                         )
                         stats["added"] += 1
 

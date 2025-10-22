@@ -12,6 +12,7 @@ import {
   Replace,
   ChevronDown,
   CheckIcon,
+  Star,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
@@ -657,6 +658,16 @@ const AssetOverview = () => {
         hoverBorderColor: "hover:border-red-500/50",
       },
       {
+        key: "missing_assets_fav_provider",
+        label: t("assetOverview.missingAssetsAtFavProvider"),
+        count: data.categories.missing_assets_fav_provider.count,
+        icon: Star,
+        color: "text-orange-400",
+        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
+        borderColor: "border-orange-900/40",
+        hoverBorderColor: "hover:border-orange-500/50",
+      },
+      {
         key: "non_primary_lang",
         label: t("assetOverview.nonPrimaryLang"),
         count: data.categories.non_primary_lang.count,
@@ -741,7 +752,7 @@ const AssetOverview = () => {
       </div>
 
       {/* Category Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {categoryCards.map((card) => {
           const Icon = card.icon;
           const isSelected = selectedCategory === card.label;

@@ -1243,6 +1243,7 @@
     "errorLoadingData": "Error Loading Data",
     "assetsWithIssues": "Assets with Issues",
     "missingAssets": "Missing Assets",
+    "missingAssetsAtFavProvider": "Missing at Fav Provider",
     "nonPrimaryLang": "Non-Primary Lang",
     "nonPrimaryProvider": "Non-Primary Provider",
     "truncatedTextCategory": "Truncated Text",
