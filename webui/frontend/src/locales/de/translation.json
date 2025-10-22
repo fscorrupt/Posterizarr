@@ -416,7 +416,18 @@
     "statusCards": "Status-Karten",
     "customizeDescription": "Dashboard-Bereiche ein-/ausblenden • Zum Sortieren ziehen",
     "hideScrollbars": "Scrollleisten ausblenden",
-    "hideScrollbarsDesc": "Scrollleisten in der gesamten Benutzeroberfläche ausblenden"
+    "hideScrollbarsDesc": "Scrollleisten in der gesamten Benutzeroberfläche ausblenden",
+    "schedulerJobs": "Geplante Aufgaben",
+    "active": "Aktiv",
+    "configured": "Konfiguriert",
+    "disabled": "Deaktiviert",
+    "schedulesConfigured": "Zeitplan(e)",
+    "executing": "Wird ausgeführt",
+    "nextRun": "Nächster",
+    "configureNow": "Jetzt konfigurieren",
+    "noSchedulesRegistered": "Keine Zeitpläne registriert",
+    "cores": "Kerne",
+    "free": "Frei"
   },
   "config": {
     "title": "Konfiguration",

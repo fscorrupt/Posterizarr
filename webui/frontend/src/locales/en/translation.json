@@ -416,7 +416,18 @@
     "statusCards": "Status Cards",
     "customizeDescription": "Show or hide dashboard sections • Drag to reorder",
     "hideScrollbars": "Hide Scrollbars",
-    "hideScrollbarsDesc": "Hide scrollbars throughout the UI"
+    "hideScrollbarsDesc": "Hide scrollbars throughout the UI",
+    "schedulerJobs": "Scheduler Jobs",
+    "active": "Active",
+    "configured": "Configured",
+    "disabled": "Disabled",
+    "schedulesConfigured": "schedule(s)",
+    "executing": "Executing",
+    "nextRun": "Next",
+    "configureNow": "Configure Now",
+    "noSchedulesRegistered": "No schedules registered",
+    "cores": "Cores",
+    "free": "Free"
   },
   "config": {
     "title": "Configuration",
