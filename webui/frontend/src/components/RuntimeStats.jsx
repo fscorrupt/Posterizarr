@@ -25,7 +25,7 @@ const API_URL = "/api";
 
 let cachedRuntimeStats = null;
 
-function RuntimeStats() {
+function RuntimeStats({ refreshTrigger = 0 }) {
   const { t } = useTranslation();
   const { startLoading, finishLoading } = useDashboardLoading();
   const hasInitiallyLoaded = useRef(false);
@@ -158,6 +158,16 @@ function RuntimeStats() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Watch for external refresh triggers (e.g., when a run finishes)
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log(
+        "External refresh trigger received, updating runtime stats..."
+      );
+      fetchRuntimeStats(true);
+    }
+  }, [refreshTrigger]);
 
   if (loading) {
     return (

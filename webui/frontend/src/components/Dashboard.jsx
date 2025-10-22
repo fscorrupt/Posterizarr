@@ -104,11 +104,14 @@ function Dashboard() {
   const [wsConnected, setWsConnected] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [allLogs, setAllLogs] = useState([]); // Store all logs
+  const [runtimeStatsRefreshTrigger, setRuntimeStatsRefreshTrigger] =
+    useState(0);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const logContainerRef = useRef(null);
   const userHasScrolled = useRef(false);
   const lastScrollTop = useRef(0);
+  const previousRunningState = useRef(null);
 
   // Card visibility settings
   const [showCardsModal, setShowCardsModal] = useState(false);
@@ -491,6 +494,15 @@ function Dashboard() {
     } else if (!status.running && wsRef.current) {
       disconnectDashboardWebSocket();
     }
+
+    // Trigger runtime stats refresh when run finishes
+    if (previousRunningState.current === true && status.running === false) {
+      console.log("Run finished, triggering runtime stats refresh...");
+      setRuntimeStatsRefreshTrigger((prev) => prev + 1);
+    }
+
+    // Update previous state
+    previousRunningState.current = status.running;
   }, [status.running]);
 
   useEffect(() => {
@@ -979,7 +991,10 @@ function Dashboard() {
         </div>
       ),
       runtimeStats: visibleCards.runtimeStats && (
-        <RuntimeStats key="runtimeStats" />
+        <RuntimeStats
+          key="runtimeStats"
+          refreshTrigger={runtimeStatsRefreshTrigger}
+        />
       ),
       recentAssets: visibleCards.recentAssets && (
         <RecentAssets key="recentAssets" />
