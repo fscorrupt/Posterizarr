@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
-import SystemInfo from "./SystemInfo";
 import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
@@ -710,30 +709,34 @@ function Dashboard() {
                 {schedulerStatus.enabled && (
                   <div className="space-y-1">
                     {schedulerStatus.schedules &&
-                      schedulerStatus.schedules.length > 0 && (
-                        <>
-                          <p className="text-xs text-theme-muted">
-                            ⏰{" "}
-                            {schedulerStatus.schedules
-                              .map((s) => s.time)
-                              .join(", ")}
+                    schedulerStatus.schedules.length > 0 ? (
+                      <>
+                        <p className="text-xs text-theme-muted">
+                          ⏰{" "}
+                          {schedulerStatus.schedules
+                            .map((s) => s.time)
+                            .join(", ")}
+                        </p>
+                        {schedulerStatus.timezone && (
+                          <p className="text-xs text-theme-muted flex items-center gap-1">
+                            <Globe className="w-3 h-3" />
+                            {schedulerStatus.timezone}
                           </p>
-                          {schedulerStatus.timezone && (
-                            <p className="text-xs text-theme-muted flex items-center gap-1">
-                              <Globe className="w-3 h-3" />
-                              {schedulerStatus.timezone}
-                            </p>
-                          )}
-                          {schedulerStatus.next_run && (
-                            <p className="text-xs text-blue-400">
-                              {t("dashboard.nextRun")}:{" "}
-                              {new Date(
-                                schedulerStatus.next_run
-                              ).toLocaleString()}
-                            </p>
-                          )}
-                        </>
-                      )}
+                        )}
+                        {schedulerStatus.next_run && (
+                          <p className="text-xs text-blue-400">
+                            {t("dashboard.nextRun")}:{" "}
+                            {new Date(
+                              schedulerStatus.next_run
+                            ).toLocaleString()}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-yellow-400">
+                        {t("dashboard.noSchedulesRegistered")}
+                      </p>
+                    )}
                     {schedulerStatus.is_executing && (
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
                         {t("dashboard.executing")}
