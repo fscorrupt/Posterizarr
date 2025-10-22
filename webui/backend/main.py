@@ -7011,6 +7011,78 @@ async def get_github_releases():
         return {"success": False, "error": str(e), "releases": []}
 
 
+@app.get("/api/dashboard/all")
+async def get_dashboard_all():
+    """
+    Combined endpoint for all dashboard data - reduces HTTP requests from 4 to 1
+    Returns: status, version, scheduler_status, system_info
+    """
+    result = {
+        "success": True,
+        "status": None,
+        "version": None,
+        "scheduler_status": None,
+        "system_info": None,
+    }
+
+    # Fetch status (always required)
+    try:
+        status_response = await get_status()
+        result["status"] = status_response
+    except Exception as e:
+        logger.error(f"Error fetching status in dashboard/all: {e}")
+        result["status"] = {
+            "running": False,
+            "last_logs": [],
+            "script_exists": False,
+            "config_exists": False,
+        }
+
+    # Fetch version (cached, so fast)
+    try:
+        version_response = await get_version()
+        result["version"] = version_response
+    except Exception as e:
+        logger.error(f"Error fetching version in dashboard/all: {e}")
+        result["version"] = {"local": None, "remote": None}
+
+    # Fetch scheduler status (if available)
+    if SCHEDULER_AVAILABLE and scheduler:
+        try:
+            scheduler_status = scheduler.get_status()
+            result["scheduler_status"] = {
+                "success": True,
+                "enabled": scheduler_status.get("enabled", False),
+                "running": scheduler_status.get("running", False),
+                "is_executing": scheduler_status.get("is_executing", False),
+                "schedules": scheduler_status.get("schedules", []),
+                "next_run": scheduler_status.get("next_run"),
+                "timezone": scheduler_status.get("timezone"),
+            }
+        except Exception as e:
+            logger.error(f"Error fetching scheduler status in dashboard/all: {e}")
+            result["scheduler_status"] = {"success": False}
+    else:
+        result["scheduler_status"] = {"success": False}
+
+    # Fetch system info
+    try:
+        system_info_response = await get_system_info()
+        result["system_info"] = system_info_response
+    except Exception as e:
+        logger.error(f"Error fetching system info in dashboard/all: {e}")
+        result["system_info"] = {
+            "platform": "Unknown",
+            "cpu_cores": 0,
+            "memory_percent": 0,
+            "total_memory": "Unknown",
+            "used_memory": "Unknown",
+            "free_memory": "Unknown",
+        }
+
+    return result
+
+
 @app.get("/api/assets/stats")
 async def get_assets_stats():
     """

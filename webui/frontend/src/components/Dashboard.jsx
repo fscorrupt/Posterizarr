@@ -141,6 +141,80 @@ function Dashboard() {
   const [draggedItem, setDraggedItem] = useState(null);
   const hasInitiallyLoaded = useRef(false);
 
+  // Combined fetch for initial dashboard load - reduces HTTP requests from 4 to 1
+  const fetchDashboardData = async (silent = false) => {
+    if (!silent) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/dashboard/all`);
+      const data = await response.json();
+
+      if (data.success) {
+        // Update status
+        if (data.status) {
+          cachedStatus = data.status;
+          setStatus(data.status);
+
+          // Initialize allLogs with the initial logs from status
+          if (data.status.last_logs && data.status.last_logs.length > 0) {
+            setAllLogs(data.status.last_logs);
+          }
+        }
+
+        // Update version
+        if (data.version) {
+          cachedVersion = data.version;
+          setVersion(data.version);
+        }
+
+        // Update scheduler status
+        if (data.scheduler_status && data.scheduler_status.success) {
+          setSchedulerStatus({
+            enabled: data.scheduler_status.enabled || false,
+            running: data.scheduler_status.running || false,
+            is_executing: data.scheduler_status.is_executing || false,
+            schedules: data.scheduler_status.schedules || [],
+            next_run: data.scheduler_status.next_run || null,
+            timezone: data.scheduler_status.timezone || null,
+          });
+        }
+
+        // Update system info
+        if (data.system_info) {
+          setSystemInfo({
+            platform: data.system_info.platform || "Unknown",
+            cpu_cores: data.system_info.cpu_cores || 0,
+            memory_percent: data.system_info.memory_percent || 0,
+            total_memory: data.system_info.total_memory || "Unknown",
+            used_memory: data.system_info.used_memory || "Unknown",
+            free_memory: data.system_info.free_memory || "Unknown",
+          });
+        }
+      }
+
+      // Mark dashboard as loaded after first successful fetch
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("dashboard");
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      // Even on error, mark as loaded to show the page
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("dashboard");
+      }
+    } finally {
+      if (!silent) {
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      }
+    }
+  };
+
   const fetchStatus = async (silent = false) => {
     if (!silent) {
       setIsRefreshing(true);
@@ -387,14 +461,11 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Register dashboard as loading and fetch initial data
+    // Register dashboard as loading and fetch all initial data in one call
     startLoading("dashboard");
-    fetchStatus(false);
-    fetchVersion(false); // Uses cache if < 24h old, fetches new if older
-    fetchSchedulerStatus(false);
-    fetchSystemInfo(false);
+    fetchDashboardData(false);
 
-    // Poll status every 3 seconds to detect when script finishes
+    // Poll individual endpoints every 3 seconds for updates (lighter requests)
     const statusInterval = setInterval(() => {
       fetchStatus(true);
       fetchSchedulerStatus(true);
