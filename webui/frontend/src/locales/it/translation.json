@@ -373,6 +373,7 @@
     "executing": "In esecuzione",
     "nextRun": "Prossima esecuzione",
     "configureNow": "Configura ora",
+    "noSchedulesRegistered": "Nessun orario registrato",
     "scriptFile": "File script",
     "configFile": "File di configurazione",
     "cores": "Core",

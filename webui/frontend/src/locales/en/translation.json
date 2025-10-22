@@ -425,6 +425,7 @@
     "executing": "Executing",
     "nextRun": "Next",
     "configureNow": "Configure Now",
+    "noSchedulesRegistered": "No schedules registered",
     "cores": "Cores",
     "free": "Free"
   },
