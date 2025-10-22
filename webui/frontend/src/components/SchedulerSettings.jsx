@@ -285,9 +285,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
+        // Update status directly from response to avoid stale data
+        setStatus(data);
+        // Also refresh config
+        const configRes = await fetch(`${API_URL}/scheduler/config`);
+        const configData = await configRes.json();
+        if (configData.success) {
+          setConfig(configData.config);
+        }
         showSuccess(t("schedulerSettings.success.scheduleRemoved"));
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        await fetchSchedulerData();
       } else {
         showError(data.detail || t("schedulerSettings.errors.removeSchedule"));
       }
@@ -317,9 +323,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
+        // Update status directly from response to avoid stale data
+        setStatus(data);
+        // Also refresh config
+        const configRes = await fetch(`${API_URL}/scheduler/config`);
+        const configData = await configRes.json();
+        if (configData.success) {
+          setConfig(configData.config);
+        }
         showSuccess(t("schedulerSettings.success.allCleared"));
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        await fetchSchedulerData();
       } else {
         showError(data.detail || t("schedulerSettings.errors.clearSchedules"));
       }

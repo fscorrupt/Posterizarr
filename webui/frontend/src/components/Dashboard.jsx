@@ -676,9 +676,9 @@ function Dashboard() {
               </div>
               <div className="p-3 rounded-lg bg-theme-primary/10">
                 {status.running ? (
-                  <CheckCircle className="w-12 h-12 text-green-400" />
+                  <Activity className="w-12 h-12 text-green-400" />
                 ) : (
-                  <Clock className="w-12 h-12 text-gray-500" />
+                  <Activity className="w-12 h-12 text-gray-500" />
                 )}
               </div>
             </div>
@@ -747,7 +747,7 @@ function Dashboard() {
               </div>
               <div className="p-3 rounded-lg bg-theme-primary/10">
                 {schedulerStatus.enabled && schedulerStatus.running ? (
-                  <Activity className="w-12 h-12 text-green-400 animate-pulse" />
+                  <Clock className="w-12 h-12 text-green-400" />
                 ) : schedulerStatus.enabled ? (
                   <Clock className="w-12 h-12 text-yellow-400" />
                 ) : (

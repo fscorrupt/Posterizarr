@@ -7258,7 +7258,9 @@ async def remove_schedule(time: str):
 
         success = scheduler.remove_schedule(time)
         if success:
-            return {"success": True, "message": f"Schedule removed: {time}"}
+            # Get updated status immediately after removal
+            status = scheduler.get_status()
+            return {"success": True, "message": f"Schedule removed: {time}", **status}
         else:
             raise HTTPException(status_code=404, detail="Schedule not found")
     except HTTPException:
@@ -7276,7 +7278,9 @@ async def clear_all_schedules():
 
     try:
         scheduler.clear_schedules()
-        return {"success": True, "message": "All schedules cleared"}
+        # Get updated status immediately after clearing
+        status = scheduler.get_status()
+        return {"success": True, "message": "All schedules cleared", **status}
     except Exception as e:
         logger.error(f"Error clearing schedules: {e}")
         raise HTTPException(status_code=500, detail=str(e))

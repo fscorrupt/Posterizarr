@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Film,
   Tv,
-  Calendar,
   Globe,
   ImageOff,
   Type,
@@ -58,12 +57,6 @@ function RuntimeStats() {
       textless: 0,
       truncated: 0,
       text: 0,
-      scheduler: {
-        enabled: false,
-        schedules: [],
-        next_run: null,
-        timezone: null,
-      },
     }
   );
   const [loading, setLoading] = useState(false);
@@ -576,93 +569,6 @@ function RuntimeStats() {
                 </p>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Scheduler Information */}
-      {runtimeStats.scheduler && runtimeStats.scheduler.enabled && (
-        <div className="mt-6 bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-primary/10">
-              <Calendar className="w-5 h-5 text-theme-primary" />
-            </div>
-            <h3 className="text-lg font-semibold text-theme-text">
-              {t("runtimeStats.scheduledRuns")}
-            </h3>
-          </div>
-
-          <div className="space-y-3">
-            {/* Next Run */}
-            {runtimeStats.scheduler.next_run && (
-              <div className="p-3 bg-theme-hover rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-theme-primary" />
-                    <span className="text-sm font-medium text-theme-text">
-                      {t("runtimeStats.nextRun")}:
-                    </span>
-                  </div>
-                  <span className="text-sm font-bold text-theme-primary">
-                    {formatDateToLocale(runtimeStats.scheduler.next_run)}
-                  </span>
-                </div>
-                {/* Timezone info if different */}
-                {(() => {
-                  const schedulerTz = runtimeStats.scheduler.timezone;
-                  if (schedulerTz && isTimezoneDifferent(schedulerTz)) {
-                    const browserTz = getBrowserTimezone();
-                    return (
-                      <div className="flex items-center gap-1 text-xs text-theme-muted border-t border-theme-primary/20 pt-2">
-                        <Globe className="w-3 h-3" />
-                        <span>
-                          {t("runtimeStats.displayedInYourTimezone")}:{" "}
-                          <span className="font-mono">{browserTz}</span>
-                        </span>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
-            )}
-
-            {/* All Schedules */}
-            {runtimeStats.scheduler.schedules &&
-              runtimeStats.scheduler.schedules.length > 0 && (
-                <div className="p-3 bg-theme-hover rounded-lg">
-                  <p className="text-xs text-theme-muted mb-2 font-medium">
-                    {t("runtimeStats.configuredSchedules")}:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {runtimeStats.scheduler.schedules.map((schedule, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-theme-card border border-theme-primary/30 rounded-full text-sm text-theme-primary font-medium"
-                      >
-                        <Clock className="w-3 h-3" />
-                        {schedule.time}
-                      </span>
-                    ))}
-                  </div>
-                  {runtimeStats.scheduler.timezone && (
-                    <div className="flex items-center gap-1 text-xs text-theme-muted mt-2">
-                      <Globe className="w-3 h-3" />
-                      <span>
-                        {t("runtimeStats.schedulerTimezone")}:{" "}
-                        <span className="font-mono text-theme-text">
-                          {runtimeStats.scheduler.timezone}
-                        </span>
-                      </span>
-                      {isTimezoneDifferent(runtimeStats.scheduler.timezone) && (
-                        <span className="text-yellow-500 ml-1">
-                          ({t("runtimeStats.differentFromBrowser")})
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
           </div>
         </div>
       )}

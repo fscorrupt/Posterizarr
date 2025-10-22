@@ -107,6 +107,7 @@ const Sidebar = () => {
   const navItems = [
     { path: "/", label: t("nav.dashboard"), icon: Activity },
     { path: "/run-modes", label: t("nav.runModes"), icon: Play },
+    { path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
     {
       path: "/runtime-history",
       label: t("nav.runtimeHistory"),
@@ -186,7 +187,6 @@ const Sidebar = () => {
         },
       ],
     },
-    { path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
     { path: "/logs", label: t("nav.logs"), icon: FileText },
     { path: "/how-it-works", label: t("nav.howItWorks"), icon: Lightbulb },
     { path: "/auto-triggers", label: t("nav.autoTriggers"), icon: Zap },
