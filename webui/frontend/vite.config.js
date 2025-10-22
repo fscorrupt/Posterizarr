@@ -6,16 +6,45 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
           // Split vendor dependencies into separate chunks
-          "react-vendor": ["react", "react-dom"],
-          "router-vendor": ["react-router-dom"],
-          "ui-vendor": ["lucide-react", "react-hot-toast"],
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom")) {
+              return "react-vendor";
+            }
+            if (id.includes("react-router-dom")) {
+              return "router-vendor";
+            }
+            if (id.includes("lucide-react") || id.includes("react-hot-toast")) {
+              return "ui-vendor";
+            }
+            if (id.includes("i18next") || id.includes("react-i18next")) {
+              return "i18n-vendor";
+            }
+            // All other node_modules go into vendor chunk
+            return "vendor";
+          }
+
+          // Split large components
+          if (id.includes("/components/")) {
+            if (id.includes("Dashboard")) {
+              return "dashboard";
+            }
+            if (id.includes("RuntimeHistory") || id.includes("RuntimeStats")) {
+              return "runtime";
+            }
+            if (id.includes("AssetOverview") || id.includes("AssetManager")) {
+              return "assets";
+            }
+            if (id.includes("Settings") || id.includes("Config")) {
+              return "settings";
+            }
+          }
         },
       },
     },
-    // Optional: Increase the chunk size warning limit if needed
-    chunkSizeWarningLimit: 1000,
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 1500,
   },
   server: {
     port: 3000,

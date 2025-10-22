@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Lock, User, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 function LoginScreen({ onLoginSuccess }) {
@@ -137,7 +137,7 @@ function LoginScreen({ onLoginSuccess }) {
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   <span>{t("auth.signingIn")}</span>
                 </>
               ) : (

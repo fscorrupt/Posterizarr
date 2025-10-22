@@ -506,6 +506,57 @@ code {
 }
 
 /* ========================================
+   CUSTOM SCROLLBAR - HIDDEN
+   ======================================== */
+
+/* Hide scrollbars when enabled - Apply to all scrollable elements */
+body.hide-scrollbars *::-webkit-scrollbar,
+body.hide-scrollbars::-webkit-scrollbar,
+html.hide-scrollbars *::-webkit-scrollbar,
+html.hide-scrollbars::-webkit-scrollbar {
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
+}
+
+body.hide-scrollbars *::-webkit-scrollbar-track,
+body.hide-scrollbars::-webkit-scrollbar-track,
+html.hide-scrollbars *::-webkit-scrollbar-track,
+html.hide-scrollbars::-webkit-scrollbar-track {
+  display: none !important;
+}
+
+body.hide-scrollbars *::-webkit-scrollbar-thumb,
+body.hide-scrollbars::-webkit-scrollbar-thumb,
+html.hide-scrollbars *::-webkit-scrollbar-thumb,
+html.hide-scrollbars::-webkit-scrollbar-thumb {
+  display: none !important;
+}
+
+body.hide-scrollbars *::-webkit-scrollbar-thumb:hover,
+body.hide-scrollbars::-webkit-scrollbar-thumb:hover,
+html.hide-scrollbars *::-webkit-scrollbar-thumb:hover,
+html.hide-scrollbars::-webkit-scrollbar-thumb:hover {
+  display: none !important;
+}
+
+/* Hide scrollbars for Firefox */
+body.hide-scrollbars,
+body.hide-scrollbars *,
+html.hide-scrollbars,
+html.hide-scrollbars * {
+  scrollbar-width: none !important;
+}
+
+/* Hide scrollbars for IE and Edge Legacy */
+body.hide-scrollbars,
+body.hide-scrollbars *,
+html.hide-scrollbars,
+html.hide-scrollbars * {
+  -ms-overflow-style: none !important;
+}
+
+/* ========================================
    THEME UTILITY CLASSES
    ======================================== */
 

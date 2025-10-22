@@ -34,6 +34,7 @@ function ScriptSchedule {
     # Final status message after the loop exits.
     if ($isOnline) {
         Write-Host "UI & Cache is now builded and online."
+        Write-Host "    You can access it by going to: http://localhost:8000/"
     }
 
     Write-Host "File Watcher Started..."
@@ -74,12 +75,13 @@ function ScriptSchedule {
             if ($NextScriptRunOffset -le '60') {
                 $alreadydisplayed = $null
                 Start-Sleep $NextScriptRunOffset
+                $ScriptArgs = "-ContainerSchedule"
                 # Calling the Posterizarr Script
                 if ((Get-Process pwsh -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*Posterizarr.ps1*" })) {
                     Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
                 }
                 Else {
-                    pwsh -File "$env:APP_ROOT/Posterizarr.ps1"
+                    pwsh -Command "$env:APP_ROOT/Posterizarr.ps1 $ScriptArgs"
                 }
             }
         }
@@ -164,6 +166,15 @@ function ScriptSchedule {
                 else {
                     write-host "Tautulli Recently added finished, removing trigger file: $($item.Name)"
                 }
+
+                # Check temp dir if there is a Currently running file present
+                $CurrentlyRunning = "$env:APP_DATA/temp/Posterizarr.Running"
+
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
+
                 write-host ""
                 write-host "Container is running since: " -NoNewline
                 write-host "$totalTime" -ForegroundColor Cyan

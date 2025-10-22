@@ -10,6 +10,7 @@ const LibraryExclusionSelector = ({
   mediaServerType, // 'plex', 'jellyfin', or 'emby'
   config, // Full config object to get connection details
   disabled = false, // New prop for disabled state
+  showIncluded = false, // New prop to show included libraries section
 }) => {
   const { t } = useTranslation();
   const [excludedLibraries, setExcludedLibraries] = useState([]);
@@ -304,6 +305,30 @@ const LibraryExclusionSelector = ({
             </p>
           </div>
         )}
+
+      {/* Included Libraries Section */}
+      {showIncluded && librariesFetched && availableLibraries.length > 0 && (
+        <div className="px-4 py-3 bg-theme-bg/50 border border-theme rounded-lg">
+          <p className="text-xs text-theme-muted mb-2">
+            {t("libraryExclusion.includedCount", {
+              count: availableLibraries.length - excludedLibraries.length,
+            })}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {availableLibraries
+              .filter((lib) => !excludedLibraries.includes(lib.name))
+              .map((lib) => (
+                <span
+                  key={lib.name}
+                  className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm border border-green-500/30 flex items-center gap-1.5"
+                >
+                  <Check className="w-3 h-3" />
+                  {lib.name}
+                </span>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Current Exclusions Summary */}
       {excludedLibraries.length > 0 && (

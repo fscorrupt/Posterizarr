@@ -128,9 +128,6 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
         if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
             total_images = posters + seasons + backgrounds + titlecards
 
-        # Add fallback images to error count
-        total_errors = errors + fallback_images
-
         return {
             "mode": mode,
             "runtime_seconds": runtime_seconds,
@@ -140,7 +137,8 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
             "seasons": seasons,
             "backgrounds": backgrounds,
             "titlecards": titlecards,
-            "errors": total_errors,
+            "errors": errors,
+            "fallbacks": fallback_images,
             "log_file": log_path.name,
         }
 
@@ -170,7 +168,7 @@ def save_runtime_to_db(log_path: Path, mode: str = "normal"):
             "backup": "backup.json",
             "syncjelly": "syncjelly.json",
             "syncemby": "syncemby.json",
-            "scheduled": "normal.json",  # Scheduler uses normal.json
+            "scheduled": "scheduled.json",
             "tautulli": "tautulli.json",
             "arr": "arr.json",
             "replace": "replace.json",
@@ -215,6 +213,7 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
     - syncjelly.json
     - syncemby.json
     - backup.json
+    - scheduled.json
 
     Args:
         json_path: Path to the JSON file
@@ -249,6 +248,38 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             + data.get("Seasons", 0)
         )
 
+        # Parse fallback count - support both old and new formats
+        # New format: "Fallbacks": 5 (direct number)
+        # Old format: "Fallbacks": [{...}] (array, count items with Fallback: "true")
+        fallback_count = 0
+        fallbacks_data = data.get("Fallbacks", 0)
+        if isinstance(fallbacks_data, int):
+            # New format: direct number
+            fallback_count = fallbacks_data
+        elif isinstance(fallbacks_data, list):
+            # Old format: count items with Fallback: "true"
+            for item in fallbacks_data:
+                if isinstance(item, dict):
+                    fallback_value = str(item.get("Fallback", "false")).lower()
+                    if fallback_value == "true":
+                        fallback_count += 1
+
+        # Parse textless count - support both formats
+        textless_count = 0
+        textless_data = data.get("Textless", 0)
+        if isinstance(textless_data, int):
+            textless_count = textless_data
+        elif isinstance(textless_data, list):
+            for item in textless_data:
+                if isinstance(item, dict):
+                    textless_value = str(item.get("Textless", "false")).lower()
+                    if textless_value == "true":
+                        textless_count += 1
+
+        # Parse truncated and text counts (direct numbers in new format)
+        truncated_count = data.get("Truncated", 0)
+        text_count = data.get("Text", 0)
+
         # Build the result dictionary
         result = {
             "mode": mode,
@@ -261,10 +292,15 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             "titlecards": data.get("Titlecards", 0),
             "collections": data.get("Collections", 0),
             "errors": data.get("Errors", 0),
+            "fallbacks": fallback_count,
+            "textless": textless_count,
+            "truncated": truncated_count,
+            "text": text_count,
             "tba_skipped": data.get("TBA Skipped", 0),
             "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
-            "notification_sent": data.get("Notification Sent", False),
-            "uptime_kuma": str(data.get("Uptime Kuma", "")),
+            "notification_sent": str(data.get("Notification Sent", "false")).lower()
+            == "true",
+            "uptime_kuma": str(data.get("Uptime Kuma", "false")).lower() == "true",
             "images_cleared": data.get("Images cleared", 0),
             "folders_cleared": data.get("Folders Cleared", 0),
             "space_saved": data.get("Space saved", ""),
@@ -351,6 +387,7 @@ def import_json_to_db(logs_dir: Path = None):
     - syncjelly.json
     - syncemby.json
     - backup.json
+    - scheduled.json
 
     Args:
         logs_dir: Path to Logs directory (auto-detected if not provided)
@@ -382,6 +419,7 @@ def import_json_to_db(logs_dir: Path = None):
             ("syncjelly.json", "syncjelly"),
             ("syncemby.json", "syncemby"),
             ("backup.json", "backup"),
+            ("scheduled.json", "scheduled"),
         ]
 
         imported_count = 0
