@@ -9125,6 +9125,7 @@ async def get_assets_overview():
 
         # Initialize categories
         missing_assets = []
+        missing_assets_fav_provider = []
         non_primary_lang = []
         non_primary_provider = []
         truncated_text = []
@@ -9142,7 +9143,6 @@ async def get_assets_overview():
             has_issue = False
 
             # Missing Assets: DownloadSource == "false" (string) or False (boolean) or empty
-            # OR FavProviderLink is missing
             download_source = record_dict.get("DownloadSource")
             provider_link = record_dict.get("FavProviderLink", "")
 
@@ -9156,8 +9156,14 @@ async def get_assets_overview():
                 provider_link == "false" or provider_link == False or not provider_link
             )
 
-            if is_download_missing or is_provider_link_missing:
+            # Category 1: Missing Asset (DownloadSource is missing)
+            if is_download_missing:
                 missing_assets.append(record_dict)
+                has_issue = True
+
+            # Category 2: Missing Asset at Favorite Provider (FavProviderLink is missing)
+            if is_provider_link_missing:
+                missing_assets_fav_provider.append(record_dict)
                 has_issue = True
 
             # Non-Primary Language: Check language against config
@@ -9230,6 +9236,10 @@ async def get_assets_overview():
                 "missing_assets": {
                     "count": len(missing_assets),
                     "assets": missing_assets,
+                },
+                "missing_assets_fav_provider": {
+                    "count": len(missing_assets_fav_provider),
+                    "assets": missing_assets_fav_provider,
                 },
                 "non_primary_lang": {
                     "count": len(non_primary_lang),
