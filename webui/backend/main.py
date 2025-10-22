@@ -7470,6 +7470,127 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         logger.info(f"  Episode Number: {request.episode_number}")
         logger.info("=" * 80)
 
+        # Try to get IDs from database if not provided in request
+        if not request.tmdb_id or not request.tvdb_id:
+            try:
+                from database import ImageChoices
+
+                db = ImageChoices()
+
+                db_record = None
+                search_method = None
+
+                # Method 1: Search by asset path (for AssetReplacer)
+                if request.asset_path and not request.asset_path.startswith("manual_"):
+                    # Extract show/movie name from asset path to match against Rootfolder
+                    # Example path: "D:/Media/Shows/Show Name (2020) {tmdb-123}/Season 01/poster.jpg"
+                    import os
+
+                    path_parts = request.asset_path.replace("\\", "/").split("/")
+
+                    # Look for folder with TMDB/TVDB ID pattern in path
+                    rootfolder_candidate = None
+                    for part in path_parts:
+                        # Check if this part has an ID pattern like {tmdb-123}, [tvdb-456], etc.
+                        if any(
+                            pattern in part.lower()
+                            for pattern in ["tmdb-", "tvdb-", "imdb-"]
+                        ):
+                            rootfolder_candidate = part
+                            break
+
+                    if rootfolder_candidate:
+                        logger.info(
+                            f"Searching database by path for: {rootfolder_candidate}"
+                        )
+                        search_method = "path"
+
+                        # Search database for matching record
+                        cursor = db.connection.cursor()
+                        cursor.execute(
+                            """
+                            SELECT tmdbid, tvdbid, imdbid, Rootfolder
+                            FROM imagechoices 
+                            WHERE Rootfolder LIKE ?
+                            LIMIT 1
+                        """,
+                            (f"%{rootfolder_candidate}%",),
+                        )
+
+                        db_record = cursor.fetchone()
+
+                # Method 2: Search by title + year (for Manual Mode)
+                if not db_record and request.title:
+                    logger.info(
+                        f"Searching database by title for: '{request.title}' (year: {request.year})"
+                    )
+                    search_method = "title"
+
+                    cursor = db.connection.cursor()
+
+                    # Try exact title match first
+                    if request.year:
+                        # Search with year in Rootfolder pattern: "Title (YYYY)"
+                        cursor.execute(
+                            """
+                            SELECT tmdbid, tvdbid, imdbid, Rootfolder
+                            FROM imagechoices 
+                            WHERE Rootfolder LIKE ?
+                            LIMIT 1
+                        """,
+                            (f"%{request.title}%({request.year})%",),
+                        )
+                    else:
+                        # Search without year
+                        cursor.execute(
+                            """
+                            SELECT tmdbid, tvdbid, imdbid, Rootfolder
+                            FROM imagechoices 
+                            WHERE Rootfolder LIKE ?
+                            LIMIT 1
+                        """,
+                            (f"%{request.title}%",),
+                        )
+
+                    db_record = cursor.fetchone()
+
+                # Process database record if found
+                if db_record:
+                    db_tmdbid = db_record[0] if db_record[0] != "false" else None
+                    db_tvdbid = db_record[1] if db_record[1] != "false" else None
+                    db_imdbid = db_record[2] if db_record[2] != "false" else None
+                    db_rootfolder = db_record[3]
+
+                    logger.info(f"Found database record (via {search_method}):")
+                    logger.info(f"  Rootfolder: {db_rootfolder}")
+                    logger.info(f"  TMDB ID: {db_tmdbid}")
+                    logger.info(f"  TVDB ID: {db_tvdbid}")
+                    logger.info(f"  IMDB ID: {db_imdbid}")
+
+                    # Use database IDs if not provided in request
+                    if not request.tmdb_id and db_tmdbid:
+                        request.tmdb_id = db_tmdbid
+                        logger.info(f"Using TMDB ID from database: {db_tmdbid}")
+
+                    if not request.tvdb_id and db_tvdbid:
+                        request.tvdb_id = db_tvdbid
+                        logger.info(f"Using TVDB ID from database: {db_tvdbid}")
+
+                    # Store IMDB ID for Fanart.tv (store in request for later use)
+                    if db_imdbid:
+                        # Store it as a custom attribute (we'll use it for Fanart)
+                        if not hasattr(request, "imdb_id"):
+                            request.imdb_id = db_imdbid
+                            logger.info(f"Using IMDB ID from database: {db_imdbid}")
+                else:
+                    logger.info(
+                        f"No matching database record found (searched via {search_method})"
+                    )
+
+            except Exception as e:
+                logger.warning(f"Could not query database for IDs: {e}")
+                logger.debug("Continuing with title-based search...")
+
         # Load config to get API keys and language preferences
         if not CONFIG_PATH.exists():
             raise HTTPException(status_code=404, detail="Config file not found")
@@ -7734,60 +7855,110 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         # Determine TMDB ID(s) - collect multiple IDs for dual search
         tmdb_ids_to_use = []
 
-        # If TMDB ID is provided, use it
+        # If TMDB ID is provided or found in DB, use it
         if request.tmdb_id:
             tmdb_ids_to_use.append(("provided_id", request.tmdb_id))
-            logger.info(f"Using provided TMDB ID: {request.tmdb_id}")
+            logger.info(f"Using TMDB ID from database/request: {request.tmdb_id}")
 
-        # If we have title, also search by title (even if ID was provided - for dual search)
-        if request.title and tmdb_token:
+        # Check if title contains an ID with prefix (e.g., "tmdb-123", "tvdb-456", "imdb-789")
+        # This handles manual ID entry in RunModes search bar with explicit provider prefix
+        # ONLY check for prefixes if we don't have IDs from database yet
+        potential_tmdb_id = None
+        potential_tvdb_id = None
+        potential_imdb_id = None
+        detected_provider = None  # Track which provider prefix was used
+
+        if not tmdb_ids_to_use and request.title:
+            title_lower = request.title.strip().lower()
+
+            # Check for TMDB ID: tmdb-123 or tmdb:123
+            tmdb_match = re.match(r"tmdb[-:](\d+)", title_lower)
+            if tmdb_match:
+                potential_tmdb_id = tmdb_match.group(1)
+                detected_provider = "tmdb"
+                logger.info(f"Detected TMDB ID from title prefix: {potential_tmdb_id}")
+
+            # Check for TVDB ID: tvdb-123 or tvdb:123
+            tvdb_match = re.match(r"tvdb[-:](\d+)", title_lower)
+            if tvdb_match:
+                potential_tvdb_id = tvdb_match.group(1)
+                detected_provider = "tvdb"
+                logger.info(f"Detected TVDB ID from title prefix: {potential_tvdb_id}")
+
+            # Check for IMDB ID: imdb-123 or imdb:123 or imdb-tt123 or just tt123
+            imdb_match = re.match(r"(?:imdb[-:])?(?:tt)?(\d+)", title_lower)
+            if imdb_match and (
+                title_lower.startswith("imdb") or title_lower.startswith("tt")
+            ):
+                potential_imdb_id = imdb_match.group(1)
+                detected_provider = "imdb"
+                # IMDB IDs should have the 'tt' prefix for Fanart.tv
+                if not potential_imdb_id.startswith("tt"):
+                    potential_imdb_id = f"tt{potential_imdb_id}"
+                logger.info(f"Detected IMDB ID from title prefix: {potential_imdb_id}")
+
+        # If we detected a TMDB ID in title prefix, use it
+        if not tmdb_ids_to_use and potential_tmdb_id:
+            tmdb_ids_to_use.append(("manual_id_entry", potential_tmdb_id))
             logger.info(
-                f"Searching TMDB for title: '{request.title}' (year: {request.year})"
+                f"Using manually entered TMDB ID from prefix: {potential_tmdb_id}"
+            )
+
+        # Only search by title if we don't have any TMDB ID yet AND no ID prefix was detected
+        if (
+            not tmdb_ids_to_use
+            and request.title
+            and not (potential_tmdb_id or potential_tvdb_id or potential_imdb_id)
+            and tmdb_token
+        ):
+            logger.info(
+                f"No TMDB ID available - searching TMDB by title: '{request.title}' (year: {request.year})"
             )
             found_id = await search_tmdb_id(
                 request.title, request.year, request.media_type
             )
-            if (
-                found_id
-                and ("title_search", found_id) not in tmdb_ids_to_use
-                and ("provided_id", found_id) not in tmdb_ids_to_use
-            ):
+            if found_id:
                 tmdb_ids_to_use.append(("title_search", found_id))
                 logger.info(f"Found TMDB ID from title search: {found_id}")
-            elif not found_id:
+            else:
                 logger.warning(f"No TMDB ID found for title: '{request.title}'")
 
         # Determine TVDB ID(s) - collect multiple IDs for dual search
         tvdb_ids_to_use = []
 
-        # If TVDB ID is provided, use it
+        # If TVDB ID is provided or found in DB, use it (works for both TV and Movies in TVDB API v4)
         if request.tvdb_id:
             tvdb_ids_to_use.append(("provided_id", request.tvdb_id))
-            logger.info(f"Using provided TVDB ID: {request.tvdb_id}")
-
-        # If we have title and it's TV, also search by title
-        if request.title and tvdb_api_key and request.media_type == "tv":
             logger.info(
-                f"Searching TVDB for title: '{request.title}' (year: {request.year})"
+                f"Using TVDB ID from database/request: {request.tvdb_id} (media_type: {request.media_type})"
+            )
+
+        # If we detected a TVDB ID in title prefix (only if no DB ID), use it
+        if not tvdb_ids_to_use and potential_tvdb_id:
+            tvdb_ids_to_use.append(("manual_id_entry", potential_tvdb_id))
+            logger.info(
+                f"Using manually entered TVDB ID from prefix: {potential_tvdb_id}"
+            )
+
+        # Only search by title if we don't have any TVDB ID yet AND no ID prefix was detected
+        # TVDB API v4 supports both TV shows and movies
+        if (
+            not tvdb_ids_to_use
+            and request.title
+            and not (potential_tmdb_id or potential_tvdb_id or potential_imdb_id)
+            and tvdb_api_key
+        ):
+            logger.info(
+                f"No TVDB ID available - searching TVDB by title: '{request.title}' (year: {request.year}, media_type: {request.media_type})"
             )
             found_id = await search_tvdb_id(
                 request.title, request.year, request.media_type
             )
-            if (
-                found_id
-                and ("title_search", found_id) not in tvdb_ids_to_use
-                and ("provided_id", found_id) not in tvdb_ids_to_use
-            ):
+            if found_id:
                 tvdb_ids_to_use.append(("title_search", found_id))
                 logger.info(f"Found TVDB ID from title search: {found_id}")
-            elif not found_id:
+            else:
                 logger.warning(f"No TVDB ID found for title: '{request.title}'")
-        elif request.media_type == "tv" and not tvdb_api_key:
-            logger.warning(
-                f"TVDB: Cannot search for TV show '{request.title}' - no TVDB API key configured"
-            )
-        elif request.media_type == "tv" and not request.title:
-            logger.warning(f"TVDB: Cannot search - no title provided for TV show")
 
         # Create async tasks for parallel fetching - AFTER IDs are resolved
         async def fetch_tmdb():
@@ -7975,61 +8146,240 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                             # Fetch from all collected IDs
                             for source, tvdb_id in tvdb_ids_to_use:
-                                logger.info(
-                                    f" TVDB: Fetching artwork for series ID: {tvdb_id} (from {source})"
+                                # TVDB API v4 supports both series and movies
+                                entity_type = (
+                                    "series" if request.media_type == "tv" else "movies"
                                 )
 
-                                # Fetch artwork
-                                artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/artworks"
-                                artwork_params = {
-                                    "lang": "eng",
-                                    "type": "2",
-                                }  # type=2 for posters
-
-                                if request.asset_type == "background":
-                                    artwork_params["type"] = (
-                                        "3"  # type=3 for backgrounds
-                                    )
-
-                                logger.info(
-                                    f" TVDB: Requesting {artwork_url} with params {artwork_params}"
-                                )
-                                artwork_response = await client.get(
-                                    artwork_url,
-                                    headers=auth_headers,
-                                    params=artwork_params,
-                                )
-
-                                logger.info(
-                                    f" TVDB: Response status: {artwork_response.status_code}"
-                                )
-                                if artwork_response.status_code == 200:
-                                    artwork_data = artwork_response.json()
-                                    artworks = artwork_data.get("data", {}).get(
-                                        "artworks", []
-                                    )
+                                # Handle season-specific requests
+                                if (
+                                    request.asset_type == "season"
+                                    and request.season_number
+                                    and entity_type == "series"
+                                ):
+                                    # Fetch season-specific artwork using extended endpoint
                                     logger.info(
-                                        f" TVDB: Found {len(artworks)} artworks in response"
+                                        f" TVDB: Fetching season {request.season_number} artwork for series ID: {tvdb_id} (from {source})"
+                                    )
+                                    artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/extended"
+
+                                    logger.info(f" TVDB: Requesting {artwork_url}")
+                                    artwork_response = await client.get(
+                                        artwork_url,
+                                        headers=auth_headers,
                                     )
 
-                                    for artwork in artworks:
-                                        image_url = artwork.get("image")
-                                        if image_url and image_url not in seen_urls:
-                                            seen_urls.add(image_url)
-                                            all_results.append(
-                                                {
-                                                    "url": image_url,
-                                                    "original_url": image_url,
-                                                    "source": "TVDB",
-                                                    "source_type": source,  # "provided_id" or "title_search"
-                                                    "type": request.asset_type,
-                                                    "language": artwork.get("language"),
-                                                }
-                                            )
-                                else:
-                                    logger.warning(
-                                        f" TVDB: Non-200 response: {artwork_response.status_code} - {artwork_response.text[:200]}"
+                                    logger.info(
+                                        f" TVDB: Response status: {artwork_response.status_code}"
                                     )
+                                    if artwork_response.status_code == 200:
+                                        extended_data = artwork_response.json()
+                                        seasons = extended_data.get("data", {}).get(
+                                            "seasons", []
+                                        )
+                                        logger.info(
+                                            f" TVDB: Found {len(seasons)} seasons in response"
+                                        )
+
+                                        # Find matching season
+                                        for season in seasons:
+                                            if (
+                                                season.get("number")
+                                                == request.season_number
+                                            ):
+                                                season_image = season.get("image")
+                                                if (
+                                                    season_image
+                                                    and season_image not in seen_urls
+                                                ):
+                                                    seen_urls.add(season_image)
+                                                    all_results.append(
+                                                        {
+                                                            "url": season_image,
+                                                            "original_url": season_image,
+                                                            "source": "TVDB",
+                                                            "source_type": source,
+                                                            "type": "season",
+                                                            "language": "eng",
+                                                        }
+                                                    )
+                                                    logger.info(
+                                                        f" TVDB: Added season {request.season_number} poster"
+                                                    )
+                                                break
+                                    else:
+                                        logger.warning(
+                                            f" TVDB: Non-200 response: {artwork_response.status_code} - {artwork_response.text[:200]}"
+                                        )
+                                else:
+                                    # Regular artwork fetch (posters, backgrounds)
+                                    logger.info(
+                                        f" TVDB: Fetching artwork for {entity_type} ID: {tvdb_id} (from {source})"
+                                    )
+
+                                    # For manual ID entry (prefix detected), try both movies and series
+                                    # This handles cases where user enters tvdb:28 without knowing if it's a movie or series
+                                    should_try_both_types = source == "manual_id_entry"
+
+                                    # Try movies first (if entity_type is movies OR if manual entry)
+                                    if entity_type == "movies" or should_try_both_types:
+                                        artwork_url = f"https://api4.thetvdb.com/v4/movies/{tvdb_id}/extended"
+
+                                        logger.info(
+                                            f" TVDB: Requesting {artwork_url} (movies extended)"
+                                        )
+                                        artwork_response = await client.get(
+                                            artwork_url,
+                                            headers=auth_headers,
+                                        )
+
+                                        logger.info(
+                                            f" TVDB: Movies response status: {artwork_response.status_code}"
+                                        )
+
+                                        if artwork_response.status_code == 200:
+                                            movie_data = artwork_response.json()
+                                            artworks = movie_data.get("data", {}).get(
+                                                "artworks", []
+                                            )
+                                            logger.info(
+                                                f" TVDB: Found {len(artworks)} artworks in movies extended response"
+                                            )
+
+                                            # Debug: Log first few artwork types to understand the structure
+                                            if artworks:
+                                                sample_types = {}
+                                                for artwork in artworks[:10]:
+                                                    art_type = artwork.get("type")
+                                                    if art_type not in sample_types:
+                                                        sample_types[art_type] = 0
+                                                    sample_types[art_type] += 1
+                                                logger.info(
+                                                    f" TVDB: Sample artwork types from first 10: {sample_types}"
+                                                )
+
+                                            # Filter artworks by type
+                                            poster_count = 0
+                                            background_count = 0
+                                            for artwork in artworks:
+                                                artwork_type = artwork.get("type")
+                                                image_url = artwork.get("image")
+
+                                                # Movies endpoint uses different type codes than series
+                                                # type=14 for posters, type=15 for backgrounds
+                                                # "standard" asset type is treated as posters
+                                                if (
+                                                    request.asset_type
+                                                    in ["poster", "standard"]
+                                                ) and artwork_type == 14:
+                                                    poster_count += 1
+                                                    if (
+                                                        image_url
+                                                        and image_url not in seen_urls
+                                                    ):
+                                                        seen_urls.add(image_url)
+                                                        all_results.append(
+                                                            {
+                                                                "url": image_url,
+                                                                "original_url": image_url,
+                                                                "source": "TVDB",
+                                                                "source_type": source,
+                                                                "type": request.asset_type,
+                                                                "language": artwork.get(
+                                                                    "language"
+                                                                ),
+                                                            }
+                                                        )
+                                                elif (
+                                                    request.asset_type == "background"
+                                                    and artwork_type == 15
+                                                ):
+                                                    background_count += 1
+                                                    if (
+                                                        image_url
+                                                        and image_url not in seen_urls
+                                                    ):
+                                                        seen_urls.add(image_url)
+                                                        all_results.append(
+                                                            {
+                                                                "url": image_url,
+                                                                "original_url": image_url,
+                                                                "source": "TVDB",
+                                                                "source_type": source,
+                                                                "type": request.asset_type,
+                                                                "language": artwork.get(
+                                                                    "language"
+                                                                ),
+                                                            }
+                                                        )
+
+                                            logger.info(
+                                                f" TVDB: Movies artwork types - Posters (type=14): {poster_count}, Backgrounds (type=15): {background_count}, Added to results: {len(all_results)}"
+                                            )
+                                        else:
+                                            logger.info(
+                                                f" TVDB: Movies endpoint returned {artwork_response.status_code} - {'Success but no artworks' if artwork_response.status_code == 200 else 'trying series endpoint'}"
+                                            )
+
+                                    # Try series endpoint (if entity_type is series OR if manual entry and movies didn't work)
+                                    if entity_type == "series" or (
+                                        should_try_both_types and len(all_results) == 0
+                                    ):
+                                        artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/artworks"
+                                        artwork_params = {
+                                            "lang": "eng",
+                                            "type": "2",
+                                        }  # type=2 for posters
+
+                                        if request.asset_type == "background":
+                                            artwork_params["type"] = (
+                                                "3"  # type=3 for backgrounds
+                                            )
+
+                                        logger.info(
+                                            f" TVDB: Requesting {artwork_url} with params {artwork_params} (series)"
+                                        )
+                                        artwork_response = await client.get(
+                                            artwork_url,
+                                            headers=auth_headers,
+                                            params=artwork_params,
+                                        )
+
+                                        logger.info(
+                                            f" TVDB: Series response status: {artwork_response.status_code}"
+                                        )
+                                        if artwork_response.status_code == 200:
+                                            artwork_data = artwork_response.json()
+                                            artworks = artwork_data.get("data", {}).get(
+                                                "artworks", []
+                                            )
+                                            logger.info(
+                                                f" TVDB: Found {len(artworks)} artworks in series response"
+                                            )
+
+                                            for artwork in artworks:
+                                                image_url = artwork.get("image")
+                                                if (
+                                                    image_url
+                                                    and image_url not in seen_urls
+                                                ):
+                                                    seen_urls.add(image_url)
+                                                    all_results.append(
+                                                        {
+                                                            "url": image_url,
+                                                            "original_url": image_url,
+                                                            "source": "TVDB",
+                                                            "source_type": source,  # "provided_id" or "title_search"
+                                                            "type": request.asset_type,
+                                                            "language": artwork.get(
+                                                                "language"
+                                                            ),
+                                                        }
+                                                    )
+                                        else:
+                                            logger.info(
+                                                f" TVDB: Series endpoint returned {artwork_response.status_code}"
+                                            )
 
                 logger.info(
                     f" TVDB: Collected {len(all_results)} unique images from {len(tvdb_ids_to_use)} ID(s)"
@@ -8041,13 +8391,26 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             return all_results
 
         async def fetch_fanart():
-            """Fetch Fanart.tv assets asynchronously from all collected IDs"""
+            """Fetch Fanart.tv assets asynchronously from all collected IDs
+
+            ID Usage:
+            - Movies: TMDB ID + IMDB ID
+            - TV Shows: TVDB ID only
+            """
             if not fanart_api_key:
                 logger.warning("Fanart.tv: No API key configured")
                 return []
 
-            if not (tmdb_ids_to_use or tvdb_ids_to_use):
-                logger.warning("Fanart.tv: No TMDB IDs or TVDB IDs available")
+            # Check if we have any IDs to use
+            imdb_id = getattr(request, "imdb_id", None)
+
+            # If we detected a manual IMDB ID entry, use it for Fanart (Movies only!)
+            if not imdb_id and potential_imdb_id and request.media_type == "movie":
+                imdb_id = potential_imdb_id
+                logger.info(f"Using manually entered IMDB ID for Fanart.tv: {imdb_id}")
+
+            if not (tmdb_ids_to_use or tvdb_ids_to_use or imdb_id):
+                logger.warning("Fanart.tv: No TMDB, TVDB, or IMDB IDs available")
                 return []
 
             all_results = []
@@ -8055,13 +8418,50 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
-                    # Fetch from TMDB IDs for movies
-                    if request.media_type == "movie" and tmdb_ids_to_use:
-                        for source, tmdb_id in tmdb_ids_to_use:
+                    # ========== MOVIES: Use TMDB ID + IMDB ID ==========
+                    if request.media_type == "movie":
+                        # Try TMDB IDs first
+                        if tmdb_ids_to_use:
+                            for source, tmdb_id in tmdb_ids_to_use:
+                                logger.info(
+                                    f" Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
+                                )
+                                url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id}?api_key={fanart_api_key}"
+                                response = await client.get(url)
+                                if response.status_code == 200:
+                                    data = response.json()
+
+                                    # Map asset types to fanart.tv keys
+                                    if request.asset_type == "poster":
+                                        fanart_keys = ["movieposter"]
+                                    elif request.asset_type == "background":
+                                        fanart_keys = ["moviebackground"]
+                                    else:
+                                        fanart_keys = []
+
+                                    for key in fanart_keys:
+                                        for item in data.get(key, []):
+                                            item_url = item.get("url")
+                                            if item_url and item_url not in seen_urls:
+                                                seen_urls.add(item_url)
+                                                all_results.append(
+                                                    {
+                                                        "url": item_url,
+                                                        "original_url": item_url,
+                                                        "source": "Fanart.tv",
+                                                        "source_type": source,
+                                                        "type": request.asset_type,
+                                                        "language": item.get("lang"),
+                                                        "likes": item.get("likes", 0),
+                                                    }
+                                                )
+
+                        # Also try IMDB ID if available (Movies only!)
+                        if imdb_id:
                             logger.info(
-                                f" Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
+                                f" Fanart.tv: Fetching movie artwork for IMDB ID: {imdb_id} (from database)"
                             )
-                            url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id}?api_key={fanart_api_key}"
+                            url = f"https://webservice.fanart.tv/v3/movies/{imdb_id}?api_key={fanart_api_key}"
                             response = await client.get(url)
                             if response.status_code == 200:
                                 data = response.json()
@@ -8084,14 +8484,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                     "url": item_url,
                                                     "original_url": item_url,
                                                     "source": "Fanart.tv",
-                                                    "source_type": source,  # "provided_id" or "title_search"
+                                                    "source_type": "imdb_id",
                                                     "type": request.asset_type,
                                                     "language": item.get("lang"),
                                                     "likes": item.get("likes", 0),
                                                 }
                                             )
 
-                    # Fetch from TVDB IDs for TV shows
+                    # ========== TV SHOWS: Use TVDB ID only ==========
                     elif request.media_type == "tv" and tvdb_ids_to_use:
                         logger.info(
                             f" Fanart.tv: Processing {len(tvdb_ids_to_use)} TVDB IDs for TV show"
@@ -8110,7 +8510,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                                 # Map asset types to fanart.tv keys
                                 if request.asset_type == "poster":
+                                    # Standard TV show posters
                                     fanart_keys = ["tvposter"]
+                                elif request.asset_type == "season":
+                                    # Season-specific posters
+                                    # Fanart.tv has seasonposter but requires season filtering
+                                    fanart_keys = ["seasonposter"]
                                 elif request.asset_type == "background":
                                     fanart_keys = ["showbackground"]
                                 else:
@@ -8125,6 +8530,32 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         f" Fanart.tv: Found {len(items)} items for key '{key}'"
                                     )
                                     for item in items:
+                                        # For season posters, filter by season number
+                                        if (
+                                            key == "seasonposter"
+                                            and request.season_number
+                                        ):
+                                            item_season = item.get("season")
+                                            # Convert to int for comparison, handle string seasons like "1" or "01"
+                                            try:
+                                                item_season_num = (
+                                                    int(item_season)
+                                                    if item_season
+                                                    else None
+                                                )
+                                            except (ValueError, TypeError):
+                                                item_season_num = None
+
+                                            if item_season_num != request.season_number:
+                                                logger.debug(
+                                                    f" Fanart.tv: Skipping season {item_season} poster (looking for season {request.season_number})"
+                                                )
+                                                continue
+                                            else:
+                                                logger.info(
+                                                    f" Fanart.tv: Found matching season {request.season_number} poster"
+                                                )
+
                                         item_url = item.get("url")
                                         if item_url and item_url not in seen_urls:
                                             seen_urls.add(item_url)
@@ -8233,6 +8664,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             "success": True,
             "results": results,
             "total_count": total_count,
+            "detected_provider": detected_provider,  # Let frontend know if a prefix was used
         }
 
     except Exception as e:
