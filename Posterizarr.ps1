@@ -43,7 +43,8 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
         # If next item is missing OR also starts with "-", treat as a switch
         if ($i + 1 -ge $ExtraArgs.Count -or $ExtraArgs[$i + 1] -like '-*') {
             $arrTriggers[$key] = $true
-        } else {
+        }
+        else {
             $arrTriggers[$key] = $ExtraArgs[$i + 1]
             $i++ # skip value since it was consumed
         }
@@ -1208,7 +1209,7 @@ function GetTMDBMoviePoster {
                     $NoLangPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                    $NoLangPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1304,14 +1305,14 @@ function GetTMDBMoviePoster {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null}
+                            $filteredPosters = $response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null }
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
                             }
 
                         }
                         Else {
-                            $filteredPosters = $response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null}
+                            $filteredPosters = $response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null }
 
                             if ($filteredPosters) {
                                 $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1352,7 +1353,7 @@ function GetTMDBMoviePoster {
                             $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
-                            $FavPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                            $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                     }
                     Else {
@@ -1417,7 +1418,7 @@ function GetTMDBMovieBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                    $NoLangPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1505,10 +1506,10 @@ function GetTMDBMovieBackground {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })[0]).file_path
                         }
                         Else {
-                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                     }
                     if ($posterpath) {
@@ -1557,7 +1558,7 @@ function GetTMDBMovieBackground {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                            $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
                             $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
@@ -1636,7 +1637,7 @@ function GetTMDBShowPoster {
                         $NoLangPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                     }
                     Else {
-                        $NoLangPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                        $NoLangPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                     }
                     if (!$NoLangPoster) {
                         Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1723,13 +1724,13 @@ function GetTMDBShowPoster {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                                $posterpath = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                                 if ($posterpath) {
                                     $posterpath = $posterpath[0].file_path
                                 }
                             }
                             Else {
-                                $posterpath = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null} | Sort-Object $global:TMDBVoteSorting -Descending)
+                                $posterpath = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)
                                 if ($posterpath) {
                                     $posterpath = $posterpath[0].file_path
                                 }
@@ -1776,7 +1777,7 @@ function GetTMDBShowPoster {
                         }
                         Else {
                             if ($lang -eq 'null') {
-                                $FavPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                                $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                             }
                             Else {
                                 $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
@@ -1927,10 +1928,10 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})[0]).file_path
+                            $posterpath = (($response.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })[0]).file_path
                         }
                         Else {
-                            $posterpath = (($response.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            $posterpath = (($response.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                     }
                     if ($posterpath) {
@@ -1986,7 +1987,7 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($responseBackup.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                            $FavPoster = ($responseBackup.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
                             $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $lang)
@@ -2037,7 +2038,7 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                            $FavPoster = ($response.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
                             $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $lang)
@@ -2102,7 +2103,7 @@ function GetTMDBShowBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                    $NoLangPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -2188,10 +2189,10 @@ function GetTMDBShowBackground {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })[0]).file_path
                         }
                         Else {
-                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                     }
                     if ($posterpath) {
@@ -2246,7 +2247,7 @@ function GetTMDBShowBackground {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                            $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
                             $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
@@ -2313,7 +2314,7 @@ function GetTMDBTitleCard {
     }
     if ($response) {
         if ($response.stills) {
-            $NoLangPoster = ($response.stills | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+            $NoLangPoster = ($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
             if (!$NoLangPoster) {
                 if ($global:WidthHeightFilter -eq 'true') {
                     if ($global:TMDBVoteSorting -eq 'primary') {
@@ -2390,10 +2391,10 @@ function GetTMDBTitleCard {
                 }
                 Else {
                     if ($global:TMDBVoteSorting -eq 'primary') {
-                        $posterpath = (($response.stills | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})[0]).file_path
+                        $posterpath = (($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })[0]).file_path
                     }
                     Else {
-                        $posterpath = (($response.stills | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        $posterpath = (($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                     }
                 }
                 if ($posterpath) {
@@ -6344,29 +6345,29 @@ function MassDownloadPlexArtwork {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters             = $posterCount
-        Backgrounds         = $BackgroundCount
-        Titlecards          = $EpisodeCount
-        Seasons             = $SeasonCount
-        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-        Mode                = $Mode
-        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Posters              = $posterCount
+        Backgrounds          = $BackgroundCount
+        Titlecards           = $EpisodeCount
+        Seasons              = $SeasonCount
+        Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                 = $Mode
+        Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors               = if ($errorCount) { $errorCount } Else { 0 }
         Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
         Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
         Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
         Text                 = if ($TextCount) { $TextCount } Else { 0 }
-        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-        "Script Version"    = $CurrentScriptVersion
-        "IM Version"        = $global:CurrentImagemagickversion
-        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"     = $CurrentScriptVersion
+        "IM Version"         = $global:CurrentImagemagickversion
+        "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
     }
 
     $jsonOutput = $jsonObject | ConvertTo-Json
@@ -7239,10 +7240,12 @@ else {
     try {
         if ($raw.StartsWith('.')) {
             $fullPath = [System.IO.Path]::GetFullPath((Join-Path $global:ScriptRoot $raw))
-        } else {
+        }
+        else {
             $fullPath = [System.IO.Path]::GetFullPath($raw)
         }
-    } catch {
+    }
+    catch {
         $fullPath = Join-Path $global:ScriptRoot 'magick'
     }
     if ($fullPath -match '(?i)\.exe$') {
@@ -7252,7 +7255,8 @@ else {
         }
         $magickinstalllocation = $dir
         $magick = $fullPath
-    } else {
+    }
+    else {
         if (-not (Test-Path $fullPath)) {
             New-Item -ItemType Directory -Force -Path $fullPath | Out-Null
         }
@@ -8316,6 +8320,9 @@ if ($Manual) {
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $PicturePath
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value 'false'
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "true"
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value "false"
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value "false"
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value "false"
         # Export the array to a CSV file
         $CSVtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
 
@@ -8330,29 +8337,29 @@ if ($Manual) {
 
         # Export json
         $jsonObject = [PSCustomObject]@{
-            Posters             = $posterCount
-            Backgrounds         = $BackgroundCount
-            Titlecards          = $EpisodeCount
-            Seasons             = $SeasonCount
-            Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-            Mode                = $Mode
-            Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-            Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            Posters              = $posterCount
+            Backgrounds          = $BackgroundCount
+            Titlecards           = $EpisodeCount
+            Seasons              = $SeasonCount
+            Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+            Mode                 = $Mode
+            Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+            Errors               = if ($errorCount) { $errorCount } Else { 0 }
             Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
             Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
             Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
             Text                 = if ($TextCount) { $TextCount } Else { 0 }
-            "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+            "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
             "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-            "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-            "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-            "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-            "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-            "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-            "Script Version"    = $CurrentScriptVersion
-            "IM Version"        = $global:CurrentImagemagickversion
-            "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-            "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+            "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+            "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+            "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+            "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+            "Script Version"     = $CurrentScriptVersion
+            "IM Version"         = $global:CurrentImagemagickversion
+            "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
         }
 
         $jsonOutput = $jsonObject | ConvertTo-Json
@@ -9511,29 +9518,29 @@ Elseif ($Testing) {
     }
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters             = $posterscount
-        Backgrounds         = $backgroundsscount
-        Titlecards          = $titlecardscount
-        Seasons             = $seasonscount
-        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-        Mode                = $Mode
-        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Posters              = $posterscount
+        Backgrounds          = $backgroundsscount
+        Titlecards           = $titlecardscount
+        Seasons              = $seasonscount
+        Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                 = $Mode
+        Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors               = if ($errorCount) { $errorCount } Else { 0 }
         Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
         Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
         Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
         Text                 = if ($TextCount) { $TextCount } Else { 0 }
-        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-        "Script Version"    = $CurrentScriptVersion
-        "IM Version"        = $global:CurrentImagemagickversion
-        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"     = $CurrentScriptVersion
+        "IM Version"         = $global:CurrentImagemagickversion
+        "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
     }
 
     $jsonOutput = $jsonObject | ConvertTo-Json
@@ -10384,6 +10391,9 @@ Elseif ($Tautulli) {
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -10416,6 +10426,9 @@ Elseif ($Tautulli) {
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -10822,6 +10835,9 @@ Elseif ($Tautulli) {
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -10853,6 +10869,9 @@ Elseif ($Tautulli) {
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -10899,6 +10918,9 @@ Elseif ($Tautulli) {
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -11343,6 +11365,9 @@ Elseif ($Tautulli) {
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -11374,6 +11399,9 @@ Elseif ($Tautulli) {
                             $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                 'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -11797,6 +11825,9 @@ Elseif ($Tautulli) {
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -11828,6 +11859,9 @@ Elseif ($Tautulli) {
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                 'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -12442,6 +12476,9 @@ Elseif ($Tautulli) {
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -12473,6 +12510,9 @@ Elseif ($Tautulli) {
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -13021,6 +13061,9 @@ Elseif ($Tautulli) {
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                             switch -Wildcard ($global:FavProvider) {
                                                                 'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                 'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -13051,6 +13094,9 @@ Elseif ($Tautulli) {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -13576,6 +13622,9 @@ Elseif ($Tautulli) {
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                             switch -Wildcard ($global:FavProvider) {
                                                                 'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                 'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -13606,6 +13655,9 @@ Elseif ($Tautulli) {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -13701,6 +13753,9 @@ Elseif ($Tautulli) {
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Manual" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $null
 
         $ImageChoicesDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
@@ -13710,29 +13765,29 @@ Elseif ($Tautulli) {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters             = $posterCount
-        Backgrounds         = $BackgroundCount
-        Titlecards          = $EpisodeCount
-        Seasons             = $SeasonCount
-        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-        Mode                = $Mode
-        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Posters              = $posterCount
+        Backgrounds          = $BackgroundCount
+        Titlecards           = $EpisodeCount
+        Seasons              = $SeasonCount
+        Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                 = $Mode
+        Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors               = if ($errorCount) { $errorCount } Else { 0 }
         Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
         Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
         Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
         Text                 = if ($TextCount) { $TextCount } Else { 0 }
-        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-        "Script Version"    = $CurrentScriptVersion
-        "IM Version"        = $global:CurrentImagemagickversion
-        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"     = $CurrentScriptVersion
+        "IM Version"         = $global:CurrentImagemagickversion
+        "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
     }
 
     $jsonOutput = $jsonObject | ConvertTo-Json
@@ -13801,6 +13856,20 @@ Elseif ($ArrTrigger) {
                 $seriesItem = $seriesSearch.Items | Where-Object { $_.ProductionYear -eq $seriesYear } | Select-Object -First 1
                 if (-not $seriesItem) {
                     Write-Entry -Message "Series '$seriesTitle' ($seriesYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Series '$seriesTitle' ($seriesYear) not found in Jellyfin"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found series: $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13810,6 +13879,20 @@ Elseif ($ArrTrigger) {
                 $seasonItem = $seasons.Items | Where-Object { $_.IndexNumber -eq $seasonIndex }
                 if (-not $seasonItem) {
                     Write-Entry -Message "Season $seasonIndex not found for series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Season $seasonIndex not found for series $($seriesItem.Name)"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found season $seasonIndex" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13819,6 +13902,20 @@ Elseif ($ArrTrigger) {
                 $episodeItem = $episodes.Items | Where-Object { $_.IndexNumber -eq $episodeIndex }
                 if (-not $episodeItem) {
                     Write-Entry -Message "Episode $episodeIndex not found in season $seasonIndex of series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Episode $episodeIndex not found in season $seasonIndex of series $($seriesItem.Name)"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found episode $($episodeIndex): $($episodeItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13835,6 +13932,20 @@ Elseif ($ArrTrigger) {
 
                 if ($null -eq $shows -or $shows.Count -eq 0) {
                     Write-Entry -Message "No shows found matching '$seriesTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "No shows found matching '$seriesTitle'"
+                    }
                     Exit
                 }
 
@@ -13869,6 +13980,20 @@ Elseif ($ArrTrigger) {
                 $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
                 if (-not $movieItem) {
                     Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Movie '$movieTitle' ($movieYear) not found in Jellyfin"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13880,6 +14005,20 @@ Elseif ($ArrTrigger) {
                 $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
                 if (-not $movieItem) {
                     Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Movie '$movieTitle' ($movieYear) not found in Jellyfin"
+                    }
                     Exit
                 }
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13894,6 +14033,20 @@ Elseif ($ArrTrigger) {
 
                 if ($null -eq $movies -or $movies.Count -eq 0) {
                     Write-Entry -Message "No movies found matching '$movieTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "No movies found matching '$movieTitle'"
+                    }
                     Exit
                 }
 
@@ -14740,6 +14893,9 @@ Elseif ($ArrTrigger) {
                                                 $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                     'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -14772,6 +14928,9 @@ Elseif ($ArrTrigger) {
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                         'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -15142,6 +15301,9 @@ Elseif ($ArrTrigger) {
                                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -15173,6 +15335,9 @@ Elseif ($ArrTrigger) {
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                         'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -15226,6 +15391,9 @@ Elseif ($ArrTrigger) {
                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                         'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -15618,6 +15786,9 @@ Elseif ($ArrTrigger) {
                                             $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -15649,6 +15820,9 @@ Elseif ($ArrTrigger) {
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -16029,6 +16203,9 @@ Elseif ($ArrTrigger) {
                                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -16060,6 +16237,9 @@ Elseif ($ArrTrigger) {
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -16586,6 +16766,9 @@ Elseif ($ArrTrigger) {
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -16617,6 +16800,9 @@ Elseif ($ArrTrigger) {
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -17070,6 +17256,9 @@ Elseif ($ArrTrigger) {
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                                 switch -Wildcard ($global:FavProvider) {
                                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                     'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -17100,6 +17289,9 @@ Elseif ($ArrTrigger) {
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                         switch -Wildcard ($global:FavProvider) {
                                                             'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                             'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -17532,6 +17724,9 @@ Elseif ($ArrTrigger) {
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                                 switch -Wildcard ($global:FavProvider) {
                                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                     'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -17562,6 +17757,9 @@ Elseif ($ArrTrigger) {
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                         switch -Wildcard ($global:FavProvider) {
                                                             'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                             'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -17695,6 +17893,9 @@ Elseif ($ArrTrigger) {
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $null
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $null
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Manual" -Value $null
+            $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+            $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+            $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $null
 
             $ImageChoicesDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -17900,29 +18101,29 @@ Elseif ($ArrTrigger) {
 
         # Export json
         $jsonObject = [PSCustomObject]@{
-            Posters             = $posterCount
-            Backgrounds         = $BackgroundCount
-            Titlecards          = $EpisodeCount
-            Seasons             = $SeasonCount
-            Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-            Mode                = $Mode
-            Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-            Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            Posters              = $posterCount
+            Backgrounds          = $BackgroundCount
+            Titlecards           = $EpisodeCount
+            Seasons              = $SeasonCount
+            Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+            Mode                 = $Mode
+            Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+            Errors               = if ($errorCount) { $errorCount } Else { 0 }
             Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
             Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
             Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
             Text                 = if ($TextCount) { $TextCount } Else { 0 }
-            "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+            "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
             "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-            "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-            "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-            "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-            "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-            "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-            "Script Version"    = $CurrentScriptVersion
-            "IM Version"        = $global:CurrentImagemagickversion
-            "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-            "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+            "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+            "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+            "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+            "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+            "Script Version"     = $CurrentScriptVersion
+            "IM Version"         = $global:CurrentImagemagickversion
+            "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
         }
 
         $jsonOutput = $jsonObject | ConvertTo-Json
@@ -18725,6 +18926,9 @@ Elseif ($ArrTrigger) {
                                                 $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                     'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -18757,6 +18961,9 @@ Elseif ($ArrTrigger) {
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                         'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -19163,6 +19370,9 @@ Elseif ($ArrTrigger) {
                                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -19194,6 +19404,9 @@ Elseif ($ArrTrigger) {
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                         'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -19240,6 +19453,9 @@ Elseif ($ArrTrigger) {
                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                         'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -19684,6 +19900,9 @@ Elseif ($ArrTrigger) {
                                             $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -19715,6 +19934,9 @@ Elseif ($ArrTrigger) {
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -20138,6 +20360,9 @@ Elseif ($ArrTrigger) {
                                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -20169,6 +20394,9 @@ Elseif ($ArrTrigger) {
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -20782,6 +21010,9 @@ Elseif ($ArrTrigger) {
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                     'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -20813,6 +21044,9 @@ Elseif ($ArrTrigger) {
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                         'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -21361,6 +21595,9 @@ Elseif ($ArrTrigger) {
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                                 switch -Wildcard ($global:FavProvider) {
                                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                     'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -21391,6 +21628,9 @@ Elseif ($ArrTrigger) {
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                         switch -Wildcard ($global:FavProvider) {
                                                             'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                             'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -21916,6 +22156,9 @@ Elseif ($ArrTrigger) {
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                                 switch -Wildcard ($global:FavProvider) {
                                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                     'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -21946,6 +22189,9 @@ Elseif ($ArrTrigger) {
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                         switch -Wildcard ($global:FavProvider) {
                                                             'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                             'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -22041,6 +22287,9 @@ Elseif ($ArrTrigger) {
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $null
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $null
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Manual" -Value $null
+            $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+            $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+            $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
             $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $null
 
             $ImageChoicesDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
@@ -22246,29 +22495,29 @@ Elseif ($ArrTrigger) {
 
         # Export json
         $jsonObject = [PSCustomObject]@{
-            Posters             = $posterCount
-            Backgrounds         = $BackgroundCount
-            Titlecards          = $EpisodeCount
-            Seasons             = $SeasonCount
-            Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-            Mode                = $Mode
-            Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-            Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            Posters              = $posterCount
+            Backgrounds          = $BackgroundCount
+            Titlecards           = $EpisodeCount
+            Seasons              = $SeasonCount
+            Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+            Mode                 = $Mode
+            Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+            Errors               = if ($errorCount) { $errorCount } Else { 0 }
             Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
             Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
             Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
             Text                 = if ($TextCount) { $TextCount } Else { 0 }
-            "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+            "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
             "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-            "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-            "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-            "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-            "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-            "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-            "Script Version"    = $CurrentScriptVersion
-            "IM Version"        = $global:CurrentImagemagickversion
-            "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-            "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+            "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+            "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+            "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+            "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+            "Script Version"     = $CurrentScriptVersion
+            "IM Version"         = $global:CurrentImagemagickversion
+            "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
         }
 
         $jsonOutput = $jsonObject | ConvertTo-Json
@@ -22995,20 +23244,24 @@ Elseif ($SyncJelly -or $SyncEmby) {
             if ($null -ne $SeasonEpisodes.SeriesId) {
                 if ($SeasonEpisodes.SeriesId -is [System.Array]) {
                     $ShowID = $SeasonEpisodes.SeriesId[0]
-                } else {
+                }
+                else {
                     $ShowID = $SeasonEpisodes.SeriesId
                 }
-            } else {
+            }
+            else {
                 $ShowID = $null
             }
 
             if ($null -ne $SeasonEpisodes.SeasonId) {
                 if ($SeasonEpisodes.SeasonId -is [System.Array]) {
                     $SeasonId = $SeasonEpisodes.SeasonId[0]
-                } else {
+                }
+                else {
                     $SeasonId = $SeasonEpisodes.SeasonId
                 }
-            } else {
+            }
+            else {
                 $SeasonId = $null
             }
 
@@ -23551,29 +23804,29 @@ Elseif ($SyncJelly -or $SyncEmby) {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters             = $posterCount
-        Backgrounds         = $BackgroundCount
-        Titlecards          = $EpisodeCount
-        Seasons             = $SeasonCount
-        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-        Mode                = $Mode
-        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Posters              = $posterCount
+        Backgrounds          = $BackgroundCount
+        Titlecards           = $EpisodeCount
+        Seasons              = $SeasonCount
+        Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                 = $Mode
+        Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors               = if ($errorCount) { $errorCount } Else { 0 }
         Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
         Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
         Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
         Text                 = if ($TextCount) { $TextCount } Else { 0 }
-        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-        "Script Version"    = $CurrentScriptVersion
-        "IM Version"        = $global:CurrentImagemagickversion
-        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"     = $CurrentScriptVersion
+        "IM Version"         = $global:CurrentImagemagickversion
+        "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
     }
 
     $jsonOutput = $jsonObject | ConvertTo-Json
@@ -23605,7 +23858,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $SkipTBACount = 0
     $SkipJapTitleCount = 0
 
-    if ($UISchedule -or $ContainerSchedule){
+    if ($UISchedule -or $ContainerSchedule) {
         $Mode = "scheduled"
     }
     Else {
@@ -23922,20 +24175,24 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($null -ne $SeasonEpisodes.SeriesId) {
                 if ($SeasonEpisodes.SeriesId -is [System.Array]) {
                     $ShowID = $SeasonEpisodes.SeriesId[0]
-                } else {
+                }
+                else {
                     $ShowID = $SeasonEpisodes.SeriesId
                 }
-            } else {
+            }
+            else {
                 $ShowID = $null
             }
 
             if ($null -ne $SeasonEpisodes.SeasonId) {
                 if ($SeasonEpisodes.SeasonId -is [System.Array]) {
                     $SeasonId = $SeasonEpisodes.SeasonId[0]
-                } else {
+                }
+                else {
                     $SeasonId = $SeasonEpisodes.SeasonId
                 }
-            } else {
+            }
+            else {
                 $SeasonId = $null
             }
 
@@ -24495,6 +24752,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -24526,6 +24786,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -24897,6 +25160,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -24927,6 +25193,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -24980,6 +25249,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -25373,6 +25645,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -25403,6 +25678,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                 'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -25784,6 +26062,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -25814,6 +26095,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                 'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -26355,6 +26639,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                     'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -26385,6 +26672,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                         'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -26839,6 +27129,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                             switch -Wildcard ($global:FavProvider) {
                                                                 'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                 'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -26868,6 +27161,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -27301,6 +27597,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                             switch -Wildcard ($global:FavProvider) {
                                                                 'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                 'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -27330,6 +27629,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -27418,7 +27720,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         # Cleanup empty Asset dirs
         if ($LibraryFolders -eq 'true') {
             # After all files are removed get all empty directories at once
-            $dirs2delete = Get-ChildItem -LiteralPath $AssetPath -Recurse -Directory -Force| Where-Object { -not $_.GetFileSystemInfos() }
+            $dirs2delete = Get-ChildItem -LiteralPath $AssetPath -Recurse -Directory -Force | Where-Object { -not $_.GetFileSystemInfos() }
 
             # Loop through the pre-filtered list
             foreach ($dir in $dirs2delete) {
@@ -27547,6 +27849,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Manual" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $null
 
         $ImageChoicesDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -27968,29 +28273,29 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters             = $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)
-        Backgrounds         = $BackgroundCount
-        Titlecards          = $EpisodeCount
-        Seasons             = $SeasonCount
-        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-        Mode                = $Mode
-        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Posters              = $($posterCount - $SeasonCount - $BackgroundCount - $EpisodeCount)
+        Backgrounds          = $BackgroundCount
+        Titlecards           = $EpisodeCount
+        Seasons              = $SeasonCount
+        Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                 = $Mode
+        Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors               = if ($errorCount) { $errorCount } Else { 0 }
         Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
         Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
         Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
         Text                 = if ($TextCount) { $TextCount } Else { 0 }
-        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-        "Script Version"    = $CurrentScriptVersion
-        "IM Version"        = $global:CurrentImagemagickversion
-        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"     = $CurrentScriptVersion
+        "IM Version"         = $global:CurrentImagemagickversion
+        "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
     }
 
     $jsonOutput = $jsonObject | ConvertTo-Json
@@ -28039,7 +28344,7 @@ ElseIf ($PosterReset) {
 }
 #region Normal Mode
 else {
-    if ($UISchedule -or $ContainerSchedule){
+    if ($UISchedule -or $ContainerSchedule) {
         $Mode = "scheduled"
     }
     Else {
@@ -29023,6 +29328,9 @@ else {
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -29054,6 +29362,9 @@ else {
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -29264,14 +29575,14 @@ else {
                                 if (!$global:posterurl) {
                                     if ($global:FavProvider -ne 'TVDB') {
                                         $global:posterurl = GetTVDBMovieBackground
-                                        if ($global:posterurl){
+                                        if ($global:posterurl) {
                                             $global:IsFallback = $true
                                         }
                                     }
                                     if (!$global:posterurl) {
                                         if ($ArtUrl) {
                                             GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
-                                            if ($global:posterurl){
+                                            if ($global:posterurl) {
                                                 $global:IsFallback = $true
                                             }
                                         }
@@ -29497,6 +29808,9 @@ else {
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -29527,6 +29841,9 @@ else {
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -29602,6 +29919,9 @@ else {
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                     'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -30056,6 +30376,9 @@ else {
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -30086,6 +30409,9 @@ else {
                             $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                 'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -30276,14 +30602,14 @@ else {
                                 if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
                                     if ($entry.tmdbid) {
                                         $global:posterurl = GetTMDBShowBackground
-                                        if ($global:posterurl){
+                                        if ($global:posterurl) {
                                             $global:IsFallback = $true
                                         }
                                         $global:FallbackText = 'True-Background'
                                     }
                                     if (!$global:posterurl) {
                                         $global:posterurl = GetFanartShowBackground
-                                        if ($global:posterurl){
+                                        if ($global:posterurl) {
                                             $global:IsFallback = $true
                                         }
                                         $global:FallbackText = 'True-Background'
@@ -30310,7 +30636,7 @@ else {
                             if (!$global:posterurl) {
                                 if ($global:FavProvider -ne 'TVDB') {
                                     $global:posterurl = GetTVDBShowBackground
-                                    if ($global:posterurl){
+                                    if ($global:posterurl) {
                                         $global:IsFallback = $true
                                     }
                                 }
@@ -30318,7 +30644,7 @@ else {
                                 if (!$global:posterurl) {
                                     if ($ArtUrl) {
                                         GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
-                                        if ($global:posterurl){
+                                        if ($global:posterurl) {
                                             $global:IsFallback = $true
                                         }
                                     }
@@ -30544,6 +30870,9 @@ else {
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                        $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                         switch -Wildcard ($global:FavProvider) {
                                             'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                             'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -30574,6 +30903,9 @@ else {
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                 'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -30782,7 +31114,7 @@ else {
                                             if ($global:FavProvider -ne 'FANART') {
                                                 $global:posterurl = GetFanartSeasonPoster
                                                 Write-Entry -Subtext "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                                if ($global:posterurl){
+                                                if ($global:posterurl) {
                                                     $global:IsFallback = $true
                                                 }
                                                 Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -30791,7 +31123,7 @@ else {
                                         if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
                                             if ($global:FavProvider -ne 'TVDB') {
                                                 $global:posterurl = GetTVDBSeasonPoster
-                                                if ($global:posterurl){
+                                                if ($global:posterurl) {
                                                     $global:IsFallback = $true
                                                 }
                                                 Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -30849,7 +31181,7 @@ else {
                                     if (!$global:posterurl) {
                                         if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
                                             $global:posterurl = GetTMDBSeasonPoster
-                                            if ($global:posterurl){
+                                            if ($global:posterurl) {
                                                 $global:IsFallback = $true
                                             }
                                             Write-Entry -Subtext "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -30858,7 +31190,7 @@ else {
                                             if ($global:FavProvider -ne 'FANART') {
                                                 $global:posterurl = GetFanartSeasonPoster
                                                 Write-Entry -Subtext "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                                if ($global:posterurl){
+                                                if ($global:posterurl) {
                                                     $global:IsFallback = $true
                                                 }
                                                 Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -30867,7 +31199,7 @@ else {
                                         if (!$global:posterurl -and $entry.tvdbid) {
                                             if ($global:FavProvider -ne 'TVDB') {
                                                 $global:posterurl = GetTVDBSeasonPoster
-                                                if ($global:posterurl){
+                                                if ($global:posterurl) {
                                                     $global:IsFallback = $true
                                                 }
                                                 Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -30877,7 +31209,7 @@ else {
                                         if ($ArtUrl) {
                                             if ($global:FavProvider -ne 'PLEX') {
                                                 GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
-                                                if ($global:posterurl){
+                                                if ($global:posterurl) {
                                                     $global:IsFallback = $true
                                                 }
                                                 Write-Entry -Subtext "Function GetPlexArtwork called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -31238,6 +31570,9 @@ else {
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                             switch -Wildcard ($global:FavProvider) {
                                                 'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                 'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -31268,6 +31603,9 @@ else {
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                     'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -31850,6 +32188,9 @@ else {
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                             switch -Wildcard ($global:FavProvider) {
                                                                 'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                 'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -31879,6 +32220,9 @@ else {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -32436,6 +32780,9 @@ else {
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                             switch -Wildcard ($global:FavProvider) {
                                                                 'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                                 'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -32465,6 +32812,9 @@ else {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value 'false'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "false"
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value if ($entry.tmdbid) { $entry.tmdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value if ($entry.tvdbid) { $entry.tvdbid } Else { "false" }
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value if ($entry.imdbid) { $entry.imdbid } Else { "false" }
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "false" }) }
                                                         'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "false" }) }
@@ -32576,7 +32926,7 @@ else {
         # Cleanup empty Asset dirs
         if ($LibraryFolders -eq 'true') {
             # After all files are removed get all empty directories at once
-            $dirs2delete = Get-ChildItem -LiteralPath $AssetPath -Recurse -Directory -Force| Where-Object { -not $_.GetFileSystemInfos() }
+            $dirs2delete = Get-ChildItem -LiteralPath $AssetPath -Recurse -Directory -Force | Where-Object { -not $_.GetFileSystemInfos() }
 
             # Loop through the pre-filtered list
             foreach ($dir in $dirs2delete) {
@@ -32705,6 +33055,9 @@ else {
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Manual" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+        $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
         $ImageChoicesDummycsv | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $null
 
         $ImageChoicesDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -33126,29 +33479,29 @@ else {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters             = $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)
-        Backgrounds         = $BackgroundCount
-        Titlecards          = $EpisodeCount
-        Seasons             = $SeasonCount
-        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
-        Mode                = $Mode
-        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
-        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Posters              = $($posterCount - $SeasonCount - $BackgroundCount - $EpisodeCount)
+        Backgrounds          = $BackgroundCount
+        Titlecards           = $EpisodeCount
+        Seasons              = $SeasonCount
+        Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                 = $Mode
+        Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors               = if ($errorCount) { $errorCount } Else { 0 }
         Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
         Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
         Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
         Text                 = if ($TextCount) { $TextCount } Else { 0 }
-        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "TBA Skipped"        = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
-        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
-        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
-        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
-        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
-        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
-        "Script Version"    = $CurrentScriptVersion
-        "IM Version"        = $global:CurrentImagemagickversion
-        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
-        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "Notification Sent"  = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"        = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"     = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"    = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"        = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"     = $CurrentScriptVersion
+        "IM Version"         = $global:CurrentImagemagickversion
+        "Start time"         = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"           = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
     }
 
     $jsonOutput = $jsonObject | ConvertTo-Json
