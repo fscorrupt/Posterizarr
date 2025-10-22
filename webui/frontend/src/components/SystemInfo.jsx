@@ -8,9 +8,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useApiData } from "../hooks/useApiData";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
-
-const API_URL = "/api";
 
 let cachedSystemInfo = null;
 
@@ -18,6 +17,17 @@ function SystemInfo() {
   const { t } = useTranslation();
   const { startLoading, finishLoading } = useDashboardLoading();
   const hasInitiallyLoaded = useRef(false);
+  
+  // Use ApiContext for system info with caching
+  const { 
+    data: apiData, 
+    loading: apiLoading, 
+    refresh: refreshSystemInfo 
+  } = useApiData("getSystemInfo", { 
+    autoFetch: true,
+    refreshInterval: 30000 // Auto-refresh every 30 seconds
+  });
+
   const [systemInfo, setSystemInfo] = useState(
     cachedSystemInfo || {
       platform: "Loading...",
@@ -30,54 +40,51 @@ function SystemInfo() {
       memory_percent: 0,
     }
   );
-  const [loading, setLoading] = useState(false); // No initial loading
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchSystemInfo = async (silent = false) => {
-    if (!silent) {
-      setRefreshing(true);
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/system-info`);
-      if (!response.ok) {
-        console.error("Failed to fetch system info:", response.status);
-        return;
-      }
-      const data = await response.json();
-      cachedSystemInfo = data; // Save to persistent cache
-      setSystemInfo(data);
-
-      // Mark as loaded after first successful fetch
+  // Update systemInfo when API data changes
+  useEffect(() => {
+    if (apiData) {
+      cachedSystemInfo = apiData;
+      setSystemInfo(apiData);
+      
       if (!hasInitiallyLoaded.current) {
         hasInitiallyLoaded.current = true;
         finishLoading("system-info");
       }
-    } catch (error) {
-      console.error("Error fetching system info:", error);
-    } finally {
+    }
+  }, [apiData]);
+
+  // Update loading state
+  useEffect(() => {
+    setLoading(apiLoading);
+  }, [apiLoading]);
+
+  // Register as loading on mount
+  useEffect(() => {
+    startLoading("system-info");
+    
+    // Check cache first
+    if (cachedSystemInfo) {
+      setSystemInfo(cachedSystemInfo);
       setLoading(false);
-      if (!silent) {
-        setTimeout(() => {
-          setRefreshing(false);
-        }, 500);
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("system-info");
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setRefreshing(true);
+    refreshSystemInfo();
+    setTimeout(() => setRefreshing(false), 500);
   };
 
-  useEffect(() => {
-    // Register as loading component and fetch data
-    startLoading("system-info");
-    fetchSystemInfo(true);
 
-    // Optional: Alle 5 Minuten im Hintergrund aktualisieren (silent)
-    const interval = setInterval(() => fetchSystemInfo(true), 5 * 60 * 1000);
-
-    return () => {
-      clearInterval(interval);
-      // Don't finish loading on unmount - that happens when data is fetched
-    };
-  }, [startLoading]);
 
   // Format memory percentage color
   const getMemoryColor = (percent) => {
@@ -120,7 +127,7 @@ function SystemInfo() {
           {t("dashboard.systemInfo")}
         </h2>
         <button
-          onClick={() => fetchSystemInfo()}
+          onClick={handleRefresh}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
           title={t("systemInfo.refreshTooltip")}

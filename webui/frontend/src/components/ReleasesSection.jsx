@@ -8,24 +8,31 @@ import {
   Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useApi } from "../context/ApiContext";
 
-const API_URL = "/api";
-
-function ReleasesSection() {
+function ReleasesSection({ cachedData }) {
   const { t } = useTranslation();
-  const [releases, setReleases] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const api = useApi();
+  const [releases, setReleases] = useState(cachedData?.releases || []);
+  const [loading, setLoading] = useState(!cachedData);
   const [error, setError] = useState(null);
 
+  // Update releases when cached data changes
   useEffect(() => {
-    fetchReleases();
-  }, []);
+    if (cachedData?.releases) {
+      setReleases(cachedData.releases);
+      setLoading(false);
+      setError(null);
+    } else if (releases.length === 0) {
+      // Fetch nur wenn keine cached data und keine releases vorhanden
+      fetchReleases();
+    }
+  }, [cachedData]);
 
   const fetchReleases = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/releases`);
-      const data = await response.json();
+      const data = await api.getReleases(true);
 
       if (data.success) {
         setReleases(data.releases);
@@ -47,7 +54,7 @@ function ReleasesSection() {
     return t("releasesSection.daysAgo", { days: daysAgo });
   };
 
-  if (loading) {
+  if (loading && releases.length === 0) {
     return (
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
@@ -61,7 +68,7 @@ function ReleasesSection() {
     );
   }
 
-  if (error) {
+  if (error && releases.length === 0) {
     return (
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">

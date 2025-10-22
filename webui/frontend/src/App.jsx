@@ -15,6 +15,7 @@ import {
   DashboardLoadingProvider,
   useDashboardLoading,
 } from "./context/DashboardLoadingContext";
+import { ApiProvider } from "./context/ApiContext";
 
 // Setup fetch interceptor BEFORE any other imports that might use fetch
 import { setupFetchInterceptor } from "./utils/fetchInterceptor";
@@ -287,13 +288,15 @@ function App() {
     <Router>
       <ThemeProvider>
         <AuthProvider>
-          <SidebarProvider>
-            <ToastProvider>
-              <DashboardLoadingProvider>
-                <AppContent />
-              </DashboardLoadingProvider>
-            </ToastProvider>
-          </SidebarProvider>
+          <ApiProvider>
+            <SidebarProvider>
+              <ToastProvider>
+                <DashboardLoadingProvider>
+                  <AppContent />
+                </DashboardLoadingProvider>
+              </ToastProvider>
+            </SidebarProvider>
+          </ApiProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

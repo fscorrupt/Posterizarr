@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Info,
   ExternalLink,
@@ -10,49 +10,29 @@ import {
   Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useApiBatch } from "../hooks/useApiData";
 import ReleasesSection from "./ReleasesSection";
 import AssetsStats from "./AssetsStats";
 
-const API_URL = "/api";
 const REPO_URL = "https://github.com/fscorrupt/Posterizarr/releases/latest";
 
 function About() {
   const { t } = useTranslation();
-  const [version, setVersion] = useState({
-    local: null,
-    remote: null,
-    is_update_available: false,
-    loading: true,
-  });
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchVersion();
-  }, []);
+  // Batch-Fetch alle About-Page-Daten gleichzeitig mit Caching
+  const { data, loading, refresh } = useApiBatch("fetchAboutData", {
+    autoFetch: true,
+  });
 
-  const fetchVersion = async () => {
+  const version = data?.version || { local: null, remote: null, is_update_available: false };
+  const assetsStatsData = data?.assetsStats;
+  const releasesData = data?.releases;
+
+  const handleRefresh = async () => {
     setRefreshing(true);
-    try {
-      const response = await fetch(`${API_URL}/version`);
-      const data = await response.json();
-
-      setVersion({
-        local: data.local,
-        remote: data.remote,
-        is_update_available: data.is_update_available || false,
-        loading: false,
-      });
-    } catch (error) {
-      console.error("Error fetching version:", error);
-      setVersion({
-        local: null,
-        remote: null,
-        is_update_available: false,
-        loading: false,
-      });
-    } finally {
-      setRefreshing(false);
-    }
+    await refresh(true); // Force refresh
+    setTimeout(() => setRefreshing(false), 500);
   };
 
   const isOutOfDate = () => {
@@ -64,7 +44,7 @@ function About() {
   };
 
   const VersionDisplay = () => {
-    if (version.loading) {
+    if (loading && !version.local) {
       return (
         <div className="flex items-center gap-2">
           <span className="text-theme-text">{t("common.loading")}</span>
@@ -126,7 +106,7 @@ function About() {
             {t("about.title")}
           </h2>
           <button
-            onClick={fetchVersion}
+            onClick={handleRefresh}
             disabled={refreshing}
             className="flex items-center gap-2 px-3 py-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all disabled:opacity-50"
           >
@@ -185,11 +165,11 @@ function About() {
         </div>
       </div>
 
-      {/* Assets Statistics */}
-      <AssetsStats />
+      {/* Assets Statistics - pass cached data */}
+      <AssetsStats cachedData={assetsStatsData} />
 
-      {/* Releases Section */}
-      <ReleasesSection />
+      {/* Releases Section - pass cached data */}
+      <ReleasesSection cachedData={releasesData} />
 
       {/* Getting Support Section*/}
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">

@@ -16,12 +16,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useApiData } from "../hooks/useApiData";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
-
-const API_URL = "/api";
 
 let cachedAssets = null;
 
@@ -30,10 +29,22 @@ function RecentAssets() {
   const { showSuccess, showError, showInfo } = useToast();
   const { startLoading, finishLoading } = useDashboardLoading();
   const hasInitiallyLoaded = useRef(false);
-  const [assets, setAssets] = useState(cachedAssets || []);
-  const [loading, setLoading] = useState(false); // No initial loading if cached
-  const [error, setError] = useState(null); // Error state
+  
+  // Use ApiContext for recent assets with real-time updates
+  const { 
+    data: apiData, 
+    loading: apiLoading, 
+    error: apiError, 
+    refresh: refreshAssets 
+  } = useApiData("getRecentAssets", { 
+    autoFetch: true,
+    refreshInterval: 120000, // Auto-refresh every 2 minutes
+    subscribeToUpdates: true // Real-time updates when assets change
+  });
 
+  const [assets, setAssets] = useState(cachedAssets || []);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Tab filter state with localStorage
@@ -56,51 +67,41 @@ function RecentAssets() {
     return Math.min(Math.max(count, 5), 10);
   });
 
-  const fetchRecentAssets = async (silent = false) => {
-    if (!silent) {
-      setRefreshing(true);
-      startLoading("recent-assets");
-    }
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_URL}/recent-assets`);
-      const data = await response.json();
-
-      if (data.success) {
-        cachedAssets = data.assets; // Save to persistent cache
-        setAssets(data.assets);
-        setError(null);
-
-        // Mark as loaded after first successful fetch
-        if (!hasInitiallyLoaded.current) {
-          hasInitiallyLoaded.current = true;
-          finishLoading("recent-assets");
-        }
-      } else {
-        const errorMsg = data.error || t("recentAssets.loadError");
-        setError(errorMsg);
-        showError(errorMsg);
+  // Update assets when API data changes
+  useEffect(() => {
+    if (apiData?.success && apiData?.assets) {
+      cachedAssets = apiData.assets;
+      setAssets(apiData.assets);
+      setError(null);
+      
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("recent-assets");
       }
-    } catch (err) {
-      const errorMsg = err.message || t("recentAssets.loadError");
+    } else if (apiData && !apiData.success) {
+      const errorMsg = apiData.error || t("recentAssets.loadError");
       setError(errorMsg);
       showError(errorMsg);
-      console.error("Error fetching recent assets:", err);
-    } finally {
-      setLoading(false);
-      if (!silent) {
-        setTimeout(() => {
-          setRefreshing(false);
-        }, 500);
-      }
     }
-  };
+  }, [apiData]);
 
+  // Handle API errors
   useEffect(() => {
-    // Register as loading and fetch on mount (silent mode = no loading spinner)
-    startLoading("recent-assets");
+    if (apiError) {
+      setError(apiError.message || t("recentAssets.loadError"));
+      showError(apiError.message || t("recentAssets.loadError"));
+    }
+  }, [apiError]);
 
+  // Update loading state
+  useEffect(() => {
+    setLoading(apiLoading);
+  }, [apiLoading]);
+
+  // Register as loading on mount
+  useEffect(() => {
+    startLoading("recent-assets");
+    
     // Check cache first
     if (cachedAssets) {
       setAssets(cachedAssets);
@@ -109,20 +110,7 @@ function RecentAssets() {
         hasInitiallyLoaded.current = true;
         finishLoading("recent-assets");
       }
-    } else {
-      fetchRecentAssets(true);
     }
-
-    // Background refresh every 2 minutes (silent)
-    const interval = setInterval(() => {
-      console.log("Auto-refreshing recent assets...");
-      fetchRecentAssets(true);
-    }, 2 * 60 * 1000);
-
-    return () => {
-      clearInterval(interval);
-      // Don't finish loading on unmount - that happens when data is fetched
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -312,7 +300,11 @@ function RecentAssets() {
 
           {/* Refresh Button - SystemInfo Style */}
           <button
-            onClick={() => fetchRecentAssets()}
+            onClick={() => {
+              setRefreshing(true);
+              refreshAssets();
+              setTimeout(() => setRefreshing(false), 500);
+            }}
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
             title={t("recentAssets.refreshTooltip")}
@@ -366,7 +358,7 @@ function RecentAssets() {
         <div className="text-center py-8 text-red-400">
           <p>Error: {error}</p>
           <button
-            onClick={() => fetchRecentAssets()}
+            onClick={refreshAssets}
             className="mt-4 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 rounded-lg transition-colors"
           >
             Retry

@@ -8,25 +8,32 @@ import {
   Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useApi } from "../context/ApiContext";
 
-const API_URL = "/api";
-
-function AssetsStats({ onSuccess, onError }) {
+function AssetsStats({ cachedData, onSuccess, onError }) {
   const { t } = useTranslation();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const api = useApi();
+  const [stats, setStats] = useState(cachedData?.stats || null);
+  const [loading, setLoading] = useState(!cachedData);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
+  // Update stats when cached data changes
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (cachedData?.stats) {
+      setStats(cachedData.stats);
+      setLoading(false);
+      setError(null);
+    } else if (!stats) {
+      // Fetch nur wenn keine cached data und keine stats vorhanden
+      fetchStats();
+    }
+  }, [cachedData]);
 
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/assets/stats`);
-      const data = await response.json();
+      const data = await api.getAssetsStats(true);
 
       if (data.success) {
         setStats(data.stats);
@@ -45,10 +52,7 @@ function AssetsStats({ onSuccess, onError }) {
   const refreshCache = async () => {
     setRefreshing(true);
     try {
-      const response = await fetch(`${API_URL}/refresh-cache`, {
-        method: "POST",
-      });
-      const data = await response.json();
+      const data = await api.refreshCache();
 
       if (data.success) {
         if (onSuccess) onSuccess(t("assetsStats.refreshSuccess"));
@@ -74,7 +78,7 @@ function AssetsStats({ onSuccess, onError }) {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
@@ -88,7 +92,7 @@ function AssetsStats({ onSuccess, onError }) {
     );
   }
 
-  if (error) {
+  if (error && !stats) {
     return (
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
@@ -168,7 +172,7 @@ function AssetsStats({ onSuccess, onError }) {
             <span className="text-theme-muted text-sm">
               {t("assetsStats.titleCards")}
             </span>
-            <Image className="w-4 h-4 text-orange-400" />
+            <Layers className="w-4 h-4 text-yellow-400" />
           </div>
           <div className="text-2xl font-bold text-theme-text">
             {stats.titlecards.toLocaleString()}
@@ -176,7 +180,7 @@ function AssetsStats({ onSuccess, onError }) {
         </div>
       </div>
 
-      {/* Total Statistics */}
+      {/* Total and Size */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-theme-hover border border-theme rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
@@ -202,42 +206,6 @@ function AssetsStats({ onSuccess, onError }) {
           </div>
         </div>
       </div>
-
-      {/* Top Folders */}
-      {stats.folders && stats.folders.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-theme-text flex items-center gap-2">
-            <FolderOpen className="w-5 h-5 text-theme-primary" />
-            {t("assetsStats.topFolders")}
-          </h3>
-          <div className="space-y-2">
-            {stats.folders.slice(0, 5).map((folder, index) => (
-              <div
-                key={folder.name}
-                className="flex items-center justify-between p-3 bg-theme-hover border border-theme rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-theme-muted text-sm font-mono">
-                    #{index + 1}
-                  </span>
-                  <FolderOpen className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text font-medium">
-                    {folder.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-theme-muted text-sm">
-                    {t("assetsStats.filesCount", { count: folder.files })}
-                  </span>
-                  <span className="text-theme-muted text-sm">
-                    {formatSize(folder.size)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

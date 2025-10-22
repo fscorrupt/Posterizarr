@@ -14,6 +14,7 @@ import {
   Scissors,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useApiData } from "../hooks/useApiData";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
 import {
   formatDateToLocale,
@@ -21,8 +22,6 @@ import {
   getBrowserTimezone,
   isTimezoneDifferent,
 } from "../utils/timeUtils";
-
-const API_URL = "/api";
 
 let cachedRuntimeStats = null;
 
@@ -66,15 +65,24 @@ function RuntimeStats() {
       },
     }
   );
+  
+  // Use ApiContext for runtime stats with caching
+  const { 
+    data: apiData, 
+    loading: apiLoading, 
+    refresh: refreshRuntimeStats 
+  } = useApiData("getRuntimeStats", { 
+    autoFetch: true,
+    refreshInterval: 5000 // Auto-refresh every 5 seconds
+  });
+
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [migrationStatus, setMigrationStatus] = useState(null);
 
   const fetchMigrationStatus = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/runtime-history/migration-status`
-      );
+      const response = await fetch("/api/runtime-history/migration-status");
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -86,16 +94,34 @@ function RuntimeStats() {
     }
   };
 
-  const fetchRuntimeStats = async (silent = false) => {
+  // Update runtimeStats when API data changes
+  useEffect(() => {
+    if (apiData) {
+      cachedRuntimeStats = apiData;
+      setRuntimeStats(apiData);
+      
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("runtime-stats");
+      }
+    }
+  }, [apiData]);
+
+  // Update loading state
+  useEffect(() => {
+    setLoading(apiLoading);
+  }, [apiLoading]);
+
+  // Old fetchRuntimeStats removed - replaced by ApiContext
+  const oldFetchRuntimeStats = async (silent = false) => {
     if (!silent) {
       setRefreshing(true);
     }
 
     try {
-      const response = await fetch(`${API_URL}/runtime-stats`);
+      const response = await fetch("/api/runtime-stats");
       if (!response.ok) {
         console.error("Failed to fetch runtime stats:", response.status);
-        // Mark as loaded even on error to prevent infinite loading
         if (!hasInitiallyLoaded.current) {
           hasInitiallyLoaded.current = true;
           finishLoading("runtime-stats");
@@ -104,7 +130,6 @@ function RuntimeStats() {
       }
       const data = await response.json();
 
-      // Always mark as loaded after receiving data, regardless of success status
       if (!hasInitiallyLoaded.current) {
         hasInitiallyLoaded.current = true;
         finishLoading("runtime-stats");
@@ -114,13 +139,11 @@ function RuntimeStats() {
         cachedRuntimeStats = data;
         setRuntimeStats(data);
       } else {
-        // Even if no data available, store the empty response
         cachedRuntimeStats = data;
         setRuntimeStats(data);
       }
     } catch (error) {
       console.error("Error fetching runtime stats:", error);
-      // Mark as loaded even on error to prevent infinite loading
       if (!hasInitiallyLoaded.current) {
         hasInitiallyLoaded.current = true;
         finishLoading("runtime-stats");
@@ -135,10 +158,18 @@ function RuntimeStats() {
     }
   };
 
-  useEffect(() => {
-    // Register as loading and fetch on mount (silent mode)
-    startLoading("runtime-stats");
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setRefreshing(true);
+    refreshRuntimeStats();
+    setTimeout(() => setRefreshing(false), 500);
+  };
 
+  // Register as loading on mount
+  useEffect(() => {
+    startLoading("runtime-stats");
+    fetchMigrationStatus();
+    
     // Check cache first
     if (cachedRuntimeStats) {
       setRuntimeStats(cachedRuntimeStats);
@@ -147,24 +178,11 @@ function RuntimeStats() {
         hasInitiallyLoaded.current = true;
         finishLoading("runtime-stats");
       }
-    } else {
-      fetchRuntimeStats(true);
     }
-
-    fetchMigrationStatus();
-
-    // Refresh every 30 seconds (silent)
-    const interval = setInterval(() => {
-      console.log("Auto-refreshing runtime stats...");
-      fetchRuntimeStats(true);
-    }, 30 * 1000);
-
-    return () => {
-      clearInterval(interval);
-      // Don't finish loading on unmount - that happens when data is fetched
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+
 
   if (loading) {
     return (
@@ -190,7 +208,7 @@ function RuntimeStats() {
           {t("dashboard.runtimeStats")}
         </h2>
         <button
-          onClick={() => fetchRuntimeStats()}
+          onClick={handleRefresh}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
           title={t("runtimeStats.refreshTooltip")}
