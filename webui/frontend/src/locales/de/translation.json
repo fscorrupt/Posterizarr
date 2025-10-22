@@ -1294,6 +1294,7 @@
     "errorLoadingData": "Fehler beim Laden der Daten",
     "assetsWithIssues": "Assets mit Problemen",
     "missingAssets": "Fehlende Assets",
+    "missingAssetsAtFavProvider": "Fehlt bei Lieblings-Anbieter",
     "nonPrimaryLang": "Nicht-Primärsprache",
     "nonPrimaryProvider": "Nicht-Primäranbieter",
     "truncatedTextCategory": "Gekürzter Text",

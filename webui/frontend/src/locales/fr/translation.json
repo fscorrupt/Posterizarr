@@ -1241,6 +1241,7 @@
     "errorLoadingData": "Erreur lors du chargement des données",
     "assetsWithIssues": "Ressources avec problèmes",
     "missingAssets": "Ressources manquantes",
+    "missingAssetsAtFavProvider": "Manquant chez fournisseur favori",
     "nonPrimaryLang": "Langue non principale",
     "nonPrimaryProvider": "Fournisseur non principal",
     "truncatedTextCategory": "Texte tronqué",
