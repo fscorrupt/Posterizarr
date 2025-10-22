@@ -419,7 +419,7 @@ def import_json_to_db(logs_dir: Path = None):
             ("syncjelly.json", "syncjelly"),
             ("syncemby.json", "syncemby"),
             ("backup.json", "backup"),
-            ("scheduled,json", "scheduled"),
+            ("scheduled.json", "scheduled"),
         ]
 
         imported_count = 0
