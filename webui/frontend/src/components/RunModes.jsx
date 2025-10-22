@@ -1939,17 +1939,6 @@ function RunModes() {
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-theme-text mb-1">
                     {t("runModes.manual.yearLabel")}
-                    {/^\d+$/.test(tmdbSearch.query.trim()) &&
-                      !tmdbSearch.searchByID && (
-                        <span
-                          className="ml-1 text-yellow-500"
-                          title={t(
-                            "runModes.validation.yearRequiredForNumericTitle"
-                          )}
-                        >
-                          *
-                        </span>
-                      )}
                   </label>
                   <input
                     type="number"
@@ -1969,13 +1958,7 @@ function RunModes() {
                       tmdbSearch.searching ||
                       tmdbSearch.searchByID
                     }
-                    className={`w-full px-4 py-2 bg-theme-bg border rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed ${
-                      /^\d+$/.test(tmdbSearch.query.trim()) &&
-                      !tmdbSearch.year &&
-                      !tmdbSearch.searchByID
-                        ? "border-yellow-500 ring-2 ring-yellow-500/20"
-                        : "border-theme"
-                    }`}
+                    className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 

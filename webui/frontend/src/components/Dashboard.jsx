@@ -400,7 +400,7 @@ function Dashboard() {
       console.log(`🔌 Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
-      
+
       // Store reference immediately to prevent race conditions
       wsRef.current = ws;
 
