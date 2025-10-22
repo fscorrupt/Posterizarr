@@ -4661,6 +4661,7 @@ async def import_json_runtime_data():
     - syncjelly.json
     - syncemby.json
     - backup.json
+    - scheduled.json
     """
     try:
         if not RUNTIME_DB_AVAILABLE or not runtime_db:

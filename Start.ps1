@@ -75,12 +75,13 @@ function ScriptSchedule {
             if ($NextScriptRunOffset -le '60') {
                 $alreadydisplayed = $null
                 Start-Sleep $NextScriptRunOffset
+                $ScriptArgs = "-ContainerSchedule"
                 # Calling the Posterizarr Script
                 if ((Get-Process pwsh -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*Posterizarr.ps1*" })) {
                     Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
                 }
                 Else {
-                    pwsh -File "$env:APP_ROOT/Posterizarr.ps1"
+                    pwsh -Command "$env:APP_ROOT/Posterizarr.ps1 $ScriptArgs"
                 }
             }
         }
