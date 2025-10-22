@@ -60,7 +60,19 @@
       "episodeResults": "Episode {{season}}x{{episode}} Images",
       "loadMore": "Load More ({{remaining}} remaining)",
       "episodeStill": "EPISODE STILL",
-      "seasonPoster": "SEASON POSTER"
+      "seasonPoster": "SEASON POSTER",
+      "searchTips": {
+        "title": "💡 Search Tips:",
+        "byTitle": "By Title:",
+        "byTitleExample": "e.g., \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "By TMDB ID:",
+        "byTmdbIdExample": "e.g., \"tmdb-286217\" or \"tmdb:286217\"",
+        "byTvdbId": "By TVDB ID:",
+        "byTvdbIdExample": "e.g., \"tvdb-456\" or \"tvdb:456\"",
+        "byImdbId": "By IMDB ID:",
+        "byImdbIdExample": "e.g., \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Without a prefix, search is performed by title."
+      }
     },
     "quickRun": {
       "title": "Quick Run Modes",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Search for TV shows on TMDB to find season posters",
       "tmdbHintTitleCard": "Search for TV shows on TMDB to find episode stills",
       "tmdbHintStandard": "Search for movies or TV shows on TMDB to find posters",
-      "tmdbSearchPlaceholder": "Enter title or TMDB ID...",
+      "tmdbSearchPlaceholder": "Enter title or prefix-id....",
       "tmdbIdPlaceholder": "Enter TMDB ID (e.g., 530915 for '1917')...",
       "searchByIdLabel": "Search by TMDB ID",
       "searchByIdHint": "Year not required when searching by ID",

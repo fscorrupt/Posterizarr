@@ -60,7 +60,19 @@
       "episodeResults": "Imagens do episódio {{season}}x{{episode}}",
       "loadMore": "Carregar mais ({{remaining}} restantes)",
       "episodeStill": "FOTO DO EPISÓDIO",
-      "seasonPoster": "CARTAZ DA TEMPORADA"
+      "seasonPoster": "CARTAZ DA TEMPORADA",
+      "searchTips": {
+        "title": "💡 Dicas de pesquisa:",
+        "byTitle": "Por título:",
+        "byTitleExample": "ex. \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "Por ID do TMDB:",
+        "byTmdbIdExample": "ex. \"tmdb-286217\" ou \"tmdb:286217\"",
+        "byTvdbId": "Por ID do TVDB:",
+        "byTvdbIdExample": "ex. \"tvdb-456\" ou \"tvdb:456\"",
+        "byImdbId": "Por ID do IMDB:",
+        "byImdbIdExample": "ex. \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Sem prefixo, a pesquisa é realizada por título."
+      }
     },
     "quickRun": {
       "title": "Modos de execução rápida",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Pesquise séries no TMDB para encontrar cartazes de temporada",
       "tmdbHintTitleCard": "Pesquise séries no TMDB para encontrar fotos de episódios",
       "tmdbHintStandard": "Pesquise filmes ou séries no TMDB para encontrar cartazes",
-      "tmdbSearchPlaceholder": "Insira o título ou ID do TMDB...",
+      "tmdbSearchPlaceholder": "Insira o título ou ID prefixo...",
       "tmdbIdPlaceholder": "Insira o ID do TMDB (ex: 530915 para '1917')...",
       "searchByIdLabel": "Pesquisar por ID do TMDB",
       "searchByIdHint": "O ano não é necessário ao pesquisar por ID",

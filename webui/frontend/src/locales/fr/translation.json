@@ -60,7 +60,19 @@
       "episodeResults": "Images de l'épisode {{season}}x{{episode}}",
       "loadMore": "Charger plus ({{remaining}} restant(s))",
       "episodeStill": "CAPTURE D'ÉPISODE",
-      "seasonPoster": "AFFICHE DE SAISON"
+      "seasonPoster": "AFFICHE DE SAISON",
+      "searchTips": {
+        "title": "💡 Conseils de recherche :",
+        "byTitle": "Par titre :",
+        "byTitleExample": "ex. \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "Par ID TMDB :",
+        "byTmdbIdExample": "ex. \"tmdb-286217\" ou \"tmdb:286217\"",
+        "byTvdbId": "Par ID TVDB :",
+        "byTvdbIdExample": "ex. \"tvdb-456\" ou \"tvdb:456\"",
+        "byImdbId": "Par ID IMDB :",
+        "byImdbIdExample": "ex. \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Sans préfixe, la recherche s'effectue par titre."
+      }
     },
     "quickRun": {
       "title": "Modes d'exécution rapide",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Recherchez des séries TV sur TMDB pour trouver des affiches de saison",
       "tmdbHintTitleCard": "Recherchez des séries TV sur TMDB pour trouver des captures d'épisode",
       "tmdbHintStandard": "Recherchez des films ou des séries TV sur TMDB pour trouver des affiches",
-      "tmdbSearchPlaceholder": "Entrez un titre ou un ID TMDB...",
+      "tmdbSearchPlaceholder": "Entrez un titre ou un ID-prefix...",
       "tmdbIdPlaceholder": "Entrez l'ID TMDB (ex : 530915 pour '1917')...",
       "searchByIdLabel": "Rechercher par ID TMDB",
       "searchByIdHint": "Année non requise lors de la recherche par ID",

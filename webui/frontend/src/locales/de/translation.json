@@ -60,7 +60,19 @@
       "episodeResults": "Episode {{season}}x{{episode}} Bilder",
       "loadMore": "Mehr laden ({{remaining}} verbleibend)",
       "episodeStill": "EPISODE STILL",
-      "seasonPoster": "SEASON POSTER"
+      "seasonPoster": "SEASON POSTER",
+      "searchTips": {
+        "title": "💡 Such-Tipps:",
+        "byTitle": "Nach Titel:",
+        "byTitleExample": "z.B. \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "Nach TMDB ID:",
+        "byTmdbIdExample": "z.B. \"tmdb-286217\" oder \"tmdb:286217\"",
+        "byTvdbId": "Nach TVDB ID:",
+        "byTvdbIdExample": "z.B. \"tvdb-456\" oder \"tvdb:456\"",
+        "byImdbId": "Nach IMDB ID:",
+        "byImdbIdExample": "z.B. \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Ohne Präfix wird nach Titel gesucht."
+      }
     },
     "quickRun": {
       "title": "Schnellstart-Modi",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Suche nach TV-Serien auf TMDB, um Staffel-Poster zu finden",
       "tmdbHintTitleCard": "Suche nach TV-Serien auf TMDB, um Episoden-Standbilder zu finden",
       "tmdbHintStandard": "Suche nach Filmen oder TV-Serien auf TMDB, um Poster zu finden",
-      "tmdbSearchPlaceholder": "Titel oder TMDB ID eingeben...",
+      "tmdbSearchPlaceholder": "Titel oder prefix-id...",
       "tmdbIdPlaceholder": "TMDB ID eingeben (z.B. 530915 für '1917')...",
       "searchByIdLabel": "Nach TMDB ID suchen",
       "searchByIdHint": "Jahr nicht erforderlich bei ID-Suche",

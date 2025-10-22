@@ -60,7 +60,19 @@
       "episodeResults": "Immagini episodio {{season}}x{{episode}}",
       "loadMore": "Carica altro ({{remaining}} rimanenti)",
       "episodeStill": "FOTOGRAMMA EPISODIO",
-      "seasonPoster": "LOCANDINA STAGIONE"
+      "seasonPoster": "LOCANDINA STAGIONE",
+      "searchTips": {
+        "title": "💡 Suggerimenti di ricerca:",
+        "byTitle": "Per titolo:",
+        "byTitleExample": "es. \"1917\", \"Breaking Bad\"",
+        "byTmdbId": "Per ID TMDB:",
+        "byTmdbIdExample": "es. \"tmdb-286217\" o \"tmdb:286217\"",
+        "byTvdbId": "Per ID TVDB:",
+        "byTvdbIdExample": "es. \"tvdb-456\" o \"tvdb:456\"",
+        "byImdbId": "Per ID IMDB:",
+        "byImdbIdExample": "es. \"imdb-tt1234567\", \"tt1234567\"",
+        "noPrefixNote": "Senza prefisso, la ricerca viene eseguita per titolo."
+      }
     },
     "quickRun": {
       "title": "Modalità di esecuzione rapida",
@@ -136,7 +148,7 @@
       "tmdbHintSeason": "Cerca serie TV su TMDB per trovare locandine delle stagioni",
       "tmdbHintTitleCard": "Cerca serie TV su TMDB per trovare fotogrammi degli episodi",
       "tmdbHintStandard": "Cerca film o serie TV su TMDB per trovare locandine",
-      "tmdbSearchPlaceholder": "Inserisci titolo o ID TMDB...",
+      "tmdbSearchPlaceholder": "Inserisci titolo o ID prefix...",
       "tmdbIdPlaceholder": "Inserisci ID TMDB (es. 530915 per '1917')...",
       "searchByIdLabel": "Cerca per ID TMDB",
       "searchByIdHint": "L'anno non è richiesto quando si cerca per ID",
