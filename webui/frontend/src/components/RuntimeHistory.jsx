@@ -48,7 +48,8 @@ function RuntimeHistory() {
   const [migrating, setMigrating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [limit] = useState(20);
+  const [limit] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [modeFilter, setModeFilter] = useState(null);
   const [summaryDays, setSummaryDays] = useState(30);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -83,6 +84,7 @@ function RuntimeHistory() {
       if (data.success) {
         cachedHistory = data.history;
         setHistory(data.history);
+        setTotalCount(data.total || 0);
         lastFetchTime = Date.now();
       }
     } catch (error) {
@@ -1074,10 +1076,8 @@ function RuntimeHistory() {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-theme">
           <p className="text-theme-muted text-sm">
-            {t("runtimeHistory.pagination.page", {
-              page: currentPage + 1,
-              count: history.length,
-            })}
+            Page {currentPage + 1} • Showing {history.length} of {totalCount}{" "}
+            entries
           </p>
           <div className="flex items-center gap-2">
             <button
