@@ -923,9 +923,9 @@ function BackgroundsGallery() {
                       });
                       setReplacerOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-theme-primary text-white hover:bg-theme-primary/90"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text font-medium transition-all shadow-sm"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-4 h-4 text-theme-primary" />
                     {t("backgroundsGallery.replace")}
                   </button>
 
@@ -941,11 +941,11 @@ function BackgroundsGallery() {
                     className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
                       deletingImage === selectedImage.path
                         ? "bg-theme-muted cursor-not-allowed opacity-50"
-                        : "bg-red-600 hover:bg-red-700 text-white"
+                        : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-red-500/50 text-theme-text"
                     }`}
                   >
                     <Trash2
-                      className={`w-4 h-4 ${
+                      className={`w-4 h-4 text-red-400 ${
                         deletingImage === selectedImage.path
                           ? "animate-spin"
                           : ""
@@ -956,7 +956,7 @@ function BackgroundsGallery() {
 
                   <button
                     onClick={() => setSelectedImage(null)}
-                    className="hidden sm:flex items-center justify-center px-5 py-2.5 bg-theme-hover hover:bg-theme-hover/80 rounded-lg font-medium transition-colors text-theme-text border border-theme-hover"
+                    className="hidden sm:flex items-center justify-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text shadow-sm"
                   >
                     {t("common.close")}
                   </button>
