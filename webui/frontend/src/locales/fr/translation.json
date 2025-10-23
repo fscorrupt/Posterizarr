@@ -438,10 +438,7 @@
     "statusCards": "Cartes de statut",
     "customizeDescription": "Afficher ou masquer les sections du tableau de bord • Glisser pour réorganiser",
     "hideScrollbars": "Masquer les barres de défilement",
-    "hideScrollbarsDesc": "Masquer les barres de défilement dans toute l'interface",
-    "scriptRunning": "Le script est en cours d'exécution",
-    "monitorProgress": "Surveillez la progression dans les journaux ci-dessous ou arrêtez le script",
-    "stopScript": "Arrêter le script"
+    "hideScrollbarsDesc": "Masquer les barres de défilement dans toute l'interface"
   },
   "config": {
     "title": "Configuration",

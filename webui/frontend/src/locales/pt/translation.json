@@ -438,10 +438,7 @@
     "statusCards": "Cartões de status",
     "customizeDescription": "Mostrar ou ocultar seções do painel • Arraste para reordenar",
     "hideScrollbars": "Ocultar barras de rolagem",
-    "hideScrollbarsDesc": "Ocultar barras de rolagem em toda a interface",
-    "scriptRunning": "O script está em execução",
-    "monitorProgress": "Monitore o progresso nos logs abaixo ou pare o script",
-    "stopScript": "Parar script"
+    "hideScrollbarsDesc": "Ocultar barras de rolagem em toda a interface"
   },
   "config": {
     "title": "Configuração",
