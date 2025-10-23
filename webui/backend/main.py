@@ -123,7 +123,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "INFO",
+        "log_level": "DEBUG",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -179,6 +179,25 @@ def save_log_level_config(level: str):
         pass  # Silent - no console output
         return False
 
+
+def initialize_webui_settings():
+    """Initialize webui_settings.json with default values if it doesn't exist"""
+    if not WEBUI_SETTINGS_PATH.exists():
+        default_settings = {
+            "log_level": "DEBUG",
+            "theme": "dark",
+            "auto_refresh_interval": 180,
+        }
+        try:
+            WEBUI_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(WEBUI_SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            pass  # Silent - no console output
+
+
+# Initialize webui_settings.json if it doesn't exist
+initialize_webui_settings()
 
 # Get log level from config file, environment variable, or default to INFO
 LOG_LEVEL_ENV = load_log_level_config()
@@ -9099,8 +9118,9 @@ async def update_asset_db_entry_as_manual(
     title_text: Optional[str] = None,
 ):
     """
-    Create or update a database entry for a manually replaced asset.
-    This ensures the asset appears in Recently Assets with Manual=Yes flag.
+    Delete existing database entries for a manually replaced asset.
+    The new entry will be created by the CSV import after the Posterizarr script completes.
+    This prevents duplicate entries with different title formats.
 
     Args:
         asset_path: Path to the asset (e.g., "4K/Movie Name (2024)/poster.jpg")
@@ -9154,49 +9174,75 @@ async def update_asset_db_entry_as_manual(
         elif re.match(r"^S\d+E\d+\.jpg$", filename, re.IGNORECASE):
             asset_type = "TitleCard"
 
-        # Check if entry already exists for this asset
-        # We match on Title, Rootfolder, and Type (same as CSV import logic)
+        # Delete any existing database entries for this specific asset
+        # This prevents duplicates - the CSV import will create the new entry after the script finishes
+        # We need to match more specifically to avoid deleting unrelated assets:
+        # - For seasons: match on Rootfolder + Type + season number in Title
+        # - For episodes: match on Rootfolder + Type + episode pattern in Title
+        # - For poster/background: match on Rootfolder + Type
+
         cursor = db.connection.cursor()
-        cursor.execute(
-            "SELECT id, Manual FROM imagechoices WHERE Title = ? AND Rootfolder = ? AND Type = ?",
-            (title_text, final_folder_name, asset_type),
-        )
-        existing = cursor.fetchone()
 
-        if existing:
-            # Update existing entry to mark as Manual (only update Manual field, nothing else)
-            record_id = existing["id"]
-            current_manual = existing["Manual"]
+        # Extract season/episode info from filename for more specific matching
+        season_match = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
+        episode_match = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
 
-            # Only update Manual field if not already set to "true"
-            if current_manual != "true":
-                db.update_choice(
-                    record_id,
-                    Manual="true",  # Use lowercase "true" for consistency
-                )
-                logger.info(
-                    f"Updated DB entry #{record_id}: Manual=true for: {title_text} ({asset_type})"
-                )
-            else:
-                logger.info(
-                    f"DB entry #{record_id} already has Manual=true for: {title_text} ({asset_type})"
-                )
+        if season_match:
+            # For seasons, find entries with matching season number in title
+            season_num = season_match.group(1)
+            cursor.execute(
+                """SELECT id, Title FROM imagechoices 
+                   WHERE Rootfolder = ? AND Type = ? 
+                   AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                (
+                    final_folder_name,
+                    asset_type,
+                    f"%Season{season_num}%",
+                    f"%Season {season_num}%",
+                    f"%Season0{season_num}%",
+                ),
+            )
+        elif episode_match:
+            # For episodes, find entries with matching episode pattern in title
+            season_num = episode_match.group(1)
+            episode_num = episode_match.group(2)
+            cursor.execute(
+                """SELECT id, Title FROM imagechoices 
+                   WHERE Rootfolder = ? AND Type = ? 
+                   AND (Title LIKE ? OR Title LIKE ?)""",
+                (
+                    final_folder_name,
+                    asset_type,
+                    f"%S{season_num}E{episode_num}%",
+                    f"%S0{season_num}E0{episode_num}%",
+                ),
+            )
         else:
-            # Create new entry with Manual="true"
-            record_id = db.insert_choice(
-                title=title_text,
-                type_=asset_type,
-                rootfolder=final_folder_name,
-                library_name=final_library_name,
-                language="N/A",  # Not known for manual replacements
-                fallback="false",
-                text_truncated="false",
-                download_source=image_url,
-                fav_provider_link="N/A",
-                manual="true",  # Use lowercase "true" for consistency
+            # For poster/background, match on Rootfolder + Type only
+            cursor.execute(
+                "SELECT id, Title FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                (final_folder_name, asset_type),
+            )
+
+        existing_entries = cursor.fetchall()
+
+        if existing_entries:
+            for entry in existing_entries:
+                record_id = entry["id"]
+                old_title = entry["Title"]
+                db.delete_choice(record_id)
+                logger.info(
+                    f"Deleted DB entry #{record_id} for manual replacement: {old_title} ({asset_type})"
+                )
+            logger.info(
+                f"New entry will be created by CSV import after script completes"
+            )
+        else:
+            logger.info(
+                f"No existing DB entries found for: {filename} in {final_folder_name}"
             )
             logger.info(
-                f"Created new DB entry #{record_id} with Manual=true for: {title_text} ({asset_type})"
+                f"New entry will be created by CSV import after script completes"
             )
 
     except Exception as e:
