@@ -8308,7 +8308,7 @@ if ($Manual) {
         $seconds = $executionTime.Seconds
 
         $CSVtemp = New-Object psobject
-        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $(if ($SeasonPoster) { "$Titletext | Season $global:SeasonNumber" } Elseif ($TitleCard) { "S$($global:SeasonNumber.PadLeft(2, '0'))E$($global:EpisodeNumber.PadLeft(2, '0')) | $Titletext" } Else { $Titletext })
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value $PosterType
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $FolderName
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
