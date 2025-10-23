@@ -4,16 +4,16 @@ Sub PromptUser()
     Dim folderPath As String
     Dim FilenamePosterizarr As String
     Dim currentVersion As String
-    
+
     ' Specify the current version number
     currentVersion = "1.0.6"
-    
+
     ' Check for updates
     CheckForUpdate currentVersion
-    
+
     ' Get the current filename
     FilenamePosterizarr = ThisWorkbook.FullName
-    
+
     ' Check if the current filename is not "Posterizarr.xlsm"
     If InStrRev(FilenamePosterizarr, "\Posterizarr.xlsm") = 0 Then
         ' Rename the workbook to "Posterizarr.xlsm"
@@ -26,13 +26,13 @@ Sub PromptUser()
 
     ' Remove all sheets and only keep Posterizarr sheet
     KeepOnlyPosterizarrSheet
-    
+
     ' Create the Fancy Button on Posterizarr sheet
     AddOrUpdateFancyButtonToPosterizarr
-    
+
     ' Prompt the user to select a folder
     folderPath = GetFolderPath("Select the folder containing the Posterizarr csv files")
-    
+
     ' Check if a folder is selected
     If folderPath <> "" Then
         ' Call the macro with the folder path
@@ -51,14 +51,14 @@ End Sub
 
 Sub ConvertToClickableLinks(ws As Worksheet, rng As Range)
     Dim cell As Range
-    
+
     ' Loop through each non-blank cell in the range and convert URLs to clickable hyperlinks
     For Each cell In rng
         If cell.Value <> "" And (InStr(1, cell.Value, "http://") > 0 Or InStr(1, cell.Value, "https://") > 0) Then
             ' Add hyperlink
             ws.Hyperlinks.Add Anchor:=cell, Address:=cell.Value
         End If
-        
+
         ' Debug statement to display the address of the cell currently being evaluated
         ' Debug.Print "Evaluated cell address: " & cell.Address
     Next cell
@@ -70,32 +70,32 @@ Sub ImportCSVs(folderPath)
     Dim conn As WorkbookConnection
     Dim q
     Dim ws As Worksheet
-    
+
     ' Concatenate folder path with filenames
     Filename1 = folderPath & "\ImageChoices.csv"
     Filename2 = folderPath & "\PlexLibexport.csv"
     Filename3 = folderPath & "\PlexEpisodeExport.csv"
-    
+
     ' Validate filenames
     If Not ValidateFilenames(Filename1, Filename2, Filename3) Then
         PromptUser ' Ask user to find logs again
         Exit Sub
     End If
-    
+
     ' Check if connections already exist and delete them if they do
     For Each conn In ThisWorkbook.Connections
         If conn.Name = "ImageChoices" Or conn.Name = "PlexLibexport" Or conn.Name = "PlexEpisodeExport" Then
             conn.Delete
         End If
     Next conn
-    
+
     ' Check if queries already exist and delete them if they do
     For Each q In ThisWorkbook.Queries
         If q.Name = "ImageChoices" Or q.Name = "PlexLibexport" Or q.Name = "PlexEpisodeExport" Then
             q.Delete
         End If
     Next q
-    
+
     ' Check if sheets already exist and delete them if they do
     For Each ws In ThisWorkbook.Worksheets
         If ws.Name = "ImageChoices" Or ws.Name = "PlexLibexport" Or ws.Name = "PlexEpisodeExport" Then
@@ -104,19 +104,19 @@ Sub ImportCSVs(folderPath)
             Application.DisplayAlerts = True
         End If
     Next ws
-    
+
     Dim wsImageChoices As Worksheet
     Dim wsPlexLibexport As Worksheet
     Dim wsPlexEpisodeExport As Worksheet
     Dim wsSheet As Worksheet
     Dim rngURLs As Range
- 
+
     Set wsImageChoices = ThisWorkbook.Worksheets.Add
     wsImageChoices.Name = "ImageChoices"
     ThisWorkbook.Queries.Add Name:="ImageChoices", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & " Source = Csv.Document(File.Contents(""" & Filename1 & """),[Delimiter="";"", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Title"", type text}, {""Type"", t" & _
         "ype text}, {""Rootfolder"", type text}, {""LibraryName"", type text}, {""Language"", type text}, {""Fallback"", type text}, {""TextTruncated"", type logical}, {""Download Source"", type text}, {""Fav Provider Link"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
-        
+
     With wsImageChoices.ListObjects.Add(SourceType:=0, Source:= _
         "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=ImageChoices;Extended Properties=""""", Destination:=wsImageChoices.Range("$A$1")).QueryTable
         .CommandType = xlCmdSql
@@ -136,11 +136,11 @@ Sub ImportCSVs(folderPath)
         .Refresh BackgroundQuery:=False
         .ListObject.ShowTotals = True
     End With
-    
+
     Set wsSheet = ThisWorkbook.Sheets("ImageChoices")
     Set rngURLs = wsSheet.UsedRange
     ConvertToClickableLinks wsSheet, rngURLs
-    
+
     Set wsPlexLibexport = ThisWorkbook.Worksheets.Add
     wsPlexLibexport.Name = "PlexLibexport"
     ThisWorkbook.Queries.Add Name:="PlexLibexport", Formula:= _
@@ -167,11 +167,11 @@ Sub ImportCSVs(folderPath)
         .Refresh BackgroundQuery:=False
         .ListObject.ShowTotals = True
     End With
-    
+
     Set wsSheet = ThisWorkbook.Sheets("PlexLibexport")
     Set rngURLs = wsSheet.UsedRange
     ConvertToClickableLinks wsSheet, rngURLs
-   
+
     Set wsPlexEpisodeExport = ThisWorkbook.Worksheets.Add
     wsPlexEpisodeExport.Name = "PlexEpisodeExport"
     ThisWorkbook.Queries.Add Name:="PlexEpisodeExport", Formula:= _
@@ -197,14 +197,14 @@ Sub ImportCSVs(folderPath)
         .Refresh BackgroundQuery:=False
         .ListObject.ShowTotals = True
     End With
-    
+
     Set wsSheet = ThisWorkbook.Sheets("PlexEpisodeExport")
     Set rngURLs = wsSheet.UsedRange
     ConvertToClickableLinks wsSheet, rngURLs
-       
+
     ' Refresh_All
     Refresh_All_Data_Connections
-    
+
     ' Select "Posterizarr"
     ThisWorkbook.Sheets("Posterizarr").Activate
 End Sub
@@ -212,23 +212,23 @@ End Sub
 Sub Refresh_All_Data_Connections()
     Dim bBackground
     Dim objConnection
-    
+
     For Each objConnection In ThisWorkbook.Connections
         'Get current background-refresh value
         bBackground = objConnection.OLEDBConnection.BackgroundQuery
-        
+
         'Temporarily disable background-refresh
         objConnection.OLEDBConnection.BackgroundQuery = False
-        
+
         'Refresh this connection
         objConnection.Refresh
-        
+
         'Set background-refresh value back to original value
         objConnection.OLEDBConnection.BackgroundQuery = bBackground
     Next
-    
+
     MsgBox "Finished refreshing all data connections", vbInformation
-    
+
 End Sub
 Sub CheckForUpdate(currentVersion As String)
     Dim http As Object
@@ -239,7 +239,7 @@ Sub CheckForUpdate(currentVersion As String)
     Dim i As Integer
 
     ' Define the URL of the GitHub raw file
-    url = "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/ReleaseModule.txt"
+    url = "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/modules/ReleaseModule.txt"
 
     ' Create a new WinHttpRequest object
     Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
@@ -288,14 +288,14 @@ End Sub
 Function GetFolderPath(prompt As String) As String
     Dim dialog As FileDialog
     Dim selectedFolder As Variant
-    
+
     #If Mac Then
         ' For macOS, use the MacScript function to call a shell script
         Dim shellScript As String
         shellScript = "osascript -e 'tell application ""System Events"" to activate' -e 'return POSIX path of (choose folder with prompt """ & prompt & """)'"
-        
+
         selectedFolder = MacScript(shellScript)
-        
+
         ' Check if user canceled the dialog
         If selectedFolder <> "" Then
             GetFolderPath = selectedFolder
@@ -305,14 +305,14 @@ Function GetFolderPath(prompt As String) As String
     #Else
         ' For Windows, use the FileDialog object
         Set dialog = Application.FileDialog(msoFileDialogFolderPicker)
-        
+
         ' Set dialog properties
         dialog.Title = prompt
         dialog.AllowMultiSelect = False
-        
+
         ' Set initial directory to the current directory of the Excel file
         dialog.InitialFileName = ThisWorkbook.Path
-        
+
         ' Show the dialog and check if a folder is selected
         If dialog.Show = -1 Then
             ' Get the selected folder path
@@ -331,19 +331,19 @@ Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 A
         ValidateFilenames = False
         Exit Function
     End If
-    
+
     If Len(Dir(Filename2)) = 0 Then
         MsgBox "File '" & Filename2 & "' does not exist. Did you specify the Posterizarr Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
-    
+
     If Len(Dir(Filename3)) = 0 Then
         MsgBox "File '" & Filename3 & "' does not exist. Did you specify the Posterizarr Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
-    
+
     ' All files exist
     ValidateFilenames = True
 End Function
@@ -353,13 +353,13 @@ Sub AddOrUpdateFancyButtonToPosterizarr()
     Dim rng As Range
     Dim btnText As String
     Dim btnExists As Boolean
-    
+
     ' Define the range where you want to place the button
     Set rng = ThisWorkbook.Sheets("Posterizarr").Range("C10")
-    
+
     ' Set button text
     btnText = "Import CSVs"
-    
+
     ' Check if the button already exists
     For Each shp In ThisWorkbook.Sheets("Posterizarr").Shapes
         If shp.Name = "FancyButton" Then
@@ -368,10 +368,10 @@ Sub AddOrUpdateFancyButtonToPosterizarr()
             Exit For
         End If
     Next shp
-    
+
     ' Add a rounded rectangle shape to the worksheet
     Set shp = ThisWorkbook.Sheets("Posterizarr").Shapes.AddShape(msoShapeRoundedRectangle, rng.Left, rng.Top, 215.25, 66.75)
-    
+
     ' Configure the shape
     With shp
         .Name = "FancyButton" ' Change the name of the shape as needed
@@ -381,7 +381,7 @@ Sub AddOrUpdateFancyButtonToPosterizarr()
         .TextFrame.Characters.Font.Size = 24 ' Set font size
         .Line.Visible = msoFalse ' Hide outline
         .OnAction = "PromptUser" ' Assign the macro to be executed when the button is clicked
-        
+
         ' Apply 3D effects
         With .ThreeD
             .SetPresetCamera (msoCameraOrthographicFront)
@@ -418,42 +418,42 @@ End Sub
 Sub KeepOnlyPosterizarrSheet()
     Dim ws As Worksheet
     Dim tempSheet As Worksheet
-    
+
     ' Create a new sheet named "posterizarr_temp_sheet1"
     Set tempSheet = ThisWorkbook.Sheets.Add
     tempSheet.Name = "posterizarr_temp_sheet1"
-    
+
     Application.DisplayAlerts = False ' Disable alerts
-    
+
     ' Delete all sheets except the "posterizarr_temp_sheet1"
     For Each ws In ThisWorkbook.Worksheets
         If ws.Name <> tempSheet.Name Then
             ws.Delete
         End If
     Next ws
-    
+
     ' Rename the "posterizarr_temp_sheet1" to "Posterizarr"
     tempSheet.Name = "Posterizarr"
-    
+
     Application.DisplayAlerts = True ' Re-enable alerts
 End Sub
 
 Sub RemoveDocumentPersonalInfo()
     Dim prop As DocumentProperty
-    
+
     ' Remove personal information from document properties
     For Each prop In ThisWorkbook.CustomDocumentProperties
         If prop.Name Like "Author" Or prop.Name Like "Last Save By" Or prop.Name Like "Manager" Or prop.Name Like "Company" Then
             prop.Delete
         End If
     Next prop
-    
+
     ' Remove personal information from built-in document properties
     ThisWorkbook.BuiltinDocumentProperties("Last Author").Value = ""
     ThisWorkbook.BuiltinDocumentProperties("Author").Value = ""
     ThisWorkbook.BuiltinDocumentProperties("Manager").Value = ""
     ThisWorkbook.BuiltinDocumentProperties("Company").Value = ""
-    
+
     ' Clear personal information from the file properties
     ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlAuthor)
     ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlLastAuthor)

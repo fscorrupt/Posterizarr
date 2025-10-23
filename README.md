@@ -113,9 +113,9 @@ For detailed setup instructions, see the [full walkthrough](walkthrough.md).
 ## 📏 Image Size Requirements
 When uploading custom images through the Web UI or Manual mode, Posterizarr recommends the following dimensions for optimal quality:
 
-- **Posters** (Movies/Shows/Seasons): **1000×1500px** (base) or **2000×3000px** or higher (**2:3 ratio**)  
-- **Backgrounds**: **1920×1080px** (base) or **3840×2160px** or higher (**16:9 ratio / 4K**)  
-- **Title Cards**: **1920×1080px** (base) or **3840×2160px** or higher (**16:9 ratio / 4K**)  
+- **Posters** (Movies/Shows/Seasons): **1000×1500px** (base) or **2000×3000px** or higher (**2:3 ratio**)
+- **Backgrounds**: **1920×1080px** (base) or **3840×2160px** or higher (**16:9 ratio / 4K**)
+- **Title Cards**: **1920×1080px** (base) or **3840×2160px** or higher (**16:9 ratio / 4K**)
 
 The Web UI will display warnings if uploaded images are smaller than these recommended sizes, but will still process them.
 
@@ -642,7 +642,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
      - "/opt/appdata/posterizarr:/posterizarr:rw"
    ```
    ⚠️ Note: This mount path is case-sensitive and must match exactly /posterizarr.
-1. Download the [trigger.py](trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
+1. Download the [trigger.py](/modules/trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
    - You may have to set `chmod +x` to the file.
 1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
 1. Click on `Add a new notification agent` and select `Script`
@@ -772,7 +772,7 @@ To use it we need to configure a script in Sonarr/Radarr, please follow these in
      - "/opt/appdata/posterizarr:/posterizarr:rw"
    ```
    ⚠️ Note: This mount path is case-sensitive and must match exactly `/posterizarr`.
-2. Download [ArrTrigger.sh](ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
+2. Download [ArrTrigger.sh](/modules/ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
    - For example, create a `scripts` folder in `/opt/appdata/sonarr`, resulting in the path:
      `/opt/appdata/sonarr/scripts/ArrTrigger.sh`
    - Make sure to set executable permissions: `chmod +x ArrTrigger.sh`
