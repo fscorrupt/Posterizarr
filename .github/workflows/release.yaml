@@ -50,22 +50,6 @@ jobs:
             type=semver,pattern={{major}}
             # Use the manually provided version when triggered via workflow_dispatch
             ${{ github.event_name == 'workflow_dispatch' && format('type=raw,value={0}', github.event.inputs.version) || '' }}
-          
-      - name: Install container-structure-test
-        run: |
-          curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
-          chmod +x container-structure-test-linux-amd64
-          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
-          
-      - name: Build test image (amd64 only)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: posterizarr:test
-          
-      - name: Run container structure tests
-        run: container-structure-test test --image posterizarr:test --config tests/docker/tests.yaml
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

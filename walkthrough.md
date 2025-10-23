@@ -107,30 +107,6 @@
         ```bash
         cd Posterizarr
         ```
-    - You should see something like this:
-        ```
-        .
-        ├── backgroundoverlay.png
-        ├── config.example.json
-        ├── docker-compose.yml
-        ├── images
-        │   ├── backgroundtesting.png
-        │   ├── folder.png
-        │   ├── imagecsv.png
-        │   ├── kometa-overview.png
-        │   ├── output.png
-        │   ├── posterizarr-overview.png
-        │   ├── posterizarr-xlsm.gif
-        │   ├── testing.png
-        │   ├── titlecardtesting.png
-        │   ├── versioning.png
-        │   ├── webhook.png
-        │   └── webhookexample.png
-        ├── overlay.png
-        ├── Posterizarr.ps1
-        ├── README.md
-        ├── Release.txt
-        └── Rocky.ttf
 1. Copy the `config.example.json` to `config.json` and adjust the settings.
     - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#configuration)
         - tvdbapi
