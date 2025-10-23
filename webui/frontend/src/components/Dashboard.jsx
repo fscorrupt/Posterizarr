@@ -505,16 +505,18 @@ function Dashboard() {
         fetchStatus(true).then(() => {
           // Need to fetch status synchronously to get the latest value
           fetch(`${API_URL}/status`)
-            .then(response => response.json())
-            .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
               // After status is updated, check if script finished while tab was hidden
               // If so, trigger instant refresh of runtime stats and recent assets
               if (!data.running) {
-                console.log("Script not running, triggering instant stats refresh...");
+                console.log(
+                  "Script not running, triggering instant stats refresh..."
+                );
                 setRuntimeStatsRefreshTrigger((prev) => prev + 1);
               }
             })
-            .catch(err => console.error("Error checking status:", err));
+            .catch((err) => console.error("Error checking status:", err));
           // WebSocket reconnection will be handled by the status.running useEffect below
         });
         fetchSchedulerStatus(true);
@@ -718,7 +720,6 @@ function Dashboard() {
   // Card labels for display
   const cardLabels = {
     statusCards: t("dashboard.statusCards"),
-    systemInfo: t("dashboard.systemInfo"),
     runtimeStats: t("dashboard.runtimeStats"),
     recentAssets: t("dashboard.recentAssets"),
     logViewer: t("dashboard.liveLogFeed"),
