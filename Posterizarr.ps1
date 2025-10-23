@@ -7637,7 +7637,7 @@ if ($Manual) {
     $seasonNumberPattern = '([1-9]\d*)$'
 
     # Regex to find "Specials" keywords or the numbers 0/00
-    $specialsPattern = '(?:^Specials$|^Extras$|^Spéciaux$|^0{1,2}$)' # Add any other language keywords here
+    $specialsPattern = '^(?:Specials|Extras|Spéciaux|0{1,2}|[Ss]eason 0)$' # Add any other language keywords here
 
     if ([string]::IsNullOrEmpty($PicturePath)) {
         $PicturePath = Read-Host "Enter local path or url to source picture"
@@ -7740,7 +7740,7 @@ if ($Manual) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            Elseif ($SeasonPosterName -eq $specialsPattern) {
+            Elseif ($SeasonPosterName -match $specialsPattern) {
                 $global:seasontmp = "Season00"
             }
             Else {
@@ -12465,7 +12465,7 @@ Elseif ($Tautulli) {
                                         }
                                         if (!$TakeLocal) {
                                             $seasontemp = New-Object psobject
-                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -12499,7 +12499,7 @@ Elseif ($Tautulli) {
                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
 
                                 $seasontemp = New-Object psobject
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -13083,7 +13083,7 @@ Elseif ($Tautulli) {
                                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -13644,7 +13644,7 @@ Elseif ($Tautulli) {
                                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -16755,7 +16755,7 @@ Elseif ($ArrTrigger) {
                                                 }
                                                 if (!$TakeLocal) {
                                                     $seasontemp = New-Object psobject
-                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
+                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -16789,7 +16789,7 @@ Elseif ($ArrTrigger) {
                                         $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
 
                                         $seasontemp = New-Object psobject
-                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -17278,7 +17278,7 @@ Elseif ($ArrTrigger) {
                                                     $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     if ($global:BackgroundOnlyTextless) {
                                                         $episodetemp = New-Object psobject
-                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -17746,7 +17746,7 @@ Elseif ($ArrTrigger) {
                                                     $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     if ($global:BackgroundOnlyTextless) {
                                                         $episodetemp = New-Object psobject
-                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -20999,7 +20999,7 @@ Elseif ($ArrTrigger) {
                                             }
                                             if (!$TakeLocal) {
                                                 $seasontemp = New-Object psobject
-                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -21033,7 +21033,7 @@ Elseif ($ArrTrigger) {
                                     $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
 
                                     $seasontemp = New-Object psobject
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -21617,7 +21617,7 @@ Elseif ($ArrTrigger) {
                                                     $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     if ($global:BackgroundOnlyTextless) {
                                                         $episodetemp = New-Object psobject
-                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -22178,7 +22178,7 @@ Elseif ($ArrTrigger) {
                                                     $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     if ($global:BackgroundOnlyTextless) {
                                                         $episodetemp = New-Object psobject
-                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                         $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -26628,7 +26628,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             }
                                             if (!$TakeLocal) {
                                                 $seasontemp = New-Object psobject
-                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -26661,7 +26661,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
 
                                     $seasontemp = New-Object psobject
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -27150,7 +27150,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -27618,7 +27618,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -31559,7 +31559,7 @@ else {
                                         }
                                         if (!$TakeLocal) {
                                             $seasontemp = New-Object psobject
-                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -31592,7 +31592,7 @@ else {
                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
 
                                 $seasontemp = New-Object psobject
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | Season " + $global:SeasonNumber)
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -32209,7 +32209,7 @@ else {
                                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -32801,7 +32801,7 @@ else {
                                                 $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
