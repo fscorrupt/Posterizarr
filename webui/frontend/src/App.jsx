@@ -15,7 +15,6 @@ import {
   DashboardLoadingProvider,
   useDashboardLoading,
 } from "./context/DashboardLoadingContext";
-import { BackgroundPollingProvider } from "./context/BackgroundPollingContext";
 
 // Setup fetch interceptor BEFORE any other imports that might use fetch
 import { setupFetchInterceptor } from "./utils/fetchInterceptor";
@@ -291,9 +290,7 @@ function App() {
           <SidebarProvider>
             <ToastProvider>
               <DashboardLoadingProvider>
-                <BackgroundPollingProvider>
-                  <AppContent />
-                </BackgroundPollingProvider>
+                <AppContent />
               </DashboardLoadingProvider>
             </ToastProvider>
           </SidebarProvider>

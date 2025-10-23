@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
-import { useBackgroundPolling } from "../context/BackgroundPollingContext";
 import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
@@ -65,8 +64,7 @@ let cachedVersion = null;
 function Dashboard() {
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
-  const { startLoading, finishLoading, isDashboardFullyLoaded } = useDashboardLoading();
-  const { systemInfo: bgSystemInfo, refreshAll: refreshBackgroundData, startPolling } = useBackgroundPolling();
+  const { startLoading, finishLoading } = useDashboardLoading();
   const [status, setStatus] = useState(
     cachedStatus || {
       running: false,
@@ -93,8 +91,7 @@ function Dashboard() {
     next_run: null,
     timezone: null,
   });
-  // Use systemInfo from background polling context (updates every 30s automatically)
-  const systemInfo = bgSystemInfo || {
+  const [systemInfo, setSystemInfo] = useState({
     platform: "...",
     os_version: "...",
     cpu_model: "...",
@@ -104,7 +101,7 @@ function Dashboard() {
     used_memory: "...",
     free_memory: "...",
     is_docker: false,
-  };
+  });
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
@@ -190,8 +187,20 @@ function Dashboard() {
           });
         }
 
-        // Note: systemInfo is now managed by BackgroundPollingContext (updates every 30s)
-        // No need to update it here - it's automatically synced in the background
+        // Update system info
+        if (data.system_info) {
+          setSystemInfo({
+            platform: data.system_info.platform || "Unknown",
+            os_version: data.system_info.os_version || "Unknown",
+            cpu_model: data.system_info.cpu_model || "Unknown",
+            cpu_cores: data.system_info.cpu_cores || 0,
+            memory_percent: data.system_info.memory_percent || 0,
+            total_memory: data.system_info.total_memory || "Unknown",
+            used_memory: data.system_info.used_memory || "Unknown",
+            free_memory: data.system_info.free_memory || "Unknown",
+            is_docker: data.system_info.is_docker || false,
+          });
+        }
       }
 
       // Mark dashboard as loaded after first successful fetch
@@ -355,7 +364,34 @@ function Dashboard() {
     }
   };
 
-  // fetchSystemInfo removed - now handled by BackgroundPollingContext
+  const fetchSystemInfo = async (silent = false) => {
+    try {
+      const response = await fetch(`${API_URL}/system-info`);
+      if (!response.ok) {
+        if (!silent) {
+          console.warn("System info endpoint not available:", response.status);
+        }
+        return;
+      }
+
+      const data = await response.json();
+      setSystemInfo({
+        platform: data.platform || "Unknown",
+        os_version: data.os_version || "Unknown",
+        cpu_model: data.cpu_model || "Unknown",
+        cpu_cores: data.cpu_cores || 0,
+        memory_percent: data.memory_percent || 0,
+        total_memory: data.total_memory || "Unknown",
+        used_memory: data.used_memory || "Unknown",
+        free_memory: data.free_memory || "Unknown",
+        is_docker: data.is_docker || false,
+      });
+    } catch (error) {
+      if (!silent) {
+        console.error("Error fetching system info:", error);
+      }
+    }
+  };
 
   const connectDashboardWebSocket = () => {
     // Prevent multiple simultaneous connections
@@ -448,10 +484,10 @@ function Dashboard() {
     fetchDashboardData(false);
 
     // Poll individual endpoints every 3 seconds for updates (lighter requests)
-    // Note: SystemInfo polling now handled by BackgroundPollingContext
     const statusInterval = setInterval(() => {
       fetchStatus(true);
       fetchSchedulerStatus(true);
+      fetchSystemInfo(true);
     }, 3000);
 
     // Interval for force refresh every 24 hours (if page stays open)
@@ -471,7 +507,7 @@ function Dashboard() {
           // This will be handled by the status.running useEffect below
         });
         fetchSchedulerStatus(true);
-        // SystemInfo auto-updates from BackgroundPollingContext
+        fetchSystemInfo(true);
       }
     };
 
@@ -484,14 +520,6 @@ function Dashboard() {
       disconnectDashboardWebSocket();
     };
   }, [startLoading]);
-
-  // Start background polling after dashboard is fully loaded
-  useEffect(() => {
-    if (isDashboardFullyLoaded) {
-      console.log("Dashboard fully loaded - starting background polling");
-      startPolling();
-    }
-  }, [isDashboardFullyLoaded, startPolling]);
 
   useEffect(() => {
     // Skip WebSocket management when tab is hidden to prevent unnecessary connections
@@ -509,15 +537,13 @@ function Dashboard() {
 
     // Trigger runtime stats refresh when run finishes
     if (previousRunningState.current === true && status.running === false) {
-      console.log("Run finished, triggering data refresh...");
+      console.log("Run finished, triggering runtime stats refresh...");
       setRuntimeStatsRefreshTrigger((prev) => prev + 1);
-      // Immediately refresh background data (recent assets, runtime stats, missing assets)
-      refreshBackgroundData();
     }
 
     // Update previous state
     previousRunningState.current = status.running;
-  }, [status.running, refreshBackgroundData]);
+  }, [status.running]);
 
   useEffect(() => {
     // Skip if tab is hidden or not running
