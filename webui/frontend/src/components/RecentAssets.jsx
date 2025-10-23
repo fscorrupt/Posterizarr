@@ -17,22 +17,24 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
+import { useBackgroundPolling } from "../context/BackgroundPollingContext";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
 
-let cachedAssets = null;
+// Module-level flag to persist across component unmounts
+let hasInitiallyLoadedRecentAssets = false;
 
 function RecentAssets() {
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const { startLoading, finishLoading } = useDashboardLoading();
-  const hasInitiallyLoaded = useRef(false);
-  const [assets, setAssets] = useState(cachedAssets || []);
-  const [loading, setLoading] = useState(false); // No initial loading if cached
-  const [error, setError] = useState(null); // Error state
+  const { recentAssetsData, refreshRecentAssets } = useBackgroundPolling();
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -56,75 +58,53 @@ function RecentAssets() {
     return Math.min(Math.max(count, 5), 10);
   });
 
-  const fetchRecentAssets = async (silent = false) => {
-    if (!silent) {
-      setRefreshing(true);
-      startLoading("recent-assets");
-    }
-    setError(null);
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setRefreshing(true);
+    refreshRecentAssets();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  };
 
+  // Fetch initial data on mount
+  const fetchInitialData = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`${API_URL}/recent-assets`);
-      const data = await response.json();
-
-      if (data.success) {
-        cachedAssets = data.assets; // Save to persistent cache
-        setAssets(data.assets);
-        setError(null);
-
-        // Mark as loaded after first successful fetch
-        if (!hasInitiallyLoaded.current) {
-          hasInitiallyLoaded.current = true;
-          finishLoading("recent-assets");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAssets(data.assets);
+          setError(null);
         }
-      } else {
-        const errorMsg = data.error || t("recentAssets.loadError");
-        setError(errorMsg);
-        showError(errorMsg);
       }
     } catch (err) {
-      const errorMsg = err.message || t("recentAssets.loadError");
-      setError(errorMsg);
-      showError(errorMsg);
-      console.error("Error fetching recent assets:", err);
+      console.error('Error fetching recent assets:', err);
+      setError('Failed to load recent assets');
     } finally {
       setLoading(false);
-      if (!silent) {
-        setTimeout(() => {
-          setRefreshing(false);
-        }, 500);
-      }
+      finishLoading("recent-assets");
+      hasInitiallyLoadedRecentAssets = true;
     }
   };
 
+  // Register as loading and fetch initial data ONLY on first mount
   useEffect(() => {
-    // Register as loading and fetch on mount (silent mode = no loading spinner)
-    startLoading("recent-assets");
-
-    // Check cache first
-    if (cachedAssets) {
-      setAssets(cachedAssets);
-      setLoading(false);
-      if (!hasInitiallyLoaded.current) {
-        hasInitiallyLoaded.current = true;
-        finishLoading("recent-assets");
-      }
-    } else {
-      fetchRecentAssets(true);
+    if (!hasInitiallyLoadedRecentAssets) {
+      startLoading("recent-assets");
+      fetchInitialData();
     }
-
-    // Background refresh every 2 minutes (silent)
-    const interval = setInterval(() => {
-      console.log("Auto-refreshing recent assets...");
-      fetchRecentAssets(true);
-    }, 2 * 60 * 1000);
-
-    return () => {
-      clearInterval(interval);
-      // Don't finish loading on unmount - that happens when data is fetched
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync with background polling data (after initial load)
+  useEffect(() => {
+    if (recentAssetsData) {
+      setAssets(recentAssetsData);
+      setError(null);
+    }
+  }, [recentAssetsData]);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10
@@ -312,7 +292,7 @@ function RecentAssets() {
 
           {/* Refresh Button - SystemInfo Style */}
           <button
-            onClick={() => fetchRecentAssets()}
+            onClick={handleRefresh}
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
             title={t("recentAssets.refreshTooltip")}
@@ -366,7 +346,7 @@ function RecentAssets() {
         <div className="text-center py-8 text-red-400">
           <p>Error: {error}</p>
           <button
-            onClick={() => fetchRecentAssets()}
+            onClick={handleRefresh}
             className="mt-4 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 rounded-lg transition-colors"
           >
             Retry

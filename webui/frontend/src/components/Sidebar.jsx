@@ -32,54 +32,26 @@ import {
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
 import { useTheme } from "../context/ThemeContext";
+import { useBackgroundPolling } from "../context/BackgroundPollingContext";
 
 const Sidebar = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const { theme, setTheme, themes } = useTheme();
+  const { missingAssetsCount } = useBackgroundPolling();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAssetsExpanded, setIsAssetsExpanded] = useState(false);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
-  const [missingAssetsCount, setMissingAssetsCount] = useState(0);
 
   // Check if Folder View is active
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem("gallery-view-mode") || "grid";
   });
 
-  // Fetch missing assets count
-  React.useEffect(() => {
-    const fetchMissingAssetsCount = async () => {
-      try {
-        const response = await fetch("/api/assets/overview");
-        if (response.ok) {
-          const data = await response.json();
-          // Show total assets with issues (not just missing assets)
-          setMissingAssetsCount(data.categories.assets_with_issues.count);
-        }
-      } catch (error) {
-        console.error("Failed to fetch missing assets count:", error);
-      }
-    };
-
-    fetchMissingAssetsCount();
-
-    // Listen for assetReplaced event to refresh immediately
-    const handleAssetReplaced = () => {
-      fetchMissingAssetsCount();
-    };
-    window.addEventListener("assetReplaced", handleAssetReplaced);
-
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchMissingAssetsCount, 60000);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("assetReplaced", handleAssetReplaced);
-    };
-  }, []);
+  // Note: Missing assets count now comes from BackgroundPollingContext
+  // which polls every 10 seconds across all tabs
 
   // Update viewMode when localStorage changes (listen to storage events)
   React.useEffect(() => {

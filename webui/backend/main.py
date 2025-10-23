@@ -120,7 +120,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "INFO",
+        "log_level": "DEBUG",  # Default to DEBUG for development/troubleshooting
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -130,6 +130,12 @@ def load_webui_settings():
             with open(WEBUI_SETTINGS_PATH, "r", encoding="utf-8") as f:
                 settings = json.load(f)
                 return {**default_settings, **settings}
+        else:
+            # File doesn't exist - create it with default settings
+            WEBUI_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(WEBUI_SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=2, ensure_ascii=False)
+            return default_settings
     except Exception:
         pass  # Silent on error
 
@@ -148,16 +154,13 @@ def save_webui_settings(settings: dict):
 
 def load_log_level_config():
     """Load log level from webui_settings.json or environment variable"""
-    try:
-        if WEBUI_SETTINGS_PATH.exists():
-            with open(WEBUI_SETTINGS_PATH, "r", encoding="utf-8") as f:
-                config = json.load(f)
-                level = config.get("log_level", "").upper()
-                if level:
-                    return level
-    except Exception:
-        pass  # Silent on error
-
+    # Call load_webui_settings to ensure file is created with defaults
+    settings = load_webui_settings()
+    level = settings.get("log_level", "").upper()
+    
+    if level:
+        return level
+    
     # Fallback to environment variable or default
     return os.getenv("WEBUI_LOG_LEVEL", "INFO").upper()
 
@@ -6682,13 +6685,13 @@ async def get_recent_assets():
 
     Uses the imagechoices.db database instead of CSV files
     Assets are ordered by ID DESC (newest/highest ID first)
+
+    Note: CSV import is not performed here to avoid re-importing deleted records.
+    CSV is imported after script runs and on startup only.
     """
     try:
-        # Auto-import CSV to database before fetching (ensures fresh data)
-        try:
-            import_imagechoices_to_db()
-        except Exception as e:
-            logger.warning(f"Could not import CSV to database: {e}")
+        # Don't auto-import CSV here - it can restore deleted records!
+        # CSV import happens after Posterizarr script runs and on startup
 
         # Get all assets from database (already sorted by id DESC - newest first)
         db_records = db.get_all_choices()
