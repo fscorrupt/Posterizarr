@@ -111,14 +111,13 @@ The web UI comes pre-integrated in the Docker container. For other platforms lik
 For detailed setup instructions, see the [full walkthrough](walkthrough.md).
 
 ## 📏 Image Size Requirements
-
 When uploading custom images through the Web UI or Manual mode, Posterizarr recommends the following dimensions for optimal quality:
 
-- **Posters** (Movies/Shows/Seasons): **2000×3000px** or higher (2:3 ratio)
-- **Backgrounds**: **3840×2160px** or higher (16:9 ratio / 4K)
-- **Title Cards**: **3840×2160px** or higher (16:9 ratio / 4K)
+- **Posters** (Movies/Shows/Seasons): **1000×1500px** (base) or **2000×3000px** or higher (**2:3 ratio**)  
+- **Backgrounds**: **1920×1080px** (base) or **3840×2160px** or higher (**16:9 ratio / 4K**)  
+- **Title Cards**: **1920×1080px** (base) or **3840×2160px** or higher (**16:9 ratio / 4K**)  
 
-The Web UI will display warnings if uploaded images are smaller than these recommended sizes, but will still process them. For more details, see [IMAGE_SIZE_REQUIREMENTS.md](IMAGE_SIZE_REQUIREMENTS.md).
+The Web UI will display warnings if uploaded images are smaller than these recommended sizes, but will still process them.
 
 ## 🧰 What You Need
 
