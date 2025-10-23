@@ -477,6 +477,111 @@ class ImageChoicesDB:
             logger.error(f"Error deleting record: {e}")
             raise
 
+    def delete_by_image_path(self, image_path: str) -> int:
+        """
+        Delete all image choice records matching a specific image path
+
+        Args:
+            image_path: Relative path to the image (e.g., 'TestMovies/MovieName/poster.jpg')
+
+        Returns:
+            int: Number of records deleted
+        """
+        try:
+            from pathlib import Path
+            import re
+
+            cursor = self.connection.cursor()
+
+            # Parse the path to extract components
+            # Path format: LibraryName/Rootfolder/filename.jpg
+            # e.g., 'TestSerien/Power Book II - Ghost (2020) [tvdb-376837] [tmdb-97890]/Season01.jpg'
+            # or 'TestMovies/Movie Name (2020) {tmdb-123}/poster.jpg'
+            path_obj = Path(image_path)
+
+            if len(path_obj.parts) < 2:
+                logger.warning(
+                    f"Invalid path format for database deletion: {image_path}"
+                )
+                return 0
+
+            # Extract the folder name (second-to-last part) which should match Rootfolder
+            rootfolder = path_obj.parts[
+                -2
+            ]  # e.g., 'Power Book II - Ghost (2020) [tvdb-376837] [tmdb-97890]'
+
+            # Extract the parent folder to determine if it's a Movie or Show
+            library_name = path_obj.parts[0] if len(path_obj.parts) >= 3 else ""
+
+            # Extract the filename to determine the type
+            filename = path_obj.stem  # e.g., 'Season01' or 'poster' (without .jpg)
+            filename_lower = filename.lower()
+
+            deleted_count = 0
+
+            # Database uses these Type values:
+            # - 'Movie' for movie posters
+            # - 'Movie Background' for movie backgrounds
+            # - 'Show' for show posters
+            # - 'Show Background' for show backgrounds
+            # - 'Season' for season posters
+            # - 'Episode' for titlecards (episode images)
+
+            if filename_lower == "poster":
+                # Delete Movie or Show poster
+                # Try both types since we don't know which one it is
+                cursor.execute(
+                    "DELETE FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Movie', 'Show')",
+                    (rootfolder,),
+                )
+            elif filename_lower == "background":
+                # Delete Movie Background or Show Background
+                cursor.execute(
+                    "DELETE FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Movie Background', 'Show Background')",
+                    (rootfolder,),
+                )
+            elif filename_lower.startswith("season"):
+                # Season poster: Title format is "Show Name | Season01"
+                cursor.execute(
+                    "DELETE FROM imagechoices WHERE Rootfolder = ? AND Type = 'Season' AND Title LIKE ?",
+                    (rootfolder, f"%| {filename}%"),
+                )
+            elif re.match(r"^s\d{2}e\d{2}$", filename_lower):
+                # Episode titlecard: Title format is "S01E01 | Episode Title"
+                # Type is 'Episode'
+                cursor.execute(
+                    "DELETE FROM imagechoices WHERE Rootfolder = ? AND Type = 'Episode' AND Title LIKE ?",
+                    (rootfolder, f"{filename.upper()}%"),  # Title starts with S01E01
+                )
+            else:
+                # Unknown type, try to match just by Rootfolder
+                logger.warning(
+                    f"Unknown file type for {filename}, matching by Rootfolder only"
+                )
+                cursor.execute(
+                    "DELETE FROM imagechoices WHERE Rootfolder = ?", (rootfolder,)
+                )
+
+            deleted_count = cursor.rowcount
+            self.connection.commit()
+
+            if deleted_count > 0:
+                logger.info(
+                    f"Deleted {deleted_count} database record(s) for image path: {image_path} (Rootfolder: {rootfolder}, Filename: {filename})"
+                )
+            else:
+                logger.debug(
+                    f"No database records found for image path: {image_path} (Rootfolder: {rootfolder}, Filename: {filename})"
+                )
+
+            return deleted_count
+        except sqlite3.Error as e:
+            logger.error(f"Error deleting records by image path: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error parsing image path {image_path}: {e}")
+            raise
+
     def import_from_csv(self, csv_path: Path) -> dict:
         """
         Import records from ImageChoices.csv file

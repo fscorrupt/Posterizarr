@@ -76,10 +76,8 @@ for subdir in SUBDIRS_TO_CREATE:
         test_file = subdir_path / ".write_test"
         test_file.touch()
         test_file.unlink()
-    except PermissionError as e:
-        pass  # Silent - no console output
-    except Exception as e:
-        pass  # Silent - no console output
+    except (PermissionError, Exception):
+        pass  # Silent on error
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
@@ -101,9 +99,8 @@ import glob
 for log_file in glob.glob(str(UI_LOGS_DIR / "*.log")):
     try:
         os.remove(log_file)
-        pass  # Silent - no console output
-    except Exception as e:
-        pass  # Silent - no console output
+    except Exception:
+        pass  # Silent on error
 
 # Determine log level from config file or environment variable or default to INFO
 LOG_LEVEL_MAP = {
@@ -133,8 +130,8 @@ def load_webui_settings():
             with open(WEBUI_SETTINGS_PATH, "r", encoding="utf-8") as f:
                 settings = json.load(f)
                 return {**default_settings, **settings}
-    except Exception as e:
-        pass  # Silent - no console output
+    except Exception:
+        pass  # Silent on error
 
     return default_settings
 
@@ -145,8 +142,7 @@ def save_webui_settings(settings: dict):
         with open(WEBUI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=2, ensure_ascii=False)
         return True
-    except Exception as e:
-        pass  # Silent - no console output
+    except Exception:
         return False
 
 
@@ -158,15 +154,12 @@ def load_log_level_config():
                 config = json.load(f)
                 level = config.get("log_level", "").upper()
                 if level:
-                    # Silent - no console output
                     return level
-    except Exception as e:
-        pass  # Silent - no console output
+    except Exception:
+        pass  # Silent on error
 
     # Fallback to environment variable or default
-    env_level = os.getenv("WEBUI_LOG_LEVEL", "INFO").upper()
-    # Silent - no console output
-    return env_level
+    return os.getenv("WEBUI_LOG_LEVEL", "INFO").upper()
 
 
 def save_log_level_config(level: str):
@@ -175,16 +168,13 @@ def save_log_level_config(level: str):
         settings = load_webui_settings()
         settings["log_level"] = level.upper()
         return save_webui_settings(settings)
-    except Exception as e:
-        pass  # Silent - no console output
+    except Exception:
         return False
 
 
 # Get log level from config file, environment variable, or default to INFO
 LOG_LEVEL_ENV = load_log_level_config()
 LOG_LEVEL = LOG_LEVEL_MAP.get(LOG_LEVEL_ENV, logging.INFO)
-
-# Silent - no console output
 
 # Setup logging with configurable log level - FILE ONLY, NO CONSOLE OUTPUT
 # Remove any existing handlers first
@@ -233,10 +223,8 @@ logger.debug(f"Working directory: {os.getcwd()}")
 logger.debug(f"Base directory: {BASE_DIR}")
 logger.debug(f"Docker mode: {IS_DOCKER}")
 
-# Create Overlayfiles directory if it doesn't exist
+# Create required directories
 OVERLAYFILES_DIR.mkdir(exist_ok=True)
-
-# Create uploads directory if it doesn't exist
 UPLOADS_DIR.mkdir(exist_ok=True)
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
@@ -253,26 +241,25 @@ def setup_backend_ui_logger():
     global queue_listener
     logger.info("Initializing backend UI logger")
     try:
-        # Create UILogs directory if not exists
+        # Create UILogs directory
         UI_LOGS_DIR.mkdir(exist_ok=True)
         logger.debug(f"UILogs directory: {UI_LOGS_DIR}")
-        logger.debug(f"UILogs directory exists: {UI_LOGS_DIR.exists()}")
 
-        # CLEANUP: Delete old log files on startup
+        # Delete old log files on startup
         backend_log_path = UI_LOGS_DIR / "FrontendUI.log"
         if backend_log_path.exists():
             logger.debug(f"Removing existing FrontendUI.log: {backend_log_path}")
             backend_log_path.unlink()
-            logger.info(f"Cleared old FrontendUI.log")
+            logger.info("Cleared old FrontendUI.log")
         else:
             logger.debug("No existing FrontendUI.log to clear")
 
-        # Create File Handler for FrontendUI.log with thread-safe queue
+        # Create File Handler with thread-safe queue
         logger.debug(f"Creating file handler for: {backend_log_path}")
         backend_ui_file_handler = logging.FileHandler(
             backend_log_path, encoding="utf-8", mode="w"
         )
-        backend_ui_file_handler.setLevel(LOG_LEVEL)  # Use configurable log level
+        backend_ui_file_handler.setLevel(LOG_LEVEL)
         backend_ui_file_handler.setFormatter(
             logging.Formatter(
                 "[%(asctime)s] [%(levelname)-8s] [BACKEND:%(name)s:%(funcName)s:%(lineno)d] - %(message)s",
@@ -295,7 +282,7 @@ def setup_backend_ui_logger():
         queue_listener.start()
         logger.debug("Queue listener started for thread-safe logging")
 
-        # Add queue handler to root logger (so all backend logs are captured)
+        # Add queue handler to root logger
         logging.getLogger().addHandler(queue_handler)
         logger.info(f"Backend logger initialized successfully: {backend_log_path}")
         logger.info(
@@ -6315,6 +6302,161 @@ async def websocket_logs(
         logger.debug("WebSocket connection closed")
 
 
+# ============================================================================
+# GALLERY HELPER FUNCTIONS (DRY - Don't Repeat Yourself)
+# ============================================================================
+
+
+def delete_asset_file(path: str, asset_type: str) -> dict:
+    """
+    Generic helper function to delete an asset file and its database entry.
+
+    Args:
+        path: Relative path to the file within ASSETS_DIR
+        asset_type: Type name for error messages (e.g., 'Poster', 'Background', 'Season', 'Titlecard')
+
+    Returns:
+        dict: Success response with message
+
+    Raises:
+        HTTPException: On validation or deletion errors
+    """
+    try:
+        # Construct the full file path
+        file_path = ASSETS_DIR / path
+
+        # Security check: Ensure the path is within ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"{asset_type} not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete from database if available
+        if DATABASE_AVAILABLE and db is not None:
+            try:
+                # Extract the relative path from ASSETS_DIR for database lookup
+                relative_path = str(file_path.relative_to(ASSETS_DIR))
+                deleted_count = db.delete_by_image_path(relative_path)
+                if deleted_count > 0:
+                    logger.info(
+                        f"Deleted {deleted_count} database record(s) for: {relative_path}"
+                    )
+                else:
+                    logger.debug(f"No database record found for: {relative_path}")
+            except Exception as db_error:
+                logger.warning(
+                    f"Failed to delete database record for {path}: {db_error}"
+                )
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted {asset_type.lower()}: {file_path}")
+
+        # Invalidate cache to reflect changes immediately
+        asset_cache["last_scanned"] = 0
+
+        return {
+            "success": True,
+            "message": f"{asset_type} '{path}' deleted successfully",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting {asset_type.lower()} {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def bulk_delete_assets(paths: List[str], asset_type: str) -> dict:
+    """
+    Generic helper function to bulk delete asset files and their database entries.
+
+    Args:
+        paths: List of relative paths to files within ASSETS_DIR
+        asset_type: Type name for logging (e.g., 'poster', 'background', 'season', 'titlecard')
+
+    Returns:
+        dict: Response with deleted and failed file lists
+    """
+    deleted = []
+    failed = []
+    db_deleted_count = 0
+
+    for path in paths:
+        try:
+            # Construct the full file path
+            file_path = ASSETS_DIR / path
+
+            # Security check: Ensure the path is within ASSETS_DIR
+            try:
+                file_path = file_path.resolve()
+                file_path.relative_to(ASSETS_DIR.resolve())
+            except ValueError:
+                failed.append({"path": path, "error": "Access denied: Invalid path"})
+                continue
+
+            # Check if file exists
+            if not file_path.exists():
+                failed.append(
+                    {"path": path, "error": f"{asset_type.capitalize()} not found"}
+                )
+                continue
+
+            # Check if it's a file (not a directory)
+            if not file_path.is_file():
+                failed.append({"path": path, "error": "Path is not a file"})
+                continue
+
+            # Delete from database if available
+            if DATABASE_AVAILABLE and db is not None:
+                try:
+                    # Extract the relative path from ASSETS_DIR for database lookup
+                    relative_path = str(file_path.relative_to(ASSETS_DIR))
+                    deleted_records = db.delete_by_image_path(relative_path)
+                    db_deleted_count += deleted_records
+                except Exception as db_error:
+                    logger.warning(
+                        f"Failed to delete database record for {path}: {db_error}"
+                    )
+
+            # Delete the file
+            file_path.unlink()
+            logger.info(f"Bulk deleted {asset_type}: {file_path}")
+            deleted.append(path)
+
+        except Exception as e:
+            logger.error(f"Error bulk deleting {asset_type} {path}: {e}")
+            failed.append({"path": path, "error": str(e)})
+
+    # Invalidate cache to reflect changes immediately
+    if deleted:
+        asset_cache["last_scanned"] = 0
+        logger.info(
+            f"Bulk delete completed: {len(deleted)} files, {db_deleted_count} database records"
+        )
+
+    return {
+        "success": True,
+        "deleted": deleted,
+        "failed": failed,
+        "db_records_deleted": db_deleted_count,
+        "summary": f"Deleted {len(deleted)} {asset_type}(s) ({db_deleted_count} DB records), {len(failed)} failed",
+    }
+
+
+# ============================================================================
+# GALLERY ENDPOINTS
+# ============================================================================
+
+
 @app.get("/api/gallery")
 async def get_gallery():
     """Get poster gallery from assets directory (only poster.jpg) - uses cache"""
@@ -6330,38 +6472,7 @@ async def get_gallery():
 @app.delete("/api/gallery/{path:path}")
 async def delete_poster(path: str):
     """Delete a poster from the assets directory"""
-    try:
-        # Construct the full file path
-        file_path = ASSETS_DIR / path
-
-        # Security check: Ensure the path is within ASSETS_DIR
-        try:
-            file_path = file_path.resolve()
-            file_path.relative_to(ASSETS_DIR.resolve())
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
-
-        # Check if file exists
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Poster not found")
-
-        # Check if it's a file (not a directory)
-        if not file_path.is_file():
-            raise HTTPException(status_code=400, detail="Path is not a file")
-
-        # Delete the file
-        file_path.unlink()
-        logger.info(f"Deleted poster: {file_path}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {"success": True, "message": f"Poster '{path}' deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting poster {path}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return delete_asset_file(path, "Poster")
 
 
 class BulkDeleteRequest(BaseModel):
@@ -6371,55 +6482,7 @@ class BulkDeleteRequest(BaseModel):
 @app.post("/api/gallery/bulk-delete")
 async def bulk_delete_posters(request: BulkDeleteRequest):
     """Delete multiple posters from the assets directory"""
-    try:
-        deleted = []
-        failed = []
-
-        for path in request.paths:
-            try:
-                # Construct the full file path
-                file_path = ASSETS_DIR / path
-
-                # Security check: Ensure the path is within ASSETS_DIR
-                try:
-                    file_path = file_path.resolve()
-                    file_path.relative_to(ASSETS_DIR.resolve())
-                except ValueError:
-                    failed.append(
-                        {"path": path, "error": "Access denied: Invalid path"}
-                    )
-                    continue
-
-                # Check if file exists
-                if not file_path.exists():
-                    failed.append({"path": path, "error": "File not found"})
-                    continue
-
-                # Check if it's a file (not a directory)
-                if not file_path.is_file():
-                    failed.append({"path": path, "error": "Path is not a file"})
-                    continue
-
-                # Delete the file
-                file_path.unlink()
-                deleted.append(path)
-                logger.info(f"Deleted poster: {file_path}")
-            except Exception as e:
-                failed.append({"path": path, "error": str(e)})
-                logger.error(f"Error deleting poster {path}: {e}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {
-            "success": True,
-            "deleted": deleted,
-            "failed": failed,
-            "message": f"Successfully deleted {len(deleted)} poster(s). {len(failed)} failed.",
-        }
-    except Exception as e:
-        logger.error(f"Error in bulk delete: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return bulk_delete_assets(request.paths, "poster")
 
 
 @app.get("/api/backgrounds-gallery")
@@ -6436,92 +6499,13 @@ async def get_backgrounds_gallery():
 @app.delete("/api/backgrounds/{path:path}")
 async def delete_background(path: str):
     """Delete a background from the assets directory"""
-    try:
-        # Construct the full file path
-        file_path = ASSETS_DIR / path
-
-        # Security check: Ensure the path is within ASSETS_DIR
-        try:
-            file_path = file_path.resolve()
-            file_path.relative_to(ASSETS_DIR.resolve())
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
-
-        # Check if file exists
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Background not found")
-
-        # Check if it's a file (not a directory)
-        if not file_path.is_file():
-            raise HTTPException(status_code=400, detail="Path is not a file")
-
-        # Delete the file
-        file_path.unlink()
-        logger.info(f"Deleted background: {file_path}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {"success": True, "message": f"Background '{path}' deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting background {path}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return delete_asset_file(path, "Background")
 
 
 @app.post("/api/backgrounds/bulk-delete")
 async def bulk_delete_backgrounds(request: BulkDeleteRequest):
     """Delete multiple backgrounds from the assets directory"""
-    try:
-        deleted = []
-        failed = []
-
-        for path in request.paths:
-            try:
-                # Construct the full file path
-                file_path = ASSETS_DIR / path
-
-                # Security check: Ensure the path is within ASSETS_DIR
-                try:
-                    file_path = file_path.resolve()
-                    file_path.relative_to(ASSETS_DIR.resolve())
-                except ValueError:
-                    failed.append(
-                        {"path": path, "error": "Access denied: Invalid path"}
-                    )
-                    continue
-
-                # Check if file exists
-                if not file_path.exists():
-                    failed.append({"path": path, "error": "File not found"})
-                    continue
-
-                # Check if it's a file (not a directory)
-                if not file_path.is_file():
-                    failed.append({"path": path, "error": "Path is not a file"})
-                    continue
-
-                # Delete the file
-                file_path.unlink()
-                deleted.append(path)
-                logger.info(f"Deleted background: {file_path}")
-            except Exception as e:
-                failed.append({"path": path, "error": str(e)})
-                logger.error(f"Error deleting background {path}: {e}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {
-            "success": True,
-            "deleted": deleted,
-            "failed": failed,
-            "message": f"Successfully deleted {len(deleted)} background(s). {len(failed)} failed.",
-        }
-    except Exception as e:
-        logger.error(f"Error in bulk delete backgrounds: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return bulk_delete_assets(request.paths, "background")
 
 
 @app.get("/api/seasons-gallery")
@@ -6538,92 +6522,13 @@ async def get_seasons_gallery():
 @app.delete("/api/seasons/{path:path}")
 async def delete_season(path: str):
     """Delete a season from the assets directory"""
-    try:
-        # Construct the full file path
-        file_path = ASSETS_DIR / path
-
-        # Security check: Ensure the path is within ASSETS_DIR
-        try:
-            file_path = file_path.resolve()
-            file_path.relative_to(ASSETS_DIR.resolve())
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
-
-        # Check if file exists
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Season not found")
-
-        # Check if it's a file (not a directory)
-        if not file_path.is_file():
-            raise HTTPException(status_code=400, detail="Path is not a file")
-
-        # Delete the file
-        file_path.unlink()
-        logger.info(f"Deleted season: {file_path}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {"success": True, "message": f"Season '{path}' deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting season {path}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return delete_asset_file(path, "Season")
 
 
 @app.post("/api/seasons/bulk-delete")
 async def bulk_delete_seasons(request: BulkDeleteRequest):
     """Delete multiple seasons from the assets directory"""
-    try:
-        deleted = []
-        failed = []
-
-        for path in request.paths:
-            try:
-                # Construct the full file path
-                file_path = ASSETS_DIR / path
-
-                # Security check: Ensure the path is within ASSETS_DIR
-                try:
-                    file_path = file_path.resolve()
-                    file_path.relative_to(ASSETS_DIR.resolve())
-                except ValueError:
-                    failed.append(
-                        {"path": path, "error": "Access denied: Invalid path"}
-                    )
-                    continue
-
-                # Check if file exists
-                if not file_path.exists():
-                    failed.append({"path": path, "error": "File not found"})
-                    continue
-
-                # Check if it's a file (not a directory)
-                if not file_path.is_file():
-                    failed.append({"path": path, "error": "Path is not a file"})
-                    continue
-
-                # Delete the file
-                file_path.unlink()
-                deleted.append(path)
-                logger.info(f"Deleted season: {file_path}")
-            except Exception as e:
-                failed.append({"path": path, "error": str(e)})
-                logger.error(f"Error deleting season {path}: {e}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {
-            "success": True,
-            "deleted": deleted,
-            "failed": failed,
-            "message": f"Successfully deleted {len(deleted)} season(s). {len(failed)} failed.",
-        }
-    except Exception as e:
-        logger.error(f"Error in bulk delete seasons: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return bulk_delete_assets(request.paths, "season")
 
 
 @app.get("/api/titlecards-gallery")
@@ -6640,92 +6545,13 @@ async def get_titlecards_gallery():
 @app.delete("/api/titlecards/{path:path}")
 async def delete_titlecard(path: str):
     """Delete a titlecard from the assets directory"""
-    try:
-        # Construct the full file path
-        file_path = ASSETS_DIR / path
-
-        # Security check: Ensure the path is within ASSETS_DIR
-        try:
-            file_path = file_path.resolve()
-            file_path.relative_to(ASSETS_DIR.resolve())
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
-
-        # Check if file exists
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="TitleCard not found")
-
-        # Check if it's a file (not a directory)
-        if not file_path.is_file():
-            raise HTTPException(status_code=400, detail="Path is not a file")
-
-        # Delete the file
-        file_path.unlink()
-        logger.info(f"Deleted titlecard: {file_path}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {"success": True, "message": f"TitleCard '{path}' deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting titlecard {path}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return delete_asset_file(path, "TitleCard")
 
 
 @app.post("/api/titlecards/bulk-delete")
 async def bulk_delete_titlecards(request: BulkDeleteRequest):
     """Delete multiple titlecards from the assets directory"""
-    try:
-        deleted = []
-        failed = []
-
-        for path in request.paths:
-            try:
-                # Construct the full file path
-                file_path = ASSETS_DIR / path
-
-                # Security check: Ensure the path is within ASSETS_DIR
-                try:
-                    file_path = file_path.resolve()
-                    file_path.relative_to(ASSETS_DIR.resolve())
-                except ValueError:
-                    failed.append(
-                        {"path": path, "error": "Access denied: Invalid path"}
-                    )
-                    continue
-
-                # Check if file exists
-                if not file_path.exists():
-                    failed.append({"path": path, "error": "File not found"})
-                    continue
-
-                # Check if it's a file (not a directory)
-                if not file_path.is_file():
-                    failed.append({"path": path, "error": "Path is not a file"})
-                    continue
-
-                # Delete the file
-                file_path.unlink()
-                deleted.append(path)
-                logger.info(f"Deleted titlecard: {file_path}")
-            except Exception as e:
-                failed.append({"path": path, "error": str(e)})
-                logger.error(f"Error deleting titlecard {path}: {e}")
-
-        # Invalidate cache to reflect changes immediately
-        asset_cache["last_scanned"] = 0
-
-        return {
-            "success": True,
-            "deleted": deleted,
-            "failed": failed,
-            "message": f"Successfully deleted {len(deleted)} titlecard(s). {len(failed)} failed.",
-        }
-    except Exception as e:
-        logger.error(f"Error in bulk delete titlecards: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return bulk_delete_assets(request.paths, "titlecard")
 
 
 # ============================================================================
