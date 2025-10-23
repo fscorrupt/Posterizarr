@@ -6372,6 +6372,9 @@ async def delete_poster(path: str):
         file_path.unlink()
         logger.info(f"Deleted poster: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6423,6 +6426,9 @@ async def bulk_delete_posters(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted poster: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting poster {path}: {e}")
@@ -6478,6 +6484,9 @@ async def delete_background(path: str):
         file_path.unlink()
         logger.info(f"Deleted background: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6525,6 +6534,9 @@ async def bulk_delete_backgrounds(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted background: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting background {path}: {e}")
@@ -6580,6 +6592,9 @@ async def delete_season(path: str):
         file_path.unlink()
         logger.info(f"Deleted season: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6627,6 +6642,9 @@ async def bulk_delete_seasons(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted season: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting season {path}: {e}")
@@ -6682,6 +6700,9 @@ async def delete_titlecard(path: str):
         file_path.unlink()
         logger.info(f"Deleted titlecard: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6729,6 +6750,9 @@ async def bulk_delete_titlecards(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted titlecard: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting titlecard {path}: {e}")
@@ -9108,6 +9132,115 @@ async def upload_asset_replacement(
         logger.error(f"Unexpected error uploading asset replacement: {e}")
         logger.error(f"Traceback:\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+def delete_db_entries_for_asset(asset_path: str):
+    """
+    Delete database entries for a given asset path.
+    Matches entries based on Rootfolder, Type, and filename pattern.
+
+    Args:
+        asset_path: Path to the asset (e.g., "TestSerien/Show Name (2020)/Season02.jpg")
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        logger.debug("Database not available, skipping DB entry deletion")
+        return
+
+    try:
+        # Parse the asset path to extract metadata
+        # Normalize path separators to forward slashes
+        normalized_path = asset_path.replace("\\", "/")
+        path_parts = normalized_path.split("/")
+        
+        if len(path_parts) < 2:
+            logger.warning(f"Asset path too short to extract metadata: {asset_path}")
+            return
+
+        # Extract folder name and filename
+        folder_name = path_parts[1] if len(path_parts) > 1 else ""
+        filename = path_parts[-1] if len(path_parts) > 0 else ""
+
+        # Determine asset type from filename
+        # Note: Database uses different type names than our internal naming
+        # Database types: "Movie", "Movie Background", "Show", "Show Background", "Season", "Episode"
+        is_background = "background" in filename.lower()
+        is_season = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
+        is_episode = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
+        
+        # Determine the database Type values to search for
+        # For posters/backgrounds, we need to check both Movie and Show types
+        search_types = []
+        if is_season:
+            search_types = ["Season"]
+        elif is_episode:
+            search_types = ["Episode"]
+        elif is_background:
+            search_types = ["Movie Background", "Show Background"]
+        else:
+            # Regular poster - could be Movie or Show or Poster
+            search_types = ["Movie", "Show", "Poster"]
+
+        cursor = db.connection.cursor()
+        
+        # Collect all matching entries across all possible type names
+        all_entries = []
+        
+        logger.debug(f"Searching for DB entries: folder={folder_name}, types={search_types}, is_episode={bool(is_episode)}, is_season={bool(is_season)}")
+        
+        for db_type in search_types:
+            if is_season:
+                # For seasons, find entries with matching season number in title
+                season_num = is_season.group(1)
+                cursor.execute(
+                    """SELECT id, Title, Type FROM imagechoices 
+                       WHERE Rootfolder = ? AND Type = ? 
+                       AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                    (folder_name, db_type, 
+                     f"%Season{season_num}%", f"%Season {season_num}%", f"%Season0{season_num}%"),
+                )
+            elif is_episode:
+                # For episodes, find entries with matching episode pattern in title
+                season_num = is_episode.group(1)
+                episode_num = is_episode.group(2)
+                pattern1 = f"%S{season_num}E{episode_num}%"
+                pattern2 = f"%S0{season_num}E0{episode_num}%"
+                logger.debug(f"Episode search: folder={folder_name}, type={db_type}, patterns={pattern1}, {pattern2}")
+                cursor.execute(
+                    """SELECT id, Title, Type FROM imagechoices 
+                       WHERE Rootfolder = ? AND Type = ? 
+                       AND (Title LIKE ? OR Title LIKE ?)""",
+                    (folder_name, db_type, pattern1, pattern2),
+                )
+            else:
+                # For poster/background, match on Rootfolder + Type only
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                    (folder_name, db_type),
+                )
+            
+            # Fetch and extend results for this type
+            found = cursor.fetchall()
+            logger.debug(f"Found {len(found)} entries for type {db_type}")
+            all_entries.extend(found)
+
+        if all_entries:
+            for entry in all_entries:
+                record_id = entry["id"]
+                title = entry["Title"]
+                entry_type = entry["Type"]
+                db.delete_choice(record_id)
+                logger.info(
+                    f"Deleted DB entry #{record_id} for deleted asset: {title} ({entry_type})"
+                )
+        else:
+            logger.debug(
+                f"No DB entries found for deleted asset: {filename} in {folder_name}"
+            )
+
+    except Exception as e:
+        logger.error(f"Error deleting database entries for asset {asset_path}: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 
 async def update_asset_db_entry_as_manual(
