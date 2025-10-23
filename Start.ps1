@@ -468,7 +468,7 @@ CopyAssetFiles
 if (-not (test-path "$env:APP_DATA/config.json")) {
     Write-Host ""
     Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
-    Copy-Item "$env:APP_DATA/config.example.json" "$env:APP_DATA/config.json" -Force | out-null
+    Copy-Item "$env:APP_ROOT/config.example.json" "$env:APP_DATA/config.json" -Force | out-null
     Write-Host "Created a default 'config.json' file from 'config.example.json'" -ForegroundColor Yellow
     Write-Host "Please edit the config.json according to GH repo to match your needs.." -ForegroundColor Yellow
     do {
