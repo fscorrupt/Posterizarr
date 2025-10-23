@@ -438,7 +438,10 @@
     "statusCards": "Schede di stato",
     "customizeDescription": "Mostra o nascondi sezioni del pannello di controllo • Trascina per riordinare",
     "hideScrollbars": "Nascondi barre di scorrimento",
-    "hideScrollbarsDesc": "Nascondi le barre di scorrimento in tutta l'interfaccia"
+    "hideScrollbarsDesc": "Nascondi le barre di scorrimento in tutta l'interfaccia",
+    "scriptRunning": "Lo script è in esecuzione",
+    "monitorProgress": "Monitora i progressi nei log qui sotto o ferma lo script",
+    "stopScript": "Ferma script"
   },
   "config": {
     "title": "Configurazione",

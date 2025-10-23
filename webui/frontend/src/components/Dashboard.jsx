@@ -120,14 +120,21 @@ function Dashboard() {
   const [showCardsModal, setShowCardsModal] = useState(false);
   const [visibleCards, setVisibleCards] = useState(() => {
     const saved = localStorage.getItem("dashboard_visible_cards");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          statusCards: true,
-          runtimeStats: true,
-          recentAssets: true,
-          logViewer: true,
-        };
+    const defaultCards = {
+      statusCards: true,
+      runtimeStats: true,
+      recentAssets: true,
+      logViewer: true,
+    };
+    
+    if (saved) {
+      const parsedCards = JSON.parse(saved);
+      // Remove any invalid entries (like removed 'systemInfo')
+      delete parsedCards.systemInfo;
+      return parsedCards;
+    }
+    
+    return defaultCards;
   });
 
   // Scrollbar visibility settings
@@ -139,9 +146,15 @@ function Dashboard() {
   // Card order settings
   const [cardOrder, setCardOrder] = useState(() => {
     const saved = localStorage.getItem("dashboard_card_order");
-    return saved
-      ? JSON.parse(saved)
-      : ["statusCards", "runtimeStats", "recentAssets", "logViewer"];
+    const validCards = ["statusCards", "runtimeStats", "recentAssets", "logViewer"];
+    
+    if (saved) {
+      // Filter out any invalid cards (like removed 'systemInfo')
+      const parsedOrder = JSON.parse(saved);
+      return parsedOrder.filter(card => validCards.includes(card));
+    }
+    
+    return validCards;
   });
 
   const [draggedItem, setDraggedItem] = useState(null);
@@ -390,6 +403,29 @@ function Dashboard() {
       if (!silent) {
         console.error("Error fetching system info:", error);
       }
+    }
+  };
+
+  const stopScript = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/stop`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showSuccess(t("dangerZone.stopSuccess"));
+        fetchStatus();
+      } else {
+        showError(data.message || t("dangerZone.stopError"));
+      }
+    } catch (error) {
+      console.error("Error stopping script:", error);
+      showError(t("dangerZone.stopError") + `: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -784,11 +820,9 @@ function Dashboard() {
   const renderDashboardCards = () => {
     const cardComponents = {
       statusCards: visibleCards.statusCards && (
-        <div
-          key="statusCards"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
-        >
-          {/* Script Status Card */}
+        <div key="statusCards">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {/* Script Status Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -1077,6 +1111,36 @@ function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Running Script Banner - shown below status cards when script is running */}
+        {status.running && (
+          <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50 mt-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-600/20">
+                  <AlertCircle className="w-6 h-6 text-orange-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-orange-200 text-lg">
+                    {t("dashboard.scriptRunning")}
+                  </p>
+                  <p className="text-sm text-orange-300/80">
+                    {t("dashboard.monitorProgress")}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={stopScript}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm text-white"
+              >
+                <Square className="w-4 h-4" />
+                {t("dashboard.stopScript")}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       ),
       runtimeStats: visibleCards.runtimeStats && (
         <RuntimeStats
@@ -1312,27 +1376,6 @@ function Dashboard() {
 
       {/* Dashboard Cards in Custom Order */}
       {renderDashboardCards()}
-
-      {/* Running Script Controls */}
-      {status.running && (
-        <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-600/20">
-                <AlertCircle className="w-6 h-6 text-orange-400" />
-              </div>
-              <div>
-                <p className="font-medium text-orange-200 text-lg">
-                  Script is running
-                </p>
-                <p className="text-sm text-orange-300/80">
-                  Monitor progress in logs below or stop the script
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Danger Zone - Using DangerZone Component */}
       <DangerZone

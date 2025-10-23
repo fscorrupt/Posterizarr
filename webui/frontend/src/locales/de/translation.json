@@ -439,7 +439,10 @@
     "configureNow": "Jetzt konfigurieren",
     "noSchedulesRegistered": "Keine Zeitpläne registriert",
     "cores": "Kerne",
-    "free": "Frei"
+    "free": "Frei",
+    "scriptRunning": "Skript läuft",
+    "monitorProgress": "Fortschritt in den Logs unten überwachen oder Skript stoppen",
+    "stopScript": "Skript stoppen"
   },
   "config": {
     "title": "Konfiguration",

@@ -439,7 +439,10 @@
     "configureNow": "Configure Now",
     "noSchedulesRegistered": "No schedules registered",
     "cores": "Cores",
-    "free": "Free"
+    "free": "Free",
+    "scriptRunning": "Script is running",
+    "monitorProgress": "Monitor progress in logs below or stop the script",
+    "stopScript": "Stop Script"
   },
   "config": {
     "title": "Configuration",
