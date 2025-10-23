@@ -693,7 +693,7 @@ class RuntimeDatabase:
                 "total_runs": 0,
                 "total_images": 0,
                 "average_runtime_seconds": 0,
-                "average_runtime_formatted": "0h 0m 0s",
+                "average_runtime_formatted": "0h:0m:0s",
                 "total_errors": 0,
                 "mode_counts": {},
                 "days": days,
@@ -737,11 +737,56 @@ class RuntimeDatabase:
 
     @staticmethod
     def _format_seconds(seconds: int) -> str:
-        """Format seconds to 'Xh Ym Zs' format"""
+        """Format seconds to 'Xh:Ym:Zs' format"""
         hours = seconds // 3600
         minutes = (seconds % 3600) // 60
         secs = seconds % 60
-        return f"{hours}h {minutes}m {secs}s"
+        return f"{hours}h:{minutes}m:{secs}s"
+
+    def migrate_runtime_format(self) -> int:
+        """
+        Migrate all runtime_formatted entries to new format (Xh:Ym:Zs)
+        Returns the number of updated entries
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            # Get all entries with runtime_seconds
+            cursor.execute(
+                """
+                SELECT id, runtime_seconds FROM runtime_stats 
+                WHERE runtime_seconds IS NOT NULL
+                """
+            )
+            entries = cursor.fetchall()
+
+            updated_count = 0
+            for entry_id, runtime_seconds in entries:
+                # Reformat using the new format
+                new_format = self._format_seconds(runtime_seconds)
+
+                cursor.execute(
+                    """
+                    UPDATE runtime_stats 
+                    SET runtime_formatted = ? 
+                    WHERE id = ?
+                    """,
+                    (new_format, entry_id),
+                )
+                updated_count += 1
+
+            conn.commit()
+            conn.close()
+            logger.info(f"Migrated {updated_count} runtime entries to new format")
+            return updated_count
+
+        except Exception as e:
+            logger.error(f"Error migrating runtime format: {e}")
+            if "conn" in locals():
+                conn.rollback()
+                conn.close()
+            return 0
 
 
 # Global database instance

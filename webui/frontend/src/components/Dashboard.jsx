@@ -93,11 +93,14 @@ function Dashboard() {
   });
   const [systemInfo, setSystemInfo] = useState({
     platform: "...",
+    os_version: "...",
+    cpu_model: "...",
     cpu_cores: 0,
     memory_percent: 0,
     total_memory: "...",
     used_memory: "...",
     free_memory: "...",
+    is_docker: false,
   });
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -188,11 +191,14 @@ function Dashboard() {
         if (data.system_info) {
           setSystemInfo({
             platform: data.system_info.platform || "Unknown",
+            os_version: data.system_info.os_version || "Unknown",
+            cpu_model: data.system_info.cpu_model || "Unknown",
             cpu_cores: data.system_info.cpu_cores || 0,
             memory_percent: data.system_info.memory_percent || 0,
             total_memory: data.system_info.total_memory || "Unknown",
             used_memory: data.system_info.used_memory || "Unknown",
             free_memory: data.system_info.free_memory || "Unknown",
+            is_docker: data.system_info.is_docker || false,
           });
         }
       }
@@ -371,11 +377,14 @@ function Dashboard() {
       const data = await response.json();
       setSystemInfo({
         platform: data.platform || "Unknown",
+        os_version: data.os_version || "Unknown",
+        cpu_model: data.cpu_model || "Unknown",
         cpu_cores: data.cpu_cores || 0,
         memory_percent: data.memory_percent || 0,
         total_memory: data.total_memory || "Unknown",
         used_memory: data.used_memory || "Unknown",
         free_memory: data.free_memory || "Unknown",
+        is_docker: data.is_docker || false,
       });
     } catch (error) {
       if (!silent) {
@@ -811,7 +820,7 @@ function Dashboard() {
 
           {/* Scheduler Jobs Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
                   {t("dashboard.schedulerJobs")}
@@ -884,7 +893,7 @@ function Dashboard() {
 
           {/* Script File Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
                   {t("dashboard.scriptFile")}
@@ -930,7 +939,7 @@ function Dashboard() {
 
           {/* Config File Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
                   {t("dashboard.configFile")}
@@ -966,15 +975,40 @@ function Dashboard() {
 
           {/* System Info Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
                   {t("dashboard.systemInfo")}
                 </p>
-                <p className="text-xl font-bold mb-2 text-theme-text">
-                  {systemInfo.platform}
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-xl font-bold text-theme-text">
+                    {systemInfo.platform}
+                  </p>
+                  {systemInfo.is_docker && (
+                    <span className="px-2 py-0.5 text-xs font-semibold bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
+                      Docker
+                    </span>
+                  )}
+                </div>
+                {systemInfo.os_version &&
+                  systemInfo.os_version !== "Unknown" && (
+                    <p className="text-xs text-theme-muted mb-2">
+                      {systemInfo.os_version}
+                    </p>
+                  )}
                 <div className="space-y-1">
+                  {systemInfo.cpu_model &&
+                    systemInfo.cpu_model !== "Unknown" && (
+                      <div className="flex items-center gap-2">
+                        <Cpu className="w-4 h-4 text-purple-400" />
+                        <span
+                          className="text-xs text-theme-muted truncate"
+                          title={systemInfo.cpu_model}
+                        >
+                          {systemInfo.cpu_model}
+                        </span>
+                      </div>
+                    )}
                   <div className="flex items-center gap-2">
                     <Cpu className="w-4 h-4 text-orange-400" />
                     <span className="text-xs text-theme-muted">

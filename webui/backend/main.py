@@ -3900,6 +3900,9 @@ async def get_system_info():
     except Exception as e:
         logger.error(f"Error getting system info: {e}")
 
+    # Add Docker detection
+    system_info["is_docker"] = IS_DOCKER
+
     return system_info
 
 
@@ -4644,6 +4647,31 @@ async def get_migration_status():
 
     except Exception as e:
         logger.error(f"Error getting migration status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/runtime-history/migrate-format")
+async def migrate_runtime_format():
+    """
+    Migrate all runtime_formatted entries to new format (Xh:Ym:Zs)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        updated_count = runtime_db.migrate_runtime_format()
+
+        return {
+            "success": True,
+            "updated_count": updated_count,
+            "message": f"Migrated {updated_count} runtime entries to new format (Xh:Ym:Zs)",
+        }
+
+    except Exception as e:
+        logger.error(f"Error migrating runtime format: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -7299,17 +7327,25 @@ async def update_scheduler_config(data: ScheduleUpdate):
 
 @app.post("/api/scheduler/schedule")
 async def add_schedule(data: ScheduleCreate):
-    """Add a new schedule"""
+    """Add a new schedule (time must be in HH:MM format, 00:00-23:59)"""
     if not SCHEDULER_AVAILABLE or not scheduler:
         raise HTTPException(status_code=503, detail="Scheduler not available")
 
     try:
+        # Validate time format before adding
+        hour, minute = scheduler.parse_schedule_time(data.time)
+        if hour is None or minute is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid time format '{data.time}'. Must be HH:MM (00:00-23:59)",
+            )
+
         success = scheduler.add_schedule(data.time, data.description)
         if success:
             return {"success": True, "message": f"Schedule added: {data.time}"}
         else:
             raise HTTPException(
-                status_code=400, detail="Invalid time format or schedule already exists"
+                status_code=400, detail=f"Schedule {data.time} already exists"
             )
     except HTTPException:
         raise
@@ -7330,7 +7366,11 @@ async def remove_schedule(time: str):
 
         success = scheduler.remove_schedule(time)
         if success:
-            # Get updated status immediately after removal
+            # Give scheduler a moment to update jobs
+            import asyncio
+
+            await asyncio.sleep(0.1)
+            # Get updated status after removal
             status = scheduler.get_status()
             return {"success": True, "message": f"Schedule removed: {time}", **status}
         else:

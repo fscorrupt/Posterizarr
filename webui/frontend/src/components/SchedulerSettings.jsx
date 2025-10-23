@@ -241,6 +241,13 @@ const SchedulerSettings = () => {
       return;
     }
 
+    // Validate time format (HH:MM, 00:00-23:59)
+    const timePattern = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    if (!timePattern.test(newTime)) {
+      showError("Invalid time format. Please use HH:MM (00:00-23:59)");
+      return;
+    }
+
     if (isUpdating) return;
     setIsUpdating(true);
 
@@ -285,15 +292,10 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Update status directly from response to avoid stale data
-        setStatus(data);
-        // Also refresh config
-        const configRes = await fetch(`${API_URL}/scheduler/config`);
-        const configData = await configRes.json();
-        if (configData.success) {
-          setConfig(configData.config);
-        }
         showSuccess(t("schedulerSettings.success.scheduleRemoved"));
+        // Wait a moment for scheduler to update, then refresh all data
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        await fetchSchedulerData();
       } else {
         showError(data.detail || t("schedulerSettings.errors.removeSchedule"));
       }
@@ -759,13 +761,15 @@ const SchedulerSettings = () => {
           className="flex flex-col md:flex-row gap-3"
         >
           <input
-            type="text"
+            type="time"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
             placeholder={t("schedulerSettings.timePlaceholder")}
             disabled={isUpdating}
             className="flex-1 px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            pattern="[0-2]?[0-9]:[0-5][0-9]"
+            min="00:00"
+            max="23:59"
+            required
           />
           <input
             type="text"

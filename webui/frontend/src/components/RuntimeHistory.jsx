@@ -226,6 +226,44 @@ function RuntimeHistory() {
     }
   };
 
+  const triggerFormatMigration = async () => {
+    if (
+      !confirm(
+        "This will update all runtime entries to the new format (0h:2m:12s). Continue?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/runtime-history/migrate-format`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to migrate format:", response.status);
+        alert("Failed to migrate runtime format. Check console for details.");
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        alert(
+          `Format migration completed!\n\nUpdated ${data.updated_count} entries to new format (Xh:Ym:Zs)`
+        );
+        // Refresh all data
+        fetchHistory();
+        fetchSummary();
+      }
+    } catch (error) {
+      console.error("Error migrating format:", error);
+      alert("Error migrating runtime format. Check console for details.");
+    }
+  };
+
   useEffect(() => {
     fetchHistory(true);
     fetchSummary();
