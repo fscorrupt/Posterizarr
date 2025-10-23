@@ -123,7 +123,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "DEBUG",
+        "log_level": "INFO",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -9151,7 +9151,7 @@ def delete_db_entries_for_asset(asset_path: str):
         # Normalize path separators to forward slashes
         normalized_path = asset_path.replace("\\", "/")
         path_parts = normalized_path.split("/")
-        
+
         if len(path_parts) < 2:
             logger.warning(f"Asset path too short to extract metadata: {asset_path}")
             return
@@ -9166,7 +9166,7 @@ def delete_db_entries_for_asset(asset_path: str):
         is_background = "background" in filename.lower()
         is_season = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
         is_episode = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
-        
+
         # Determine the database Type values to search for
         # For posters/backgrounds, we need to check both Movie and Show types
         search_types = []
@@ -9181,12 +9181,14 @@ def delete_db_entries_for_asset(asset_path: str):
             search_types = ["Movie", "Show", "Poster"]
 
         cursor = db.connection.cursor()
-        
+
         # Collect all matching entries across all possible type names
         all_entries = []
-        
-        logger.debug(f"Searching for DB entries: folder={folder_name}, types={search_types}, is_episode={bool(is_episode)}, is_season={bool(is_season)}")
-        
+
+        logger.debug(
+            f"Searching for DB entries: folder={folder_name}, types={search_types}, is_episode={bool(is_episode)}, is_season={bool(is_season)}"
+        )
+
         for db_type in search_types:
             if is_season:
                 # For seasons, find entries with matching season number in title
@@ -9195,8 +9197,13 @@ def delete_db_entries_for_asset(asset_path: str):
                     """SELECT id, Title, Type FROM imagechoices 
                        WHERE Rootfolder = ? AND Type = ? 
                        AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
-                    (folder_name, db_type, 
-                     f"%Season{season_num}%", f"%Season {season_num}%", f"%Season0{season_num}%"),
+                    (
+                        folder_name,
+                        db_type,
+                        f"%Season{season_num}%",
+                        f"%Season {season_num}%",
+                        f"%Season0{season_num}%",
+                    ),
                 )
             elif is_episode:
                 # For episodes, find entries with matching episode pattern in title
@@ -9204,7 +9211,9 @@ def delete_db_entries_for_asset(asset_path: str):
                 episode_num = is_episode.group(2)
                 pattern1 = f"%S{season_num}E{episode_num}%"
                 pattern2 = f"%S0{season_num}E0{episode_num}%"
-                logger.debug(f"Episode search: folder={folder_name}, type={db_type}, patterns={pattern1}, {pattern2}")
+                logger.debug(
+                    f"Episode search: folder={folder_name}, type={db_type}, patterns={pattern1}, {pattern2}"
+                )
                 cursor.execute(
                     """SELECT id, Title, Type FROM imagechoices 
                        WHERE Rootfolder = ? AND Type = ? 
@@ -9217,7 +9226,7 @@ def delete_db_entries_for_asset(asset_path: str):
                     "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
                     (folder_name, db_type),
                 )
-            
+
             # Fetch and extend results for this type
             found = cursor.fetchall()
             logger.debug(f"Found {len(found)} entries for type {db_type}")
@@ -9240,6 +9249,7 @@ def delete_db_entries_for_asset(asset_path: str):
     except Exception as e:
         logger.error(f"Error deleting database entries for asset {asset_path}: {e}")
         import traceback
+
         logger.error(traceback.format_exc())
 
 
