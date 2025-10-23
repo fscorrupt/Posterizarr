@@ -25,7 +25,7 @@ const API_URL = "/api";
 
 let cachedAssets = null;
 
-function RecentAssets() {
+function RecentAssets({ refreshTrigger = 0 }) {
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const { startLoading, finishLoading } = useDashboardLoading();
@@ -125,6 +125,16 @@ function RecentAssets() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Watch for external refresh triggers (e.g., when a run finishes)
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log(
+        "External refresh trigger received, updating recent assets..."
+      );
+      fetchRecentAssets(true);
+    }
+  }, [refreshTrigger]);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10

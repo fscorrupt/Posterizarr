@@ -503,8 +503,19 @@ function Dashboard() {
         console.log("Dashboard tab became visible, refreshing data...");
         // Fetch latest status first
         fetchStatus(true).then(() => {
-          // After status is updated, check if WebSocket needs reconnection
-          // This will be handled by the status.running useEffect below
+          // Need to fetch status synchronously to get the latest value
+          fetch(`${API_URL}/status`)
+            .then(response => response.json())
+            .then(data => {
+              // After status is updated, check if script finished while tab was hidden
+              // If so, trigger instant refresh of runtime stats and recent assets
+              if (!data.running) {
+                console.log("Script not running, triggering instant stats refresh...");
+                setRuntimeStatsRefreshTrigger((prev) => prev + 1);
+              }
+            })
+            .catch(err => console.error("Error checking status:", err));
+          // WebSocket reconnection will be handled by the status.running useEffect below
         });
         fetchSchedulerStatus(true);
         fetchSystemInfo(true);
@@ -1073,7 +1084,10 @@ function Dashboard() {
         />
       ),
       recentAssets: visibleCards.recentAssets && (
-        <RecentAssets key="recentAssets" />
+        <RecentAssets
+          key="recentAssets"
+          refreshTrigger={runtimeStatsRefreshTrigger}
+        />
       ),
       logViewer: visibleCards.logViewer && (
         <div
