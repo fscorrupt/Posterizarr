@@ -1255,7 +1255,39 @@ function Dashboard() {
       ),
     };
 
-    return cardOrder.map((cardKey) => cardComponents[cardKey]).filter(Boolean);
+    return cardOrder
+      .map((cardKey, index) => {
+        const card = cardComponents[cardKey];
+
+        // Insert running banner after statusCards
+        if (cardKey === "statusCards" && status.running) {
+          return (
+            <React.Fragment key={cardKey}>
+              {card}
+              <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-600/20">
+                      <AlertCircle className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-orange-200 text-lg">
+                        Script is running
+                      </p>
+                      <p className="text-sm text-orange-300/80">
+                        Monitor progress in logs below or stop the script
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        }
+
+        return card;
+      })
+      .filter(Boolean);
   };
 
   return (
@@ -1315,27 +1347,6 @@ function Dashboard() {
 
       {/* Dashboard Cards in Custom Order */}
       {renderDashboardCards()}
-
-      {/* Running Script Controls */}
-      {status.running && (
-        <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-600/20">
-                <AlertCircle className="w-6 h-6 text-orange-400" />
-              </div>
-              <div>
-                <p className="font-medium text-orange-200 text-lg">
-                  Script is running
-                </p>
-                <p className="text-sm text-orange-300/80">
-                  Monitor progress in logs below or stop the script
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Danger Zone - Using DangerZone Component */}
       <DangerZone
