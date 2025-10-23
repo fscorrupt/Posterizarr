@@ -987,12 +987,12 @@ function Dashboard() {
 
           {/* System Info Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
                   {t("dashboard.systemInfo")}
                 </p>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <p className="text-xl font-bold text-theme-text">
                     {systemInfo.platform}
                   </p>
@@ -1004,15 +1004,18 @@ function Dashboard() {
                 </div>
                 {systemInfo.os_version &&
                   systemInfo.os_version !== "Unknown" && (
-                    <p className="text-xs text-theme-muted mb-2">
+                    <p
+                      className="text-xs text-theme-muted mb-2 truncate"
+                      title={systemInfo.os_version}
+                    >
                       {systemInfo.os_version}
                     </p>
                   )}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {systemInfo.cpu_model &&
                     systemInfo.cpu_model !== "Unknown" && (
-                      <div className="flex items-center gap-2">
-                        <Cpu className="w-4 h-4 text-purple-400" />
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Cpu className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
                         <span
                           className="text-xs text-theme-muted truncate"
                           title={systemInfo.cpu_model}
@@ -1022,25 +1025,25 @@ function Dashboard() {
                       </div>
                     )}
                   <div className="flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-orange-400" />
+                    <Cpu className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
                     <span className="text-xs text-theme-muted">
                       {systemInfo.cpu_cores} {t("dashboard.cores")}
                     </span>
                   </div>
                   {systemInfo.memory_percent > 0 && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <HardDrive className="w-4 h-4 text-blue-400" />
-                        <span className="text-xs text-theme-muted">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <HardDrive className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                        <span className="text-xs text-theme-muted truncate">
                           {systemInfo.used_memory} / {systemInfo.total_memory}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-theme-muted">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-theme-muted truncate">
                           {systemInfo.free_memory} {t("dashboard.free")}
                         </span>
                         <span
-                          className={`text-xs font-medium ${
+                          className={`text-xs font-medium flex-shrink-0 ${
                             systemInfo.memory_percent >= 90
                               ? "text-red-400"
                               : systemInfo.memory_percent >= 75
@@ -1053,9 +1056,9 @@ function Dashboard() {
                           {systemInfo.memory_percent.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="w-full bg-theme-hover rounded-full h-2">
+                      <div className="w-full bg-theme-hover rounded-full h-1.5">
                         <div
-                          className={`h-2 rounded-full transition-all ${
+                          className={`h-1.5 rounded-full transition-all ${
                             systemInfo.memory_percent >= 90
                               ? "bg-red-500"
                               : systemInfo.memory_percent >= 75
@@ -1071,8 +1074,8 @@ function Dashboard() {
                   )}
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-theme-primary/10">
-                <Server className="w-12 h-12 text-purple-400" />
+              <div className="p-3 rounded-lg bg-theme-primary/10 flex-shrink-0">
+                <Server className="w-10 h-10 text-purple-400" />
               </div>
             </div>
           </div>
