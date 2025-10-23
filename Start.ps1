@@ -472,7 +472,7 @@ if (-not (test-path "$env:APP_DATA/config.json")) {
     Write-Host "Created a default 'config.json' file from 'config.example.json'" -ForegroundColor Yellow
     Write-Host "Please edit the config.json according to GH repo to match your needs.." -ForegroundColor Yellow
     do {
-        Start-Sleep 600
+        Start-Sleep 30
     } until (
         test-path "$env:APP_DATA/config.json"
     )
