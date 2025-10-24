@@ -827,9 +827,7 @@ const SchedulerSettings = () => {
                       <button
                         key={hour}
                         type="button"
-                        onClick={() =>
-                          handleTimeSelect(hour, selectedMinute)
-                        }
+                        onClick={() => handleTimeSelect(hour, selectedMinute)}
                         className={`w-full px-4 py-2 text-sm transition-all text-center ${
                           selectedHour === hour
                             ? "bg-theme-primary text-white"
@@ -850,9 +848,7 @@ const SchedulerSettings = () => {
                       <button
                         key={minute}
                         type="button"
-                        onClick={() =>
-                          handleTimeSelect(selectedHour, minute)
-                        }
+                        onClick={() => handleTimeSelect(selectedHour, minute)}
                         className={`w-full px-4 py-2 text-sm transition-all text-center ${
                           selectedMinute === minute
                             ? "bg-theme-primary text-white"
