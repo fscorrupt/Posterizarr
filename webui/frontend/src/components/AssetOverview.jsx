@@ -17,6 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
+import ScrollToButtons from "./ScrollToButtons";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
@@ -1105,6 +1106,9 @@ const AssetOverview = () => {
           onSuccess={handleReplaceSuccess}
         />
       )}
+
+      {/* Scroll To Buttons */}
+      <ScrollToButtons />
     </div>
   );
 };
