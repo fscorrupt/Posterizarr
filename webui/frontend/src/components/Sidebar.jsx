@@ -43,6 +43,7 @@ const Sidebar = () => {
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [missingAssetsCount, setMissingAssetsCount] = useState(0);
+  const [manualAssetsCount, setManualAssetsCount] = useState(0);
 
   // Check if Folder View is active
   const [viewMode, setViewMode] = useState(() => {
@@ -74,6 +75,37 @@ const Sidebar = () => {
 
     // Refresh every 60 seconds
     const interval = setInterval(fetchMissingAssetsCount, 60000);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("assetReplaced", handleAssetReplaced);
+    };
+  }, []);
+
+  // Fetch manual assets count
+  React.useEffect(() => {
+    const fetchManualAssetsCount = async () => {
+      try {
+        const response = await fetch("/api/manual-assets-gallery");
+        if (response.ok) {
+          const data = await response.json();
+          setManualAssetsCount(data.total_assets || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch manual assets count:", error);
+      }
+    };
+
+    fetchManualAssetsCount();
+
+    // Listen for assetReplaced event to refresh immediately
+    const handleAssetReplaced = () => {
+      fetchManualAssetsCount();
+    };
+    window.addEventListener("assetReplaced", handleAssetReplaced);
+
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchManualAssetsCount, 60000);
 
     return () => {
       clearInterval(interval);
@@ -161,6 +193,12 @@ const Sidebar = () => {
       path: "/assets-manager",
       label: t("nav.assetsManager"),
       icon: FolderKanban,
+    },
+    {
+      path: "/manual-assets",
+      label: "Manual Assets",
+      icon: FileImage,
+      badge: manualAssetsCount,
     },
     {
       path: "/config",

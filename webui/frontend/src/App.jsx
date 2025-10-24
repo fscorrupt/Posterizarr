@@ -25,6 +25,7 @@ import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
 import GalleryHub from "./components/GalleryHub";
 import AssetsManager from "./components/AssetsManager";
+import ManualAssets from "./components/ManualAssets";
 import About from "./components/About";
 import HowItWorks from "./components/HowItWorks";
 import AutoTriggers from "./components/AutoTriggers";
@@ -216,6 +217,7 @@ function AppContent() {
                 <Route path="/run-modes" element={<RunModes />} />
                 <Route path="/scheduler" element={<SchedulerSettings />} />
                 <Route path="/assets-manager" element={<AssetsManager />} />
+                <Route path="/manual-assets" element={<ManualAssets />} />
                 <Route path="/asset-overview" element={<AssetOverview />} />
                 <Route path="/runtime-history" element={<RuntimeHistory />} />
 

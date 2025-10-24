@@ -6787,6 +6787,207 @@ async def bulk_delete_titlecards(request: BulkDeleteRequest):
 
 
 # ============================================================================
+# MANUAL ASSETS GALLERY
+# ============================================================================
+
+
+@app.get("/api/manual-assets-gallery")
+async def get_manual_assets_gallery():
+    """Get all assets from manualassets directory - organized by library and folder"""
+    try:
+        if not MANUAL_ASSETS_DIR.exists():
+            logger.warning(
+                f"Manual assets directory does not exist: {MANUAL_ASSETS_DIR}"
+            )
+            return {"libraries": [], "total_assets": 0}
+
+        libraries = []
+        total_assets = 0
+
+        # Iterate through library folders
+        for library_dir in MANUAL_ASSETS_DIR.iterdir():
+            if not library_dir.is_dir():
+                continue
+
+            library_name = library_dir.name
+            folders = []
+
+            # Iterate through show/movie folders
+            for folder_dir in library_dir.iterdir():
+                if not folder_dir.is_dir():
+                    continue
+
+                folder_name = folder_dir.name
+                assets = []
+
+                # Find all image files in this folder
+                for img_file in folder_dir.iterdir():
+                    if img_file.is_file() and img_file.suffix.lower() in [
+                        ".jpg",
+                        ".jpeg",
+                        ".png",
+                        ".webp",
+                    ]:
+                        # Skip backup files
+                        if img_file.suffix == ".backup" or ".backup" in img_file.name:
+                            continue
+
+                        # Determine asset type from filename
+                        filename_lower = img_file.name.lower()
+                        if (
+                            filename_lower == "poster.jpg"
+                            or filename_lower == "poster.png"
+                        ):
+                            asset_type = "poster"
+                        elif (
+                            filename_lower == "background.jpg"
+                            or filename_lower == "background.png"
+                        ):
+                            asset_type = "background"
+                        elif filename_lower.startswith("season") and any(
+                            c.isdigit() for c in filename_lower
+                        ):
+                            asset_type = "season"
+                        elif re.match(r"^s\d+e\d+\.", filename_lower):
+                            asset_type = "titlecard"
+                        else:
+                            asset_type = "other"
+
+                        # Build relative path from manual assets dir
+                        relative_path = f"{library_name}/{folder_name}/{img_file.name}"
+
+                        assets.append(
+                            {
+                                "name": img_file.name,
+                                "path": relative_path,
+                                "type": asset_type,
+                                "size": img_file.stat().st_size,
+                                "url": f"/manual_poster_assets/{relative_path}",
+                            }
+                        )
+                        total_assets += 1
+
+                if assets:
+                    folders.append(
+                        {
+                            "name": folder_name,
+                            "path": f"{library_name}/{folder_name}",
+                            "assets": assets,
+                            "asset_count": len(assets),
+                        }
+                    )
+
+            if folders:
+                libraries.append(
+                    {
+                        "name": library_name,
+                        "folders": folders,
+                        "folder_count": len(folders),
+                    }
+                )
+
+        logger.info(
+            f"Manual assets gallery: {len(libraries)} libraries, {total_assets} total assets"
+        )
+        return {"libraries": libraries, "total_assets": total_assets}
+
+    except Exception as e:
+        logger.error(f"Error getting manual assets gallery: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/manual-assets/{path:path}")
+async def delete_manual_asset(path: str):
+    """Delete an asset from the manual assets directory"""
+    try:
+        # Construct the full file path
+        file_path = MANUAL_ASSETS_DIR / path
+
+        # Security check: Ensure the path is within MANUAL_ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(MANUAL_ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted manual asset: {file_path}")
+
+        return {
+            "success": True,
+            "message": f"Manual asset '{path}' deleted successfully",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting manual asset {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/manual-assets/bulk-delete")
+async def bulk_delete_manual_assets(request: BulkDeleteRequest):
+    """Delete multiple assets from the manual assets directory"""
+    try:
+        deleted = []
+        failed = []
+
+        for path in request.paths:
+            try:
+                # Construct the full file path
+                file_path = MANUAL_ASSETS_DIR / path
+
+                # Security check: Ensure the path is within MANUAL_ASSETS_DIR
+                try:
+                    file_path = file_path.resolve()
+                    file_path.relative_to(MANUAL_ASSETS_DIR.resolve())
+                except ValueError:
+                    failed.append(
+                        {"path": path, "error": "Access denied: Invalid path"}
+                    )
+                    continue
+
+                # Check if file exists
+                if not file_path.exists():
+                    failed.append({"path": path, "error": "File not found"})
+                    continue
+
+                # Check if it's a file (not a directory)
+                if not file_path.is_file():
+                    failed.append({"path": path, "error": "Path is not a file"})
+                    continue
+
+                # Delete the file
+                file_path.unlink()
+                deleted.append(path)
+                logger.info(f"Deleted manual asset: {file_path}")
+            except Exception as e:
+                failed.append({"path": path, "error": str(e)})
+                logger.error(f"Error deleting manual asset {path}: {e}")
+
+        return {
+            "success": True,
+            "deleted": deleted,
+            "failed": failed,
+            "message": f"Successfully deleted {len(deleted)} manual asset(s). {len(failed)} failed.",
+        }
+    except Exception as e:
+        logger.error(f"Error in bulk delete manual assets: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 
 
 @app.get("/api/assets-folders")
@@ -10274,6 +10475,16 @@ if ASSETS_DIR.exists():
         name="poster_assets",
     )
     logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
+
+if MANUAL_ASSETS_DIR.exists():
+    app.mount(
+        "/manual_poster_assets",
+        CachedStaticFiles(directory=str(MANUAL_ASSETS_DIR), max_age=86400),  # 24h Cache
+        name="manual_poster_assets",
+    )
+    logger.info(
+        f"Mounted /manual_poster_assets -> {MANUAL_ASSETS_DIR} (with 24h cache)"
+    )
 
 if TEST_DIR.exists():
     app.mount(

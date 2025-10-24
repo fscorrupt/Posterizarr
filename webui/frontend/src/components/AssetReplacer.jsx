@@ -1972,7 +1972,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         onClose={() => setShowUploadConfirm(false)}
         onConfirm={handleConfirmUpload}
         title={t("assetReplacer.confirmReplaceTitle")}
-        message={t("assetReplacer.confirmReplaceMessage")}
+        message={
+          <>
+            {t("assetReplacer.confirmReplaceMessage")}
+            {!processWithOverlays && (
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-300 leading-relaxed">
+                  <strong>ℹ️ Note:</strong> If you do not check "Process with
+                  overlays after replace", the asset will be placed in the
+                  manualassets directory and the poster will be recreated by
+                  Posterizarr during the next normal/scheduled run.
+                </p>
+              </div>
+            )}
+          </>
+        }
         confirmText={t("assetReplacer.confirmReplaceButton")}
         type="warning"
       />
@@ -1986,7 +2000,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         }}
         onConfirm={handleSelectPreview}
         title={t("assetReplacer.confirmReplaceTitle")}
-        message={t("assetReplacer.confirmReplaceMessage")}
+        message={
+          <>
+            {t("assetReplacer.confirmReplaceMessage")}
+            {!processWithOverlays && (
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-300 leading-relaxed">
+                  <strong>ℹ️ Note:</strong> If you do not check "Process with
+                  overlays after replace", the asset will be placed in the
+                  manualassets directory and the poster will be recreated by
+                  Posterizarr during the next normal/scheduled run.
+                </p>
+              </div>
+            )}
+          </>
+        }
         confirmText={t("assetReplacer.confirmReplaceButton")}
         type="warning"
       />
