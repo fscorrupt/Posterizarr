@@ -927,43 +927,27 @@ function FolderView() {
       {/* Image Preview Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-theme-primary"
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 px-4 sm:px-6 py-4 border-b border-theme-hover bg-gradient-to-r from-theme-card to-theme-hover">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg sm:text-xl font-bold text-theme-text mb-1 break-words">
-                    {currentPath.length > 0
-                      ? currentPath[currentPath.length - 1]
-                      : "Unknown"}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-theme-muted truncate">
-                    /{currentPath.join("/")}/{selectedImage.name}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelectedImage(null)}
-                  className="flex-shrink-0 p-2 hover:bg-theme-hover rounded-lg transition-colors sm:hidden"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5 text-theme-text" />
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
 
-            {/* Image Content */}
-            <div className="p-4 sm:p-6 bg-theme-bg flex items-center justify-center">
-              <div className="max-h-[50vh] sm:max-h-[65vh] flex items-center justify-center">
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Image */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4">
                 <img
                   src={`${selectedImage.url}?t=${cacheBuster}`}
                   alt={selectedImage.name}
-                  className="max-w-full max-h-[50vh] sm:max-h-[65vh] object-contain rounded-lg shadow-2xl"
+                  className="max-w-full max-h-[80vh] object-contain"
                   onError={(e) => {
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "block";
@@ -973,75 +957,90 @@ function FolderView() {
                   <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
-                  <p className="text-theme-text text-lg font-semibold mb-2">
+                  <p className="text-white text-lg font-semibold mb-2">
                     {t("folderView.previewNotAvailable")}
                   </p>
-                  <p className="text-theme-muted text-sm">
+                  <p className="text-gray-400 text-sm">
                     {t("folderView.useFileExplorer")}
                   </p>
                 </div>
               </div>
-            </div>
 
-            {/* Footer with Actions */}
-            <div className="sticky bottom-0 px-4 sm:px-6 py-4 border-t border-theme-hover bg-theme-card">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                {/* File Size Info */}
-                <span className="text-xs sm:text-sm text-theme-muted font-medium">
-                  {t("folderView.size")}: {formatFileSize(selectedImage.size)}
-                </span>
+              {/* Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <h3 className="text-xl font-bold text-theme-text mb-4">
+                  Asset Details
+                </h3>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAssetToReplace({
-                        path: selectedImage.path,
-                        url: selectedImage.url,
-                        name: selectedImage.name,
-                        type: getAssetType(selectedImage.name),
-                      });
-                      setReplacerOpen(true);
-                      setSelectedImage(null);
-                    }}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text font-medium transition-all shadow-sm"
-                  >
-                    <RefreshCw className="w-4 h-4 text-theme-primary" />
-                    {t("folderView.replace")}
-                  </button>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-theme-muted">Folder</label>
+                    <p className="text-theme-text break-all">
+                      {currentPath.length > 0
+                        ? currentPath[currentPath.length - 1]
+                        : "Unknown"}
+                    </p>
+                  </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirm({
-                        path: selectedImage.path,
-                        name: selectedImage.name,
-                      });
-                    }}
-                    disabled={deletingImage === selectedImage.path}
-                    className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-                      deletingImage === selectedImage.path
-                        ? "bg-theme-muted cursor-not-allowed opacity-50"
-                        : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-red-500/50 text-theme-text"
-                    }`}
-                  >
-                    <Trash2
-                      className={`w-4 h-4 text-red-400 ${
-                        deletingImage === selectedImage.path
-                          ? "animate-spin"
-                          : ""
-                      }`}
-                    />
-                    {t("folderView.deleteButton")}
-                  </button>
+                  <div>
+                    <label className="text-sm text-theme-muted">Filename</label>
+                    <p className="text-theme-text break-all">
+                      {selectedImage.name}
+                    </p>
+                  </div>
 
-                  <button
-                    onClick={() => setSelectedImage(null)}
-                    className="hidden sm:flex items-center justify-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text shadow-sm"
-                  >
-                    {t("folderView.close")}
-                  </button>
+                  <div>
+                    <label className="text-sm text-theme-muted">Path</label>
+                    <p className="text-theme-text text-sm break-all">
+                      /{currentPath.join("/")}/{selectedImage.name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted">Size</label>
+                    <p className="text-theme-text">
+                      {formatFileSize(selectedImage.size)}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-theme space-y-2">
+                    <button
+                      onClick={() => {
+                        setAssetToReplace({
+                          path: selectedImage.path,
+                          url: selectedImage.url,
+                          name: selectedImage.name,
+                          type: getAssetType(selectedImage.name),
+                        });
+                        setReplacerOpen(true);
+                        setSelectedImage(null);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-all"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      {t("folderView.replace")}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setDeleteConfirm({
+                          path: selectedImage.path,
+                          name: selectedImage.name,
+                        });
+                      }}
+                      disabled={deletingImage === selectedImage.path}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2
+                        className={`w-4 h-4 ${
+                          deletingImage === selectedImage.path
+                            ? "animate-spin"
+                            : ""
+                        }`}
+                      />
+                      {t("folderView.deleteButton")}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
