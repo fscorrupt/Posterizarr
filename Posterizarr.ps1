@@ -13,7 +13,6 @@ param (
     [switch]$MoviePosterCard,
     [switch]$ShowPosterCard,
     [switch]$BackgroundCard,
-    [switch]$Replace,
     [switch]$UISchedule,
     [switch]$ContainerSchedule,
     [string]$PicturePath,
@@ -8380,10 +8379,6 @@ if ($Manual) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
-#region Replace Mode
-Elseif ($Replace){
-
-}
 #region Testing Mode
 Elseif ($Testing) {
     $Mode = "testing"
@@ -13799,6 +13794,7 @@ Elseif ($Tautulli) {
 }
 #region Arr Mode
 Elseif ($ArrTrigger) {
+    $posterCount = 0
     $arrplatform = $arrTriggers['arr_platform']
     $Mode = "arr"
 
