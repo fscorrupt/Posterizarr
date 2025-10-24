@@ -823,9 +823,16 @@ function Dashboard() {
                         Started:{" "}
                         <span className="font-mono">
                           {new Date(status.start_time)
-                            .toISOString()
-                            .slice(0, 19)
-                            .replace("T", " ")}
+                            .toLocaleString("sv-SE", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: false,
+                            })
+                            .replace(",", "")}
                         </span>
                       </p>
                     )}
@@ -885,9 +892,18 @@ function Dashboard() {
                           <p className="text-xs text-blue-400">
                             {t("dashboard.nextRun")}:{" "}
                             {new Date(schedulerStatus.next_run)
-                              .toISOString()
-                              .slice(0, 19)
-                              .replace("T", " ")}
+                              .toLocaleString("sv-SE", {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: false,
+                                timeZone:
+                                  schedulerStatus.timezone || "Europe/Berlin",
+                              })
+                              .replace(",", "")}
                           </p>
                         )}
                       </>

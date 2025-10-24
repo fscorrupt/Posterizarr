@@ -532,7 +532,19 @@ const SchedulerSettings = () => {
   const formatDateTime = (isoString) => {
     if (!isoString) return t("schedulerSettings.never");
     const date = new Date(isoString);
-    return date.toISOString().slice(0, 19).replace("T", " ");
+    // Use the configured timezone to display the time
+    return date
+      .toLocaleString("sv-SE", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: timezone, // Use the configured timezone
+      })
+      .replace(",", "");
   };
 
   if (loading) {
