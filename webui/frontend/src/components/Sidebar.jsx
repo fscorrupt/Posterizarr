@@ -206,6 +206,7 @@ const Sidebar = () => {
       label: t("nav.assetOverview"),
       icon: AlertTriangle,
       badge: missingAssetsCount,
+      badgeColor: "red",
     },
     {
       id: "assetsManager",
@@ -219,6 +220,7 @@ const Sidebar = () => {
       label: "Manual Assets",
       icon: FileImage,
       badge: manualAssetsCount,
+      badgeColor: "green",
     },
     {
       id: "config",
@@ -476,7 +478,13 @@ const Sidebar = () => {
                       {!isCollapsed &&
                         item.badge !== undefined &&
                         item.badge > 0 && (
-                          <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                          <span
+                            className={`${
+                              item.badgeColor === "green"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            } text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center`}
+                          >
                             {item.badge}
                           </span>
                         )}
@@ -705,7 +713,13 @@ const Sidebar = () => {
                             <GripVertical className="w-4 h-4 text-theme-muted opacity-60 cursor-grab active:cursor-grabbing" />
                           )}
                           {item.badge !== undefined && item.badge > 0 && (
-                            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                            <span
+                              className={`${
+                                item.badgeColor === "green"
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              } text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center`}
+                            >
                               {item.badge}
                             </span>
                           )}
