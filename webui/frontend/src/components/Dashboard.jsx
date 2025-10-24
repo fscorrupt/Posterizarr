@@ -884,9 +884,10 @@ function Dashboard() {
                         {schedulerStatus.next_run && (
                           <p className="text-xs text-blue-400">
                             {t("dashboard.nextRun")}:{" "}
-                            {new Date(
-                              schedulerStatus.next_run
-                            ).toLocaleString()}
+                            {new Date(schedulerStatus.next_run)
+                              .toISOString()
+                              .slice(0, 19)
+                              .replace("T", " ")}
                           </p>
                         )}
                       </>
