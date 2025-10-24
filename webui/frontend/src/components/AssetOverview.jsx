@@ -471,8 +471,12 @@ const AssetOverview = () => {
     if (selectedCategory === "All Categories") {
       assets = allAssets;
     } else {
-      const categoryKey = selectedCategory.toLowerCase().replace(/[- ]/g, "_");
-      assets = data.categories[categoryKey]?.assets || [];
+      // Find the category card with matching label to get the correct key
+      const categoryCard = categoryCards.find(
+        (card) => card.label === selectedCategory
+      );
+      const categoryKey = categoryCard?.key;
+      assets = categoryKey ? data.categories[categoryKey]?.assets || [] : [];
     }
 
     // Filter out Manual entries (Manual === "true" or true)
@@ -510,6 +514,7 @@ const AssetOverview = () => {
     selectedType,
     selectedLibrary,
     allAssets,
+    categoryCards,
   ]);
 
   // Get tags for an asset
