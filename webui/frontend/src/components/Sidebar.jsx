@@ -108,8 +108,8 @@ const Sidebar = () => {
     };
     window.addEventListener("assetReplaced", handleAssetReplaced);
 
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchManualAssetsCount, 60000);
+    // Refresh every 3 seconds for instant updates
+    const interval = setInterval(fetchManualAssetsCount, 3000);
 
     return () => {
       clearInterval(interval);

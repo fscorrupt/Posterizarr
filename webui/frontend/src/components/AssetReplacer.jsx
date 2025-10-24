@@ -885,6 +885,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         if (data.manual_run_triggered) {
           showSuccess(t("assetReplacer.replacedAndQueued"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
 
           // Call onSuccess to delete DB entry before navigating
           console.log(
@@ -910,6 +912,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
           setTimeout(async () => {
             console.log(
               "Calling onSuccess callback to delete DB entry (upload no-queue path)"
@@ -1130,6 +1134,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         if (data.manual_run_triggered) {
           showSuccess(t("assetReplacer.replacedAndQueued"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
 
           // Call onSuccess to delete DB entry before navigating
           console.log(
@@ -1155,6 +1161,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
           setTimeout(async () => {
             console.log(
               "Calling onSuccess callback to delete DB entry (preview no-queue path)"
