@@ -52,7 +52,7 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
                     minutes = int(match.group(2))
                     seconds = int(match.group(3))
                     runtime_seconds = hours * 3600 + minutes * 60 + seconds
-                    runtime_formatted = f"{hours}h {minutes}m {seconds}s"
+                    runtime_formatted = f"{hours}h:{minutes}m:{seconds}s"
 
             # Look for: "Finished, Total images downloaded: 42" OR "Finished, Total images created: 42"
             if (
@@ -237,8 +237,13 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             data = json.load(f)
 
         # Parse runtime
-        runtime_formatted = data.get("Runtime", "00:00:00")
-        runtime_seconds = _parse_runtime_to_seconds(runtime_formatted)
+        runtime_raw = data.get("Runtime", "00:00:00")
+        runtime_seconds = _parse_runtime_to_seconds(runtime_raw)
+        # Reformat to new format (Xh:Ym:Zs)
+        hours = runtime_seconds // 3600
+        minutes = (runtime_seconds % 3600) // 60
+        seconds = runtime_seconds % 60
+        runtime_formatted = f"{hours}h:{minutes}m:{seconds}s"
 
         # Parse image counts
         total_images = (
@@ -330,7 +335,8 @@ def _parse_runtime_to_seconds(runtime_str: str) -> int:
 
     Supports formats:
     - "00:27:43" (HH:MM:SS)
-    - "0h 27m 43s"
+    - "0h:27m:43s" (new format with colons)
+    - "0h 27m 43s" (legacy format with spaces)
     - "27m 43s"
 
     Args:

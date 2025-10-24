@@ -17,6 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
+import ScrollToButtons from "./ScrollToButtons";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
@@ -461,6 +462,74 @@ const AssetOverview = () => {
     return ["All Libraries", ...Array.from(uniqueLibs).sort()];
   }, [allAssets]);
 
+  // Category cards configuration (must be before filteredAssets to avoid circular dependency)
+  const categoryCards = useMemo(() => {
+    if (!data) return [];
+
+    return [
+      {
+        key: "assets_with_issues",
+        label: t("assetOverview.assetsWithIssues"),
+        count: data.categories.assets_with_issues.count,
+        icon: AlertTriangle,
+        color: "text-yellow-400",
+        bgColor: "bg-gradient-to-br from-black/80 to-black/60",
+        borderColor: "border-black/40",
+        hoverBorderColor: "hover:border-yellow-500/50",
+      },
+      {
+        key: "missing_assets",
+        label: t("assetOverview.missingAssets"),
+        count: data.categories.missing_assets.count,
+        icon: FileQuestion,
+        color: "text-red-400",
+        bgColor: "bg-gradient-to-br from-red-900/30 to-red-950/20",
+        borderColor: "border-red-900/40",
+        hoverBorderColor: "hover:border-red-500/50",
+      },
+      {
+        key: "missing_assets_fav_provider",
+        label: t("assetOverview.missingAssetsAtFavProvider"),
+        count: data.categories.missing_assets_fav_provider.count,
+        icon: Star,
+        color: "text-orange-400",
+        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
+        borderColor: "border-orange-900/40",
+        hoverBorderColor: "hover:border-orange-500/50",
+      },
+      {
+        key: "non_primary_lang",
+        label: t("assetOverview.nonPrimaryLang"),
+        count: data.categories.non_primary_lang.count,
+        icon: Globe,
+        color: "text-yellow-400",
+        bgColor: "bg-gradient-to-br from-yellow-900/20 to-yellow-950/10",
+        borderColor: "border-yellow-900/40",
+        hoverBorderColor: "hover:border-yellow-500/50",
+      },
+      {
+        key: "non_primary_provider",
+        label: t("assetOverview.nonPrimaryProvider"),
+        count: data.categories.non_primary_provider.count,
+        icon: Database,
+        color: "text-orange-400",
+        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
+        borderColor: "border-orange-900/40",
+        hoverBorderColor: "hover:border-orange-500/50",
+      },
+      {
+        key: "truncated_text",
+        label: t("assetOverview.truncatedTextCategory"),
+        count: data.categories.truncated_text.count,
+        icon: Type,
+        color: "text-purple-400",
+        bgColor: "bg-gradient-to-br from-purple-900/30 to-purple-950/20",
+        borderColor: "border-purple-900/40",
+        hoverBorderColor: "hover:border-purple-500/50",
+      },
+    ];
+  }, [data, t]);
+
   // Filter assets based on selected category and filters
   const filteredAssets = useMemo(() => {
     if (!data) return [];
@@ -471,8 +540,12 @@ const AssetOverview = () => {
     if (selectedCategory === "All Categories") {
       assets = allAssets;
     } else {
-      const categoryKey = selectedCategory.toLowerCase().replace(/[- ]/g, "_");
-      assets = data.categories[categoryKey]?.assets || [];
+      // Find the category card with matching label to get the correct key
+      const categoryCard = categoryCards.find(
+        (card) => card.label === selectedCategory
+      );
+      const categoryKey = categoryCard?.key;
+      assets = categoryKey ? data.categories[categoryKey]?.assets || [] : [];
     }
 
     // Filter out Manual entries (Manual === "true" or true)
@@ -510,6 +583,7 @@ const AssetOverview = () => {
     selectedType,
     selectedLibrary,
     allAssets,
+    categoryCards,
   ]);
 
   // Get tags for an asset
@@ -631,74 +705,6 @@ const AssetOverview = () => {
 
     return tags;
   };
-
-  // Category cards configuration
-  const categoryCards = useMemo(() => {
-    if (!data) return [];
-
-    return [
-      {
-        key: "assets_with_issues",
-        label: t("assetOverview.assetsWithIssues"),
-        count: data.categories.assets_with_issues.count,
-        icon: AlertTriangle,
-        color: "text-yellow-400",
-        bgColor: "bg-gradient-to-br from-black/80 to-black/60",
-        borderColor: "border-black/40",
-        hoverBorderColor: "hover:border-yellow-500/50",
-      },
-      {
-        key: "missing_assets",
-        label: t("assetOverview.missingAssets"),
-        count: data.categories.missing_assets.count,
-        icon: FileQuestion,
-        color: "text-red-400",
-        bgColor: "bg-gradient-to-br from-red-900/30 to-red-950/20",
-        borderColor: "border-red-900/40",
-        hoverBorderColor: "hover:border-red-500/50",
-      },
-      {
-        key: "missing_assets_fav_provider",
-        label: t("assetOverview.missingAssetsAtFavProvider"),
-        count: data.categories.missing_assets_fav_provider.count,
-        icon: Star,
-        color: "text-orange-400",
-        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
-        borderColor: "border-orange-900/40",
-        hoverBorderColor: "hover:border-orange-500/50",
-      },
-      {
-        key: "non_primary_lang",
-        label: t("assetOverview.nonPrimaryLang"),
-        count: data.categories.non_primary_lang.count,
-        icon: Globe,
-        color: "text-yellow-400",
-        bgColor: "bg-gradient-to-br from-yellow-900/20 to-yellow-950/10",
-        borderColor: "border-yellow-900/40",
-        hoverBorderColor: "hover:border-yellow-500/50",
-      },
-      {
-        key: "non_primary_provider",
-        label: t("assetOverview.nonPrimaryProvider"),
-        count: data.categories.non_primary_provider.count,
-        icon: Database,
-        color: "text-orange-400",
-        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
-        borderColor: "border-orange-900/40",
-        hoverBorderColor: "hover:border-orange-500/50",
-      },
-      {
-        key: "truncated_text",
-        label: t("assetOverview.truncatedTextCategory"),
-        count: data.categories.truncated_text.count,
-        icon: Type,
-        color: "text-purple-400",
-        bgColor: "bg-gradient-to-br from-purple-900/30 to-purple-950/20",
-        borderColor: "border-purple-900/40",
-        hoverBorderColor: "hover:border-purple-500/50",
-      },
-    ];
-  }, [data]);
 
   if (loading) {
     return (
@@ -1100,6 +1106,9 @@ const AssetOverview = () => {
           onSuccess={handleReplaceSuccess}
         />
       )}
+
+      {/* Scroll To Buttons */}
+      <ScrollToButtons />
     </div>
   );
 };

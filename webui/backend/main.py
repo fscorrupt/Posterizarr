@@ -44,6 +44,7 @@ if IS_DOCKER:
     BASE_DIR = Path("/config")
     APP_DIR = Path("/app")
     ASSETS_DIR = Path("/assets")
+    MANUAL_ASSETS_DIR = Path("/manualassets")
     IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
 else:
@@ -52,9 +53,11 @@ else:
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
     ASSETS_DIR = PROJECT_ROOT / "assets"
+    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
     ASSETS_DIR.mkdir(exist_ok=True)
+    MANUAL_ASSETS_DIR.mkdir(exist_ok=True)
 
 # Ensure directories exist locally
 SUBDIRS_TO_CREATE = [
@@ -179,6 +182,25 @@ def save_log_level_config(level: str):
         pass  # Silent - no console output
         return False
 
+
+def initialize_webui_settings():
+    """Initialize webui_settings.json with default values if it doesn't exist"""
+    if not WEBUI_SETTINGS_PATH.exists():
+        default_settings = {
+            "log_level": "DEBUG",
+            "theme": "dark",
+            "auto_refresh_interval": 180,
+        }
+        try:
+            WEBUI_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(WEBUI_SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            pass  # Silent - no console output
+
+
+# Initialize webui_settings.json if it doesn't exist
+initialize_webui_settings()
 
 # Get log level from config file, environment variable, or default to INFO
 LOG_LEVEL_ENV = load_log_level_config()
@@ -426,6 +448,7 @@ logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
+current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
@@ -3900,6 +3923,9 @@ async def get_system_info():
     except Exception as e:
         logger.error(f"Error getting system info: {e}")
 
+    # Add Docker detection
+    system_info["is_docker"] = IS_DOCKER
+
     return system_info
 
 
@@ -4090,7 +4116,7 @@ async def get_upload_diagnostics():
 @app.get("/api/status")
 async def get_status():
     """Get script status with last log lines from appropriate log file"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     manual_is_running = False
     if current_process is not None:
@@ -4107,6 +4133,7 @@ async def get_status():
 
             current_process = None
             current_mode = None
+            current_start_time = None
             manual_is_running = False
 
             # Auto-trigger cache refresh after script finishes
@@ -4278,6 +4305,7 @@ async def get_status():
         "active_log": active_log,
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
+        "start_time": current_start_time if is_running else None,
     }
 
 
@@ -4644,6 +4672,31 @@ async def get_migration_status():
 
     except Exception as e:
         logger.error(f"Error getting migration status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/runtime-history/migrate-format")
+async def migrate_runtime_format():
+    """
+    Migrate all runtime_formatted entries to new format (Xh:Ym:Zs)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        updated_count = runtime_db.migrate_runtime_format()
+
+        return {
+            "success": True,
+            "updated_count": updated_count,
+            "message": f"Migrated {updated_count} runtime entries to new format (Xh:Ym:Zs)",
+        }
+
+    except Exception as e:
+        logger.error(f"Error migrating runtime format: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -5203,7 +5256,7 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
 @app.post("/api/run-manual")
 async def run_manual_mode(request: ManualModeRequest):
     """Run manual mode with custom parameters"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Debug logging
     logger.info(f"Manual mode request received: {request.model_dump()}")
@@ -5383,6 +5436,7 @@ async def run_manual_mode(request: ManualModeRequest):
             text=True,
         )
         current_mode = "manual"  # Set current mode to manual
+        current_start_time = datetime.now().isoformat()
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
@@ -5420,7 +5474,7 @@ async def run_manual_mode_upload(
     episodeNumber: str = Form(""),
 ):
     """Run manual mode with uploaded file"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     logger.info(f"Manual mode upload request received")
     logger.info(f"  File: {file.filename if file else 'None'}")
@@ -5732,6 +5786,7 @@ async def run_manual_mode_upload(
             text=True,
         )
         current_mode = "manual"
+        current_start_time = datetime.now().isoformat()
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
@@ -5791,7 +5846,7 @@ async def run_manual_mode_upload(
 @app.post("/api/run/{mode}")
 async def run_script(mode: str):
     """Run Posterizarr script in different modes"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -5836,6 +5891,7 @@ async def run_script(mode: str):
             text=True,
         )
         current_mode = mode  # Set current mode
+        current_start_time = datetime.now().isoformat()
         logger.info(
             f"Started Posterizarr in {mode} mode with PID {current_process.pid}"
         )
@@ -5856,7 +5912,7 @@ async def run_script(mode: str):
 @app.post("/api/reset-posters")
 async def reset_posters(request: ResetPostersRequest):
     """Reset all posters in a Plex library"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if script is running
     if current_process and current_process.poll() is None:
@@ -5907,6 +5963,7 @@ async def reset_posters(request: ResetPostersRequest):
             text=True,
         )
         current_mode = "reset"  # Set current mode to reset
+        current_start_time = datetime.now().isoformat()
 
         logger.info(
             f"Started poster reset for library '{request.library}' with PID {current_process.pid}"
@@ -5929,7 +5986,7 @@ async def reset_posters(request: ResetPostersRequest):
 @app.post("/api/stop")
 async def stop_script():
     """Stop running script gracefully - works for both manual and scheduled runs"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if manual process is running
     manual_running = current_process and current_process.poll() is None
@@ -5953,11 +6010,13 @@ async def stop_script():
                 current_process.wait(timeout=5)
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 stopped_processes.append("manual")
             except subprocess.TimeoutExpired:
                 current_process.kill()
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 stopped_processes.append("manual (force killed after timeout)")
 
         # Stop scheduler process if running
@@ -5990,7 +6049,7 @@ async def stop_script():
 @app.post("/api/force-kill")
 async def force_kill_script():
     """Force kill running script immediately - works for both manual and scheduled runs"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if manual process is running
     manual_running = current_process and current_process.poll() is None
@@ -6014,12 +6073,14 @@ async def force_kill_script():
                 current_process.wait(timeout=2)
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 killed_processes.append("manual")
                 logger.warning("Manual script was force killed")
             except Exception as e:
                 logger.error(f"Error force killing manual process: {e}")
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 killed_processes.append("manual (cleared)")
 
         # Kill scheduler process if running
@@ -6048,6 +6109,7 @@ async def force_kill_script():
         # Try to set to None anyway
         current_process = None
         current_mode = None
+        current_start_time = None
         if SCHEDULER_AVAILABLE and scheduler:
             scheduler.current_process = None
             scheduler.is_running = False
@@ -6325,6 +6387,9 @@ async def delete_poster(path: str):
         file_path.unlink()
         logger.info(f"Deleted poster: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6376,6 +6441,9 @@ async def bulk_delete_posters(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted poster: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting poster {path}: {e}")
@@ -6431,6 +6499,9 @@ async def delete_background(path: str):
         file_path.unlink()
         logger.info(f"Deleted background: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6478,6 +6549,9 @@ async def bulk_delete_backgrounds(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted background: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting background {path}: {e}")
@@ -6533,6 +6607,9 @@ async def delete_season(path: str):
         file_path.unlink()
         logger.info(f"Deleted season: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6580,6 +6657,9 @@ async def bulk_delete_seasons(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted season: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting season {path}: {e}")
@@ -6635,6 +6715,9 @@ async def delete_titlecard(path: str):
         file_path.unlink()
         logger.info(f"Deleted titlecard: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6682,6 +6765,9 @@ async def bulk_delete_titlecards(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted titlecard: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting titlecard {path}: {e}")
@@ -6697,6 +6783,207 @@ async def bulk_delete_titlecards(request: BulkDeleteRequest):
         }
     except Exception as e:
         logger.error(f"Error in bulk delete titlecards: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# MANUAL ASSETS GALLERY
+# ============================================================================
+
+
+@app.get("/api/manual-assets-gallery")
+async def get_manual_assets_gallery():
+    """Get all assets from manualassets directory - organized by library and folder"""
+    try:
+        if not MANUAL_ASSETS_DIR.exists():
+            logger.warning(
+                f"Manual assets directory does not exist: {MANUAL_ASSETS_DIR}"
+            )
+            return {"libraries": [], "total_assets": 0}
+
+        libraries = []
+        total_assets = 0
+
+        # Iterate through library folders
+        for library_dir in MANUAL_ASSETS_DIR.iterdir():
+            if not library_dir.is_dir():
+                continue
+
+            library_name = library_dir.name
+            folders = []
+
+            # Iterate through show/movie folders
+            for folder_dir in library_dir.iterdir():
+                if not folder_dir.is_dir():
+                    continue
+
+                folder_name = folder_dir.name
+                assets = []
+
+                # Find all image files in this folder
+                for img_file in folder_dir.iterdir():
+                    if img_file.is_file() and img_file.suffix.lower() in [
+                        ".jpg",
+                        ".jpeg",
+                        ".png",
+                        ".webp",
+                    ]:
+                        # Skip backup files
+                        if img_file.suffix == ".backup" or ".backup" in img_file.name:
+                            continue
+
+                        # Determine asset type from filename
+                        filename_lower = img_file.name.lower()
+                        if (
+                            filename_lower == "poster.jpg"
+                            or filename_lower == "poster.png"
+                        ):
+                            asset_type = "poster"
+                        elif (
+                            filename_lower == "background.jpg"
+                            or filename_lower == "background.png"
+                        ):
+                            asset_type = "background"
+                        elif filename_lower.startswith("season") and any(
+                            c.isdigit() for c in filename_lower
+                        ):
+                            asset_type = "season"
+                        elif re.match(r"^s\d+e\d+\.", filename_lower):
+                            asset_type = "titlecard"
+                        else:
+                            asset_type = "other"
+
+                        # Build relative path from manual assets dir
+                        relative_path = f"{library_name}/{folder_name}/{img_file.name}"
+
+                        assets.append(
+                            {
+                                "name": img_file.name,
+                                "path": relative_path,
+                                "type": asset_type,
+                                "size": img_file.stat().st_size,
+                                "url": f"/manual_poster_assets/{relative_path}",
+                            }
+                        )
+                        total_assets += 1
+
+                if assets:
+                    folders.append(
+                        {
+                            "name": folder_name,
+                            "path": f"{library_name}/{folder_name}",
+                            "assets": assets,
+                            "asset_count": len(assets),
+                        }
+                    )
+
+            if folders:
+                libraries.append(
+                    {
+                        "name": library_name,
+                        "folders": folders,
+                        "folder_count": len(folders),
+                    }
+                )
+
+        logger.info(
+            f"Manual assets gallery: {len(libraries)} libraries, {total_assets} total assets"
+        )
+        return {"libraries": libraries, "total_assets": total_assets}
+
+    except Exception as e:
+        logger.error(f"Error getting manual assets gallery: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/manual-assets/{path:path}")
+async def delete_manual_asset(path: str):
+    """Delete an asset from the manual assets directory"""
+    try:
+        # Construct the full file path
+        file_path = MANUAL_ASSETS_DIR / path
+
+        # Security check: Ensure the path is within MANUAL_ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(MANUAL_ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted manual asset: {file_path}")
+
+        return {
+            "success": True,
+            "message": f"Manual asset '{path}' deleted successfully",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting manual asset {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/manual-assets/bulk-delete")
+async def bulk_delete_manual_assets(request: BulkDeleteRequest):
+    """Delete multiple assets from the manual assets directory"""
+    try:
+        deleted = []
+        failed = []
+
+        for path in request.paths:
+            try:
+                # Construct the full file path
+                file_path = MANUAL_ASSETS_DIR / path
+
+                # Security check: Ensure the path is within MANUAL_ASSETS_DIR
+                try:
+                    file_path = file_path.resolve()
+                    file_path.relative_to(MANUAL_ASSETS_DIR.resolve())
+                except ValueError:
+                    failed.append(
+                        {"path": path, "error": "Access denied: Invalid path"}
+                    )
+                    continue
+
+                # Check if file exists
+                if not file_path.exists():
+                    failed.append({"path": path, "error": "File not found"})
+                    continue
+
+                # Check if it's a file (not a directory)
+                if not file_path.is_file():
+                    failed.append({"path": path, "error": "Path is not a file"})
+                    continue
+
+                # Delete the file
+                file_path.unlink()
+                deleted.append(path)
+                logger.info(f"Deleted manual asset: {file_path}")
+            except Exception as e:
+                failed.append({"path": path, "error": str(e)})
+                logger.error(f"Error deleting manual asset {path}: {e}")
+
+        return {
+            "success": True,
+            "deleted": deleted,
+            "failed": failed,
+            "message": f"Successfully deleted {len(deleted)} manual asset(s). {len(failed)} failed.",
+        }
+    except Exception as e:
+        logger.error(f"Error in bulk delete manual assets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -7299,17 +7586,25 @@ async def update_scheduler_config(data: ScheduleUpdate):
 
 @app.post("/api/scheduler/schedule")
 async def add_schedule(data: ScheduleCreate):
-    """Add a new schedule"""
+    """Add a new schedule (time must be in HH:MM format, 00:00-23:59)"""
     if not SCHEDULER_AVAILABLE or not scheduler:
         raise HTTPException(status_code=503, detail="Scheduler not available")
 
     try:
+        # Validate time format before adding
+        hour, minute = scheduler.parse_schedule_time(data.time)
+        if hour is None or minute is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid time format '{data.time}'. Must be HH:MM (00:00-23:59)",
+            )
+
         success = scheduler.add_schedule(data.time, data.description)
         if success:
             return {"success": True, "message": f"Schedule added: {data.time}"}
         else:
             raise HTTPException(
-                status_code=400, detail="Invalid time format or schedule already exists"
+                status_code=400, detail=f"Schedule {data.time} already exists"
             )
     except HTTPException:
         raise
@@ -7330,7 +7625,11 @@ async def remove_schedule(time: str):
 
         success = scheduler.remove_schedule(time)
         if success:
-            # Get updated status immediately after removal
+            # Give scheduler a moment to update jobs
+            import asyncio
+
+            await asyncio.sleep(0.1)
+            # Get updated status after removal
             status = scheduler.get_status()
             return {"success": True, "message": f"Schedule removed: {time}", **status}
         else:
@@ -8731,17 +9030,28 @@ async def upload_asset_replacement(
             # Normalize the path to handle different path separators (Windows/Linux/Docker)
             normalized_path = Path(asset_path)
 
+            # Determine target directory based on process_with_overlays flag
+            # If NOT processing with overlays, save to manualassets folder
+            if not process_with_overlays:
+                target_base_dir = MANUAL_ASSETS_DIR
+                logger.info(
+                    f"Saving to manual assets directory (no overlay processing)"
+                )
+            else:
+                target_base_dir = ASSETS_DIR
+                logger.info(f"Saving to assets directory (with overlay processing)")
+
             # Handle absolute paths (for assets outside app root)
             if normalized_path.is_absolute():
                 full_asset_path = normalized_path.resolve()
                 logger.info(f"Using absolute asset path: {full_asset_path}")
             else:
-                full_asset_path = (ASSETS_DIR / normalized_path).resolve()
+                full_asset_path = (target_base_dir / normalized_path).resolve()
                 logger.info(f"Using relative asset path: {full_asset_path}")
 
-            # Security: For relative paths, ensure they don't escape ASSETS_DIR
+            # Security: For relative paths, ensure they don't escape target directory
             if not normalized_path.is_absolute():
-                if not str(full_asset_path).startswith(str(ASSETS_DIR.resolve())):
+                if not str(full_asset_path).startswith(str(target_base_dir.resolve())):
                     logger.error(f"Path traversal attempt detected: {asset_path}")
                     raise HTTPException(
                         status_code=400,
@@ -8755,7 +9065,7 @@ async def upload_asset_replacement(
                 logger.info(f"Creating new asset: {full_asset_path}")
 
             logger.info(f"Full asset path: {full_asset_path}")
-            logger.info(f"Is Docker: {IS_DOCKER}, Assets Dir: {ASSETS_DIR}")
+            logger.info(f"Is Docker: {IS_DOCKER}, Target Dir: {target_base_dir}")
 
         except (ValueError, OSError) as e:
             logger.error(f"Invalid asset path '{asset_path}': {e}")
@@ -8873,10 +9183,17 @@ async def upload_asset_replacement(
             logger.warning(f"Could not validate image dimensions: {e}")
             # Don't fail upload if dimension check itself fails, just log it
 
-        # Track if this is a replacement or new asset
+        # Check if asset exists in alternate location (for moving between folders)
+        alternate_base_dir = (
+            ASSETS_DIR if not process_with_overlays else MANUAL_ASSETS_DIR
+        )
+        alternate_asset_path = alternate_base_dir / normalized_path
+        asset_exists_in_alternate = alternate_asset_path.exists()
+
+        # Track if this is a replacement or new asset in target location
         is_replacement = full_asset_path.exists()
 
-        # Create backup of original if replacing
+        # Create backup of original if replacing in target location
         if is_replacement:
             try:
                 backup_path = full_asset_path.with_suffix(
@@ -8889,6 +9206,25 @@ async def upload_asset_replacement(
                     logger.info(f"Created backup: {backup_path}")
             except Exception as e:
                 logger.warning(f"Failed to create backup (continuing anyway): {e}")
+
+        # Delete old asset from alternate location if moving between folders
+        if asset_exists_in_alternate and not is_replacement:
+            try:
+                logger.info(
+                    f"Deleting old asset from alternate location: {alternate_asset_path}"
+                )
+                alternate_asset_path.unlink()
+                # Also delete backup if exists
+                alternate_backup = alternate_asset_path.with_suffix(
+                    alternate_asset_path.suffix + ".backup"
+                )
+                if alternate_backup.exists():
+                    alternate_backup.unlink()
+                    logger.info(f"Deleted old backup: {alternate_backup}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not delete old asset from alternate location: {e}"
+                )
 
         # Save new image
         try:
@@ -8911,7 +9247,9 @@ async def upload_asset_replacement(
                 )
 
             action = "Replaced" if is_replacement else "Created"
-            logger.info(f"{action} asset: {asset_path} (size: {len(contents)} bytes)")
+            logger.info(
+                f"{action} asset: {asset_path} (size: {len(contents)} bytes, target: {target_base_dir.name})"
+            )
         except PermissionError as e:
             logger.error(f"Permission denied writing to {full_asset_path}: {e}")
             raise HTTPException(
@@ -9005,7 +9343,7 @@ async def upload_asset_replacement(
                     )
 
                     # Start the Manual Run process
-                    global current_process, current_mode
+                    global current_process, current_mode, current_start_time
                     current_process = subprocess.Popen(
                         command,
                         cwd=str(BASE_DIR),
@@ -9014,6 +9352,7 @@ async def upload_asset_replacement(
                         text=True,
                     )
                     current_mode = "manual"
+                    current_start_time = datetime.now().isoformat()
 
                     logger.info(
                         f"Manual Run started (PID: {current_process.pid}) for overlay processing"
@@ -9051,6 +9390,125 @@ async def upload_asset_replacement(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+def delete_db_entries_for_asset(asset_path: str):
+    """
+    Delete database entries for a given asset path.
+    Matches entries based on Rootfolder, Type, and filename pattern.
+
+    Args:
+        asset_path: Path to the asset (e.g., "TestSerien/Show Name (2020)/Season02.jpg")
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        logger.debug("Database not available, skipping DB entry deletion")
+        return
+
+    try:
+        # Parse the asset path to extract metadata
+        # Normalize path separators to forward slashes
+        normalized_path = asset_path.replace("\\", "/")
+        path_parts = normalized_path.split("/")
+
+        if len(path_parts) < 2:
+            logger.warning(f"Asset path too short to extract metadata: {asset_path}")
+            return
+
+        # Extract folder name and filename
+        folder_name = path_parts[1] if len(path_parts) > 1 else ""
+        filename = path_parts[-1] if len(path_parts) > 0 else ""
+
+        # Determine asset type from filename
+        # Note: Database uses different type names than our internal naming
+        # Database types: "Movie", "Movie Background", "Show", "Show Background", "Season", "Episode"
+        is_background = "background" in filename.lower()
+        is_season = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
+        is_episode = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
+
+        # Determine the database Type values to search for
+        # For posters/backgrounds, we need to check both Movie and Show types
+        search_types = []
+        if is_season:
+            search_types = ["Season"]
+        elif is_episode:
+            search_types = ["Episode"]
+        elif is_background:
+            search_types = ["Movie Background", "Show Background"]
+        else:
+            # Regular poster - could be Movie or Show or Poster
+            search_types = ["Movie", "Show", "Poster"]
+
+        cursor = db.connection.cursor()
+
+        # Collect all matching entries across all possible type names
+        all_entries = []
+
+        logger.debug(
+            f"Searching for DB entries: folder={folder_name}, types={search_types}, is_episode={bool(is_episode)}, is_season={bool(is_season)}"
+        )
+
+        for db_type in search_types:
+            if is_season:
+                # For seasons, find entries with matching season number in title
+                season_num = is_season.group(1)
+                cursor.execute(
+                    """SELECT id, Title, Type FROM imagechoices 
+                       WHERE Rootfolder = ? AND Type = ? 
+                       AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                    (
+                        folder_name,
+                        db_type,
+                        f"%Season{season_num}%",
+                        f"%Season {season_num}%",
+                        f"%Season0{season_num}%",
+                    ),
+                )
+            elif is_episode:
+                # For episodes, find entries with matching episode pattern in title
+                season_num = is_episode.group(1)
+                episode_num = is_episode.group(2)
+                pattern1 = f"%S{season_num}E{episode_num}%"
+                pattern2 = f"%S0{season_num}E0{episode_num}%"
+                logger.debug(
+                    f"Episode search: folder={folder_name}, type={db_type}, patterns={pattern1}, {pattern2}"
+                )
+                cursor.execute(
+                    """SELECT id, Title, Type FROM imagechoices 
+                       WHERE Rootfolder = ? AND Type = ? 
+                       AND (Title LIKE ? OR Title LIKE ?)""",
+                    (folder_name, db_type, pattern1, pattern2),
+                )
+            else:
+                # For poster/background, match on Rootfolder + Type only
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                    (folder_name, db_type),
+                )
+
+            # Fetch and extend results for this type
+            found = cursor.fetchall()
+            logger.debug(f"Found {len(found)} entries for type {db_type}")
+            all_entries.extend(found)
+
+        if all_entries:
+            for entry in all_entries:
+                record_id = entry["id"]
+                title = entry["Title"]
+                entry_type = entry["Type"]
+                db.delete_choice(record_id)
+                logger.info(
+                    f"Deleted DB entry #{record_id} for deleted asset: {title} ({entry_type})"
+                )
+        else:
+            logger.debug(
+                f"No DB entries found for deleted asset: {filename} in {folder_name}"
+            )
+
+    except Exception as e:
+        logger.error(f"Error deleting database entries for asset {asset_path}: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+
+
 async def update_asset_db_entry_as_manual(
     asset_path: str,
     image_url: str,
@@ -9059,8 +9517,9 @@ async def update_asset_db_entry_as_manual(
     title_text: Optional[str] = None,
 ):
     """
-    Create or update a database entry for a manually replaced asset.
-    This ensures the asset appears in Recently Assets with Manual=Yes flag.
+    Delete existing database entries for a manually replaced asset.
+    The new entry will be created by the CSV import after the Posterizarr script completes.
+    This prevents duplicate entries with different title formats.
 
     Args:
         asset_path: Path to the asset (e.g., "4K/Movie Name (2024)/poster.jpg")
@@ -9106,57 +9565,109 @@ async def update_asset_db_entry_as_manual(
                 title_text = final_folder_name
 
         # Determine asset type from filename
-        asset_type = "Poster"
+        # Match database Type column values: "Show", "Movie", "Show Background", "Movie Background", "Season", "Episode"
+        asset_type = "Poster"  # Default, will be refined below
+
         if "background" in filename.lower():
+            # Could be "Show Background" or "Movie Background"
             asset_type = "Background"
         elif re.match(r"^Season\d+\.jpg$", filename, re.IGNORECASE):
             asset_type = "Season"
         elif re.match(r"^S\d+E\d+\.jpg$", filename, re.IGNORECASE):
-            asset_type = "TitleCard"
+            asset_type = "Episode"
+        # For poster.jpg files, asset_type remains "Poster"
+        # We'll match both "Show" and "Movie" types in the query
 
-        # Check if entry already exists for this asset
-        # We match on Title, Rootfolder, and Type (same as CSV import logic)
+        # Delete any existing database entries for this specific asset
+        # This prevents duplicates - the CSV import will create the new entry after the script finishes
+        # We need to match more specifically to avoid deleting unrelated assets:
+        # - For seasons: match on Rootfolder + Type + season number in Title
+        # - For episodes: match on Rootfolder + Type + episode pattern in Title
+        # - For poster/background: match on Rootfolder + Type
+
         cursor = db.connection.cursor()
-        cursor.execute(
-            "SELECT id, Manual FROM imagechoices WHERE Title = ? AND Rootfolder = ? AND Type = ?",
-            (title_text, final_folder_name, asset_type),
-        )
-        existing = cursor.fetchone()
 
-        if existing:
-            # Update existing entry to mark as Manual (only update Manual field, nothing else)
-            record_id = existing["id"]
-            current_manual = existing["Manual"]
+        # Extract season/episode info from filename for more specific matching
+        season_match = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
+        episode_match = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
 
-            # Only update Manual field if not already set to "true"
-            if current_manual != "true":
-                db.update_choice(
-                    record_id,
-                    Manual="true",  # Use lowercase "true" for consistency
+        if season_match:
+            # For seasons, find entries with matching season number in title
+            season_num = season_match.group(1)
+            # Also try without leading zero
+            season_num_int = str(int(season_num))
+            logger.info(
+                f"Searching for Season: folder='{final_folder_name}', season_num='{season_num}', season_num_int='{season_num_int}'"
+            )
+            cursor.execute(
+                """SELECT id, Title, Type FROM imagechoices 
+                   WHERE Rootfolder = ? AND Type = ? 
+                   AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                (
+                    final_folder_name,
+                    asset_type,
+                    f"%Season{season_num}%",
+                    f"%Season {season_num}%",
+                    f"%Season {season_num_int}%",
+                    f"%Season{season_num_int}%",
+                ),
+            )
+        elif episode_match:
+            # For episodes, find entries with matching episode pattern in title
+            season_num = episode_match.group(1)
+            episode_num = episode_match.group(2)
+            cursor.execute(
+                """SELECT id, Title FROM imagechoices 
+                   WHERE Rootfolder = ? AND Type = ? 
+                   AND (Title LIKE ? OR Title LIKE ?)""",
+                (
+                    final_folder_name,
+                    asset_type,
+                    f"%S{season_num}E{episode_num}%",
+                    f"%S0{season_num}E0{episode_num}%",
+                ),
+            )
+        else:
+            # For poster/background, match on Rootfolder + Type
+            # For posters, match both "Show" and "Movie" types
+            # For backgrounds, match both "Show Background" and "Movie Background" types
+            if asset_type == "Poster":
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Show', 'Movie')",
+                    (final_folder_name,),
                 )
-                logger.info(
-                    f"Updated DB entry #{record_id}: Manual=true for: {title_text} ({asset_type})"
+            elif asset_type == "Background":
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Show Background', 'Movie Background')",
+                    (final_folder_name,),
                 )
             else:
-                logger.info(
-                    f"DB entry #{record_id} already has Manual=true for: {title_text} ({asset_type})"
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                    (final_folder_name, asset_type),
                 )
+
+        existing_entries = cursor.fetchall()
+
+        if existing_entries:
+            for entry in existing_entries:
+                record_id = entry["id"]
+                old_title = entry["Title"]
+                # sqlite3.Row objects use dictionary-style access, not .get()
+                entry_type = entry["Type"] if "Type" in entry.keys() else asset_type
+                db.delete_choice(record_id)
+                logger.info(
+                    f"Deleted DB entry #{record_id} for manual replacement: {old_title} ({entry_type})"
+                )
+            logger.info(
+                f"New entry will be created by CSV import after script completes"
+            )
         else:
-            # Create new entry with Manual="true"
-            record_id = db.insert_choice(
-                title=title_text,
-                type_=asset_type,
-                rootfolder=final_folder_name,
-                library_name=final_library_name,
-                language="N/A",  # Not known for manual replacements
-                fallback="false",
-                text_truncated="false",
-                download_source=image_url,
-                fav_provider_link="N/A",
-                manual="true",  # Use lowercase "true" for consistency
+            logger.info(
+                f"No existing DB entries found for: {filename} in {final_folder_name}"
             )
             logger.info(
-                f"Created new DB entry #{record_id} with Manual=true for: {title_text} ({asset_type})"
+                f"New entry will be created by CSV import after script completes"
             )
 
     except Exception as e:
@@ -9194,9 +9705,32 @@ async def replace_asset_from_url(
             )
 
         # Validate asset path exists
-        full_asset_path = ASSETS_DIR / asset_path
-        if not full_asset_path.exists():
-            raise HTTPException(status_code=404, detail="Asset not found")
+        # Determine target directory based on process_with_overlays flag
+        if not process_with_overlays:
+            target_base_dir = MANUAL_ASSETS_DIR
+            logger.info(f"Saving to manual assets directory (no overlay processing)")
+        else:
+            target_base_dir = ASSETS_DIR
+            logger.info(f"Saving to assets directory (with overlay processing)")
+
+        full_asset_path = target_base_dir / asset_path
+
+        # Check if asset exists in either location (for replacement)
+        # First check target location, then check alternate location
+        asset_exists_in_target = full_asset_path.exists()
+
+        # Also check the alternate location (in case user is moving between folders)
+        alternate_base_dir = (
+            ASSETS_DIR if not process_with_overlays else MANUAL_ASSETS_DIR
+        )
+        alternate_asset_path = alternate_base_dir / asset_path
+        asset_exists_in_alternate = alternate_asset_path.exists()
+
+        if not asset_exists_in_target and not asset_exists_in_alternate:
+            logger.warning(
+                f"Asset not found in either location, will create new: {asset_path}"
+            )
+            # Don't fail - just create new asset
 
         # Download image from URL
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -9208,20 +9742,45 @@ async def replace_asset_from_url(
 
             contents = response.content
 
-        # Create backup of original
-        backup_path = full_asset_path.with_suffix(full_asset_path.suffix + ".backup")
-        if full_asset_path.exists() and not backup_path.exists():
-            import shutil
+        # Ensure target directory exists
+        full_asset_path.parent.mkdir(parents=True, exist_ok=True)
 
-            shutil.copy2(full_asset_path, backup_path)
-            logger.info(f"Created backup: {backup_path}")
+        # Create backup of original if it exists in target location
+        if asset_exists_in_target:
+            backup_path = full_asset_path.with_suffix(
+                full_asset_path.suffix + ".backup"
+            )
+            if not backup_path.exists():
+                import shutil
+
+                shutil.copy2(full_asset_path, backup_path)
+                logger.info(f"Created backup: {backup_path}")
+
+        # Delete old asset from alternate location if moving between folders
+        if asset_exists_in_alternate and not asset_exists_in_target:
+            try:
+                logger.info(
+                    f"Deleting old asset from alternate location: {alternate_asset_path}"
+                )
+                alternate_asset_path.unlink()
+                # Also delete backup if exists
+                alternate_backup = alternate_asset_path.with_suffix(
+                    alternate_asset_path.suffix + ".backup"
+                )
+                if alternate_backup.exists():
+                    alternate_backup.unlink()
+                    logger.info(f"Deleted old backup: {alternate_backup}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not delete old asset from alternate location: {e}"
+                )
 
         # Save new image
         with open(full_asset_path, "wb") as f:
             f.write(contents)
 
         logger.info(
-            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes)"
+            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes, target: {target_base_dir.name})"
         )
 
         # Add/Update database entry for this replaced asset (mark as Manual)
@@ -9392,7 +9951,7 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
     Internal function to trigger manual run without HTTP overhead
     This is called from replace_asset_from_url
     """
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -9494,6 +10053,7 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
         text=True,
     )
     current_mode = "manual"
+    current_start_time = datetime.now().isoformat()
 
     logger.info(f"Manual Run process started (PID: {current_process.pid})")
 
@@ -9941,6 +10501,16 @@ if ASSETS_DIR.exists():
         name="poster_assets",
     )
     logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
+
+if MANUAL_ASSETS_DIR.exists():
+    app.mount(
+        "/manual_poster_assets",
+        CachedStaticFiles(directory=str(MANUAL_ASSETS_DIR), max_age=86400),  # 24h Cache
+        name="manual_poster_assets",
+    )
+    logger.info(
+        f"Mounted /manual_poster_assets -> {MANUAL_ASSETS_DIR} (with 24h cache)"
+    )
 
 if TEST_DIR.exists():
     app.mount(
