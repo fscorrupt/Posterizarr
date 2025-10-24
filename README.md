@@ -818,9 +818,9 @@ The setup process is handled by a simple script that installs all necessary depe
       setup.bat
       ```
     - **On Linux or macOS:**
-      `bash
-    sh setup.sh
-    `
+      ```bash
+      setup.sh
+      ```
       The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
 
 **Running the UI**
