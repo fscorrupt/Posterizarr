@@ -787,7 +787,7 @@ function Dashboard() {
       statusCards: visibleCards.statusCards && (
         <div
           key="statusCards"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {/* Script Status Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
@@ -916,80 +916,85 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Script File Card */}
+          {/* Script & Config Files Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  {t("dashboard.scriptFile")}
+                  {t("dashboard.scriptFile")} & {t("dashboard.configFile")}
                 </p>
-                <p
-                  className={`text-2xl font-bold mb-2 ${
-                    status.script_exists ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {status.script_exists
-                    ? t("dashboard.found")
-                    : t("dashboard.missing")}
-                </p>
-                {status.script_exists && (version.local || version.remote) && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
-                      v{version.local || version.remote}
-                    </span>
-                    {version.is_update_available && (
-                      <a
-                        href="https://github.com/fscorrupt/Posterizarr/releases/latest"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center"
-                      >
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
-                          v{version.remote} available
-                        </span>
-                      </a>
+                <div className="space-y-3">
+                  {/* Script Status */}
+                  <div className="flex items-center gap-2">
+                    {status.script_exists ? (
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                     )}
+                    <span
+                      className={`text-lg font-bold ${
+                        status.script_exists ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {t("dashboard.scriptFile")}:{" "}
+                      {status.script_exists
+                        ? t("dashboard.found")
+                        : t("dashboard.missing")}
+                    </span>
                   </div>
-                )}
-              </div>
-              <div className="p-3 rounded-lg bg-theme-primary/10">
-                {status.script_exists ? (
-                  <CheckCircle className="w-12 h-12 text-green-400" />
-                ) : (
-                  <AlertCircle className="w-12 h-12 text-red-400" />
-                )}
-              </div>
-            </div>
-          </div>
+                  {status.script_exists && (version.local || version.remote) && (
+                    <div className="flex items-center gap-2 flex-wrap ml-7">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                        v{version.local || version.remote}
+                      </span>
+                      {version.is_update_available && (
+                        <a
+                          href="https://github.com/fscorrupt/Posterizarr/releases/latest"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center"
+                        >
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
+                            v{version.remote} available
+                          </span>
+                        </a>
+                      )}
+                    </div>
+                  )}
 
-          {/* Config File Card */}
-          <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-theme-muted text-sm mb-1 font-medium">
-                  {t("dashboard.configFile")}
-                </p>
-                <p
-                  className={`text-2xl font-bold mb-2 ${
-                    status.config_exists ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {status.config_exists
-                    ? t("dashboard.found")
-                    : t("dashboard.missing")}
-                </p>
-                {status.config_exists && (
-                  <Link
-                    to="/config"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg text-sm font-semibold transition-all hover:scale-105 hover:shadow-lg shadow-md"
-                  >
-                    <Settings className="w-4 h-4" />
-                    {t("dashboard.configureNow")}
-                  </Link>
-                )}
+                  {/* Config Status */}
+                  <div className="flex items-center gap-2">
+                    {status.config_exists ? (
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                    )}
+                    <span
+                      className={`text-lg font-bold ${
+                        status.config_exists ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {t("dashboard.configFile")}:{" "}
+                      {status.config_exists
+                        ? t("dashboard.found")
+                        : t("dashboard.missing")}
+                    </span>
+                  </div>
+                  {status.config_exists && (
+                    <div className="ml-7">
+                      <Link
+                        to="/config"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg text-sm font-semibold transition-all hover:scale-105 hover:shadow-lg shadow-md"
+                      >
+                        <Settings className="w-4 h-4" />
+                        {t("dashboard.configureNow")}
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="p-3 rounded-lg bg-theme-primary/10">
-                {status.config_exists ? (
+                {status.script_exists && status.config_exists ? (
                   <CheckCircle className="w-12 h-12 text-green-400" />
                 ) : (
                   <AlertCircle className="w-12 h-12 text-red-400" />
