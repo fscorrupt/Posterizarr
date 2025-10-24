@@ -235,6 +235,19 @@ function ManualAssets() {
     }
   };
 
+  // Get asset aspect ratio based on type
+  const getAssetAspectRatio = (type) => {
+    switch (type) {
+      case "background":
+      case "titlecard":
+        return "aspect-[16/9]"; // Landscape for backgrounds and title cards
+      case "poster":
+      case "season":
+      default:
+        return "aspect-[2/3]"; // Portrait for posters and seasons
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -481,7 +494,9 @@ function ManualAssets() {
 
                                     {/* Image */}
                                     <div
-                                      className="aspect-[2/3] bg-theme-darker relative cursor-pointer"
+                                      className={`${getAssetAspectRatio(
+                                        asset.type
+                                      )} bg-theme-darker relative cursor-pointer`}
                                       onClick={() => {
                                         if (bulkDeleteMode) {
                                           toggleAssetSelection(asset.path);
