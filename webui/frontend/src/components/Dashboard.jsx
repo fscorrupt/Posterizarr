@@ -942,25 +942,26 @@ function Dashboard() {
                         : t("dashboard.missing")}
                     </span>
                   </div>
-                  {status.script_exists && (version.local || version.remote) && (
-                    <div className="flex items-center gap-2 flex-wrap ml-7">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
-                        v{version.local || version.remote}
-                      </span>
-                      {version.is_update_available && (
-                        <a
-                          href="https://github.com/fscorrupt/Posterizarr/releases/latest"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center"
-                        >
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
-                            v{version.remote} available
-                          </span>
-                        </a>
-                      )}
-                    </div>
-                  )}
+                  {status.script_exists &&
+                    (version.local || version.remote) && (
+                      <div className="flex items-center gap-2 flex-wrap ml-7">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                          v{version.local || version.remote}
+                        </span>
+                        {version.is_update_available && (
+                          <a
+                            href="https://github.com/fscorrupt/Posterizarr/releases/latest"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center"
+                          >
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
+                              v{version.remote} available
+                            </span>
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                   {/* Config Status */}
                   <div className="flex items-center gap-2">
