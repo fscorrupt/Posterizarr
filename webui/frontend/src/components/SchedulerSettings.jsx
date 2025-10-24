@@ -18,6 +18,7 @@ import {
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
+import { formatDateTimeInTimezone } from "../utils/timeUtils";
 
 const API_URL = "/api";
 
@@ -530,9 +531,11 @@ const SchedulerSettings = () => {
   };
 
   const formatDateTime = (isoString) => {
-    if (!isoString) return t("schedulerSettings.never");
-    const date = new Date(isoString);
-    return date.toISOString().slice(0, 19).replace("T", " ");
+    return formatDateTimeInTimezone(
+      isoString,
+      timezone,
+      t("schedulerSettings.never")
+    );
   };
 
   if (loading) {
