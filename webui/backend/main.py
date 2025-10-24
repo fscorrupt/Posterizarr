@@ -9565,13 +9565,18 @@ async def update_asset_db_entry_as_manual(
                 title_text = final_folder_name
 
         # Determine asset type from filename
-        asset_type = "Poster"
+        # Match database Type column values: "Show", "Movie", "Show Background", "Movie Background", "Season", "Episode"
+        asset_type = "Poster"  # Default, will be refined below
+
         if "background" in filename.lower():
+            # Could be "Show Background" or "Movie Background"
             asset_type = "Background"
         elif re.match(r"^Season\d+\.jpg$", filename, re.IGNORECASE):
             asset_type = "Season"
         elif re.match(r"^S\d+E\d+\.jpg$", filename, re.IGNORECASE):
-            asset_type = "TitleCard"
+            asset_type = "Episode"
+        # For poster.jpg files, asset_type remains "Poster"
+        # We'll match both "Show" and "Movie" types in the query
 
         # Delete any existing database entries for this specific asset
         # This prevents duplicates - the CSV import will create the new entry after the script finishes
@@ -9589,16 +9594,22 @@ async def update_asset_db_entry_as_manual(
         if season_match:
             # For seasons, find entries with matching season number in title
             season_num = season_match.group(1)
+            # Also try without leading zero
+            season_num_int = str(int(season_num))
+            logger.info(
+                f"Searching for Season: folder='{final_folder_name}', season_num='{season_num}', season_num_int='{season_num_int}'"
+            )
             cursor.execute(
-                """SELECT id, Title FROM imagechoices 
+                """SELECT id, Title, Type FROM imagechoices 
                    WHERE Rootfolder = ? AND Type = ? 
-                   AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                   AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
                 (
                     final_folder_name,
                     asset_type,
                     f"%Season{season_num}%",
                     f"%Season {season_num}%",
-                    f"%Season0{season_num}%",
+                    f"%Season {season_num_int}%",
+                    f"%Season{season_num_int}%",
                 ),
             )
         elif episode_match:
@@ -9617,11 +9628,24 @@ async def update_asset_db_entry_as_manual(
                 ),
             )
         else:
-            # For poster/background, match on Rootfolder + Type only
-            cursor.execute(
-                "SELECT id, Title FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
-                (final_folder_name, asset_type),
-            )
+            # For poster/background, match on Rootfolder + Type
+            # For posters, match both "Show" and "Movie" types
+            # For backgrounds, match both "Show Background" and "Movie Background" types
+            if asset_type == "Poster":
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Show', 'Movie')",
+                    (final_folder_name,),
+                )
+            elif asset_type == "Background":
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Show Background', 'Movie Background')",
+                    (final_folder_name,),
+                )
+            else:
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                    (final_folder_name, asset_type),
+                )
 
         existing_entries = cursor.fetchall()
 
@@ -9629,9 +9653,11 @@ async def update_asset_db_entry_as_manual(
             for entry in existing_entries:
                 record_id = entry["id"]
                 old_title = entry["Title"]
+                # sqlite3.Row objects use dictionary-style access, not .get()
+                entry_type = entry["Type"] if "Type" in entry.keys() else asset_type
                 db.delete_choice(record_id)
                 logger.info(
-                    f"Deleted DB entry #{record_id} for manual replacement: {old_title} ({asset_type})"
+                    f"Deleted DB entry #{record_id} for manual replacement: {old_title} ({entry_type})"
                 )
             logger.info(
                 f"New entry will be created by CSV import after script completes"
