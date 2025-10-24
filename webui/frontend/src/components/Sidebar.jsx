@@ -143,8 +143,18 @@ const Sidebar = () => {
   // Define all nav items with unique IDs
   const defaultNavItems = [
     { id: "dashboard", path: "/", label: t("nav.dashboard"), icon: Activity },
-    { id: "runModes", path: "/run-modes", label: t("nav.runModes"), icon: Play },
-    { id: "scheduler", path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
+    {
+      id: "runModes",
+      path: "/run-modes",
+      label: t("nav.runModes"),
+      icon: Play,
+    },
+    {
+      id: "scheduler",
+      path: "/scheduler",
+      label: t("nav.scheduler"),
+      icon: Clock,
+    },
     {
       id: "runtimeHistory",
       path: "/runtime-history",
@@ -237,8 +247,18 @@ const Sidebar = () => {
       ],
     },
     { id: "logs", path: "/logs", label: t("nav.logs"), icon: FileText },
-    { id: "howItWorks", path: "/how-it-works", label: t("nav.howItWorks"), icon: Lightbulb },
-    { id: "autoTriggers", path: "/auto-triggers", label: t("nav.autoTriggers"), icon: Zap },
+    {
+      id: "howItWorks",
+      path: "/how-it-works",
+      label: t("nav.howItWorks"),
+      icon: Lightbulb,
+    },
+    {
+      id: "autoTriggers",
+      path: "/auto-triggers",
+      label: t("nav.autoTriggers"),
+      icon: Zap,
+    },
     { id: "about", path: "/about", label: t("nav.about"), icon: Info },
   ];
 
