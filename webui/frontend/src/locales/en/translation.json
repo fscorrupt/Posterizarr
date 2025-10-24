@@ -476,7 +476,7 @@
     "schedulesConfigured": "schedule(s)",
     "executing": "Executing",
     "nextRun": "Next",
-    "configureNow": "Configure Now",
+    "configureNow": "Configure",
     "noSchedulesRegistered": "No schedules registered",
     "cores": "Cores",
     "free": "Free"

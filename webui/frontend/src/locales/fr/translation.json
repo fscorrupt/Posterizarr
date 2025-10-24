@@ -424,7 +424,7 @@
     "disabled": "Désactivé",
     "executing": "En cours d'exécution",
     "nextRun": "Prochaine exécution",
-    "configureNow": "Configurer maintenant",
+    "configureNow": "Configurer",
     "noSchedulesRegistered": "Aucun horaire enregistré",
     "scriptFile": "Fichier script",
     "configFile": "Fichier de config",
