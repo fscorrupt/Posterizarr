@@ -1310,8 +1310,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                         Process with overlays after replace
                       </h4>
                       <p className="text-xs text-theme-muted mt-0.5 leading-relaxed">
-                        Applies borders, overlays & text to the replaced asset
-                        based on overlay settings.
+                        {processWithOverlays
+                          ? "Applies borders, overlays & text to the replaced asset based on overlay settings. Asset will be saved to assets/ folder."
+                          : "Direct replacement without overlay processing. Asset will be saved to manualassets/ folder for manual use."}
                       </p>
                     </div>
                     <button

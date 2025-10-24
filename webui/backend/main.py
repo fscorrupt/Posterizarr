@@ -44,6 +44,7 @@ if IS_DOCKER:
     BASE_DIR = Path("/config")
     APP_DIR = Path("/app")
     ASSETS_DIR = Path("/assets")
+    MANUAL_ASSETS_DIR = Path("/manualassets")
     IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
 else:
@@ -52,9 +53,11 @@ else:
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
     ASSETS_DIR = PROJECT_ROOT / "assets"
+    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
     ASSETS_DIR.mkdir(exist_ok=True)
+    MANUAL_ASSETS_DIR.mkdir(exist_ok=True)
 
 # Ensure directories exist locally
 SUBDIRS_TO_CREATE = [
@@ -8826,17 +8829,28 @@ async def upload_asset_replacement(
             # Normalize the path to handle different path separators (Windows/Linux/Docker)
             normalized_path = Path(asset_path)
 
+            # Determine target directory based on process_with_overlays flag
+            # If NOT processing with overlays, save to manualassets folder
+            if not process_with_overlays:
+                target_base_dir = MANUAL_ASSETS_DIR
+                logger.info(
+                    f"Saving to manual assets directory (no overlay processing)"
+                )
+            else:
+                target_base_dir = ASSETS_DIR
+                logger.info(f"Saving to assets directory (with overlay processing)")
+
             # Handle absolute paths (for assets outside app root)
             if normalized_path.is_absolute():
                 full_asset_path = normalized_path.resolve()
                 logger.info(f"Using absolute asset path: {full_asset_path}")
             else:
-                full_asset_path = (ASSETS_DIR / normalized_path).resolve()
+                full_asset_path = (target_base_dir / normalized_path).resolve()
                 logger.info(f"Using relative asset path: {full_asset_path}")
 
-            # Security: For relative paths, ensure they don't escape ASSETS_DIR
+            # Security: For relative paths, ensure they don't escape target directory
             if not normalized_path.is_absolute():
-                if not str(full_asset_path).startswith(str(ASSETS_DIR.resolve())):
+                if not str(full_asset_path).startswith(str(target_base_dir.resolve())):
                     logger.error(f"Path traversal attempt detected: {asset_path}")
                     raise HTTPException(
                         status_code=400,
@@ -8850,7 +8864,7 @@ async def upload_asset_replacement(
                 logger.info(f"Creating new asset: {full_asset_path}")
 
             logger.info(f"Full asset path: {full_asset_path}")
-            logger.info(f"Is Docker: {IS_DOCKER}, Assets Dir: {ASSETS_DIR}")
+            logger.info(f"Is Docker: {IS_DOCKER}, Target Dir: {target_base_dir}")
 
         except (ValueError, OSError) as e:
             logger.error(f"Invalid asset path '{asset_path}': {e}")
@@ -8968,10 +8982,17 @@ async def upload_asset_replacement(
             logger.warning(f"Could not validate image dimensions: {e}")
             # Don't fail upload if dimension check itself fails, just log it
 
-        # Track if this is a replacement or new asset
+        # Check if asset exists in alternate location (for moving between folders)
+        alternate_base_dir = (
+            ASSETS_DIR if not process_with_overlays else MANUAL_ASSETS_DIR
+        )
+        alternate_asset_path = alternate_base_dir / normalized_path
+        asset_exists_in_alternate = alternate_asset_path.exists()
+
+        # Track if this is a replacement or new asset in target location
         is_replacement = full_asset_path.exists()
 
-        # Create backup of original if replacing
+        # Create backup of original if replacing in target location
         if is_replacement:
             try:
                 backup_path = full_asset_path.with_suffix(
@@ -8984,6 +9005,25 @@ async def upload_asset_replacement(
                     logger.info(f"Created backup: {backup_path}")
             except Exception as e:
                 logger.warning(f"Failed to create backup (continuing anyway): {e}")
+
+        # Delete old asset from alternate location if moving between folders
+        if asset_exists_in_alternate and not is_replacement:
+            try:
+                logger.info(
+                    f"Deleting old asset from alternate location: {alternate_asset_path}"
+                )
+                alternate_asset_path.unlink()
+                # Also delete backup if exists
+                alternate_backup = alternate_asset_path.with_suffix(
+                    alternate_asset_path.suffix + ".backup"
+                )
+                if alternate_backup.exists():
+                    alternate_backup.unlink()
+                    logger.info(f"Deleted old backup: {alternate_backup}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not delete old asset from alternate location: {e}"
+                )
 
         # Save new image
         try:
@@ -9006,7 +9046,9 @@ async def upload_asset_replacement(
                 )
 
             action = "Replaced" if is_replacement else "Created"
-            logger.info(f"{action} asset: {asset_path} (size: {len(contents)} bytes)")
+            logger.info(
+                f"{action} asset: {asset_path} (size: {len(contents)} bytes, target: {target_base_dir.name})"
+            )
         except PermissionError as e:
             logger.error(f"Permission denied writing to {full_asset_path}: {e}")
             raise HTTPException(
@@ -9436,9 +9478,32 @@ async def replace_asset_from_url(
             )
 
         # Validate asset path exists
-        full_asset_path = ASSETS_DIR / asset_path
-        if not full_asset_path.exists():
-            raise HTTPException(status_code=404, detail="Asset not found")
+        # Determine target directory based on process_with_overlays flag
+        if not process_with_overlays:
+            target_base_dir = MANUAL_ASSETS_DIR
+            logger.info(f"Saving to manual assets directory (no overlay processing)")
+        else:
+            target_base_dir = ASSETS_DIR
+            logger.info(f"Saving to assets directory (with overlay processing)")
+
+        full_asset_path = target_base_dir / asset_path
+
+        # Check if asset exists in either location (for replacement)
+        # First check target location, then check alternate location
+        asset_exists_in_target = full_asset_path.exists()
+
+        # Also check the alternate location (in case user is moving between folders)
+        alternate_base_dir = (
+            ASSETS_DIR if not process_with_overlays else MANUAL_ASSETS_DIR
+        )
+        alternate_asset_path = alternate_base_dir / asset_path
+        asset_exists_in_alternate = alternate_asset_path.exists()
+
+        if not asset_exists_in_target and not asset_exists_in_alternate:
+            logger.warning(
+                f"Asset not found in either location, will create new: {asset_path}"
+            )
+            # Don't fail - just create new asset
 
         # Download image from URL
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -9450,20 +9515,45 @@ async def replace_asset_from_url(
 
             contents = response.content
 
-        # Create backup of original
-        backup_path = full_asset_path.with_suffix(full_asset_path.suffix + ".backup")
-        if full_asset_path.exists() and not backup_path.exists():
-            import shutil
+        # Ensure target directory exists
+        full_asset_path.parent.mkdir(parents=True, exist_ok=True)
 
-            shutil.copy2(full_asset_path, backup_path)
-            logger.info(f"Created backup: {backup_path}")
+        # Create backup of original if it exists in target location
+        if asset_exists_in_target:
+            backup_path = full_asset_path.with_suffix(
+                full_asset_path.suffix + ".backup"
+            )
+            if not backup_path.exists():
+                import shutil
+
+                shutil.copy2(full_asset_path, backup_path)
+                logger.info(f"Created backup: {backup_path}")
+
+        # Delete old asset from alternate location if moving between folders
+        if asset_exists_in_alternate and not asset_exists_in_target:
+            try:
+                logger.info(
+                    f"Deleting old asset from alternate location: {alternate_asset_path}"
+                )
+                alternate_asset_path.unlink()
+                # Also delete backup if exists
+                alternate_backup = alternate_asset_path.with_suffix(
+                    alternate_asset_path.suffix + ".backup"
+                )
+                if alternate_backup.exists():
+                    alternate_backup.unlink()
+                    logger.info(f"Deleted old backup: {alternate_backup}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not delete old asset from alternate location: {e}"
+                )
 
         # Save new image
         with open(full_asset_path, "wb") as f:
             f.write(contents)
 
         logger.info(
-            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes)"
+            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes, target: {target_base_dir.name})"
         )
 
         # Add/Update database entry for this replaced asset (mark as Manual)
