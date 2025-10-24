@@ -847,6 +847,8 @@
     "confirmClearAllMessage": "Tem certeza de que deseja limpar todos os agendamentos? Isso não pode ser desfeito.",
     "timePlaceholder": "HH:MM (ex: 14:30)",
     "descriptionPlaceholder": "Descrição (opcional)",
+    "hour": "Hora",
+    "minute": "Minuto",
     "add": "Adicionar",
     "removeSchedule": "Remover agendamento",
     "noSchedulesConfigured": "Nenhum agendamento configurado",

@@ -849,6 +849,8 @@
     "confirmClearAllMessage": "Are you sure you want to clear all schedules? This cannot be undone.",
     "timePlaceholder": "HH:MM (e.g., 14:30)",
     "descriptionPlaceholder": "Description (optional)",
+    "hour": "Hour",
+    "minute": "Minute",
     "add": "Add",
     "removeSchedule": "Remove schedule",
     "noSchedulesConfigured": "No schedules configured",

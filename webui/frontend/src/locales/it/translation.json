@@ -847,6 +847,8 @@
     "confirmClearAllMessage": "Sei sicuro di voler cancellare tutte le pianificazioni? Questa azione non può essere annullata.",
     "timePlaceholder": "HH:MM (es. 14:30)",
     "descriptionPlaceholder": "Descrizione (opzionale)",
+    "hour": "Ora",
+    "minute": "Minuto",
     "add": "Aggiungi",
     "removeSchedule": "Rimuovi pianificazione",
     "noSchedulesConfigured": "Nessuna pianificazione configurata",

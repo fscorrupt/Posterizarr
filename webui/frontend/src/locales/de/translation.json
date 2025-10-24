@@ -848,6 +848,8 @@
     "confirmClearAllMessage": "Sind Sie sicher, dass Sie alle Zeitpläne löschen möchten? Dies kann nicht rückgängig gemacht werden.",
     "timePlaceholder": "HH:MM (z.B. 14:30)",
     "descriptionPlaceholder": "Beschreibung (optional)",
+    "hour": "Stunde",
+    "minute": "Minute",
     "add": "Hinzufügen",
     "removeSchedule": "Zeitplan entfernen",
     "noSchedulesConfigured": "Keine Zeitpläne konfiguriert",

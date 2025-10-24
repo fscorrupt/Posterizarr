@@ -847,6 +847,8 @@
     "confirmClearAllMessage": "Êtes-vous sûr de vouloir effacer toutes les planifications ? Cette action est irréversible.",
     "timePlaceholder": "HH:MM (ex., 14:30)",
     "descriptionPlaceholder": "Description (facultatif)",
+    "hour": "Heure",
+    "minute": "Minute",
     "add": "Ajouter",
     "removeSchedule": "Supprimer la planification",
     "noSchedulesConfigured": "Aucune planification configurée",
