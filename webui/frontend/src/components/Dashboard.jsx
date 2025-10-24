@@ -76,6 +76,7 @@ function Dashboard() {
       active_log: null,
       already_running_detected: false,
       running_file_exists: false,
+      start_time: null,
     }
   );
   const [loading, setLoading] = useState(false);
@@ -806,16 +807,27 @@ function Dashboard() {
                 </p>
                 {status.running && (
                   <div className="space-y-1">
+                    {status.current_mode && (
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-1">
+                        {t("dashboard.mode")}: {status.current_mode}
+                      </div>
+                    )}
                     {status.pid && (
                       <p className="text-sm text-theme-muted">
                         {t("dashboard.pid")}:{" "}
                         <span className="font-mono">{status.pid}</span>
                       </p>
                     )}
-                    {status.current_mode && (
-                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                        {t("dashboard.mode")}: {status.current_mode}
-                      </div>
+                    {status.start_time && (
+                      <p className="text-xs text-theme-muted">
+                        Started:{" "}
+                        <span className="font-mono">
+                          {new Date(status.start_time)
+                            .toISOString()
+                            .slice(0, 19)
+                            .replace("T", " ")}
+                        </span>
+                      </p>
                     )}
                   </div>
                 )}

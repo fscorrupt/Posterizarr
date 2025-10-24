@@ -445,6 +445,7 @@ logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
+current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
@@ -4112,7 +4113,7 @@ async def get_upload_diagnostics():
 @app.get("/api/status")
 async def get_status():
     """Get script status with last log lines from appropriate log file"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     manual_is_running = False
     if current_process is not None:
@@ -4129,6 +4130,7 @@ async def get_status():
 
             current_process = None
             current_mode = None
+            current_start_time = None
             manual_is_running = False
 
             # Auto-trigger cache refresh after script finishes
@@ -4300,6 +4302,7 @@ async def get_status():
         "active_log": active_log,
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
+        "start_time": current_start_time if is_running else None,
     }
 
 
@@ -5250,7 +5253,7 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
 @app.post("/api/run-manual")
 async def run_manual_mode(request: ManualModeRequest):
     """Run manual mode with custom parameters"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Debug logging
     logger.info(f"Manual mode request received: {request.model_dump()}")
@@ -5430,6 +5433,7 @@ async def run_manual_mode(request: ManualModeRequest):
             text=True,
         )
         current_mode = "manual"  # Set current mode to manual
+        current_start_time = datetime.now().isoformat()
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
@@ -5467,7 +5471,7 @@ async def run_manual_mode_upload(
     episodeNumber: str = Form(""),
 ):
     """Run manual mode with uploaded file"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     logger.info(f"Manual mode upload request received")
     logger.info(f"  File: {file.filename if file else 'None'}")
@@ -5779,6 +5783,7 @@ async def run_manual_mode_upload(
             text=True,
         )
         current_mode = "manual"
+        current_start_time = datetime.now().isoformat()
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
@@ -5838,7 +5843,7 @@ async def run_manual_mode_upload(
 @app.post("/api/run/{mode}")
 async def run_script(mode: str):
     """Run Posterizarr script in different modes"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -5883,6 +5888,7 @@ async def run_script(mode: str):
             text=True,
         )
         current_mode = mode  # Set current mode
+        current_start_time = datetime.now().isoformat()
         logger.info(
             f"Started Posterizarr in {mode} mode with PID {current_process.pid}"
         )
@@ -5903,7 +5909,7 @@ async def run_script(mode: str):
 @app.post("/api/reset-posters")
 async def reset_posters(request: ResetPostersRequest):
     """Reset all posters in a Plex library"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if script is running
     if current_process and current_process.poll() is None:
@@ -5954,6 +5960,7 @@ async def reset_posters(request: ResetPostersRequest):
             text=True,
         )
         current_mode = "reset"  # Set current mode to reset
+        current_start_time = datetime.now().isoformat()
 
         logger.info(
             f"Started poster reset for library '{request.library}' with PID {current_process.pid}"
@@ -5976,7 +5983,7 @@ async def reset_posters(request: ResetPostersRequest):
 @app.post("/api/stop")
 async def stop_script():
     """Stop running script gracefully - works for both manual and scheduled runs"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if manual process is running
     manual_running = current_process and current_process.poll() is None
@@ -6000,11 +6007,13 @@ async def stop_script():
                 current_process.wait(timeout=5)
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 stopped_processes.append("manual")
             except subprocess.TimeoutExpired:
                 current_process.kill()
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 stopped_processes.append("manual (force killed after timeout)")
 
         # Stop scheduler process if running
@@ -6037,7 +6046,7 @@ async def stop_script():
 @app.post("/api/force-kill")
 async def force_kill_script():
     """Force kill running script immediately - works for both manual and scheduled runs"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if manual process is running
     manual_running = current_process and current_process.poll() is None
@@ -6061,12 +6070,14 @@ async def force_kill_script():
                 current_process.wait(timeout=2)
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 killed_processes.append("manual")
                 logger.warning("Manual script was force killed")
             except Exception as e:
                 logger.error(f"Error force killing manual process: {e}")
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 killed_processes.append("manual (cleared)")
 
         # Kill scheduler process if running
@@ -6095,6 +6106,7 @@ async def force_kill_script():
         # Try to set to None anyway
         current_process = None
         current_mode = None
+        current_start_time = None
         if SCHEDULER_AVAILABLE and scheduler:
             scheduler.current_process = None
             scheduler.is_running = False
@@ -9088,7 +9100,7 @@ async def upload_asset_replacement(
                     )
 
                     # Start the Manual Run process
-                    global current_process, current_mode
+                    global current_process, current_mode, current_start_time
                     current_process = subprocess.Popen(
                         command,
                         cwd=str(BASE_DIR),
@@ -9097,6 +9109,7 @@ async def upload_asset_replacement(
                         text=True,
                     )
                     current_mode = "manual"
+                    current_start_time = datetime.now().isoformat()
 
                     logger.info(
                         f"Manual Run started (PID: {current_process.pid}) for overlay processing"
@@ -9621,7 +9634,7 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
     Internal function to trigger manual run without HTTP overhead
     This is called from replace_asset_from_url
     """
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -9723,6 +9736,7 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
         text=True,
     )
     current_mode = "manual"
+    current_start_time = datetime.now().isoformat()
 
     logger.info(f"Manual Run process started (PID: {current_process.pid})")
 

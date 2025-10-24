@@ -492,10 +492,7 @@ const SchedulerSettings = () => {
   const formatDateTime = (isoString) => {
     if (!isoString) return t("schedulerSettings.never");
     const date = new Date(isoString);
-    return date.toLocaleString("de-DE", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
+    return date.toISOString().slice(0, 19).replace("T", " ");
   };
 
   if (loading) {

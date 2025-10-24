@@ -56,17 +56,8 @@ export const formatDateToLocale = (date, options = {}) => {
   const dateObj = date instanceof Date ? date : parseDateTime(date);
   if (!dateObj || isNaN(dateObj.getTime())) return "N/A";
 
-  const defaultOptions = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
-
-  return dateObj.toLocaleString(undefined, { ...defaultOptions, ...options });
+  // Format as yyyy-mm-dd HH:mm:ss
+  return dateObj.toISOString().slice(0, 19).replace("T", " ");
 };
 
 /**
