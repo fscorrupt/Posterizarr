@@ -18,6 +18,7 @@ import {
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
+import { formatDateTimeInTimezone } from "../utils/timeUtils";
 
 const API_URL = "/api";
 
@@ -530,21 +531,11 @@ const SchedulerSettings = () => {
   };
 
   const formatDateTime = (isoString) => {
-    if (!isoString) return t("schedulerSettings.never");
-    const date = new Date(isoString);
-    // Use the configured timezone to display the time
-    return date
-      .toLocaleString("sv-SE", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-        timeZone: timezone, // Use the configured timezone
-      })
-      .replace(",", "");
+    return formatDateTimeInTimezone(
+      isoString,
+      timezone,
+      t("schedulerSettings.never")
+    );
   };
 
   if (loading) {

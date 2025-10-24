@@ -33,6 +33,7 @@ import RecentAssets from "./RecentAssets";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
+import { formatDateTimeInTimezone } from "../utils/timeUtils";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -822,17 +823,11 @@ function Dashboard() {
                       <p className="text-xs text-theme-muted">
                         Started:{" "}
                         <span className="font-mono">
-                          {new Date(status.start_time)
-                            .toLocaleString("sv-SE", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                              hour12: false,
-                            })
-                            .replace(",", "")}
+                          {formatDateTimeInTimezone(
+                            status.start_time,
+                            schedulerStatus?.timezone || "Europe/Berlin",
+                            "N/A"
+                          )}
                         </span>
                       </p>
                     )}
@@ -891,19 +886,11 @@ function Dashboard() {
                         {schedulerStatus.next_run && (
                           <p className="text-xs text-blue-400">
                             {t("dashboard.nextRun")}:{" "}
-                            {new Date(schedulerStatus.next_run)
-                              .toLocaleString("sv-SE", {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                                hour12: false,
-                                timeZone:
-                                  schedulerStatus.timezone || "Europe/Berlin",
-                              })
-                              .replace(",", "")}
+                            {formatDateTimeInTimezone(
+                              schedulerStatus.next_run,
+                              schedulerStatus.timezone || "Europe/Berlin",
+                              "N/A"
+                            )}
                           </p>
                         )}
                       </>

@@ -44,20 +44,75 @@ export const parseDateTime = (dateStr) => {
 };
 
 /**
+ * Format a date/time in a specific timezone
+ * Uses sv-SE locale for consistent YYYY-MM-DD HH:MM:SS format
+ *
+ * @param {string|Date} isoString - ISO date string or Date object
+ * @param {string} timezone - IANA timezone identifier (e.g., "Europe/Berlin")
+ * @param {string} fallback - Fallback text if date is invalid (default: "Never")
+ * @returns {string} Formatted date string or fallback
+ */
+export const formatDateTimeInTimezone = (
+  isoString,
+  timezone = "Europe/Berlin",
+  fallback = "Never"
+) => {
+  if (!isoString) return fallback;
+
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return fallback;
+
+    return date
+      .toLocaleString("sv-SE", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: timezone,
+      })
+      .replace(",", "");
+  } catch (error) {
+    console.error("Error formatting date in timezone:", error);
+    return fallback;
+  }
+};
+
+/**
  * Format a date to the browser's locale
  *
  * @param {Date|string} date - Date object or date string
  * @param {Object} options - Intl.DateTimeFormat options
+ * @param {string} timezone - Optional timezone (defaults to browser timezone)
  * @returns {string} Formatted date string
  */
-export const formatDateToLocale = (date, options = {}) => {
+export const formatDateToLocale = (date, options = {}, timezone = null) => {
   if (!date) return "N/A";
 
   const dateObj = date instanceof Date ? date : parseDateTime(date);
   if (!dateObj || isNaN(dateObj.getTime())) return "N/A";
 
-  // Format as yyyy-mm-dd HH:mm:ss
-  return dateObj.toISOString().slice(0, 19).replace("T", " ");
+  // If timezone is provided, use formatDateTimeInTimezone for consistency
+  if (timezone) {
+    return formatDateTimeInTimezone(dateObj, timezone, "N/A");
+  }
+
+  // Otherwise, format as yyyy-mm-dd HH:mm:ss in browser timezone
+  return dateObj
+    .toLocaleString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      ...options,
+    })
+    .replace(",", "");
 };
 
 /**
