@@ -1163,54 +1163,6 @@ On [docker](#docker) this way:
 >   - Example: `06:00` or `06:00,14:00`.....
 > - AssetPath in config needs to be `/assets` not the path you entered.
 
-### How to create the Posterizarr.xlsm
-
-<details close>
-<summary>📝Posterizarr Excel Creation using Module1.bas [click to unfold]</summary>
-<br>
-
-1. **Open Excel**: First, open Microsoft Excel on your computer. You can do this by clicking on the Excel icon in your applications menu or by searching for "Excel" in your computer's search bar and selecting it from the results.
-
-2. **Access the Visual Basic for Applications (VBA) Editor**:
-
-   - While in Excel, press `Alt + F11` on your keyboard. This keyboard shortcut will open the VBA editor window.
-
-3. **Import Module**:
-
-   - In the VBA editor window, you'll see a menu bar at the top.
-   - Right-click on any existing module or in the project explorer (usually located on the left-hand side).
-   - From the dropdown menu, select `Import File...`.
-   - A file explorer window will open. Navigate to the location where you saved the `Module1.bas` file.
-   - Select the `Module1.bas` file and click `Open`.
-
-4. **Run the Macro**:
-   - Now, go back to the Excel window.
-   - Look for the `View` tab at the top of the Excel window.
-   - Click on the `View` tab.
-   - Within the `Macros` group, you'll find a button labeled `Macros`. Click on it.
-   - In the dropdown menu, select `View Macros`.
-   - A Macros dialog box will appear, listing all available macros.
-   - In the list, you should see the `PromptUser` macro.
-   - Select `PromptUser` from the list.
-   - Finally, click the `Run` button.
-
-Following these steps will allow you to import the `Module1.bas` file containing the VBA code into Excel and then run the `PromptUser` macro.
-
-</details>
-
-### How to use the Posterizarr.xlsm
-
-<details close>
-<summary>🎥Posterizarr Excel [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="excel" height="100%" src="/images/posterizarr-xlsm.gif">
-  </a>
-</p>
-
-</details>
-
 ### Jellyfin
 
 In order to view the `16:9` episode posters without getting cropped to `3:2`, you need to set a css.
