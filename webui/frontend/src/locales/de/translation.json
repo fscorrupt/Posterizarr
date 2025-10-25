@@ -1355,6 +1355,7 @@
     "missingAsset": "Fehlendes Asset",
     "missingAssetAtFavProvider": "Fehlendes Asset bei Lieblings-Anbieter",
     "notPrimaryLanguage": "Nicht-Primärsprache",
+    "unknownLanguage": "Unbekannte Sprache",
     "notPrimaryProvider": "Nicht-Primäranbieter",
     "truncatedText": "Gekürzter Text",
     "manual": "Manuell",

@@ -1302,6 +1302,7 @@
     "missingAsset": "Ressource manquante",
     "missingAssetAtFavProvider": "Ressource manquante chez le fournisseur favori",
     "notPrimaryLanguage": "Langue non principale",
+    "unknownLanguage": "Langue inconnue",
     "notPrimaryProvider": "Fournisseur non principal",
     "truncatedText": "Texte tronqué",
     "manual": "Manuel",
