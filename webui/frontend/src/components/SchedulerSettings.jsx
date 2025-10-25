@@ -326,9 +326,12 @@ const SchedulerSettings = () => {
     setIsUpdating(true);
 
     try {
-      const response = await fetch(`${API_URL}/scheduler/schedule/${time}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/scheduler/schedule/${encodeURIComponent(time)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 

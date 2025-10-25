@@ -209,9 +209,12 @@ function BackgroundsGallery() {
 
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/backgrounds/${imagePath}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/backgrounds/${encodeURIComponent(imagePath)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();

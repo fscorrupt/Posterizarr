@@ -179,9 +179,12 @@ function TitleCardGallery() {
 
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/titlecards/${imagePath}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/titlecards/${encodeURIComponent(imagePath)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();

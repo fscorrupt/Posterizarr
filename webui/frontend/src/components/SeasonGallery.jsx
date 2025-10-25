@@ -178,9 +178,12 @@ function SeasonGallery() {
 
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/seasons/${imagePath}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/seasons/${encodeURIComponent(imagePath)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();

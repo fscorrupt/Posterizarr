@@ -141,9 +141,12 @@ const OverlayAssets = () => {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(`/api/overlayfiles/${filename}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/overlayfiles/${encodeURIComponent(filename)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 

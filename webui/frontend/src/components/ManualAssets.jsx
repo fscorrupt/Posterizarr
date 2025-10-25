@@ -126,9 +126,12 @@ function ManualAssets() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/manual-assets/${assetPath}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/manual-assets/${encodeURIComponent(assetPath)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();

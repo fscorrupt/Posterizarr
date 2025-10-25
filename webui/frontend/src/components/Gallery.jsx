@@ -191,9 +191,12 @@ function Gallery() {
 
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/gallery/${imagePath}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/gallery/${encodeURIComponent(imagePath)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();
