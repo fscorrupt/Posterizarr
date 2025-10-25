@@ -1302,6 +1302,7 @@
     "missingAsset": "Ativo ausente",
     "missingAssetAtFavProvider": "Ativo ausente no provedor favorito",
     "notPrimaryLanguage": "Idioma não primário",
+    "unknownLanguage": "Idioma desconhecido",
     "notPrimaryProvider": "Provedor não primário",
     "truncatedText": "Texto truncado",
     "manual": "Manual",
