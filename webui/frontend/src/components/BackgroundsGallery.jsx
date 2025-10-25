@@ -887,7 +887,7 @@ function BackgroundsGallery() {
                     Will Update on next Run
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Use manual assets explorer to view background
+                    {t('backgroundsGallery.useFileExplorer')}
                   </p>
                 </div>
               </div>
