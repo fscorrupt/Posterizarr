@@ -121,7 +121,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 
 ## 🧰 What You Need
 
-> [!IMPORTANT] >**Requirements:**
+> [!IMPORTANT]
+> **Requirements:**
 >
 > Before you begin, make sure you have:
 
