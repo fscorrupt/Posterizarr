@@ -164,6 +164,16 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences [my personal config](MyPersonalConfig.json):
 
+    <details open>
+      <summary>WebUI</summary>
+      <br>
+
+      - `basicAuthEnabled`: When set to `true`, the UI requires a username and password for access. (Default: `false`)
+      - `basicAuthUsername`: The username for UI authentication. (Default: `admin`)
+      - `basicAuthPassword`: The password for UI authentication. (Default: `posterizarr`)
+    </details>
+
+
    <details open>
    <summary>ApiPart</summary>
    <br>
@@ -542,6 +552,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 | **Fallback Options for Title Cards**     | - Uses **background images as title cards** if title-specific artwork is unavailable.                                                                                                                                                                                                                                                                                                                                                          |
 | **Overlay Reset**                        | - Reset all posters in a library of your choice to the Plex default.                                                                                                                                                                                                                                                                                                                                                                           |
 
+## Modes
+
 ### Automatic Mode
 
 Run the script without any parameters:
@@ -559,71 +571,6 @@ On [docker](#docker) this way:
 This will generate posters for your entire Plex library based on the configured settings.
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Kometa to use as the assets folder.
-
-### Assets Tip
-
-> [!TIP]
-> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/520ce753541fe90ec43c9e12ca056f839f9f4434/docker-compose.example.yml#L17) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
->
-> Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
->
-> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
->
-> Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
->
-> If you use Kometa make sure to set this settings on each Library in Kometa Config:
-
-```yaml
-libraries:
-  4K TV Shows:
-    settings:
-      asset_directory: /assets/4K TV Shows
-      prioritize_assets: true
-    operations:
-      assets_for_all: true
-```
-
-### Manual Assets Naming
-
-> [!IMPORTANT]
-> Naming must follow these rules, including proper case sensitivity (uppercase and lowercase) in file/folder names; otherwise, the asset will not be picked up.
-
-If you have Library Folders set to `true`, it will look like this:
-| **Asset** | **Naming** |
-|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Poster** | `poster.*`|
-| **Season** | `Season01.*`<br>`Season02.*`<br>`.....`|
-| **Season Special** | `Season00.*`|
-| **TitleCard** | `S01E01.*`<br>`S01E02.*`<br>`.....`|
-| **Background** | `background.*`|
-
-```
-├───Anime Shows
-│   └───Solo Leveling (2024) [tvdb-389597]
-│           poster.jpg
-│           S01E01.jpg
-│           Season01.jpg
-│           background.jpg
-```
-
-If you have Library Folders set to `false`, it will look like this:
-| **Asset** | **Naming** |
-|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Poster** | `Solo Leveling (2024) [tvdb-389597].*`|
-| **Season** | `Solo Leveling (2024) [tvdb-389597]_Season01.*`<br>`Solo Leveling (2024) [tvdb-389597]_Season02.*`<br>`.....`|
-| **Season Special** | `Solo Leveling (2024) [tvdb-389597]_Season00.*`|
-| **TitleCard** | `Solo Leveling (2024) [tvdb-389597]_S01E01.*`<br>`Solo Leveling (2024) [tvdb-389597]_S01E02.*`<br>`.....`|
-| **Background** | `Solo Leveling (2024) [tvdb-389597]_background.*`|
-
-```
-├───Anime Shows
-│       Solo Leveling (2024) [tvdb-389597].jpg
-│       Solo Leveling (2024) [tvdb-389597]_S01E01.jpg
-│       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
-│       Solo Leveling (2024) [tvdb-389597]_background.jpg
-```
-
-## Modes
 
 ### Tautulli Mode Docker
 
@@ -787,68 +734,6 @@ To use it we need to configure a script in Sonarr/Radarr, please follow these in
    - The file will be named like: `recently_added_20250925114601966_1da214d7.posterizarr`
 9. Posterizarr monitors this directory for files ending in `.posterizarr`.
    - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
-
-### UI Installation (Manual)
-
-This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
-
-**Prerequisites**
-
-Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
-
-- ✅ **Python 3:** Required for the backend server.
-- ✅ **Node.js (with npm):** Required for the frontend interface.
-- ✅ **PowerShell Core:** Required to run the main `Posterizarr.ps1` script.
-
-**Setup Instructions**
-
-The setup process is handled by a simple script that installs all necessary dependencies.
-
-1.  Open a terminal or command prompt.
-2.  Navigate into the `webui` directory located in the project's root folder.
-    ```bash
-    cd path/to/Posterizarr/webui
-    ```
-3.  Run the appropriate setup script for your operating system:
-    - **On Windows:**
-      ```bash
-      setup.ps1
-      ```
-      or
-      ```bash
-      setup.bat
-      ```
-    - **On Linux or macOS:**
-      ```bash
-      setup.sh
-      ```
-      The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
-
-**Running the UI**
-
-After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
-
-**Terminal 2: Start the Frontend**
-
-```bash
-# Navigate to the frontend directory
-cd webui/frontend
-
-# Run the development server
-npm run build
-```
-
-**Terminal 1: Start the Backend**
-
-```bash
-# Navigate to the backend directory
-cd webui/backend
-
-# Run the Python server
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
 
 ### Testing Mode
 
@@ -1080,6 +965,131 @@ On [docker](#docker) this way:
 
 > [!TIP]
 > This is handy if you want to run the sync after a kometa run, then you have kometa ovlerayed images in jelly/emby
+
+### UI Installation (Manual)
+
+This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
+
+**Prerequisites**
+
+Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
+
+- ✅ **Python 3:** Required for the backend server.
+- ✅ **Node.js (with npm):** Required for the frontend interface.
+- ✅ **PowerShell Core:** Required to run the main `Posterizarr.ps1` script.
+
+**Setup Instructions**
+
+The setup process is handled by a simple script that installs all necessary dependencies.
+
+1.  Open a terminal or command prompt.
+2.  Navigate into the `webui` directory located in the project's root folder.
+    ```bash
+    cd path/to/Posterizarr/webui
+    ```
+3.  Run the appropriate setup script for your operating system:
+    - **On Windows:**
+      ```bash
+      setup.ps1
+      ```
+      or
+      ```bash
+      setup.bat
+      ```
+    - **On Linux or macOS:**
+      ```bash
+      setup.sh
+      ```
+      The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
+
+**Running the UI**
+
+After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
+
+**Terminal 2: Start the Frontend**
+
+```bash
+# Navigate to the frontend directory
+cd webui/frontend
+
+# Run the development server
+npm run build
+```
+
+**Terminal 1: Start the Backend**
+
+```bash
+# Navigate to the backend directory
+cd webui/backend
+
+# Run the Python server
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
+
+### Assets Tip
+
+> [!TIP]
+> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/520ce753541fe90ec43c9e12ca056f839f9f4434/docker-compose.example.yml#L17) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
+>
+> Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
+>
+> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
+>
+> Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
+>
+> If you use Kometa make sure to set this settings on each Library in Kometa Config:
+
+```yaml
+libraries:
+  4K TV Shows:
+    settings:
+      asset_directory: /assets/4K TV Shows
+      prioritize_assets: true
+    operations:
+      assets_for_all: true
+```
+
+### Manual Assets Naming
+
+> [!IMPORTANT]
+> Naming must follow these rules, including proper case sensitivity (uppercase and lowercase) in file/folder names; otherwise, the asset will not be picked up.
+
+If you have Library Folders set to `true`, it will look like this:
+| **Asset** | **Naming** |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Poster** | `poster.*`|
+| **Season** | `Season01.*`<br>`Season02.*`<br>`.....`|
+| **Season Special** | `Season00.*`|
+| **TitleCard** | `S01E01.*`<br>`S01E02.*`<br>`.....`|
+| **Background** | `background.*`|
+
+```
+├───Anime Shows
+│   └───Solo Leveling (2024) [tvdb-389597]
+│           poster.jpg
+│           S01E01.jpg
+│           Season01.jpg
+│           background.jpg
+```
+
+If you have Library Folders set to `false`, it will look like this:
+| **Asset** | **Naming** |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Poster** | `Solo Leveling (2024) [tvdb-389597].*`|
+| **Season** | `Solo Leveling (2024) [tvdb-389597]_Season01.*`<br>`Solo Leveling (2024) [tvdb-389597]_Season02.*`<br>`.....`|
+| **Season Special** | `Solo Leveling (2024) [tvdb-389597]_Season00.*`|
+| **TitleCard** | `Solo Leveling (2024) [tvdb-389597]_S01E01.*`<br>`Solo Leveling (2024) [tvdb-389597]_S01E02.*`<br>`.....`|
+| **Background** | `Solo Leveling (2024) [tvdb-389597]_background.*`|
+
+```
+├───Anime Shows
+│       Solo Leveling (2024) [tvdb-389597].jpg
+│       Solo Leveling (2024) [tvdb-389597]_S01E01.jpg
+│       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
+│       Solo Leveling (2024) [tvdb-389597]_background.jpg
+```
 
 ## Platforms & Tools
 
