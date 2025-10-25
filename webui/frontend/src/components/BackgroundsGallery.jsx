@@ -873,18 +873,18 @@ function BackgroundsGallery() {
                   className="max-w-full max-h-[80vh] object-contain"
                   onError={(e) => {
                     e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "block";
+                    e.target.nextSibling.style.display = "flex";
                   }}
                 />
-                <div className="text-center" style={{ display: "none" }}>
+                <div className="text-center flex-col items-center justify-center" style={{ display: "none" }}>
                   <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
                     <Layers className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-white text-lg font-semibold mb-2">
-                    {t("backgroundsGallery.previewNotAvailable")}
+                    Will Update on next Run
                   </p>
                   <p className="text-gray-400 text-sm">
-                    {t("backgroundsGallery.useFileExplorer")}
+                    Use manual assets explorer to view background
                   </p>
                 </div>
               </div>
