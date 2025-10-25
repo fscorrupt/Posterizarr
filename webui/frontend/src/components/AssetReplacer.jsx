@@ -1693,6 +1693,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       )}
                     </div>
                   )}
+
+                  {/* Placeholder when no image uploaded and overlays are disabled */}
+                  {!uploadedImage && !processWithOverlays && (
+                    <div className="w-full sm:w-48 flex-shrink-0">
+                      <p className="text-xs font-medium text-theme-text mb-2">
+                        Preview:
+                      </p>
+                      <div
+                        className={`relative bg-theme-bg rounded-lg overflow-hidden border border-theme mx-auto flex flex-col items-center justify-center ${
+                          useHorizontalLayout
+                            ? "aspect-[16/9] max-w-xs"
+                            : "aspect-[2/3] max-w-[12rem]"
+                        }`}
+                      >
+                        <ImageIcon className="w-12 h-12 text-theme-muted mb-3" />
+                        <p className="text-sm font-medium text-theme-text text-center px-4">
+                          Will Update on next Run
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Upload Asset Button */}
