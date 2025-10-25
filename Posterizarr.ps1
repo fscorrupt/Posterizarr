@@ -1,32 +1,32 @@
 param (
-    [switch]$Manual,
-    [switch]$Testing,
-    [switch]$Tautulli,
-    [switch]$Backup,
-    [switch]$dev,
-    [switch]$SyncJelly,
-    [switch]$SyncEmby,
-    [switch]$PosterReset,
-    [switch]$SeasonPoster,
-    [switch]$TitleCard,
-    [switch]$CollectionCard,
-    [switch]$MoviePosterCard,
-    [switch]$ShowPosterCard,
-    [switch]$BackgroundCard,
-    [switch]$UISchedule,
-    [switch]$ContainerSchedule,
-    [string]$PicturePath,
-    [string]$Titletext,
-    [string]$FolderName,
-    [string]$LibraryName,
-    [string]$SeasonPosterName,
-    [string]$EPTitleName,
-    [string]$EpisodeNumber,
-    [string]$RatingKey,
-    [string]$parentratingkey,
-    [string]$grandparentratingkey,
-    [string]$mediatype,
-    [string]$LibraryToReset,
+    [switch]$Manual, # Required for Manual trigger
+    [switch]$Testing, # Required for Testing trigger
+    [switch]$Tautulli, # Required for Tautulli trigger
+    [switch]$Backup, # Required for Backup trigger
+    [switch]$dev, # Required for trigger dev branch
+    [switch]$SyncJelly, # Required for Jellyfin Sync trigger
+    [switch]$SyncEmby, # Required for Emby Sync trigger
+    [switch]$PosterReset, # Required for Poster Reset trigger
+    [switch]$SeasonPoster, # Required for Manual Trigger
+    [switch]$TitleCard, # Required for Manual Trigger
+    [switch]$CollectionCard, # Required for Manual Trigger
+    [switch]$MoviePosterCard, # Required for Manual Trigger
+    [switch]$ShowPosterCard, # Required for Manual Trigger
+    [switch]$BackgroundCard, # Required for Manual Trigger
+    [switch]$UISchedule, # Required for UI Schedule trigger
+    [switch]$ContainerSchedule, # Required for Container Schedule trigger
+    [string]$PicturePath, # Required for Manual Trigger
+    [string]$Titletext, # Required for Manual Trigger
+    [string]$FolderName, # Required for Manual Trigger
+    [string]$LibraryName, # Required for Manual Trigger
+    [string]$SeasonPosterName, # Required for Manual Trigger
+    [string]$EPTitleName, # Required for Manual Trigger
+    [string]$EpisodeNumber, # Required for Manual Trigger
+    [string]$RatingKey, # Required for Tautulli Trigger
+    [string]$parentratingkey, # Required for Tautulli Trigger
+    [string]$grandparentratingkey, # Required for Tautulli Trigger
+    [string]$mediatype, # Required for Tautulli Trigger
+    [string]$LibraryToReset, # Required for Poster Reset Trigger
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs # Required for Arrtrigger
 )

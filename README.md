@@ -510,12 +510,13 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 
 ## Usage
 
-- **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
-- **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
-- **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually (Interactive).
-- **Backup Mode**: Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
-- **Poster reset Mode**: Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
-- **Sync Modes**: Run the script with the `-SyncJelly or -SyncEmby` switch to sync every artwork you have in Plex to Jelly/Emby.
+- [**Automatic Mode**](#automatic-mode): Execute the script without any parameters to generate posters for your entire Plex library.
+- [**Testing Mode**](#testing-mode): Run the script with the `-Testing` switch to create Test posters before you start using it.
+- [**Manual Mode Interactive**](#manual-mode-interactive): Run the script with the `-Manual` switch to create custom posters manually (Interactive).
+- [**Manual Mode Semi-Interactive**](#manual-mode-semi-automated): Run the script with the `-Manual` switch to create custom posters (You can pass everything via cli).
+- [**Backup Mode**](#backup-mode): Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
+- [**Poster reset Mode**](#poster-reset-mode): Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
+- [**Sync Modes**](#sync-modes): Run the script with the `-SyncJelly or -SyncEmby` switch to sync every artwork you have in Plex to Jelly/Emby.
 
 > [!NOTE]
 >
@@ -571,169 +572,6 @@ On [docker](#docker) this way:
 This will generate posters for your entire Plex library based on the configured settings.
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Kometa to use as the assets folder.
-
-### Tautulli Mode Docker
-
-> [!IMPORTANT]
-> Tautulli and Posterizarr must run as a container in Docker
-
-> [!Note]
-> If Discord is configured it will send a Notification on each trigger.
-
-In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
-
-To use it we need to configure a script in Tautulli, please follow these instructions.
-
-1. Make sure that you mount the `Posterizarr` directory to tautulli, cause the script needs the Path `/posterizarr`
-   ```yml
-   volumes:
-     - "/opt/appdata/posterizarr:/posterizarr:rw"
-   ```
-   ⚠️ Note: This mount path is case-sensitive and must match exactly /posterizarr.
-1. Download the [trigger.py](/modules/trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
-   - You may have to set `chmod +x` to the file.
-1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
-1. Click on `Add a new notification agent` and select `Script`
-1. Specify the script folder where you placed the script and select the script file.
-   - You can specify a `Description` at the bottom like i did.
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_Step1.png">
-     </a>
-   </p>
-   </details>
-1. Go to `Triggers`, scroll down and select `Recently Added`.
-<details close>
-<summary>🖼️Example [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
-  </a>
-</p>
-</details>
-1. Go to `Conditions`, you can now specify when the script should get called.
-   - In my case i specified the **Media Type**: `episode, movie, show and season`
-   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
-     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
-     <details close>
-     <summary>🖼️Example [click to unfold]</summary>
-     <br>
-     <p>
-       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
-       </a>
-     </p>
-     </details>
-1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
-   - **Please do not change the Argument otherwise the script could fail.**
-   ```sh
-   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
-   ```
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
-     </a>
-   </p>
-   </details>
-
-### Tautulli Mode Windows
-
-> [!Note]
-> If Discord is configured it will send a Notification on each trigger.
-
-In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
-
-1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
-1. Click on `Add a new notification agent` and select `Script`
-1. Specify the script folder of Posterizarr and select the script file.
-   - Set the script timeout to `0`, which is unlimited. (The default is `30`, which would kill the script before it finishes.)
-   - You can specify a `Description` at the bottom like i did.
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_windows_Step1.png">
-     </a>
-   </p>
-   </details>
-1. Go to `Triggers`, scroll down and select `Recently Added`.
-<details close>
-<summary>🖼️Example [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
-  </a>
-</p>
-</details>
-1. Go to `Conditions`, you can now specify when the script should get called.
-   - In my case i specified the **Media Type**: `episode, movie, show and season`
-   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
-     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
-     <details close>
-     <summary>🖼️Example [click to unfold]</summary>
-     <br>
-     <p>
-       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
-       </a>
-     </p>
-     </details>
-1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
-   - **Please do not change the Argument otherwise the script could fail.**
-   ```sh
-   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
-   ```
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
-     </a>
-   </p>
-   </details>
-
-### Sonarr/Radarr Mode Docker
-
-> [!IMPORTANT]
-> Arrs and Posterizarr must run as a container in Docker
-
-> [!Note]
-> If Discord is configured it will send a Notification on each trigger.
-
-In this mode we use Sonarr/Radarr to trigger Posterizarr for an specific item in Plex/Jellyfin, like a new show, movie or episode got added.
-
-To use it we need to configure a script in Sonarr/Radarr, please follow these instructions.
-
-1. Ensure you mount the `Posterizarr` directory to your Sonarr/Radarr container, as the script requires access to `/posterizarr`:
-   ```yml
-   volumes:
-     - "/opt/appdata/posterizarr:/posterizarr:rw"
-   ```
-   ⚠️ Note: This mount path is case-sensitive and must match exactly `/posterizarr`.
-2. Download [ArrTrigger.sh](/modules/ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
-   - For example, create a `scripts` folder in `/opt/appdata/sonarr`, resulting in the path:
-     `/opt/appdata/sonarr/scripts/ArrTrigger.sh`
-   - Make sure to set executable permissions: `chmod +x ArrTrigger.sh`
-3. In Sonarr/Radarr, go to **Settings** → **Connect**.
-4. Click the `+` button and select **Custom Script**.
-5. Enter a name for the script.
-6. For **Notification Triggers**, select only `On File Import`.
-7. Under **Path**, browse to and select your `ArrTrigger.sh` script.
-   - Example: `/config/scripts/ArrTrigger.sh`
-8. With this setup, the Arr suite will create a file in `/posterizarr/watcher` whenever a file is imported.
-   - The file will be named like: `recently_added_20250925114601966_1da214d7.posterizarr`
-9. Posterizarr monitors this directory for files ending in `.posterizarr`.
-   - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
 
 ### Testing Mode
 
@@ -965,6 +803,169 @@ On [docker](#docker) this way:
 
 > [!TIP]
 > This is handy if you want to run the sync after a kometa run, then you have kometa ovlerayed images in jelly/emby
+
+### Tautulli Mode Docker
+
+> [!IMPORTANT]
+> Tautulli and Posterizarr must run as a container in Docker
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
+
+To use it we need to configure a script in Tautulli, please follow these instructions.
+
+1. Make sure that you mount the `Posterizarr` directory to tautulli, cause the script needs the Path `/posterizarr`
+   ```yml
+   volumes:
+     - "/opt/appdata/posterizarr:/posterizarr:rw"
+   ```
+   ⚠️ Note: This mount path is case-sensitive and must match exactly /posterizarr.
+1. Download the [trigger.py](/modules/trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
+   - You may have to set `chmod +x` to the file.
+1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
+1. Click on `Add a new notification agent` and select `Script`
+1. Specify the script folder where you placed the script and select the script file.
+   - You can specify a `Description` at the bottom like i did.
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_Step1.png">
+     </a>
+   </p>
+   </details>
+1. Go to `Triggers`, scroll down and select `Recently Added`.
+<details close>
+<summary>🖼️Example [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+  </a>
+</p>
+</details>
+1. Go to `Conditions`, you can now specify when the script should get called.
+   - In my case i specified the **Media Type**: `episode, movie, show and season`
+   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
+     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
+     <details close>
+     <summary>🖼️Example [click to unfold]</summary>
+     <br>
+     <p>
+       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
+       </a>
+     </p>
+     </details>
+1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
+   - **Please do not change the Argument otherwise the script could fail.**
+   ```sh
+   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+   ```
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
+     </a>
+   </p>
+   </details>
+
+### Tautulli Mode Windows
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
+
+1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
+1. Click on `Add a new notification agent` and select `Script`
+1. Specify the script folder of Posterizarr and select the script file.
+   - Set the script timeout to `0`, which is unlimited. (The default is `30`, which would kill the script before it finishes.)
+   - You can specify a `Description` at the bottom like i did.
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_windows_Step1.png">
+     </a>
+   </p>
+   </details>
+1. Go to `Triggers`, scroll down and select `Recently Added`.
+<details close>
+<summary>🖼️Example [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+  </a>
+</p>
+</details>
+1. Go to `Conditions`, you can now specify when the script should get called.
+   - In my case i specified the **Media Type**: `episode, movie, show and season`
+   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
+     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
+     <details close>
+     <summary>🖼️Example [click to unfold]</summary>
+     <br>
+     <p>
+       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
+       </a>
+     </p>
+     </details>
+1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
+   - **Please do not change the Argument otherwise the script could fail.**
+   ```sh
+   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+   ```
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
+     </a>
+   </p>
+   </details>
+
+### Sonarr/Radarr Mode Docker
+
+> [!IMPORTANT]
+> Arrs and Posterizarr must run as a container in Docker
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Sonarr/Radarr to trigger Posterizarr for an specific item in Plex/Jellyfin, like a new show, movie or episode got added.
+
+To use it we need to configure a script in Sonarr/Radarr, please follow these instructions.
+
+1. Ensure you mount the `Posterizarr` directory to your Sonarr/Radarr container, as the script requires access to `/posterizarr`:
+   ```yml
+   volumes:
+     - "/opt/appdata/posterizarr:/posterizarr:rw"
+   ```
+   ⚠️ Note: This mount path is case-sensitive and must match exactly `/posterizarr`.
+2. Download [ArrTrigger.sh](/modules/ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
+   - For example, create a `scripts` folder in `/opt/appdata/sonarr`, resulting in the path:
+     `/opt/appdata/sonarr/scripts/ArrTrigger.sh`
+   - Make sure to set executable permissions: `chmod +x ArrTrigger.sh`
+3. In Sonarr/Radarr, go to **Settings** → **Connect**.
+4. Click the `+` button and select **Custom Script**.
+5. Enter a name for the script.
+6. For **Notification Triggers**, select only `On File Import`.
+7. Under **Path**, browse to and select your `ArrTrigger.sh` script.
+   - Example: `/config/scripts/ArrTrigger.sh`
+8. With this setup, the Arr suite will create a file in `/posterizarr/watcher` whenever a file is imported.
+   - The file will be named like: `recently_added_20250925114601966_1da214d7.posterizarr`
+9. Posterizarr monitors this directory for files ending in `.posterizarr`.
+   - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
 
 ### UI Installation (Manual)
 
@@ -1453,7 +1454,7 @@ Feel free to customize the script further to meet your specific preferences or a
 
 > [!IMPORTANT]
 >
-> - Adjust on each PR the version number in script on Line 15 `$CurrentScriptVersion = "1.9.7"`
+> - Adjust on each PR the version number in script on Line 54 `$CurrentScriptVersion = "2.0.0"`
 > - Adjust the version number in [Release.txt](Release.txt) to match the one in script.
 >   - this is required because the script checks against this file if a newer version is available.
 > - Do not include images on a PR.
