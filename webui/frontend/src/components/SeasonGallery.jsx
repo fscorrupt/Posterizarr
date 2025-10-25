@@ -873,7 +873,7 @@ function SeasonGallery() {
                     {t('seasonGallery.imageNotAvailable')}
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Use manual assets explorer to view season poster
+                    {t("seasonGallery.useFileExplorer")}
                   </p>
                 </div>
               </div>
