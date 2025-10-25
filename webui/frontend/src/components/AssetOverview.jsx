@@ -669,8 +669,15 @@ const AssetOverview = () => {
     }
 
     // 3. NON-PRIMARY LANGUAGE CHECK
+    // Check for "Unknown" language first (add badge for non-primary language)
+    if (asset.Language && asset.Language.toLowerCase() === "unknown") {
+      tags.push({
+        label: t("assetOverview.notPrimaryLanguage"),
+        color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+      });
+    }
     // Language is either a valid language code/string or "false" (string)
-    if (
+    else if (
       asset.Language &&
       asset.Language !== "false" &&
       asset.Language !== false &&
@@ -704,14 +711,6 @@ const AssetOverview = () => {
           color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
-    }
-
-    // Check for "Unknown" language (add badge for unknown language)
-    if (asset.Language && asset.Language.toLowerCase() === "unknown") {
-      tags.push({
-        label: t("assetOverview.notPrimaryLanguage"),
-        color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-      });
     }
 
     // 4. TRUNCATED TEXT CHECK
