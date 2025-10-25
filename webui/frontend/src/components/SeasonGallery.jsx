@@ -862,7 +862,10 @@ function SeasonGallery() {
                     e.target.nextSibling.style.display = "flex";
                   }}
                 />
-                <div className="text-center flex-col items-center justify-center" style={{ display: "none" }}>
+                <div
+                  className="text-center flex-col items-center justify-center"
+                  style={{ display: "none" }}
+                >
                   <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
