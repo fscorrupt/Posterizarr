@@ -1709,7 +1709,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       >
                         <ImageIcon className="w-12 h-12 text-theme-muted mb-3" />
                         <p className="text-sm font-medium text-theme-text text-center px-4">
-                          Will Update on next Run
+                          {t("assetReplacer.willUpdateOnNextRun")}
                         </p>
                       </div>
                     </div>
