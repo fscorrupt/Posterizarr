@@ -970,7 +970,7 @@ function FolderView() {
                     Will Update on next Run
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Use manual assets explorer to view poster
+                    {t('folderView.useFileExplorer')}
                   </p>
                 </div>
               </div>
