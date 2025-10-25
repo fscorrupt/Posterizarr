@@ -324,11 +324,13 @@ function RecentAssets({ refreshTrigger = 0 }) {
           <button
             onClick={() => fetchRecentAssets()}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             title={t("recentAssets.refreshTooltip")}
           >
             <RefreshCw
-              className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+              className={`w-5 h-5 text-theme-primary ${
+                refreshing ? "animate-spin" : ""
+              }`}
             />
             <span className="text-sm font-medium">{t("common.refresh")}</span>
           </button>

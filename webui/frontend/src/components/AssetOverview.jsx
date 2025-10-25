@@ -758,28 +758,6 @@ const AssetOverview = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-orange-400" />
-            <h1 className="text-3xl font-bold text-theme-text">
-              {t("assetOverview.title")}
-            </h1>
-          </div>
-          <p className="text-theme-muted mt-2">
-            {t("assetOverview.description")}
-          </p>
-        </div>
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-        >
-          <RefreshCw className="w-4 h-4 text-theme-primary" />
-          <span className="text-theme-text">{t("common.refresh")}</span>
-        </button>
-      </div>
-
       {/* Category Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {categoryCards.map((card) => {
@@ -997,14 +975,23 @@ const AssetOverview = () => {
 
       {/* Assets Grid */}
       <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-xl font-bold text-theme-text mb-4">
-          {selectedCategory === "All Categories"
-            ? t("assetOverview.allAssets")
-            : selectedCategory}
-          <span className="text-theme-muted ml-2">
-            ({filteredAssets.length})
-          </span>
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-theme-text">
+            {selectedCategory === "All Categories"
+              ? t("assetOverview.allAssets")
+              : selectedCategory}
+            <span className="text-theme-muted ml-2">
+              ({filteredAssets.length})
+            </span>
+          </h2>
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4 text-theme-primary" />
+            <span className="text-theme-text">{t("common.refresh")}</span>
+          </button>
+        </div>
 
         {filteredAssets.length === 0 ? (
           <div className="text-center py-12">
