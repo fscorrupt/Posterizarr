@@ -880,7 +880,7 @@ function TitleCardGallery() {
                     {t('titleCardGallery.imagePreviewNotAvailable')}
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Use manual assets explorer to view title card
+                    {t('titleCardGallery.useFileExplorer')}
                   </p>
                 </div>
               </div>
