@@ -165,9 +165,12 @@ function FolderView() {
   const deletePoster = async (imagePath, imageName) => {
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/gallery/${imagePath}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/gallery/${encodeURIComponent(imagePath)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -251,9 +254,12 @@ function FolderView() {
 
     for (const assetPath of selectedAssets) {
       try {
-        const response = await fetch(`${API_URL}/gallery/${assetPath}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(
+          `${API_URL}/gallery/${encodeURIComponent(assetPath)}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (response.ok) {
           successCount++;
@@ -316,7 +322,7 @@ function FolderView() {
           for (const asset of assets) {
             try {
               const deleteResponse = await fetch(
-                `${API_URL}/gallery/${asset.path}`,
+                `${API_URL}/gallery/${encodeURIComponent(asset.path)}`,
                 {
                   method: "DELETE",
                 }
@@ -950,10 +956,13 @@ function FolderView() {
                   className="max-w-full max-h-[80vh] object-contain"
                   onError={(e) => {
                     e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "block";
+                    e.target.nextSibling.style.display = "flex";
                   }}
                 />
-                <div className="text-center" style={{ display: "none" }}>
+                <div
+                  className="text-center flex-col items-center justify-center"
+                  style={{ display: "none" }}
+                >
                   <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>

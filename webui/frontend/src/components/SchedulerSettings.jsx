@@ -326,9 +326,12 @@ const SchedulerSettings = () => {
     setIsUpdating(true);
 
     try {
-      const response = await fetch(`${API_URL}/scheduler/schedule/${time}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/scheduler/schedule/${encodeURIComponent(time)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 
@@ -561,31 +564,6 @@ const SchedulerSettings = () => {
         type="danger"
       />
 
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        {/* Master Toggle */}
-        <button
-          onClick={toggleScheduler}
-          disabled={isUpdating}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-sm hover:scale-105 ${
-            config?.enabled
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
-          } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {isUpdating ? (
-            <Loader2 className="w-5 h-5 text-theme-primary animate-spin" />
-          ) : (
-            <Power className="w-5 h-5" />
-          )}
-          {isUpdating
-            ? t("schedulerSettings.updating")
-            : config?.enabled
-            ? t("schedulerSettings.enabled")
-            : t("schedulerSettings.disabled")}
-        </button>
-      </div>
-
       {/* Container Users Info */}
       <div className="bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-4 shadow-sm">
         <div className="flex items-start gap-3">
@@ -657,13 +635,36 @@ const SchedulerSettings = () => {
 
       {/* Configuration */}
       <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-theme-primary/10">
-            <Settings className="w-6 h-6 text-theme-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-theme-primary/10">
+              <Settings className="w-6 h-6 text-theme-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-theme-primary">
+              {t("schedulerSettings.configuration")}
+            </h2>
           </div>
-          <h2 className="text-xl font-semibold text-theme-primary">
-            {t("schedulerSettings.configuration")}
-          </h2>
+          {/* Master Toggle */}
+          <button
+            onClick={toggleScheduler}
+            disabled={isUpdating}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-sm hover:scale-105 ${
+              config?.enabled
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
+            } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {isUpdating ? (
+              <Loader2 className="w-5 h-5 text-theme-primary animate-spin" />
+            ) : (
+              <Power className="w-5 h-5" />
+            )}
+            {isUpdating
+              ? t("schedulerSettings.updating")
+              : config?.enabled
+              ? t("schedulerSettings.enabled")
+              : t("schedulerSettings.disabled")}
+          </button>
         </div>
 
         {/* Timezone */}

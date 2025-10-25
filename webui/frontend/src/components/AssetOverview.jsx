@@ -67,6 +67,21 @@ const AssetOverview = () => {
     fetchData();
   }, []);
 
+  // Helper function to parse clean show name from Rootfolder
+  const parseShowName = (rootfolder) => {
+    if (!rootfolder) return null;
+
+    // Remove TMDB/TVDB/IMDB IDs from the folder name
+    // Pattern matches: [tvdb-123456], [tmdb-123456], [imdb-tt123456], etc.
+    const cleanName = rootfolder
+      .replace(/\s*\[tvdb-[^\]]+\]/gi, "")
+      .replace(/\s*\[tmdb-[^\]]+\]/gi, "")
+      .replace(/\s*\[imdb-[^\]]+\]/gi, "")
+      .trim();
+
+    return cleanName;
+  };
+
   // Function to calculate dropdown position
   const calculateDropdownPosition = (ref) => {
     if (!ref.current) return false;
@@ -473,8 +488,8 @@ const AssetOverview = () => {
         count: data.categories.assets_with_issues.count,
         icon: AlertTriangle,
         color: "text-yellow-400",
-        bgColor: "bg-gradient-to-br from-black/80 to-black/60",
-        borderColor: "border-black/40",
+        bgColor: "bg-gradient-to-br from-yellow-900/30 to-yellow-950/20",
+        borderColor: "border-yellow-900/40",
         hoverBorderColor: "hover:border-yellow-500/50",
       },
       {
@@ -502,20 +517,20 @@ const AssetOverview = () => {
         label: t("assetOverview.nonPrimaryLang"),
         count: data.categories.non_primary_lang.count,
         icon: Globe,
-        color: "text-yellow-400",
-        bgColor: "bg-gradient-to-br from-yellow-900/20 to-yellow-950/10",
-        borderColor: "border-yellow-900/40",
-        hoverBorderColor: "hover:border-yellow-500/50",
+        color: "text-sky-400",
+        bgColor: "bg-gradient-to-br from-sky-900/30 to-sky-950/20",
+        borderColor: "border-sky-900/40",
+        hoverBorderColor: "hover:border-sky-500/50",
       },
       {
         key: "non_primary_provider",
         label: t("assetOverview.nonPrimaryProvider"),
         count: data.categories.non_primary_provider.count,
         icon: Database,
-        color: "text-orange-400",
-        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
-        borderColor: "border-orange-900/40",
-        hoverBorderColor: "hover:border-orange-500/50",
+        color: "text-emerald-400",
+        bgColor: "bg-gradient-to-br from-emerald-900/30 to-emerald-950/20",
+        borderColor: "border-emerald-900/40",
+        hoverBorderColor: "hover:border-emerald-500/50",
       },
       {
         key: "truncated_text",
@@ -647,7 +662,7 @@ const AssetOverview = () => {
         if (!isDownloadFromPrimaryProvider || !isFavLinkFromPrimaryProvider) {
           tags.push({
             label: t("assetOverview.notPrimaryProvider"),
-            color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+            color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
           });
         }
       }
@@ -673,7 +688,7 @@ const AssetOverview = () => {
       if (langNormalized !== primaryNormalized) {
         tags.push({
           label: t("assetOverview.notPrimaryLanguage"),
-          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+          color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
     } else if (
@@ -686,9 +701,17 @@ const AssetOverview = () => {
       if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
         tags.push({
           label: t("assetOverview.notPrimaryLanguage"),
-          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+          color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
+    }
+
+    // Check for "Unknown" language (add badge for unknown language)
+    if (asset.Language && asset.Language.toLowerCase() === "unknown") {
+      tags.push({
+        label: t("assetOverview.notPrimaryLanguage"),
+        color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+      });
     }
 
     // 4. TRUNCATED TEXT CHECK
@@ -735,28 +758,6 @@ const AssetOverview = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-orange-400" />
-            <h1 className="text-3xl font-bold text-theme-text">
-              {t("assetOverview.title")}
-            </h1>
-          </div>
-          <p className="text-theme-muted mt-2">
-            {t("assetOverview.description")}
-          </p>
-        </div>
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-        >
-          <RefreshCw className="w-4 h-4 text-theme-primary" />
-          <span className="text-theme-text">{t("common.refresh")}</span>
-        </button>
-      </div>
-
       {/* Category Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {categoryCards.map((card) => {
@@ -974,14 +975,23 @@ const AssetOverview = () => {
 
       {/* Assets Grid */}
       <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-xl font-bold text-theme-text mb-4">
-          {selectedCategory === "All Categories"
-            ? t("assetOverview.allAssets")
-            : selectedCategory}
-          <span className="text-theme-muted ml-2">
-            ({filteredAssets.length})
-          </span>
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-theme-text">
+            {selectedCategory === "All Categories"
+              ? t("assetOverview.allAssets")
+              : selectedCategory}
+            <span className="text-theme-muted ml-2">
+              ({filteredAssets.length})
+            </span>
+          </h2>
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4 text-theme-primary" />
+            <span className="text-theme-text">{t("common.refresh")}</span>
+          </button>
+        </div>
 
         {filteredAssets.length === 0 ? (
           <div className="text-center py-12">
@@ -995,6 +1005,15 @@ const AssetOverview = () => {
             {filteredAssets.map((asset) => {
               const tags = getAssetTags(asset);
 
+              // Parse show name for episodes and titlecards only (not seasons)
+              const assetType = (asset.Type || "").toLowerCase();
+              const isEpisodeType =
+                assetType.includes("episode") ||
+                assetType.includes("titlecard");
+              const showName = isEpisodeType
+                ? parseShowName(asset.Rootfolder)
+                : null;
+
               return (
                 <div
                   key={asset.id}
@@ -1003,7 +1022,17 @@ const AssetOverview = () => {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-theme-text break-words">
-                        {asset.Title}
+                        {showName ? (
+                          <>
+                            <span className="text-theme-primary">
+                              {showName}
+                            </span>
+                            <span className="text-theme-muted mx-2">|</span>
+                            <span>{asset.Title}</span>
+                          </>
+                        ) : (
+                          asset.Title
+                        )}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
                         <span className="font-medium">
