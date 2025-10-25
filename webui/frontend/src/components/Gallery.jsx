@@ -895,7 +895,7 @@ function Gallery() {
                     Will Update on next Run
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Use manual assets explorer to view poster
+                    {t('gallery.useFileExplorer')}
                   </p>
                 </div>
               </div>
