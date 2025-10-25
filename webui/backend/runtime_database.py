@@ -741,7 +741,7 @@ class RuntimeDatabase:
         hours = seconds // 3600
         minutes = (seconds % 3600) // 60
         secs = seconds % 60
-        return f"{hours}h:{minutes}m:{secs}s"
+        return f"{hours}h {minutes}m {secs}s"
 
     def migrate_runtime_format(self) -> int:
         """

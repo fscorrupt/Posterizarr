@@ -121,7 +121,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 
 ## 🧰 What You Need
 
-> [!IMPORTANT] >**Requirements:**
+> [!IMPORTANT]
+> **Requirements:**
 >
 > Before you begin, make sure you have:
 
@@ -162,6 +163,16 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences [my personal config](MyPersonalConfig.json):
+
+    <details open>
+      <summary>WebUI</summary>
+      <br>
+
+      - `basicAuthEnabled`: When set to `true`, the UI requires a username and password for access. (Default: `false`)
+      - `basicAuthUsername`: The username for UI authentication. (Default: `admin`)
+      - `basicAuthPassword`: The password for UI authentication. (Default: `posterizarr`)
+    </details>
+
 
    <details open>
    <summary>ApiPart</summary>
@@ -499,12 +510,13 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 
 ## Usage
 
-- **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
-- **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
-- **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually (Interactive).
-- **Backup Mode**: Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
-- **Poster reset Mode**: Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
-- **Sync Modes**: Run the script with the `-SyncJelly or -SyncEmby` switch to sync every artwork you have in Plex to Jelly/Emby.
+- [**Automatic Mode**](#automatic-mode): Execute the script without any parameters to generate posters for your entire Plex library.
+- [**Testing Mode**](#testing-mode): Run the script with the `-Testing` switch to create Test posters before you start using it.
+- [**Manual Mode Interactive**](#manual-mode-interactive): Run the script with the `-Manual` switch to create custom posters manually (Interactive).
+- [**Manual Mode Semi-Interactive**](#manual-mode-semi-automated): Run the script with the `-Manual` switch to create custom posters (You can pass everything via cli).
+- [**Backup Mode**](#backup-mode): Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
+- [**Poster reset Mode**](#poster-reset-mode): Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
+- [**Sync Modes**](#sync-modes): Run the script with the `-SyncJelly or -SyncEmby` switch to sync every artwork you have in Plex to Jelly/Emby.
 
 > [!NOTE]
 >
@@ -541,6 +553,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 | **Fallback Options for Title Cards**     | - Uses **background images as title cards** if title-specific artwork is unavailable.                                                                                                                                                                                                                                                                                                                                                          |
 | **Overlay Reset**                        | - Reset all posters in a library of your choice to the Plex default.                                                                                                                                                                                                                                                                                                                                                                           |
 
+## Modes
+
 ### Automatic Mode
 
 Run the script without any parameters:
@@ -558,296 +572,6 @@ On [docker](#docker) this way:
 This will generate posters for your entire Plex library based on the configured settings.
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Kometa to use as the assets folder.
-
-### Assets Tip
-
-> [!TIP]
-> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/520ce753541fe90ec43c9e12ca056f839f9f4434/docker-compose.example.yml#L17) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
->
-> Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
->
-> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
->
-> Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
->
-> If you use Kometa make sure to set this settings on each Library in Kometa Config:
-
-```yaml
-libraries:
-  4K TV Shows:
-    settings:
-      asset_directory: /assets/4K TV Shows
-      prioritize_assets: true
-    operations:
-      assets_for_all: true
-```
-
-### Manual Assets Naming
-
-> [!IMPORTANT]
-> Naming must follow these rules, including proper case sensitivity (uppercase and lowercase) in file/folder names; otherwise, the asset will not be picked up.
-
-If you have Library Folders set to `true`, it will look like this:
-| **Asset** | **Naming** |
-|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Poster** | `poster.*`|
-| **Season** | `Season01.*`<br>`Season02.*`<br>`.....`|
-| **Season Special** | `Season00.*`|
-| **TitleCard** | `S01E01.*`<br>`S01E02.*`<br>`.....`|
-| **Background** | `background.*`|
-
-```
-├───Anime Shows
-│   └───Solo Leveling (2024) [tvdb-389597]
-│           poster.jpg
-│           S01E01.jpg
-│           Season01.jpg
-│           background.jpg
-```
-
-If you have Library Folders set to `false`, it will look like this:
-| **Asset** | **Naming** |
-|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Poster** | `Solo Leveling (2024) [tvdb-389597].*`|
-| **Season** | `Solo Leveling (2024) [tvdb-389597]_Season01.*`<br>`Solo Leveling (2024) [tvdb-389597]_Season02.*`<br>`.....`|
-| **Season Special** | `Solo Leveling (2024) [tvdb-389597]_Season00.*`|
-| **TitleCard** | `Solo Leveling (2024) [tvdb-389597]_S01E01.*`<br>`Solo Leveling (2024) [tvdb-389597]_S01E02.*`<br>`.....`|
-| **Background** | `Solo Leveling (2024) [tvdb-389597]_background.*`|
-
-```
-├───Anime Shows
-│       Solo Leveling (2024) [tvdb-389597].jpg
-│       Solo Leveling (2024) [tvdb-389597]_S01E01.jpg
-│       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
-│       Solo Leveling (2024) [tvdb-389597]_background.jpg
-```
-
-## Modes
-
-### Tautulli Mode Docker
-
-> [!IMPORTANT]
-> Tautulli and Posterizarr must run as a container in Docker
-
-> [!Note]
-> If Discord is configured it will send a Notification on each trigger.
-
-In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
-
-To use it we need to configure a script in Tautulli, please follow these instructions.
-
-1. Make sure that you mount the `Posterizarr` directory to tautulli, cause the script needs the Path `/posterizarr`
-   ```yml
-   volumes:
-     - "/opt/appdata/posterizarr:/posterizarr:rw"
-   ```
-   ⚠️ Note: This mount path is case-sensitive and must match exactly /posterizarr.
-1. Download the [trigger.py](/modules/trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
-   - You may have to set `chmod +x` to the file.
-1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
-1. Click on `Add a new notification agent` and select `Script`
-1. Specify the script folder where you placed the script and select the script file.
-   - You can specify a `Description` at the bottom like i did.
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_Step1.png">
-     </a>
-   </p>
-   </details>
-1. Go to `Triggers`, scroll down and select `Recently Added`.
-<details close>
-<summary>🖼️Example [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
-  </a>
-</p>
-</details>
-1. Go to `Conditions`, you can now specify when the script should get called.
-   - In my case i specified the **Media Type**: `episode, movie, show and season`
-   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
-     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
-     <details close>
-     <summary>🖼️Example [click to unfold]</summary>
-     <br>
-     <p>
-       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
-       </a>
-     </p>
-     </details>
-1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
-   - **Please do not change the Argument otherwise the script could fail.**
-   ```sh
-   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
-   ```
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
-     </a>
-   </p>
-   </details>
-
-### Tautulli Mode Windows
-
-> [!Note]
-> If Discord is configured it will send a Notification on each trigger.
-
-In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
-
-1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
-1. Click on `Add a new notification agent` and select `Script`
-1. Specify the script folder of Posterizarr and select the script file.
-   - Set the script timeout to `0`, which is unlimited. (The default is `30`, which would kill the script before it finishes.)
-   - You can specify a `Description` at the bottom like i did.
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_windows_Step1.png">
-     </a>
-   </p>
-   </details>
-1. Go to `Triggers`, scroll down and select `Recently Added`.
-<details close>
-<summary>🖼️Example [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
-  </a>
-</p>
-</details>
-1. Go to `Conditions`, you can now specify when the script should get called.
-   - In my case i specified the **Media Type**: `episode, movie, show and season`
-   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
-     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
-     <details close>
-     <summary>🖼️Example [click to unfold]</summary>
-     <br>
-     <p>
-       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
-       </a>
-     </p>
-     </details>
-1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
-   - **Please do not change the Argument otherwise the script could fail.**
-   ```sh
-   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
-   ```
-   <details close>
-   <summary>🖼️Example [click to unfold]</summary>
-   <br>
-   <p>
-     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
-     </a>
-   </p>
-   </details>
-
-### Sonarr/Radarr Mode Docker
-
-> [!IMPORTANT]
-> Arrs and Posterizarr must run as a container in Docker
-
-> [!Note]
-> If Discord is configured it will send a Notification on each trigger.
-
-In this mode we use Sonarr/Radarr to trigger Posterizarr for an specific item in Plex/Jellyfin, like a new show, movie or episode got added.
-
-To use it we need to configure a script in Sonarr/Radarr, please follow these instructions.
-
-1. Ensure you mount the `Posterizarr` directory to your Sonarr/Radarr container, as the script requires access to `/posterizarr`:
-   ```yml
-   volumes:
-     - "/opt/appdata/posterizarr:/posterizarr:rw"
-   ```
-   ⚠️ Note: This mount path is case-sensitive and must match exactly `/posterizarr`.
-2. Download [ArrTrigger.sh](/modules/ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
-   - For example, create a `scripts` folder in `/opt/appdata/sonarr`, resulting in the path:
-     `/opt/appdata/sonarr/scripts/ArrTrigger.sh`
-   - Make sure to set executable permissions: `chmod +x ArrTrigger.sh`
-3. In Sonarr/Radarr, go to **Settings** → **Connect**.
-4. Click the `+` button and select **Custom Script**.
-5. Enter a name for the script.
-6. For **Notification Triggers**, select only `On File Import`.
-7. Under **Path**, browse to and select your `ArrTrigger.sh` script.
-   - Example: `/config/scripts/ArrTrigger.sh`
-8. With this setup, the Arr suite will create a file in `/posterizarr/watcher` whenever a file is imported.
-   - The file will be named like: `recently_added_20250925114601966_1da214d7.posterizarr`
-9. Posterizarr monitors this directory for files ending in `.posterizarr`.
-   - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
-
-### UI Installation (Manual)
-
-This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
-
-**Prerequisites**
-
-Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
-
-- ✅ **Python 3:** Required for the backend server.
-- ✅ **Node.js (with npm):** Required for the frontend interface.
-- ✅ **PowerShell Core:** Required to run the main `Posterizarr.ps1` script.
-
-**Setup Instructions**
-
-The setup process is handled by a simple script that installs all necessary dependencies.
-
-1.  Open a terminal or command prompt.
-2.  Navigate into the `webui` directory located in the project's root folder.
-    ```bash
-    cd path/to/Posterizarr/webui
-    ```
-3.  Run the appropriate setup script for your operating system:
-    - **On Windows:**
-      ```bash
-      setup.ps1
-      ```
-      or
-      ```bash
-      setup.bat
-      ```
-    - **On Linux or macOS:**
-      ```bash
-      setup.sh
-      ```
-      The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
-
-**Running the UI**
-
-After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
-
-**Terminal 2: Start the Frontend**
-
-```bash
-# Navigate to the frontend directory
-cd webui/frontend
-
-# Run the development server
-npm run build
-```
-
-**Terminal 1: Start the Backend**
-
-```bash
-# Navigate to the backend directory
-cd webui/backend
-
-# Run the Python server
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
 
 ### Testing Mode
 
@@ -1080,6 +804,294 @@ On [docker](#docker) this way:
 > [!TIP]
 > This is handy if you want to run the sync after a kometa run, then you have kometa ovlerayed images in jelly/emby
 
+### Tautulli Mode Docker
+
+> [!IMPORTANT]
+> Tautulli and Posterizarr must run as a container in Docker
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
+
+To use it we need to configure a script in Tautulli, please follow these instructions.
+
+1. Make sure that you mount the `Posterizarr` directory to tautulli, cause the script needs the Path `/posterizarr`
+   ```yml
+   volumes:
+     - "/opt/appdata/posterizarr:/posterizarr:rw"
+   ```
+   ⚠️ Note: This mount path is case-sensitive and must match exactly /posterizarr.
+1. Download the [trigger.py](/modules/trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
+   - You may have to set `chmod +x` to the file.
+1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
+1. Click on `Add a new notification agent` and select `Script`
+1. Specify the script folder where you placed the script and select the script file.
+   - You can specify a `Description` at the bottom like i did.
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_Step1.png">
+     </a>
+   </p>
+   </details>
+1. Go to `Triggers`, scroll down and select `Recently Added`.
+<details close>
+<summary>🖼️Example [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+  </a>
+</p>
+</details>
+1. Go to `Conditions`, you can now specify when the script should get called.
+   - In my case i specified the **Media Type**: `episode, movie, show and season`
+   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
+     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
+     <details close>
+     <summary>🖼️Example [click to unfold]</summary>
+     <br>
+     <p>
+       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
+       </a>
+     </p>
+     </details>
+1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
+   - **Please do not change the Argument otherwise the script could fail.**
+   ```sh
+   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+   ```
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
+     </a>
+   </p>
+   </details>
+
+### Tautulli Mode Windows
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
+
+1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
+1. Click on `Add a new notification agent` and select `Script`
+1. Specify the script folder of Posterizarr and select the script file.
+   - Set the script timeout to `0`, which is unlimited. (The default is `30`, which would kill the script before it finishes.)
+   - You can specify a `Description` at the bottom like i did.
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_windows_Step1.png">
+     </a>
+   </p>
+   </details>
+1. Go to `Triggers`, scroll down and select `Recently Added`.
+<details close>
+<summary>🖼️Example [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+  </a>
+</p>
+</details>
+1. Go to `Conditions`, you can now specify when the script should get called.
+   - In my case i specified the **Media Type**: `episode, movie, show and season`
+   - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
+     - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
+     <details close>
+     <summary>🖼️Example [click to unfold]</summary>
+     <br>
+     <p>
+       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
+       </a>
+     </p>
+     </details>
+1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
+   - **Please do not change the Argument otherwise the script could fail.**
+   ```sh
+   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+   ```
+   <details close>
+   <summary>🖼️Example [click to unfold]</summary>
+   <br>
+   <p>
+     <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
+     </a>
+   </p>
+   </details>
+
+### Sonarr/Radarr Mode Docker
+
+> [!IMPORTANT]
+> Arrs and Posterizarr must run as a container in Docker
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Sonarr/Radarr to trigger Posterizarr for an specific item in Plex/Jellyfin, like a new show, movie or episode got added.
+
+To use it we need to configure a script in Sonarr/Radarr, please follow these instructions.
+
+1. Ensure you mount the `Posterizarr` directory to your Sonarr/Radarr container, as the script requires access to `/posterizarr`:
+   ```yml
+   volumes:
+     - "/opt/appdata/posterizarr:/posterizarr:rw"
+   ```
+   ⚠️ Note: This mount path is case-sensitive and must match exactly `/posterizarr`.
+2. Download [ArrTrigger.sh](/modules/ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
+   - For example, create a `scripts` folder in `/opt/appdata/sonarr`, resulting in the path:
+     `/opt/appdata/sonarr/scripts/ArrTrigger.sh`
+   - Make sure to set executable permissions: `chmod +x ArrTrigger.sh`
+3. In Sonarr/Radarr, go to **Settings** → **Connect**.
+4. Click the `+` button and select **Custom Script**.
+5. Enter a name for the script.
+6. For **Notification Triggers**, select only `On File Import`.
+7. Under **Path**, browse to and select your `ArrTrigger.sh` script.
+   - Example: `/config/scripts/ArrTrigger.sh`
+8. With this setup, the Arr suite will create a file in `/posterizarr/watcher` whenever a file is imported.
+   - The file will be named like: `recently_added_20250925114601966_1da214d7.posterizarr`
+9. Posterizarr monitors this directory for files ending in `.posterizarr`.
+   - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
+
+### UI Installation (Manual)
+
+This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
+
+**Prerequisites**
+
+Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
+
+- ✅ **Python 3:** Required for the backend server.
+- ✅ **Node.js (with npm):** Required for the frontend interface.
+- ✅ **PowerShell Core:** Required to run the main `Posterizarr.ps1` script.
+
+**Setup Instructions**
+
+The setup process is handled by a simple script that installs all necessary dependencies.
+
+1.  Open a terminal or command prompt.
+2.  Navigate into the `webui` directory located in the project's root folder.
+    ```bash
+    cd path/to/Posterizarr/webui
+    ```
+3.  Run the appropriate setup script for your operating system:
+    - **On Windows:**
+      ```bash
+      setup.ps1
+      ```
+      or
+      ```bash
+      setup.bat
+      ```
+    - **On Linux or macOS:**
+      ```bash
+      setup.sh
+      ```
+      The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
+
+**Running the UI**
+
+After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
+
+**Terminal 2: Start the Frontend**
+
+```bash
+# Navigate to the frontend directory
+cd webui/frontend
+
+# Run the development server
+npm run build
+```
+
+**Terminal 1: Start the Backend**
+
+```bash
+# Navigate to the backend directory
+cd webui/backend
+
+# Run the Python server
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
+
+### Assets Tip
+
+> [!TIP]
+> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/520ce753541fe90ec43c9e12ca056f839f9f4434/docker-compose.example.yml#L17) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
+>
+> Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
+>
+> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
+>
+> Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
+>
+> If you use Kometa make sure to set this settings on each Library in Kometa Config:
+
+```yaml
+libraries:
+  4K TV Shows:
+    settings:
+      asset_directory: /assets/4K TV Shows
+      prioritize_assets: true
+    operations:
+      assets_for_all: true
+```
+
+### Manual Assets Naming
+
+> [!IMPORTANT]
+> Naming must follow these rules, including proper case sensitivity (uppercase and lowercase) in file/folder names; otherwise, the asset will not be picked up.
+
+If you have Library Folders set to `true`, it will look like this:
+| **Asset** | **Naming** |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Poster** | `poster.*`|
+| **Season** | `Season01.*`<br>`Season02.*`<br>`.....`|
+| **Season Special** | `Season00.*`|
+| **TitleCard** | `S01E01.*`<br>`S01E02.*`<br>`.....`|
+| **Background** | `background.*`|
+
+```
+├───Anime Shows
+│   └───Solo Leveling (2024) [tvdb-389597]
+│           poster.jpg
+│           S01E01.jpg
+│           Season01.jpg
+│           background.jpg
+```
+
+If you have Library Folders set to `false`, it will look like this:
+| **Asset** | **Naming** |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Poster** | `Solo Leveling (2024) [tvdb-389597].*`|
+| **Season** | `Solo Leveling (2024) [tvdb-389597]_Season01.*`<br>`Solo Leveling (2024) [tvdb-389597]_Season02.*`<br>`.....`|
+| **Season Special** | `Solo Leveling (2024) [tvdb-389597]_Season00.*`|
+| **TitleCard** | `Solo Leveling (2024) [tvdb-389597]_S01E01.*`<br>`Solo Leveling (2024) [tvdb-389597]_S01E02.*`<br>`.....`|
+| **Background** | `Solo Leveling (2024) [tvdb-389597]_background.*`|
+
+```
+├───Anime Shows
+│       Solo Leveling (2024) [tvdb-389597].jpg
+│       Solo Leveling (2024) [tvdb-389597]_S01E01.jpg
+│       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
+│       Solo Leveling (2024) [tvdb-389597]_background.jpg
+```
+
 ## Platforms & Tools
 
 ### Docker
@@ -1161,54 +1173,6 @@ On [docker](#docker) this way:
 > - Change `RUN_TIME` to your needs **- You need to use 24H Time Format**
 >   - Example: `06:00` or `06:00,14:00`.....
 > - AssetPath in config needs to be `/assets` not the path you entered.
-
-### How to create the Posterizarr.xlsm
-
-<details close>
-<summary>📝Posterizarr Excel Creation using Module1.bas [click to unfold]</summary>
-<br>
-
-1. **Open Excel**: First, open Microsoft Excel on your computer. You can do this by clicking on the Excel icon in your applications menu or by searching for "Excel" in your computer's search bar and selecting it from the results.
-
-2. **Access the Visual Basic for Applications (VBA) Editor**:
-
-   - While in Excel, press `Alt + F11` on your keyboard. This keyboard shortcut will open the VBA editor window.
-
-3. **Import Module**:
-
-   - In the VBA editor window, you'll see a menu bar at the top.
-   - Right-click on any existing module or in the project explorer (usually located on the left-hand side).
-   - From the dropdown menu, select `Import File...`.
-   - A file explorer window will open. Navigate to the location where you saved the `Module1.bas` file.
-   - Select the `Module1.bas` file and click `Open`.
-
-4. **Run the Macro**:
-   - Now, go back to the Excel window.
-   - Look for the `View` tab at the top of the Excel window.
-   - Click on the `View` tab.
-   - Within the `Macros` group, you'll find a button labeled `Macros`. Click on it.
-   - In the dropdown menu, select `View Macros`.
-   - A Macros dialog box will appear, listing all available macros.
-   - In the list, you should see the `PromptUser` macro.
-   - Select `PromptUser` from the list.
-   - Finally, click the `Run` button.
-
-Following these steps will allow you to import the `Module1.bas` file containing the VBA code into Excel and then run the `PromptUser` macro.
-
-</details>
-
-### How to use the Posterizarr.xlsm
-
-<details close>
-<summary>🎥Posterizarr Excel [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="excel" height="100%" src="/images/posterizarr-xlsm.gif">
-  </a>
-</p>
-
-</details>
 
 ### Jellyfin
 
@@ -1490,7 +1454,7 @@ Feel free to customize the script further to meet your specific preferences or a
 
 > [!IMPORTANT]
 >
-> - Adjust on each PR the version number in script on Line 15 `$CurrentScriptVersion = "1.9.7"`
+> - Adjust on each PR the version number in script on Line 54 `$CurrentScriptVersion = "2.0.0"`
 > - Adjust the version number in [Release.txt](Release.txt) to match the one in script.
 >   - this is required because the script checks against this file if a newer version is available.
 > - Do not include images on a PR.
