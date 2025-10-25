@@ -892,10 +892,10 @@ function Gallery() {
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-white text-lg font-semibold mb-2">
-                    Will Update on next Run
+                    {t("gallery.previewNotAvailable")}
                   </p>
                   <p className="text-gray-400 text-sm">
-                    {t('gallery.useFileExplorer')}
+                    {t("gallery.useFileExplorer")}
                   </p>
                 </div>
               </div>

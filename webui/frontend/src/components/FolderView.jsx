@@ -967,10 +967,10 @@ function FolderView() {
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-white text-lg font-semibold mb-2">
-                    Will Update on next Run
+                    {t("folderView.previewNotAvailable")}
                   </p>
                   <p className="text-gray-400 text-sm">
-                    {t('folderView.useFileExplorer')}
+                    {t("folderView.useFileExplorer")}
                   </p>
                 </div>
               </div>
