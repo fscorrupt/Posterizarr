@@ -863,6 +863,33 @@ const getConfigTooltips = (language) => {
   return tooltips[language] || tooltips.en;
 };
 
+// Helper function to remove redundant prefixes from setting keys for display
+const getCleanSettingKey = (key) => {
+  const prefixes = [
+    "CollectionTitle",
+    "CollectionPoster",
+    "SeasonPoster",
+    "TitleCardTitle",
+    "TitleCardEP",
+    "TitleCard",
+    "ShowTitle",
+    "Background",
+    "Poster",
+  ];
+
+  for (const prefix of prefixes) {
+    if (key.startsWith(prefix)) {
+      const remainder = key.slice(prefix.length);
+      // Only remove prefix if there's something left after it
+      if (remainder) {
+        return remainder;
+      }
+    }
+  }
+
+  return key;
+};
+
 function ConfigEditor() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
@@ -4060,7 +4087,7 @@ function ConfigEditor() {
                               </div>
                               {key !== displayName && (
                                 <span className="text-xs text-theme-muted font-mono bg-theme-bg px-2 py-1 rounded">
-                                  {key}
+                                  {getCleanSettingKey(key)}
                                 </span>
                               )}
                             </div>
