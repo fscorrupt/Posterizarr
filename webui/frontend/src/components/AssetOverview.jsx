@@ -20,66 +20,190 @@ import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
 import ScrollToButtons from "./ScrollToButtons";
 
+// Helper function to detect provider from URL and return badge styling
+const getProviderBadge = (url) => {
+  if (!url || url === "false" || url === false) {
+    return {
+      name: "Missing",
+      color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      logo: null,
+    };
+  }
+
+  const urlLower = url.toLowerCase();
+
+  if (urlLower.includes("tmdb") || urlLower.includes("themoviedb")) {
+    return {
+      name: "TMDB",
+      color:
+        "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30",
+      logo: "/tmdb.png",
+    };
+  } else if (urlLower.includes("tvdb") || urlLower.includes("thetvdb")) {
+    return {
+      name: "TVDB",
+      color:
+        "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30",
+      logo: "/tvdb.png",
+    };
+  } else if (urlLower.includes("fanart")) {
+    return {
+      name: "Fanart.tv",
+      color:
+        "bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30",
+      logo: "/fanart.png",
+    };
+  } else if (urlLower.includes("plex")) {
+    return {
+      name: "Plex",
+      color:
+        "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30",
+      logo: "/plex.png",
+    };
+  } else if (urlLower.includes("imdb")) {
+    return {
+      name: "IMDb",
+      color:
+        "bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30",
+      logo: "/imdb.png",
+    };
+  } else {
+    return {
+      name: "Other",
+      color:
+        "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30",
+      logo: null,
+    };
+  }
+};
+
+// Asset Row Component - Memoized to prevent unnecessary re-renders
+const AssetRow = React.memo(({ asset, tags, showName, onNoEditsNeeded, onReplace }) => {
+  const { t } = useTranslation();
+  const [logoError, setLogoError] = useState(false);
+
+  // Memoize badge computation based on DownloadSource
+  const badge = useMemo(
+    () => getProviderBadge(asset.DownloadSource),
+    [asset.DownloadSource]
+  );
+
+  return (
+    <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-theme-text break-words">
+            {showName ? (
+              <>
+                <span className="text-theme-primary">
+                  {showName}
+                </span>
+                <span className="text-theme-muted mx-2">|</span>
+                <span>{asset.Title}</span>
+              </>
+            ) : (
+              asset.Title
+            )}
+          </h3>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
+            <span className="font-medium">
+              {t("assetOverview.type")}:
+            </span>
+            <span className="bg-theme-card px-2 py-0.5 rounded">
+              {asset.Type || "Unknown"}
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <span className="font-medium">
+              {t("assetOverview.language")}:
+            </span>
+            <span className="bg-theme-card px-2 py-0.5 rounded">
+              {asset.Language &&
+              asset.Language !== "false" &&
+              asset.Language !== false
+                ? asset.Language
+                : "Unknown"}
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <span className="font-medium">
+              {t("assetOverview.source")}:
+            </span>
+            {asset.DownloadSource &&
+            asset.DownloadSource !== "false" &&
+            asset.DownloadSource !== false ? (
+              <a
+                href={asset.DownloadSource}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                title={asset.DownloadSource}
+              >
+                {badge.logo && !logoError ? (
+                  <img
+                    src={badge.logo}
+                    alt={badge.name}
+                    className="h-[35px] object-contain"
+                    onError={() => setLogoError(true)}
+                  />
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                  >
+                    {badge.name}
+                  </span>
+                )}
+                <ExternalLink className="w-3 h-3 opacity-60" />
+              </a>
+            ) : (
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+              >
+                {badge.name}
+              </span>
+            )}
+          </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {tags.map((tag, index) => (
+              <span
+                key={index}
+                className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
+              >
+                {tag.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-start gap-2">
+          <button
+            onClick={() => onNoEditsNeeded(asset)}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+            title={t("assetOverview.noEditsNeededTooltip")}
+          >
+            <CheckIcon className="w-4 h-4 text-theme-primary" />
+            {t("assetOverview.noEditsNeeded")}
+          </button>
+          <button
+            onClick={() => onReplace(asset)}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+            title={t("assetOverview.replaceTooltip")}
+          >
+            <Replace className="w-4 h-4 text-theme-primary" />
+            {t("assetOverview.replace")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+AssetRow.displayName = 'AssetRow';
+
 const AssetOverview = () => {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
-
-  // Helper function to detect provider from URL and return badge styling
-  const getProviderBadge = (url) => {
-    if (!url || url === "false" || url === false) {
-      return {
-        name: "Missing",
-        color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-        logo: null,
-      };
-    }
-
-    const urlLower = url.toLowerCase();
-
-    if (urlLower.includes("tmdb") || urlLower.includes("themoviedb")) {
-      return {
-        name: "TMDB",
-        color:
-          "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30",
-        logo: "/tmdb.png",
-      };
-    } else if (urlLower.includes("tvdb") || urlLower.includes("thetvdb")) {
-      return {
-        name: "TVDB",
-        color:
-          "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30",
-        logo: "/tvdb.png",
-      };
-    } else if (urlLower.includes("fanart")) {
-      return {
-        name: "Fanart.tv",
-        color:
-          "bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30",
-        logo: "/fanart.png",
-      };
-    } else if (urlLower.includes("plex")) {
-      return {
-        name: "Plex",
-        color:
-          "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30",
-        logo: "/plex.png",
-      };
-    } else if (urlLower.includes("imdb")) {
-      return {
-        name: "IMDb",
-        color:
-          "bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30",
-        logo: "/imdb.png",
-      };
-    } else {
-      return {
-        name: "Other",
-        color:
-          "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30",
-        logo: null,
-      };
-    }
-  };
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1072,125 +1196,14 @@ const AssetOverview = () => {
                 : null;
 
               return (
-                <div
+                <AssetRow
                   key={asset.id}
-                  className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-theme-text break-words">
-                        {showName ? (
-                          <>
-                            <span className="text-theme-primary">
-                              {showName}
-                            </span>
-                            <span className="text-theme-muted mx-2">|</span>
-                            <span>{asset.Title}</span>
-                          </>
-                        ) : (
-                          asset.Title
-                        )}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
-                        <span className="font-medium">
-                          {t("assetOverview.type")}:
-                        </span>
-                        <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.Type || "Unknown"}
-                        </span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="font-medium">
-                          {t("assetOverview.language")}:
-                        </span>
-                        <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.Language &&
-                          asset.Language !== "false" &&
-                          asset.Language !== false
-                            ? asset.Language
-                            : "Unknown"}
-                        </span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="font-medium">
-                          {t("assetOverview.source")}:
-                        </span>
-                        {(() => {
-                          const badge = getProviderBadge(asset.DownloadSource);
-
-                          if (
-                            asset.DownloadSource &&
-                            asset.DownloadSource !== "false" &&
-                            asset.DownloadSource !== false
-                          ) {
-                            return (
-                              <a
-                                href={asset.DownloadSource}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
-                                title={asset.DownloadSource}
-                              >
-                                {badge.logo ? (
-                                  <img
-                                    src={badge.logo}
-                                    alt={badge.name}
-                                    className="h-[35px] object-contain"
-                                  />
-                                ) : (
-                                  <span
-                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
-                                  >
-                                    {badge.name}
-                                  </span>
-                                )}
-                                <ExternalLink className="w-3 h-3 opacity-60" />
-                              </a>
-                            );
-                          } else {
-                            return (
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
-                              >
-                                {badge.name}
-                              </span>
-                            );
-                          }
-                        })()}
-                      </div>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
-                          >
-                            {tag.label}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-start gap-2">
-                      <button
-                        onClick={() => handleNoEditsNeeded(asset)}
-                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-                        title={t("assetOverview.noEditsNeededTooltip")}
-                      >
-                        <CheckIcon className="w-4 h-4 text-theme-primary" />
-                        {t("assetOverview.noEditsNeeded")}
-                      </button>
-                      <button
-                        onClick={() => handleReplace(asset)}
-                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-                        title={t("assetOverview.replaceTooltip")}
-                      >
-                        <Replace className="w-4 h-4 text-theme-primary" />
-                        {t("assetOverview.replace")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  asset={asset}
+                  tags={tags}
+                  showName={showName}
+                  onNoEditsNeeded={handleNoEditsNeeded}
+                  onReplace={handleReplace}
+                />
               );
             })}
           </div>
