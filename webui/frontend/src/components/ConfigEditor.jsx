@@ -24,6 +24,8 @@ import {
   Eye,
   Expand,
   Minimize,
+  ExternalLink,
+  Github,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ValidateButton from "./ValidateButton";
@@ -33,6 +35,70 @@ import LibraryExclusionSelector from "./LibraryExclusionSelector";
 import { useToast } from "../context/ToastContext";
 
 const API_URL = "/api";
+
+// Mapping von Gruppen zu README-Abschnitten
+const README_LINKS = {
+  "WebUI Settings": "https://github.com/fscorrupt/Posterizarr#webui",
+  "API Keys & Tokens": "https://github.com/fscorrupt/Posterizarr#apipart",
+  ApiPart: "https://github.com/fscorrupt/Posterizarr#apipart",
+  "Language & Preferences": "https://github.com/fscorrupt/Posterizarr#apipart",
+  "Image Filters": "https://github.com/fscorrupt/Posterizarr#apipart",
+  "Plex Settings": "https://github.com/fscorrupt/Posterizarr#plexpart",
+  PlexPart: "https://github.com/fscorrupt/Posterizarr#plexpart",
+  "Jellyfin Settings": "https://github.com/fscorrupt/Posterizarr#jellyfinpart",
+  JellyfinPart: "https://github.com/fscorrupt/Posterizarr#jellyfinpart",
+  "Emby Settings": "https://github.com/fscorrupt/Posterizarr#embypart",
+  EmbyPart: "https://github.com/fscorrupt/Posterizarr#embypart",
+  Notifications: "https://github.com/fscorrupt/Posterizarr#notification",
+  Notification: "https://github.com/fscorrupt/Posterizarr#notification",
+  "General Settings":
+    "https://github.com/fscorrupt/Posterizarr#prerequisitepart",
+  PrerequisitePart: "https://github.com/fscorrupt/Posterizarr#prerequisitepart",
+  "Overlay Files": "https://github.com/fscorrupt/Posterizarr#prerequisitepart",
+  "Resolution Overlays":
+    "https://github.com/fscorrupt/Posterizarr#prerequisitepart",
+  Fonts: "https://github.com/fscorrupt/Posterizarr#prerequisitepart",
+  "Text Formatting":
+    "https://github.com/fscorrupt/Posterizarr#prerequisitepart",
+  "Image Processing": "https://github.com/fscorrupt/Posterizarr#overlaypart",
+  OverlayPart: "https://github.com/fscorrupt/Posterizarr#overlaypart",
+  "Poster Settings":
+    "https://github.com/fscorrupt/Posterizarr#posteroverlaypart",
+  PosterOverlayPart:
+    "https://github.com/fscorrupt/Posterizarr#posteroverlaypart",
+  "Season Poster Settings":
+    "https://github.com/fscorrupt/Posterizarr#seasonposteroverlaypart",
+  SeasonPosterOverlayPart:
+    "https://github.com/fscorrupt/Posterizarr#seasonposteroverlaypart",
+  "Show Title on Season":
+    "https://github.com/fscorrupt/Posterizarr#showtilteonseasonposterpart",
+  ShowTitleOnSeasonPosterPart:
+    "https://github.com/fscorrupt/Posterizarr#showtilteonseasonposterpart",
+  "Background Settings":
+    "https://github.com/fscorrupt/Posterizarr#backgroundoverlaypart",
+  BackgroundOverlayPart:
+    "https://github.com/fscorrupt/Posterizarr#backgroundoverlaypart",
+  "Title Card Overlay":
+    "https://github.com/fscorrupt/Posterizarr#titlecardoverlaypart",
+  TitleCardOverlayPart:
+    "https://github.com/fscorrupt/Posterizarr#titlecardoverlaypart",
+  "Title Card Title Text":
+    "https://github.com/fscorrupt/Posterizarr#titlecardtitletextpart",
+  TitleCardTitleTextPart:
+    "https://github.com/fscorrupt/Posterizarr#titlecardtitletextpart",
+  "Title Card Episode Text":
+    "https://github.com/fscorrupt/Posterizarr#titlecardepisodetextpart",
+  TitleCardEPTextPart:
+    "https://github.com/fscorrupt/Posterizarr#titlecardepisodetextpart",
+  "Collection Poster":
+    "https://github.com/fscorrupt/Posterizarr#collectionposteroverlaypart",
+  CollectionPosterOverlayPart:
+    "https://github.com/fscorrupt/Posterizarr#collectionposteroverlaypart",
+  "Collection Title":
+    "https://github.com/fscorrupt/Posterizarr#collectiontitleposterpart",
+  CollectionTitlePosterPart:
+    "https://github.com/fscorrupt/Posterizarr#collectiontitleposterpart",
+};
 
 // Comprehensive tooltip descriptions for all config variables
 const getConfigTooltips = (language) => {
@@ -1696,6 +1762,11 @@ function ConfigEditor() {
     return getGroupIcon(groupName);
   };
 
+  // Get README link for a group
+  const getReadmeLink = (groupName) => {
+    return README_LINKS[groupName] || null;
+  };
+
   // Helper function to check if a media server field should be disabled
   const isFieldDisabled = (key, groupName) => {
     if (!config) return false;
@@ -2029,7 +2100,7 @@ function ConfigEditor() {
 
             {/* Upload Button */}
             <label
-              className={`flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm cursor-pointer ${
                 uploadingOverlay ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2051,18 +2122,18 @@ function ConfigEditor() {
               ) : (
                 <Upload className="w-4 h-4" />
               )}
-              <span className="text-sm">Upload</span>
+              <span>Upload</span>
             </label>
 
             {/* Preview Button */}
             {stringValue && (
               <button
                 onClick={() => setPreviewOverlay(stringValue)}
-                className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 title="Preview overlay image"
               >
                 <Eye className="w-4 h-4" />
-                <span className="text-sm text-theme-text">Preview</span>
+                <span>Preview</span>
               </button>
             )}
           </div>
@@ -2164,7 +2235,7 @@ function ConfigEditor() {
 
             {/* Upload Button */}
             <label
-              className={`flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm cursor-pointer ${
                 uploadingFont ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2186,18 +2257,18 @@ function ConfigEditor() {
               ) : (
                 <Upload className="w-4 h-4" />
               )}
-              <span className="text-sm">Upload</span>
+              <span>Upload</span>
             </label>
 
             {/* Preview Button */}
             {stringValue && (
               <button
                 onClick={() => setPreviewFont(stringValue)}
-                className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 title="Preview font"
               >
                 <Eye className="w-4 h-4" />
-                <span className="text-sm text-theme-text">Preview</span>
+                <span>Preview</span>
               </button>
             )}
           </div>
@@ -3477,10 +3548,10 @@ function ConfigEditor() {
                 }
               }}
               disabled={disabled}
-              className={`px-3 py-1 text-xs rounded-lg transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm ${
                 currentInputType === "name"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-bg text-theme-muted hover:bg-theme-hover"
+                  ? "bg-theme-primary text-white border-theme-primary"
+                  : ""
               } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Color Name
@@ -3494,10 +3565,10 @@ function ConfigEditor() {
                 }
               }}
               disabled={disabled}
-              className={`px-3 py-1 text-xs rounded-lg transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm ${
                 currentInputType === "hex"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-bg text-theme-muted hover:bg-theme-hover"
+                  ? "bg-theme-primary text-white border-theme-primary"
+                  : ""
               } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Hex Code
@@ -3850,25 +3921,23 @@ function ConfigEditor() {
           <button
             onClick={fetchConfig}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
-              className={`w-4 h-4 text-theme-text ${
+              className={`w-4 h-4 text-theme-primary ${
                 loading ? "animate-spin" : ""
               }`}
             />
-            <span className="text-sm text-theme-text">
-              {t("configEditor.reload")}
-            </span>
+            <span className="text-theme-text">{t("configEditor.reload")}</span>
           </button>
           <button
             onClick={() => saveConfig(false)}
             disabled={saving}
-            className={`flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border ${
+            className={`flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border ${
               hasUnsavedChanges
                 ? "border-yellow-500 animate-pulse"
                 : "border-theme"
-            } hover:border-theme-primary/50 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg text-theme-text transition-all shadow-sm`}
+            } hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
             title={t("configEditor.saveConfigTitle")}
           >
             {saving ? (
@@ -3880,7 +3949,7 @@ function ConfigEditor() {
                 }`}
               />
             )}
-            <span className="text-sm">
+            <span className="text-theme-text">
               {saving
                 ? t("configEditor.saving")
                 : t("configEditor.saveChanges")}
@@ -3984,18 +4053,18 @@ function ConfigEditor() {
                 });
                 setExpandedGroups(newExpandedState);
               }}
-              className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             >
-              <Expand className="w-4 h-4" />
+              <Expand className="w-4 h-4 text-theme-primary" />
               {t("configEditor.expandAll")}
             </button>
             <button
               onClick={() => {
                 setExpandedGroups({});
               }}
-              className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             >
-              <Minimize className="w-4 h-4" />
+              <Minimize className="w-4 h-4 text-theme-primary" />
               {t("configEditor.collapseAll")}
             </button>
           </div>
@@ -4009,6 +4078,7 @@ function ConfigEditor() {
           const isExpanded = expandedGroups[groupName];
           const fields = getFilteredFieldsForGroup(groupName);
           const settingsCount = fields.length;
+          const readmeLink = getReadmeLink(groupName);
 
           // Don't show groups with no matching fields when searching
           if (searchQuery && settingsCount === 0) return null;
@@ -4031,19 +4101,34 @@ function ConfigEditor() {
                     <h3 className="text-xl font-semibold text-theme-primary">
                       {formatGroupName(groupName)}
                     </h3>
-                    <p className="text-sm text-theme-muted mt-1">
-                      {settingsCount} setting
-                      {settingsCount !== 1 ? "s" : ""}
-                      {searchQuery && " (filtered)"}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-theme-muted">
+                        {settingsCount} setting
+                        {settingsCount !== 1 ? "s" : ""}
+                        {searchQuery && " (filtered)"}
+                      </p>
+                      {readmeLink && (
+                        <a
+                          href={readmeLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all shadow-sm hover:scale-105"
+                          title="Open settings documentation in GitHub README"
+                        >
+                          <Github className="w-3.5 h-3.5 text-theme-primary" />
+                          <span>SETTINGS WIKI</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                       isExpanded
-                        ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
-                        : "bg-theme-bg text-theme-muted border border-theme"
+                        ? "bg-theme-card text-theme-primary border border-theme-primary/50 shadow-sm"
+                        : "bg-theme-card text-theme-muted border border-theme"
                     }`}
                   >
                     {isExpanded ? "Open" : "Closed"}
@@ -4431,7 +4516,7 @@ function ConfigEditor() {
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   onClick={() => setPreviewOverlay(null)}
-                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   {t("common.close")}
                 </button>
@@ -4554,7 +4639,7 @@ function ConfigEditor() {
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   onClick={() => setPreviewFont(null)}
-                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   {t("common.close")}
                 </button>
