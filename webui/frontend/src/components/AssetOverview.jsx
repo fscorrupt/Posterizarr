@@ -13,6 +13,7 @@ import {
   ChevronDown,
   CheckIcon,
   Star,
+  ExternalLink,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
@@ -22,6 +23,63 @@ import ScrollToButtons from "./ScrollToButtons";
 const AssetOverview = () => {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
+
+  // Helper function to detect provider from URL and return badge styling
+  const getProviderBadge = (url) => {
+    if (!url || url === "false" || url === false) {
+      return {
+        name: "Missing",
+        color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+        logo: null,
+      };
+    }
+
+    const urlLower = url.toLowerCase();
+
+    if (urlLower.includes("tmdb") || urlLower.includes("themoviedb")) {
+      return {
+        name: "TMDB",
+        color:
+          "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30",
+        logo: "/tmdb.png",
+      };
+    } else if (urlLower.includes("tvdb") || urlLower.includes("thetvdb")) {
+      return {
+        name: "TVDB",
+        color:
+          "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30",
+        logo: "/tvdb.png",
+      };
+    } else if (urlLower.includes("fanart")) {
+      return {
+        name: "Fanart.tv",
+        color:
+          "bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30",
+        logo: "/fanart.png",
+      };
+    } else if (urlLower.includes("plex")) {
+      return {
+        name: "Plex",
+        color:
+          "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30",
+        logo: "/plex.png",
+      };
+    } else if (urlLower.includes("imdb")) {
+      return {
+        name: "IMDb",
+        color:
+          "bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30",
+        logo: "/imdb.png",
+      };
+    } else {
+      return {
+        name: "Other",
+        color:
+          "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30",
+        logo: null,
+      };
+    }
+  };
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1055,35 +1113,48 @@ const AssetOverview = () => {
                         <span className="font-medium">
                           {t("assetOverview.source")}:
                         </span>
-                        {asset.FavProviderLink &&
-                        asset.FavProviderLink !== "false" &&
-                        asset.FavProviderLink !== false ? (
-                          <a
-                            href={asset.FavProviderLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-theme-card px-2 py-0.5 rounded text-theme-primary hover:text-theme-primary/80 hover:underline transition-colors break-all"
-                            title={asset.DownloadSource || "View Source"}
-                          >
-                            {asset.DownloadSource &&
+                        {(() => {
+                          const badge = getProviderBadge(asset.DownloadSource);
+
+                          if (
+                            asset.DownloadSource &&
                             asset.DownloadSource !== "false" &&
                             asset.DownloadSource !== false
-                              ? asset.DownloadSource.length > 50
-                                ? `${asset.DownloadSource.substring(0, 50)}...`
-                                : asset.DownloadSource
-                              : "View Source"}
-                          </a>
-                        ) : (
-                          <span className="bg-theme-card px-2 py-0.5 rounded break-all">
-                            {asset.DownloadSource &&
-                            asset.DownloadSource !== "false" &&
-                            asset.DownloadSource !== false
-                              ? asset.DownloadSource.length > 50
-                                ? `${asset.DownloadSource.substring(0, 50)}...`
-                                : asset.DownloadSource
-                              : "Missing"}
-                          </span>
-                        )}
+                          ) {
+                            return (
+                              <a
+                                href={asset.DownloadSource}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                                title={asset.DownloadSource}
+                              >
+                                {badge.logo ? (
+                                  <img
+                                    src={badge.logo}
+                                    alt={badge.name}
+                                    className="h-[35px] object-contain"
+                                  />
+                                ) : (
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                                  >
+                                    {badge.name}
+                                  </span>
+                                )}
+                                <ExternalLink className="w-3 h-3 opacity-60" />
+                              </a>
+                            );
+                          } else {
+                            return (
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                              >
+                                {badge.name}
+                              </span>
+                            );
+                          }
+                        })()}
                       </div>
 
                       {/* Tags */}
