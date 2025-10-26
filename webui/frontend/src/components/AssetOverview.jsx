@@ -78,128 +78,124 @@ const getProviderBadge = (url) => {
 };
 
 // Asset Row Component - Memoized to prevent unnecessary re-renders
-const AssetRow = React.memo(({ asset, tags, showName, onNoEditsNeeded, onReplace }) => {
-  const { t } = useTranslation();
-  const [logoError, setLogoError] = useState(false);
+const AssetRow = React.memo(
+  ({ asset, tags, showName, onNoEditsNeeded, onReplace }) => {
+    const { t } = useTranslation();
+    const [logoError, setLogoError] = useState(false);
 
-  // Memoize badge computation based on DownloadSource
-  const badge = useMemo(
-    () => getProviderBadge(asset.DownloadSource),
-    [asset.DownloadSource]
-  );
+    // Memoize badge computation based on DownloadSource
+    const badge = useMemo(
+      () => getProviderBadge(asset.DownloadSource),
+      [asset.DownloadSource]
+    );
 
-  return (
-    <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-theme-text break-words">
-            {showName ? (
-              <>
-                <span className="text-theme-primary">
-                  {showName}
+    return (
+      <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-theme-text break-words">
+              {showName ? (
+                <>
+                  <span className="text-theme-primary">{showName}</span>
+                  <span className="text-theme-muted mx-2">|</span>
+                  <span>{asset.Title}</span>
+                </>
+              ) : (
+                asset.Title
+              )}
+            </h3>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
+              <span className="font-medium">{t("assetOverview.type")}:</span>
+              <span className="bg-theme-card px-2 py-0.5 rounded">
+                {asset.Type || "Unknown"}
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="font-medium">
+                {t("assetOverview.language")}:
+              </span>
+              <span className="bg-theme-card px-2 py-0.5 rounded">
+                {asset.Language &&
+                asset.Language !== "false" &&
+                asset.Language !== false
+                  ? asset.Language
+                  : "Unknown"}
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="font-medium">{t("assetOverview.source")}:</span>
+              {asset.DownloadSource &&
+              asset.DownloadSource !== "false" &&
+              asset.DownloadSource !== false ? (
+                <a
+                  href={asset.DownloadSource}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                  title={asset.DownloadSource}
+                >
+                  {badge.logo && !logoError ? (
+                    <img
+                      src={badge.logo}
+                      alt={badge.name}
+                      className="h-[35px] object-contain"
+                      onError={() => setLogoError(true)}
+                    />
+                  ) : (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                    >
+                      {badge.name}
+                    </span>
+                  )}
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+              ) : (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                >
+                  {badge.name}
                 </span>
-                <span className="text-theme-muted mx-2">|</span>
-                <span>{asset.Title}</span>
-              </>
-            ) : (
-              asset.Title
-            )}
-          </h3>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
-            <span className="font-medium">
-              {t("assetOverview.type")}:
-            </span>
-            <span className="bg-theme-card px-2 py-0.5 rounded">
-              {asset.Type || "Unknown"}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="font-medium">
-              {t("assetOverview.language")}:
-            </span>
-            <span className="bg-theme-card px-2 py-0.5 rounded">
-              {asset.Language &&
-              asset.Language !== "false" &&
-              asset.Language !== false
-                ? asset.Language
-                : "Unknown"}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="font-medium">
-              {t("assetOverview.source")}:
-            </span>
-            {asset.DownloadSource &&
-            asset.DownloadSource !== "false" &&
-            asset.DownloadSource !== false ? (
-              <a
-                href={asset.DownloadSource}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
-                title={asset.DownloadSource}
-              >
-                {badge.logo && !logoError ? (
-                  <img
-                    src={badge.logo}
-                    alt={badge.name}
-                    className="h-[35px] object-contain"
-                    onError={() => setLogoError(true)}
-                  />
-                ) : (
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
-                  >
-                    {badge.name}
-                  </span>
-                )}
-                <ExternalLink className="w-3 h-3 opacity-60" />
-              </a>
-            ) : (
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
-              >
-                {badge.name}
-              </span>
-            )}
+              )}
+            </div>
+
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {tags.map((tag, index) => (
-              <span
-                key={index}
-                className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
-              >
-                {tag.label}
-              </span>
-            ))}
+          {/* Action Buttons */}
+          <div className="flex items-start gap-2">
+            <button
+              onClick={() => onNoEditsNeeded(asset)}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+              title={t("assetOverview.noEditsNeededTooltip")}
+            >
+              <CheckIcon className="w-4 h-4 text-theme-primary" />
+              {t("assetOverview.noEditsNeeded")}
+            </button>
+            <button
+              onClick={() => onReplace(asset)}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+              title={t("assetOverview.replaceTooltip")}
+            >
+              <Replace className="w-4 h-4 text-theme-primary" />
+              {t("assetOverview.replace")}
+            </button>
           </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-start gap-2">
-          <button
-            onClick={() => onNoEditsNeeded(asset)}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-            title={t("assetOverview.noEditsNeededTooltip")}
-          >
-            <CheckIcon className="w-4 h-4 text-theme-primary" />
-            {t("assetOverview.noEditsNeeded")}
-          </button>
-          <button
-            onClick={() => onReplace(asset)}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-            title={t("assetOverview.replaceTooltip")}
-          >
-            <Replace className="w-4 h-4 text-theme-primary" />
-            {t("assetOverview.replace")}
-          </button>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
-AssetRow.displayName = 'AssetRow';
+AssetRow.displayName = "AssetRow";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
