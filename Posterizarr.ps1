@@ -51,7 +51,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "2.0.0"
+$CurrentScriptVersion = "2.0.2"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -29332,6 +29332,14 @@ else {
                         }
                         else {
                             if ($global:UploadExistingAssets -eq 'true') {
+                                if ($entry.PlexPosterUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $entry.PlexPosterUrl
+                                    }
+                                }
                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                 try {
                                     GetPlexArtwork -Type "$Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
@@ -29809,6 +29817,14 @@ else {
                         }
                         else {
                             if ($global:UploadExistingAssets -eq 'true') {
+                                if ($entry.PlexBackgroundUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                                    }
+                                }
                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                 try {
                                     GetPlexArtwork -Type " $Titletext | Backgound Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
@@ -30375,6 +30391,14 @@ else {
                     }
                     else {
                         if ($global:UploadExistingAssets -eq 'true') {
+                            if ($entry.PlexPosterUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexPosterUrl
+                                }
+                            }
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
                                 GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
@@ -30865,6 +30889,14 @@ else {
                     }
                     else {
                         if ($global:UploadExistingAssets -eq 'true') {
+                            if ($entry.PlexBackgroundUrl -like "/library/*") {
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                                }
+                            }
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
                                 GetPlexArtwork -Type " $Titletext | Background Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
@@ -31561,6 +31593,14 @@ else {
                         }
                         else {
                             if ($global:UploadExistingAssets -eq 'true') {
+                                if ($global:PlexSeasonUrl -like "/library/*") {
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $global:PlexSeasonUrl
+                                    }
+                                }
                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                 try {
                                     GetPlexArtwork -Type " $Titletext | $global:seasontmp Artwork." -ArtUrl $Arturl -TempImage $SeasonImage
@@ -32177,6 +32217,14 @@ else {
                                         }
                                         else {
                                             if ($global:UploadExistingAssets -eq 'true') {
+                                                if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                    if ($PlexToken) {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                    }
+                                                    Else {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                    }
+                                                }
                                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                                 try {
                                                     GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
@@ -32767,6 +32815,14 @@ else {
                                         }
                                         else {
                                             if ($global:UploadExistingAssets -eq 'true') {
+                                                if ($global:PlexTitleCardUrl -like "/library/*") {
+                                                    if ($PlexToken) {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                                    }
+                                                    Else {
+                                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                                    }
+                                                }
                                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                                 try {
                                                     GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
