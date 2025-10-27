@@ -40,6 +40,8 @@ IS_DOCKER = (
     or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
 )
 
+port = int(os.environ.get("APP_PORT", 8000))
+
 if IS_DOCKER:
     BASE_DIR = Path("/config")
     APP_DIR = Path("/app")
@@ -126,7 +128,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "INFO",
+        "log_level": "WARNING",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -187,7 +189,7 @@ def initialize_webui_settings():
     """Initialize webui_settings.json with default values if it doesn't exist"""
     if not WEBUI_SETTINGS_PATH.exists():
         default_settings = {
-            "log_level": "DEBUG",
+            "log_level": "WARNING",
             "theme": "dark",
             "auto_refresh_interval": 180,
         }
@@ -10562,4 +10564,4 @@ async def spa_fallback(request: Request, exc: HTTPException):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
