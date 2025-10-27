@@ -800,15 +800,13 @@ def scan_and_cache_assets():
         return
 
     try:
-        all_images = (
-            list(ASSETS_DIR.rglob("*.jpg"))
-            + list(ASSETS_DIR.rglob("*.jpeg"))
-            + list(ASSETS_DIR.rglob("*.png"))
-            + list(ASSETS_DIR.rglob("*.webp"))
-        )
-
-        # Filter out @eaDir directories from Synology NAS
-        all_images = [img for img in all_images if "@eaDir" not in img.parts]
+        # Scan once for all image types and filter @eaDir in one pass
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+        all_images = [
+            p
+            for p in ASSETS_DIR.rglob("*")
+            if p.suffix.lower() in image_extensions and "@eaDir" not in p.parts
+        ]
 
         temp_folders = {}
 
@@ -817,11 +815,11 @@ def scan_and_cache_assets():
             if not image_data:
                 continue
 
-            folder_name = (
-                Path(image_data["path"]).parts[0]
-                if len(Path(image_data["path"]).parts) > 0
-                else "root"
-            )
+            # Get folder name from original Path object (already computed in image_path)
+            try:
+                folder_name = image_path.relative_to(ASSETS_DIR).parts[0]
+            except (ValueError, IndexError):
+                folder_name = "root"
 
             if folder_name not in temp_folders:
                 temp_folders[folder_name] = {
