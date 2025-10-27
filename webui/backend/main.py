@@ -807,6 +807,9 @@ def scan_and_cache_assets():
             + list(ASSETS_DIR.rglob("*.webp"))
         )
 
+        # Filter out @eaDir directories from Synology NAS
+        all_images = [img for img in all_images if "@eaDir" not in str(img)]
+
         temp_folders = {}
 
         for image_path in all_images:
@@ -979,6 +982,10 @@ def find_poster_in_assets(
 
         # Search recursively for the folder
         for item in ASSETS_DIR.rglob("*"):
+            # Skip @eaDir folders from Synology NAS
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
             if item.is_dir() and item.name == rootfolder:
                 # Found the matching folder
                 image_file = None
@@ -6808,7 +6815,8 @@ async def get_manual_assets_gallery():
 
         # Iterate through library folders
         for library_dir in MANUAL_ASSETS_DIR.iterdir():
-            if not library_dir.is_dir():
+            # Skip @eaDir folders from Synology NAS
+            if not library_dir.is_dir() or library_dir.name == "@eaDir":
                 continue
 
             library_name = library_dir.name
@@ -6816,7 +6824,8 @@ async def get_manual_assets_gallery():
 
             # Iterate through show/movie folders
             for folder_dir in library_dir.iterdir():
-                if not folder_dir.is_dir():
+                # Skip @eaDir folders from Synology NAS
+                if not folder_dir.is_dir() or folder_dir.name == "@eaDir":
                     continue
 
                 folder_name = folder_dir.name
@@ -6824,6 +6833,10 @@ async def get_manual_assets_gallery():
 
                 # Find all image files in this folder
                 for img_file in folder_dir.iterdir():
+                    # Skip @eaDir files
+                    if "@eaDir" in str(img_file):
+                        continue
+
                     if img_file.is_file() and img_file.suffix.lower() in [
                         ".jpg",
                         ".jpeg",
@@ -7050,6 +7063,10 @@ async def get_folder_view_items(library_path: str):
 
         folders = []
         for item in library_full_path.iterdir():
+            # Skip @eaDir folders from Synology NAS
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
             if item.is_dir():
                 # Count assets in this folder
                 asset_count = 0
@@ -7497,8 +7514,15 @@ async def get_test_gallery():
     image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
 
     try:
-        for image_path in TEST_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
+        # Filter out @eaDir during iteration
+        all_test_images = [
+            p
+            for p in TEST_DIR.rglob("*")
+            if p.suffix.lower() in image_extensions and "@eaDir" not in str(p)
+        ]
+
+        for image_path in all_test_images:
+            if image_path.is_file():
                 try:
                     relative_path = image_path.relative_to(TEST_DIR)
                     # Create URL path with forward slashes
