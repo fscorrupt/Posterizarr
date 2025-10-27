@@ -8,3 +8,4 @@ pytz==2024.1
 psutil>=5.9.0
 requests>=2.31.0
 Pillow>=11.0.0
+watchdog>=3.0.0

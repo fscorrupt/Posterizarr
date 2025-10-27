@@ -440,6 +440,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import logs watcher module for background process monitoring
+try:
+    logger.debug("Attempting to import logs_watcher module")
+    from logs_watcher import create_logs_watcher
+
+    LOGS_WATCHER_AVAILABLE = True
+    logger.info("Logs watcher module loaded successfully")
+except ImportError as e:
+    LOGS_WATCHER_AVAILABLE = False
+    logger.warning(
+        f"Logs watcher not available: {e}. Background process monitoring will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -447,6 +461,7 @@ logger.debug(f"Auth Middleware: {AUTH_MIDDLEWARE_AVAILABLE}")
 logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
+logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -454,6 +469,7 @@ current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
+logs_watcher = None  # Logs directory watcher for background processes
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
@@ -1288,7 +1304,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db
+    global scheduler, db, config_db, logs_watcher
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1373,9 +1389,42 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Scheduler module not available, skipping scheduler initialization")
 
+    # Initialize and start logs watcher for background processes (Tautulli, Sonarr, Radarr)
+    if LOGS_WATCHER_AVAILABLE and (DATABASE_AVAILABLE or RUNTIME_DB_AVAILABLE):
+        try:
+            logger.info("Initializing logs watcher for background processes...")
+            logs_watcher = create_logs_watcher(
+                logs_dir=LOGS_DIR,
+                db_instance=db,
+                runtime_db_instance=runtime_db if RUNTIME_DB_AVAILABLE else None,
+            )
+            logs_watcher.start()
+            logger.info(
+                "✓ Logs watcher started - monitoring for Tautulli/Sonarr/Radarr changes"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize logs watcher: {e}")
+            logs_watcher = None
+    else:
+        if not LOGS_WATCHER_AVAILABLE:
+            logger.info("Logs watcher module not available, skipping initialization")
+        else:
+            logger.info(
+                "Logs watcher requires database modules, skipping initialization"
+            )
+
     yield
 
     # Shutdown
+    # Stop logs watcher
+    if logs_watcher:
+        try:
+            logger.info("Stopping logs watcher...")
+            logs_watcher.stop()
+            logger.info("Logs watcher stopped")
+        except Exception as e:
+            logger.error(f"Error stopping logs watcher: {e}")
+
     # Stop queue listener for thread-safe logging
     global queue_listener
     if queue_listener:
@@ -7743,6 +7792,57 @@ async def run_scheduler_now():
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error triggering scheduled run: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# LOGS WATCHER STATUS ENDPOINT
+# ============================================================================
+
+
+@app.get("/api/logs-watcher/status")
+async def get_logs_watcher_status():
+    """Get logs watcher status and statistics"""
+    if not LOGS_WATCHER_AVAILABLE:
+        return {
+            "available": False,
+            "message": "Logs watcher module not available",
+        }
+
+    if not logs_watcher:
+        return {
+            "available": True,
+            "running": False,
+            "message": "Logs watcher not initialized",
+        }
+
+    try:
+        return {
+            "available": True,
+            "running": logs_watcher.is_running,
+            "watching_directory": str(logs_watcher.logs_dir),
+            "debounce_seconds": logs_watcher.debounce_seconds,
+            "last_csv_import": (
+                datetime.fromtimestamp(logs_watcher.last_csv_import).isoformat()
+                if logs_watcher.last_csv_import > 0
+                else None
+            ),
+            "monitored_files": {
+                "csv": "ImageChoices.csv",
+                "runtime_json": (
+                    list(logs_watcher.handler.RUNTIME_JSON_FILES)
+                    if logs_watcher.handler
+                    else []
+                ),
+            },
+            "recent_imports": {
+                "csv_count": 1 if logs_watcher.last_csv_import > 0 else 0,
+                "json_count": len(logs_watcher.last_json_imports),
+            },
+            "message": "Logs watcher is monitoring for background process changes",
+        }
+    except Exception as e:
+        logger.error(f"Error getting logs watcher status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
