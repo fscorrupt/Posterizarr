@@ -6834,7 +6834,7 @@ async def get_manual_assets_gallery():
                 # Find all image files in this folder
                 for img_file in folder_dir.iterdir():
                     # Skip items containing @eaDir in path
-                    if "@eaDir" in str(img_file):
+                    if "@eaDir" in img_file.parts:
                         continue
 
                     if img_file.is_file() and img_file.suffix.lower() in [
