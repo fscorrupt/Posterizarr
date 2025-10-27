@@ -510,6 +510,7 @@
     "titleCards": "Titelkarten",
     "seasons": "Staffeln",
     "posters": "Poster",
+    "assetsFolders": "Assets-Ordner",
     "upload": "Hochladen",
     "delete": "Löschen",
     "replace": "Ersetzen",
@@ -752,7 +753,7 @@
     "loading": "Lade Galerie...",
     "noImages": "Keine Bilder gefunden",
     "error": "Fehler beim Laden der Galerie",
-    "folders": "Ordner",
+    "folders": "Bibliotheks-Ordner",
     "cancelSelect": "Auswahl abbrechen",
     "select": "Auswählen",
     "refresh": "Aktualisieren",
@@ -965,7 +966,7 @@
     }
   },
   "seasonGallery": {
-    "folders": "Ordner",
+    "folders": "Bibliotheks-Ordner",
     "select": "Auswählen",
     "cancelSelect": "Auswahl abbrechen",
     "refresh": "Aktualisieren",
@@ -1029,7 +1030,7 @@
     "errors": {
       "bulkDeletePartial": "{{deleted}} Titelkarte(n) gelöscht, aber {{failed}} fehlgeschlagen."
     },
-    "folders": "Ordner",
+    "folders": "Bibliotheks-Ordner",
     "select": "Auswählen",
     "cancelSelect": "Auswahl abbrechen",
     "refresh": "Aktualisieren",
@@ -1140,7 +1141,7 @@
     "forTheCommunity": "für die Community"
   },
   "backgroundsGallery": {
-    "folders": "Ordner",
+    "folders": "Bibliotheks-Ordner",
     "select": "Auswählen",
     "cancelSelect": "Auswahl abbrechen",
     "searchPlaceholder": "Hintergründe in {{folder}} durchsuchen...",

@@ -509,6 +509,7 @@
     "titleCards": "Schede titolo",
     "seasons": "Stagioni",
     "posters": "Locandine",
+    "assetsFolders": "Cartelle degli asset",
     "upload": "Carica",
     "delete": "Elimina",
     "replace": "Sostituisci",
@@ -751,7 +752,7 @@
     "loading": "Caricamento galleria...",
     "noImages": "Nessuna immagine trovata",
     "error": "Errore durante il caricamento della galleria",
-    "folders": "Cartelle",
+    "folders": "Cartelle della libreria",
     "cancelSelect": "Annulla selezione",
     "select": "Seleziona",
     "refresh": "Aggiorna",
@@ -964,7 +965,7 @@
     }
   },
   "seasonGallery": {
-    "folders": "Cartelle",
+    "folders": "Cartelle della libreria",
     "select": "Seleziona",
     "cancelSelect": "Annulla selezione",
     "refresh": "Aggiorna",
@@ -1028,7 +1029,7 @@
     "errors": {
       "bulkDeletePartial": "Eliminate {{deleted}} schede titolo, ma {{failed}} non riuscite."
     },
-    "folders": "Cartelle",
+    "folders": "Cartelle della libreria",
     "select": "Seleziona",
     "cancelSelect": "Annulla selezione",
     "refresh": "Aggiorna",
@@ -1139,7 +1140,7 @@
     "forTheCommunity": "per la community"
   },
   "backgroundsGallery": {
-    "folders": "Cartelle",
+    "folders": "Cartelle della libreria",
     "select": "Seleziona",
     "cancelSelect": "Annulla selezione",
     "searchPlaceholder": "Cerca sfondi in {{folder}}...",

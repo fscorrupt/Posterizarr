@@ -509,6 +509,7 @@
     "titleCards": "Cartons de titre",
     "seasons": "Saisons",
     "posters": "Affiches",
+    "assetsFolders": "Dossiers de ressources",
     "upload": "Téléverser",
     "delete": "Supprimer",
     "replace": "Remplacer",
@@ -751,7 +752,7 @@
     "loading": "Chargement de la galerie...",
     "noImages": "Aucune image trouvée",
     "error": "Erreur lors du chargement de la galerie",
-    "folders": "Dossiers",
+    "folders": "Dossiers de bibliothèque",
     "cancelSelect": "Annuler la sélection",
     "select": "Sélectionner",
     "refresh": "Actualiser",
@@ -964,7 +965,7 @@
     }
   },
   "seasonGallery": {
-    "folders": "Dossiers",
+    "folders": "Dossiers de bibliothèque",
     "select": "Sélectionner",
     "cancelSelect": "Annuler la sélection",
     "refresh": "Actualiser",
@@ -1028,7 +1029,7 @@
     "errors": {
       "bulkDeletePartial": "Supprimé {{deleted}} carton(s) de titre, mais {{failed}} ont échoué."
     },
-    "folders": "Dossiers",
+    "folders": "Dossiers de bibliothèque",
     "select": "Sélectionner",
     "cancelSelect": "Annuler la sélection",
     "refresh": "Actualiser",
@@ -1139,7 +1140,7 @@
     "forTheCommunity": "pour la communauté"
   },
   "backgroundsGallery": {
-    "folders": "Dossiers",
+    "folders": "Dossiers de bibliothèque",
     "select": "Sélectionner",
     "cancelSelect": "Annuler la sélection",
     "searchPlaceholder": "Rechercher des arrière-plans dans {{folder}}...",

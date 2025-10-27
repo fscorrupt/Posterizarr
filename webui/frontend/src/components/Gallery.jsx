@@ -412,7 +412,7 @@ function Gallery() {
                         {t("gallery.cancelSelect")}
                       </span>
                       <span className="sm:hidden">
-                        {t("gallery.cancel") || "Cancel"}
+                        {t("gallery.cancelSelect") || "Cancel"}
                       </span>
                     </>
                   ) : (

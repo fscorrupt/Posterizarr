@@ -373,13 +373,15 @@ function BackgroundsGallery() {
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
-        <div className="bg-theme-card rounded-lg border border-theme-border p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+        <div className="bg-theme-card rounded-lg border border-theme-border p-3 sm:p-4">
+          {/* Header with Controls - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-theme-text flex items-center gap-2">
               <Folder className="w-5 h-5 text-theme-primary" />
               {t("backgroundsGallery.folders")}
             </h2>
-            <div className="flex items-center gap-3">
+            {/* Controls - wrap on small screens */}
+            <div className="flex flex-wrap items-center gap-2">
               {/* Compact Image Size Slider */}
               <CompactImageSizeSlider
                 value={imageSize}
@@ -396,21 +398,31 @@ function BackgroundsGallery() {
                       setSelectMode(true);
                     }
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-sm ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-lg ${
                     selectMode
-                      ? "bg-orange-600 hover:bg-orange-700 text-white"
-                      : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
+                      ? "bg-orange-600 hover:bg-orange-700"
+                      : "bg-theme-primary hover:bg-theme-primary/90"
                   }`}
                 >
                   {selectMode ? (
                     <>
-                      <Square className="w-5 h-5" />
-                      {t("backgroundsGallery.cancelSelect")}
+                      <Square className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="hidden sm:inline">
+                        {t("backgroundsGallery.cancelSelect")}
+                      </span>
+                      <span className="sm:hidden">
+                        {t("backgroundsGallery.cancelSelect") || "Cancel"}
+                      </span>
                     </>
                   ) : (
                     <>
-                      <CheckSquare className="w-5 h-5 text-theme-primary" />
-                      {t("backgroundsGallery.select")}
+                      <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="hidden sm:inline">
+                        {t("backgroundsGallery.select")}
+                      </span>
+                      <span className="sm:hidden">
+                        {t("backgroundsGallery.select")}
+                      </span>
                     </>
                   )}
                 </button>
@@ -424,14 +436,14 @@ function BackgroundsGallery() {
                   }
                 }}
                 disabled={loading || imagesLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-theme-text font-medium transition-all shadow-sm"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-theme-text text-sm font-medium transition-all shadow-sm"
               >
                 <RefreshCw
-                  className={`w-5 h-5 text-theme-primary ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-theme-primary ${
                     loading || imagesLoading ? "animate-spin" : ""
                   }`}
                 />
-                {t("common.refresh")}
+                <span className="hidden sm:inline">{t("common.refresh")}</span>
               </button>
             </div>
           </div>
@@ -884,10 +896,10 @@ function BackgroundsGallery() {
                     <Layers className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-white text-lg font-semibold mb-2">
-                    {t('backgroundsGallery.previewNotAvailable')}
+                    {t("backgroundsGallery.previewNotAvailable")}
                   </p>
                   <p className="text-gray-400 text-sm">
-                    {t('backgroundsGallery.useFileExplorer')}
+                    {t("backgroundsGallery.useFileExplorer")}
                   </p>
                 </div>
               </div>
