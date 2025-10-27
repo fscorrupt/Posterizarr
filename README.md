@@ -995,7 +995,7 @@ Once both services are running, you can access the Posterizarr Web UI by opening
 ### Assets Tip
 
 > [!TIP]
-> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/520ce753541fe90ec43c9e12ca056f839f9f4434/docker-compose.example.yml#L17) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
+> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/aa1143e66830d9343189ea93f0d050b986b18abd/docker-compose.yml#L19) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
 >
 > Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
 >
@@ -1059,14 +1059,17 @@ If you have Library Folders set to `false`, it will look like this:
 
 ### Docker
 
-- [Docker-Compose Example File](docker-compose.example.yml)
+- [Docker-Compose Example File](docker-compose.yml)
 
   - Change `RUN_TIME` in yaml to your needs **- You need to use 24H Time Format**
     - The Script gets executed on the Times you specified
     - Before starting the scheduled run it checks if another Posterizarr process is running, if yes - the scheduled run will be skipped.
     - If set to `disabled`, the script will **not** run on a schedule but will still watch for file triggers and respond to manual triggers.
+      - Required at `disabled` for the UI & if you want to set the schedules there.
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
+  - Add `DISABLE_UI` and set it to `true` if you want to disable the UI.
+  - Change `APP_PORT` and set it to your prefered port (`9000` also update it in compose ports block)
   - You may also have to change `user: "1000:1000"` (PUID/PGID)
 
   If you manually want to run the Script you can do it this way:

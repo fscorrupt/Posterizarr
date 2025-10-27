@@ -1653,7 +1653,7 @@
             "title": "Trigger-Skript herunterladen",
             "description": "Lade trigger.py von GitHub herunter und platziere es in deinem Tautulli-Skript-Verzeichnis.",
             "substeps": [
-              "Download von: https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
+              "Download von: https://github.com/fscorrupt/Posterizarr/blob/main/modules/trigger.py",
               "In Tautulli-Skript-Verzeichnis ablegen (siehe Tautulli Wiki für Speicherort)",
               "Ausführungsrechte setzen: chmod +x trigger.py"
             ]
@@ -1771,7 +1771,7 @@
           "title": "Trigger-Skript herunterladen",
           "description": "Lade ArrTrigger.sh von GitHub herunter und platziere es in deinem Sonarr-Skript-Verzeichnis.",
           "substeps": [
-            "Download von: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Download von: https://github.com/fscorrupt/Posterizarr/blob/main/modules/ArrTrigger.sh",
             "Beispiel: Erstelle /opt/appdata/sonarr/scripts/ Verzeichnis",
             "Platziere ArrTrigger.sh in diesem Verzeichnis",
             "Ausführungsrechte setzen: chmod +x ArrTrigger.sh"
@@ -1843,7 +1843,7 @@
           "title": "Trigger-Skript herunterladen",
           "description": "Lade ArrTrigger.sh von GitHub herunter und platziere es in deinem Radarr-Skript-Verzeichnis.",
           "substeps": [
-            "Download von: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Download von: https://github.com/fscorrupt/Posterizarr/blob/main/modules/ArrTrigger.sh",
             "Beispiel: Erstelle /opt/appdata/radarr/scripts/ Verzeichnis",
             "Platziere ArrTrigger.sh in diesem Verzeichnis",
             "Ausführungsrechte setzen: chmod +x ArrTrigger.sh"

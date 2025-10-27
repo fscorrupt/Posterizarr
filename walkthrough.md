@@ -189,7 +189,7 @@
 > Have a look at the [Assets Tip](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#assets-tip)
 
 ## Docker
-1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/raw/main/docker-compose.example.yml) to fit your environment.
+1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/raw/main/docker-compose.yml) to fit your environment.
     - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#docker)
 
         Docker-Compose example on Linux:
