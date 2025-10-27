@@ -79,9 +79,21 @@ COPY <<'EOF' /app/start.sh
 #!/bin/sh
 set -e
 export PYTHONPATH=/app
-# Start FastAPI backend (serves API and frontend) - NO CONSOLE LOGGING
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --log-level critical --no-access-log &
+
+# Use APP_PORT environment variable, or default to 8000
+INTERNAL_PORT=${APP_PORT:-8000}
+
+# Check if the UI should be started
+if [ "$DISABLE_UI" != "TRUE" ]; then
+  echo "Starting FastAPI Web UI (API + Frontend) on port ${INTERNAL_PORT}..."
+  # Start FastAPI backend in the background using the variable
+  python -m uvicorn backend.main:app --host 0.0.0.0 --port ${INTERNAL_PORT} --log-level critical --no-access-log &
+else
+  echo "DISABLE_UI=TRUE detected. Skipping Web UI startup."
+fi
+
 # Start Posterizarr PowerShell automation
+echo "Starting Posterizarr PowerShell automation..."
 exec /usr/bin/catatonit -- pwsh -NoProfile /app/Start.ps1
 EOF
 
