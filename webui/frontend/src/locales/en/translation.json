@@ -510,6 +510,7 @@
     "titleCards": "Title Cards",
     "seasons": "Seasons",
     "posters": "Posters",
+    "assetsFolders": "Assets Folders",
     "collections": "Collections",
     "upload": "Upload",
     "delete": "Delete",
@@ -753,7 +754,7 @@
     "loading": "Loading gallery...",
     "noImages": "No images found",
     "error": "Error loading gallery",
-    "folders": "Folders",
+    "folders": "Library Folders",
     "cancelSelect": "Cancel Select",
     "select": "Select",
     "refresh": "Refresh",
@@ -966,7 +967,7 @@
     }
   },
   "seasonGallery": {
-    "folders": "Folders",
+    "folders": "Library Folders",
     "select": "Select",
     "cancelSelect": "Cancel Select",
     "refresh": "Refresh",
@@ -1030,7 +1031,7 @@
     "errors": {
       "bulkDeletePartial": "Deleted {{deleted}} title card(s), but {{failed}} failed."
     },
-    "folders": "Folders",
+    "folders": "Library Folders",
     "select": "Select",
     "cancelSelect": "Cancel Select",
     "refresh": "Refresh",
@@ -1141,7 +1142,7 @@
     "forTheCommunity": "for the community"
   },
   "backgroundsGallery": {
-    "folders": "Folders",
+    "folders": "Library Folders",
     "select": "Select",
     "cancelSelect": "Cancel Select",
     "searchPlaceholder": "Search backgrounds in {{folder}}...",

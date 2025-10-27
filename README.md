@@ -164,19 +164,13 @@ The Web UI will display warnings if uploaded images are smaller than these recom
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences [my personal config](MyPersonalConfig.json):
 
-    <details open>
-      <summary>WebUI</summary>
-      <br>
+#### WebUI
 
-      - `basicAuthEnabled`: When set to `true`, the UI requires a username and password for access. (Default: `false`)
-      - `basicAuthUsername`: The username for UI authentication. (Default: `admin`)
-      - `basicAuthPassword`: The password for UI authentication. (Default: `posterizarr`)
-    </details>
+- `basicAuthEnabled`: When set to `true`, the UI requires a username and password for access. (Default: `false`)
+- `basicAuthUsername`: The username for UI authentication. (Default: `admin`)
+- `basicAuthPassword`: The password for UI authentication. (Default: `posterizarr`)
 
-
-   <details open>
-   <summary>ApiPart</summary>
-   <br>
+#### ApiPart
 
    - `tvdbapi`: Your TVDB Project API key.
      - If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format `YourApiKey#YourPin`. (It is important to include a `#` between the API key and the PIN.)
@@ -211,19 +205,16 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `PreferredBackgroundLanguageOrder`: Specify language preferences for backgrounds. Default is `PleaseFillMe` ( It will take your poster lang order / `xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
 
      - If you set it to `xx` you tell the script it should only search for textless, posters with text will be skipped.
-     </details>
-     <details open>
-     <summary>PlexPart</summary>
-     <br>
+
+#### PlexPart
 
    - `LibstoExclude`: Libraries, by name, to exclude from processing.
    - `PlexUrl`: Plex server URL (i.e. "http://192.168.1.1:32400" or "http://myplexserver.com:32400").
    - `UsePlex`: If set to `true`, you tell the script to use a Plex Server (Default value is: `true`)
    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
-   </details>
-   <details open>
-   <summary>JellyfinPart</summary>
-   <br>
+
+
+#### JellyfinPart
 
    - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
    - `JellyfinUrl`: Jellyfin server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
@@ -231,20 +222,16 @@ The Web UI will display warnings if uploaded images are smaller than these recom
      - Also have a look at the hint: [Jellyfin CSS](#jellyfin-1)
    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
    - `ReplaceThumbwithBackdrop`: If set to `true` (Default value is: false), the script will replace the `Thumb` picture with the `backdrop` image. This will only occur if `BackgroundPosters` is also set to `true`.
-   </details>
-   <details open>
-   <summary>EmbyPart</summary>
-   <br>
+
+#### EmbyPart
 
    - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
    - `EmbyUrl`: Emby server URL (i.e. "http://192.168.1.1:8096/emby" or "http://myplexserver.com:8096/emby").
    - `UseEmby`: If set to `true`, you tell the script to use a Emby Server (Default value is: `false`)
    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
    - `ReplaceThumbwithBackdrop`: If set to `true` (Default value is: false), the script will replace the `Thumb` picture with the `backdrop` image. This will only occur if `BackgroundPosters` is also set to `true`.
-   </details>
-   <details open>
-   <summary>Notification</summary>
-   <br>
+
+#### Notification
 
    - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
    - `AppriseUrl`: **Only possible on Docker** -Url for apprise provider -> [See Docs](https://github.com/caronc/apprise/wiki).
@@ -252,10 +239,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `DiscordUserName`: Username for the discord webhook, default is `Posterizarr`
    - `UptimeKumaUrl`: Uptime-Kuma Webhook Url.
    - `UseUptimeKuma`: Set to `true` if you want to send webhook to Uptime-Kuma.
-   </details>
-   <details open>
-   <summary>PrerequisitePart</summary>
-   <br>
+
+#### PrerequisitePart
 
    - `AssetPath`: Path to store generated posters.
    - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
@@ -318,17 +303,13 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `DisableHashValidation` : Set to `true` to skip hash validation (Default value is: false).
      - _Note: This may produce bloat, as every item will be re-uploaded to the media servers._
    - `DisableOnlineAssetFetch` : Set to `true` to skip all online lookups and use only locally available assets. (Default value is: false).
-   </details>
-   <details open>
-   <summary>OverlayPart</summary>
-   <br>
+
+#### OverlayPart
 
    - `ImageProcessing`: Set to `true` if you want the ImageMagick part (text, overlay and/or border); if `false`, it only downloads the posters.
    - `outputQuality`: Image output quality, default is `92%` if you set it to `100%` the image size gets doubled.
-   </details>
-   <details open>
-   <summary>PosterOverlayPart</summary>
-   <br>
+
+#### PosterOverlayPart
 
    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
    - `AddBorder`: Set to `true` to add a border to the image.
@@ -347,10 +328,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the picture.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
-   <details open>
-   <summary>SeasonPosterOverlayPart</summary>
-   <br>
+
+#### SeasonPosterOverlayPart
 
    - `ShowFallback`: Set to `true` if you want to fallback to show poster if no season poster was found.
    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -370,10 +349,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the picture.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
-   <details open>
-   <summary>ShowTilteOnSeasonPosterPart</summary>
-   <br>
+
+#### ShowTilteOnSeasonPosterPart
 
    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
    - `AddShowTitletoSeason`: if set to `true` it will add show title to season poster (Default Value is: `false`)
@@ -388,10 +365,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the picture.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
-   <details open>
-   <summary>BackgroundOverlayPart</summary>
-   <br>
+
+#### BackgroundOverlayPart
 
    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
    - `AddBorder`: Set to `true` to add a border to the background image.
@@ -410,10 +385,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the background image.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
-   <details open>
-   <summary>TitleCardOverlayPart</summary>
-   <br>
+
+#### TitleCardOverlayPart
 
    - `UseBackgroundAsTitleCard`: Set to `true` if you prefer show background as TitleCard, default is `false` where it uses episode image as TitleCard.
    - `BackgroundFallback`: Set to `false` if you want to skip Background fallback for TitleCard images if no TitleCard was found.
@@ -421,10 +394,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `AddBorder`: Set to `true` to add a border to the TitleCard image.
    - `borderwidth`: Border width.
    - `bordercolor`: Color of border.
-   </details>
-   <details open>
-   <summary>TitleCardTitleTextPart</summary>
-   <br>
+
+#### TitleCardTitleTextPart
 
    - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
    - `AddTextStroke`: Set to `true` to add stroke to text.
@@ -439,11 +410,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the TitleCard image.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
-   <details open>
-   <summary>TitleCardEpisodeTextPart</summary>
-   <br>
 
+#### TitleCardEpisodeTextPart
    - `SeasonTCText`: You can Specify the default text for `Season` that appears on TitleCard.
      - Example: `STAFFEL 1 • EPISODE 5` or `"SÄSONG 1 • EPISODE 1"`
    - `EpisodeTCText`: You can Specify the default text for `Episode` that appears on TitleCard.
@@ -461,11 +429,8 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the TitleCard image.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
 
-   <details open>
-   <summary>CollectionPosterOverlayPart</summary>
-   <br>
+#### CollectionPosterOverlayPart
 
    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
    - `AddBorder`: Set to `true` to add a border to the image.
@@ -484,26 +449,24 @@ The Web UI will display warnings if uploaded images are smaller than these recom
    - `text_offset`: Text box offset from the bottom of the picture.
    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
-   <details open>
-   <summary>CollectionTitlePosterPart</summary>
-   <br>
 
-   - `fontAllCaps`: Set to `true` for all caps text, else `false`.
-   - `AddCollectionTitle`: if set to `true` it will add collectiontitle to collection poster (Default Value is: `true`)
-   - `CollectionTitle`: Extra text that gets added to the collection poster (Default is `Collection`)
-   - `AddTextStroke`: Set to `true` to add stroke to text.
-   - `strokecolor`: Color of text stroke.
-   - `strokewidth`: Stroke width.
-   - `fontcolor`: Color of font text.
-   - `minPointSize`: Minimum size of text in poster.
-   - `maxPointSize`: Maximum size of text in poster.
-   - `MaxWidth`: Maximum width of text box.
-   - `MaxHeight`: Maximum height of text box.
-   - `text_offset`: Text box offset from the bottom of the picture.
-   - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
-   - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
-   </details>
+#### CollectionTitlePosterPart
+
+  - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+  - `AddCollectionTitle`: if set to `true` it will add collectiontitle to collection poster (Default Value is: `true`)
+  - `CollectionTitle`: Extra text that gets added to the collection poster (Default is `Collection`)
+  - `AddTextStroke`: Set to `true` to add stroke to text.
+  - `strokecolor`: Color of text stroke.
+  - `strokewidth`: Stroke width.
+  - `fontcolor`: Color of font text.
+  - `minPointSize`: Minimum size of text in poster.
+  - `maxPointSize`: Maximum size of text in poster.
+  - `MaxWidth`: Maximum width of text box.
+  - `MaxHeight`: Maximum height of text box.
+  - `text_offset`: Text box offset from the bottom of the picture.
+  - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+  - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
+
 
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as Posterizarr.ps1 which is `$ScriptRoot`.

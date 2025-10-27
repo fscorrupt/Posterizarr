@@ -168,13 +168,13 @@ const Sidebar = () => {
       icon: Image,
       hasSubItems: true,
       subItems:
-        // In Folder View: Only show "Posters" tab, in Grid View: show all tabs
+        // In Folder View: Only show "Assets Folders" tab, in Grid View: show all tabs
         viewMode === "folder"
           ? [
               {
                 path: "/gallery/posters",
-                label: t("assets.posters"),
-                icon: Image,
+                label: t("assets.assetsFolders"),
+                icon: FolderKanban,
               },
             ]
           : [

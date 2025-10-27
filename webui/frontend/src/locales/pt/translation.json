@@ -509,6 +509,7 @@
     "titleCards": "Cartões de título",
     "seasons": "Temporadas",
     "posters": "Cartazes",
+    "assetsFolders": "Pastas de ativos",
     "upload": "Enviar",
     "delete": "Excluir",
     "replace": "Substituir",
@@ -751,7 +752,7 @@
     "loading": "Carregando galeria...",
     "noImages": "Nenhuma imagem encontrada",
     "error": "Erro ao carregar galeria",
-    "folders": "Pastas",
+    "folders": "Pastas da biblioteca",
     "cancelSelect": "Cancelar seleção",
     "select": "Selecionar",
     "refresh": "Atualizar",
@@ -964,7 +965,7 @@
     }
   },
   "seasonGallery": {
-    "folders": "Pastas",
+    "folders": "Pastas da biblioteca",
     "select": "Selecionar",
     "cancelSelect": "Cancelar seleção",
     "refresh": "Atualizar",
@@ -1028,7 +1029,7 @@
     "errors": {
       "bulkDeletePartial": "Excluídos {{deleted}} cartões de título, mas {{failed}} falharam."
     },
-    "folders": "Pastas",
+    "folders": "Pastas da biblioteca",
     "select": "Selecionar",
     "cancelSelect": "Cancelar seleção",
     "refresh": "Atualizar",
@@ -1139,7 +1140,7 @@
     "forTheCommunity": "para a comunidade"
   },
   "backgroundsGallery": {
-    "folders": "Pastas",
+    "folders": "Pastas da biblioteca",
     "select": "Selecionar",
     "cancelSelect": "Cancelar seleção",
     "searchPlaceholder": "Pesquisar fundos em {{folder}}...",

@@ -948,7 +948,7 @@ function Dashboard() {
                   {status.script_exists &&
                     (version.local || version.remote) && (
                       <div className="flex items-center gap-2 flex-wrap ml-7">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-card border border-theme-primary text-theme-primary shadow-sm">
                           v{version.local || version.remote}
                         </span>
                         {version.is_update_available && (
@@ -958,7 +958,7 @@ function Dashboard() {
                             rel="noopener noreferrer"
                             className="inline-flex items-center"
                           >
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
+                            <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/20 border border-green-500/50 text-green-400 shadow-sm animate-pulse hover:scale-105 transition-transform">
                               v{version.remote} available
                             </span>
                           </a>
@@ -988,10 +988,12 @@ function Dashboard() {
                     <div className="ml-7">
                       <Link
                         to="/config"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg text-sm font-semibold transition-all hover:scale-105 hover:shadow-lg shadow-md"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                       >
-                        <Settings className="w-4 h-4" />
-                        {t("dashboard.configureNow")}
+                        <Settings className="w-4 h-4 text-theme-primary" />
+                        <span className="text-theme-text">
+                          {t("dashboard.configureNow")}
+                        </span>
                       </Link>
                     </div>
                   )}
