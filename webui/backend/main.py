@@ -808,7 +808,7 @@ def scan_and_cache_assets():
         )
 
         # Filter out @eaDir directories from Synology NAS
-        all_images = [img for img in all_images if "@eaDir" not in str(img)]
+        all_images = [img for img in all_images if "@eaDir" not in img.parts]
 
         temp_folders = {}
 
