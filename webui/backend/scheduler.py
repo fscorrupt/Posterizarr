@@ -353,10 +353,44 @@ class PosterizarrScheduler:
             self.update_next_run()
 
     def parse_schedule_time(self, time_str: str) -> tuple:
-        """Parse time string (HH:MM) into hour and minute"""
+        """
+        Parse and validate time string (HH:MM) into hour and minute
+        Only accepts times between 00:00 and 23:59
+        """
         try:
-            hour, minute = time_str.split(":")
-            return int(hour), int(minute)
+            # Check format
+            if not time_str or ":" not in time_str:
+                logger.error(f"Invalid time format '{time_str}': must be HH:MM")
+                return None, None
+
+            parts = time_str.split(":")
+            if len(parts) != 2:
+                logger.error(f"Invalid time format '{time_str}': must be HH:MM")
+                return None, None
+
+            hour = int(parts[0])
+            minute = int(parts[1])
+
+            # Validate ranges
+            if hour < 0 or hour > 23:
+                logger.error(
+                    f"Invalid hour '{hour}' in time '{time_str}': must be 00-23"
+                )
+                return None, None
+
+            if minute < 0 or minute > 59:
+                logger.error(
+                    f"Invalid minute '{minute}' in time '{time_str}': must be 00-59"
+                )
+                return None, None
+
+            return hour, minute
+
+        except ValueError as e:
+            logger.error(
+                f"Error parsing time '{time_str}': {e} (must be numeric HH:MM)"
+            )
+            return None, None
         except Exception as e:
             logger.error(f"Error parsing time '{time_str}': {e}")
             return None, None
@@ -365,8 +399,10 @@ class PosterizarrScheduler:
         """Apply all configured schedules to the scheduler"""
         config = self.load_config()
 
-        # Remove all existing jobs
-        self.scheduler.remove_all_jobs()
+        # Remove all existing jobs first
+        if self.scheduler.running:
+            self.scheduler.remove_all_jobs()
+            logger.debug("Removed all existing scheduler jobs")
 
         if not config.get("enabled", False):
             logger.info("Scheduler is disabled, not applying schedules")
@@ -630,21 +666,23 @@ class PosterizarrScheduler:
 
         logger.info(f"Removed schedule: {time_str}")
 
+        # Save config first before applying changes
         # If no schedules left, reset next_run
         if len(new_schedules) == 0:
             config["next_run"] = None
             logger.info("Last schedule removed, resetting next_run to None")
-            self.save_config(config)
-        else:
-            # Save config first
-            self.save_config(config)
 
-            if config.get("enabled", False) and self.scheduler.running:
-                logger.info("Scheduler is running, reapplying schedules...")
-                self.apply_schedules()
-            else:
-                # Even if not running, recalculate next_run for UI display
-                self.update_next_run_from_schedules()
+        self.save_config(config)
+
+        # Always reapply schedules if scheduler is enabled and running
+        if config.get("enabled", False) and self.scheduler.running:
+            logger.info(
+                "Scheduler is running, reapplying schedules to remove deleted job..."
+            )
+            self.apply_schedules()
+        else:
+            # Even if not running, recalculate next_run for UI display
+            self.update_next_run_from_schedules()
 
         return True
 

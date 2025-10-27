@@ -18,6 +18,7 @@ import {
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
+import { formatDateTimeInTimezone } from "../utils/timeUtils";
 
 const API_URL = "/api";
 
@@ -63,6 +64,13 @@ const SchedulerSettings = () => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
+
+  // Time picker state
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
+  const [timePickerUp, setTimePickerUp] = useState(false);
+  const [selectedHour, setSelectedHour] = useState("00");
+  const [selectedMinute, setSelectedMinute] = useState("00");
+  const timePickerRef = useRef(null);
 
   // Dropdown state and ref
   const [timezoneDropdownOpen, setTimezoneDropdownOpen] = useState(false);
@@ -161,7 +169,7 @@ const SchedulerSettings = () => {
     return spaceAbove > spaceBelow;
   };
 
-  // Click-outside detection for dropdown
+  // Click-outside detection for dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -169,6 +177,12 @@ const SchedulerSettings = () => {
         !timezoneDropdownRef.current.contains(event.target)
       ) {
         setTimezoneDropdownOpen(false);
+      }
+      if (
+        timePickerRef.current &&
+        !timePickerRef.current.contains(event.target)
+      ) {
+        setTimePickerOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -199,6 +213,33 @@ const SchedulerSettings = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Generate hours array (00-23)
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    i.toString().padStart(2, "0")
+  );
+
+  // Generate minutes array (00-59)
+  const minutes = Array.from({ length: 60 }, (_, i) =>
+    i.toString().padStart(2, "0")
+  );
+
+  // Handle time selection
+  const handleTimeSelect = (hour, minute) => {
+    const time = `${hour}:${minute}`;
+    setNewTime(time);
+    setSelectedHour(hour);
+    setSelectedMinute(minute);
+    setTimePickerOpen(false);
+  };
+
+  // Open time picker and set position
+  const openTimePicker = () => {
+    if (isUpdating) return;
+    const shouldOpenUp = calculateDropdownPosition(timePickerRef);
+    setTimePickerUp(shouldOpenUp);
+    setTimePickerOpen(!timePickerOpen);
   };
 
   const toggleScheduler = async () => {
@@ -241,6 +282,13 @@ const SchedulerSettings = () => {
       return;
     }
 
+    // Validate time format (HH:MM, 00:00-23:59)
+    const timePattern = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    if (!timePattern.test(newTime)) {
+      showError("Invalid time format. Please use HH:MM (00:00-23:59)");
+      return;
+    }
+
     if (isUpdating) return;
     setIsUpdating(true);
 
@@ -278,15 +326,19 @@ const SchedulerSettings = () => {
     setIsUpdating(true);
 
     try {
-      const response = await fetch(`${API_URL}/scheduler/schedule/${time}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/scheduler/schedule/${encodeURIComponent(time)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         showSuccess(t("schedulerSettings.success.scheduleRemoved"));
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Wait a moment for scheduler to update, then refresh all data
+        await new Promise((resolve) => setTimeout(resolve, 200));
         await fetchSchedulerData();
       } else {
         showError(data.detail || t("schedulerSettings.errors.removeSchedule"));
@@ -317,9 +369,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
+        // Update status directly from response to avoid stale data
+        setStatus(data);
+        // Also refresh config
+        const configRes = await fetch(`${API_URL}/scheduler/config`);
+        const configData = await configRes.json();
+        if (configData.success) {
+          setConfig(configData.config);
+        }
         showSuccess(t("schedulerSettings.success.allCleared"));
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        await fetchSchedulerData();
       } else {
         showError(data.detail || t("schedulerSettings.errors.clearSchedules"));
       }
@@ -476,12 +534,11 @@ const SchedulerSettings = () => {
   };
 
   const formatDateTime = (isoString) => {
-    if (!isoString) return t("schedulerSettings.never");
-    const date = new Date(isoString);
-    return date.toLocaleString("de-DE", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
+    return formatDateTimeInTimezone(
+      isoString,
+      timezone,
+      t("schedulerSettings.never")
+    );
   };
 
   if (loading) {
@@ -506,31 +563,6 @@ const SchedulerSettings = () => {
         message={t("schedulerSettings.confirmClearAllMessage")}
         type="danger"
       />
-
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        {/* Master Toggle */}
-        <button
-          onClick={toggleScheduler}
-          disabled={isUpdating}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-sm hover:scale-105 ${
-            config?.enabled
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
-          } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {isUpdating ? (
-            <Loader2 className="w-5 h-5 text-theme-primary animate-spin" />
-          ) : (
-            <Power className="w-5 h-5" />
-          )}
-          {isUpdating
-            ? t("schedulerSettings.updating")
-            : config?.enabled
-            ? t("schedulerSettings.enabled")
-            : t("schedulerSettings.disabled")}
-        </button>
-      </div>
 
       {/* Container Users Info */}
       <div className="bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-4 shadow-sm">
@@ -603,13 +635,36 @@ const SchedulerSettings = () => {
 
       {/* Configuration */}
       <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-theme-primary/10">
-            <Settings className="w-6 h-6 text-theme-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-theme-primary/10">
+              <Settings className="w-6 h-6 text-theme-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-theme-primary">
+              {t("schedulerSettings.configuration")}
+            </h2>
           </div>
-          <h2 className="text-xl font-semibold text-theme-primary">
-            {t("schedulerSettings.configuration")}
-          </h2>
+          {/* Master Toggle */}
+          <button
+            onClick={toggleScheduler}
+            disabled={isUpdating}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-sm hover:scale-105 ${
+              config?.enabled
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
+            } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {isUpdating ? (
+              <Loader2 className="w-5 h-5 text-theme-primary animate-spin" />
+            ) : (
+              <Power className="w-5 h-5" />
+            )}
+            {isUpdating
+              ? t("schedulerSettings.updating")
+              : config?.enabled
+              ? t("schedulerSettings.enabled")
+              : t("schedulerSettings.disabled")}
+          </button>
         </div>
 
         {/* Timezone */}
@@ -746,15 +801,73 @@ const SchedulerSettings = () => {
           onSubmit={addSchedule}
           className="flex flex-col md:flex-row gap-3"
         >
-          <input
-            type="text"
-            value={newTime}
-            onChange={(e) => setNewTime(e.target.value)}
-            placeholder={t("schedulerSettings.timePlaceholder")}
-            disabled={isUpdating}
-            className="flex-1 px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            pattern="[0-2]?[0-9]:[0-5][0-9]"
-          />
+          {/* Custom Time Picker */}
+          <div className="flex-1 relative" ref={timePickerRef}>
+            <button
+              type="button"
+              onClick={openTimePicker}
+              disabled={isUpdating}
+              className="w-full px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-between"
+            >
+              <span className={newTime ? "" : "text-theme-muted"}>
+                {newTime || t("schedulerSettings.timePlaceholder")}
+              </span>
+              <Clock className="w-5 h-5 text-theme-muted" />
+            </button>
+
+            {timePickerOpen && !isUpdating && (
+              <div
+                className={`absolute z-50 left-0 right-0 ${
+                  timePickerUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl`}
+              >
+                <div className="flex divide-x divide-theme">
+                  {/* Hours Column */}
+                  <div className="flex-1 max-h-64 overflow-y-auto">
+                    <div className="sticky top-0 bg-theme-card border-b border-theme px-3 py-2 text-xs font-semibold text-theme-primary">
+                      {t("schedulerSettings.hour") || "Hour"}
+                    </div>
+                    {hours.map((hour) => (
+                      <button
+                        key={hour}
+                        type="button"
+                        onClick={() => handleTimeSelect(hour, selectedMinute)}
+                        className={`w-full px-4 py-2 text-sm transition-all text-center ${
+                          selectedHour === hour
+                            ? "bg-theme-primary text-white"
+                            : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
+                        }`}
+                      >
+                        {hour}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Minutes Column */}
+                  <div className="flex-1 max-h-64 overflow-y-auto">
+                    <div className="sticky top-0 bg-theme-card border-b border-theme px-3 py-2 text-xs font-semibold text-theme-primary">
+                      {t("schedulerSettings.minute") || "Minute"}
+                    </div>
+                    {minutes.map((minute) => (
+                      <button
+                        key={minute}
+                        type="button"
+                        onClick={() => handleTimeSelect(selectedHour, minute)}
+                        className={`w-full px-4 py-2 text-sm transition-all text-center ${
+                          selectedMinute === minute
+                            ? "bg-theme-primary text-white"
+                            : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
+                        }`}
+                      >
+                        {minute}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <input
             type="text"
             value={newDescription}

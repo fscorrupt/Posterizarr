@@ -167,86 +167,92 @@ const TMDBPosterSearchModal = React.memo(
 
           {/* Provider Tabs */}
           <div className="flex gap-2 px-6 pt-4 border-b border-theme">
-            {/* TMDB Tab */}
-            <button
-              onClick={() =>
-                setTmdbSearch({ ...tmdbSearch, activeProvider: "tmdb" })
-              }
-              className={`px-4 py-2 rounded-t-lg font-medium transition-all ${
-                tmdbSearch.activeProvider === "tmdb"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-hover text-theme-muted hover:bg-theme-bg"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span>TMDB</span>
-                {tmdbSearch.results.tmdb?.length > 0 && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs ${
-                      tmdbSearch.activeProvider === "tmdb"
-                        ? "bg-white/20 text-white"
-                        : "bg-theme-primary text-white"
-                    }`}
-                  >
-                    {tmdbSearch.results.tmdb.length}
-                  </span>
-                )}
-              </div>
-            </button>
+            {/* TMDB Tab - only show if in visibleProviders */}
+            {tmdbSearch.visibleProviders.includes("tmdb") && (
+              <button
+                onClick={() =>
+                  setTmdbSearch({ ...tmdbSearch, activeProvider: "tmdb" })
+                }
+                className={`px-4 py-2 rounded-t-lg font-medium transition-all ${
+                  tmdbSearch.activeProvider === "tmdb"
+                    ? "bg-theme-primary text-white"
+                    : "bg-theme-hover text-theme-muted hover:bg-theme-bg"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>TMDB</span>
+                  {tmdbSearch.results.tmdb?.length > 0 && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs ${
+                        tmdbSearch.activeProvider === "tmdb"
+                          ? "bg-white/20 text-white"
+                          : "bg-theme-primary text-white"
+                      }`}
+                    >
+                      {tmdbSearch.results.tmdb.length}
+                    </span>
+                  )}
+                </div>
+              </button>
+            )}
 
-            {/* TVDB Tab */}
-            <button
-              onClick={() =>
-                setTmdbSearch({ ...tmdbSearch, activeProvider: "tvdb" })
-              }
-              className={`px-4 py-2 rounded-t-lg font-medium transition-all ${
-                tmdbSearch.activeProvider === "tvdb"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-hover text-theme-muted hover:bg-theme-bg"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span>TVDB</span>
-                {tmdbSearch.results.tvdb?.length > 0 && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs ${
-                      tmdbSearch.activeProvider === "tvdb"
-                        ? "bg-white/20 text-white"
-                        : "bg-theme-primary text-white"
-                    }`}
-                  >
-                    {tmdbSearch.results.tvdb.length}
-                  </span>
-                )}
-              </div>
-            </button>
+            {/* TVDB Tab - only show if in visibleProviders */}
+            {tmdbSearch.visibleProviders.includes("tvdb") && (
+              <button
+                onClick={() =>
+                  setTmdbSearch({ ...tmdbSearch, activeProvider: "tvdb" })
+                }
+                className={`px-4 py-2 rounded-t-lg font-medium transition-all ${
+                  tmdbSearch.activeProvider === "tvdb"
+                    ? "bg-theme-primary text-white"
+                    : "bg-theme-hover text-theme-muted hover:bg-theme-bg"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>TVDB</span>
+                  {tmdbSearch.results.tvdb?.length > 0 && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs ${
+                        tmdbSearch.activeProvider === "tvdb"
+                          ? "bg-white/20 text-white"
+                          : "bg-theme-primary text-white"
+                      }`}
+                    >
+                      {tmdbSearch.results.tvdb.length}
+                    </span>
+                  )}
+                </div>
+              </button>
+            )}
 
-            {/* Fanart.tv Tab */}
-            <button
-              onClick={() =>
-                setTmdbSearch({ ...tmdbSearch, activeProvider: "fanart" })
-              }
-              className={`px-4 py-2 rounded-t-lg font-medium transition-all ${
-                tmdbSearch.activeProvider === "fanart"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-hover text-theme-muted hover:bg-theme-bg"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span>Fanart.tv</span>
-                {tmdbSearch.results.fanart?.length > 0 && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs ${
-                      tmdbSearch.activeProvider === "fanart"
-                        ? "bg-white/20 text-white"
-                        : "bg-theme-primary text-white"
-                    }`}
-                  >
-                    {tmdbSearch.results.fanart.length}
-                  </span>
-                )}
-              </div>
-            </button>
+            {/* Fanart.tv Tab - only show if in visibleProviders */}
+            {tmdbSearch.visibleProviders.includes("fanart") && (
+              <button
+                onClick={() =>
+                  setTmdbSearch({ ...tmdbSearch, activeProvider: "fanart" })
+                }
+                className={`px-4 py-2 rounded-t-lg font-medium transition-all ${
+                  tmdbSearch.activeProvider === "fanart"
+                    ? "bg-theme-primary text-white"
+                    : "bg-theme-hover text-theme-muted hover:bg-theme-bg"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>Fanart.tv</span>
+                  {tmdbSearch.results.fanart?.length > 0 && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs ${
+                        tmdbSearch.activeProvider === "fanart"
+                          ? "bg-white/20 text-white"
+                          : "bg-theme-primary text-white"
+                      }`}
+                    >
+                      {tmdbSearch.results.fanart.length}
+                    </span>
+                  )}
+                </div>
+              </button>
+            )}
           </div>
 
           {/* Content - Scrollable */}
@@ -482,6 +488,8 @@ function RunModes() {
     searchByID: false, // When true, treat query as TMDB ID
     // Active provider tab
     activeProvider: "tmdb", // Track which provider tab is active
+    // Visible providers based on search type
+    visibleProviders: ["tmdb", "tvdb", "fanart"], // Default: show all tabs
   });
 
   useEffect(() => {
@@ -994,24 +1002,25 @@ function RunModes() {
         asset_type: manualForm.posterType,
       };
 
-      // Check if query is numeric - if so, send BOTH as ID and as title for dual search
-      const isNumericQuery = /^\d+$/.test(tmdbSearch.query.trim());
+      // Check if query contains provider prefix (tmdb-, tvdb-, imdb-, tt)
+      // If prefix exists, backend will extract the ID automatically
+      // If no prefix, treat as title search (even for numeric titles like "1917")
+      const queryLower = tmdbSearch.query.trim().toLowerCase();
+      const hasPrefix =
+        queryLower.startsWith("tmdb-") ||
+        queryLower.startsWith("tmdb:") ||
+        queryLower.startsWith("tvdb-") ||
+        queryLower.startsWith("tvdb:") ||
+        queryLower.startsWith("imdb-") ||
+        queryLower.startsWith("imdb:") ||
+        queryLower.startsWith("tt");
 
-      if (isNumericQuery) {
-        // For numeric queries, send BOTH as ID and as title
-        // Backend will search by ID AND by title, combining results
-        requestBody.tmdb_id = tmdbSearch.query.trim();
-        requestBody.title = tmdbSearch.query.trim(); // Also search by title
+      // Always send as title - backend will detect prefixes and extract IDs
+      requestBody.title = tmdbSearch.query.trim();
 
-        if (mediaType === "tv") {
-          requestBody.tvdb_id = tmdbSearch.query.trim();
-        }
-        console.log(
-          `Dual search - ID: ${tmdbSearch.query} + Title: "${tmdbSearch.query}"`
-        );
+      if (hasPrefix) {
+        console.log(`Searching with ID prefix: ${tmdbSearch.query}`);
       } else {
-        // Text query - only search by title
-        requestBody.title = tmdbSearch.query;
         console.log(`Searching by title: ${tmdbSearch.query}`);
       }
 
@@ -1044,6 +1053,7 @@ function RunModes() {
         console.log("  TMDB:", data.results.tmdb?.length || 0, "items");
         console.log("  TVDB:", data.results.tvdb?.length || 0, "items");
         console.log("  Fanart:", data.results.fanart?.length || 0, "items");
+        console.log("  Detected Provider:", data.detected_provider || "none");
 
         const results = {
           tmdb: data.results.tmdb || [],
@@ -1051,15 +1061,34 @@ function RunModes() {
           fanart: data.results.fanart || [],
         };
 
-        // Auto-switch to first provider with results
-        let activeProvider = "tmdb";
-        if (results.tmdb.length > 0) {
-          activeProvider = "tmdb";
-        } else if (results.tvdb.length > 0) {
-          activeProvider = "tvdb";
-        } else if (results.fanart.length > 0) {
-          activeProvider = "fanart";
+        // Determine which providers should be visible
+        let visibleProviders = [];
+
+        if (data.detected_provider) {
+          // User used a prefix (tmdb-, tvdb-, imdb-, tt) - only show that provider
+          console.log(
+            `Prefix detected: showing only ${data.detected_provider} tab`
+          );
+
+          if (data.detected_provider === "tmdb") {
+            visibleProviders = ["tmdb"];
+          } else if (data.detected_provider === "tvdb") {
+            visibleProviders = ["tvdb"];
+          } else if (data.detected_provider === "imdb") {
+            // IMDB uses Fanart.tv for display
+            visibleProviders = ["fanart"];
+          }
+        } else {
+          // No prefix - show all providers that have results
+          console.log("No prefix detected: showing all providers with results");
+
+          if (results.tmdb.length > 0) visibleProviders.push("tmdb");
+          if (results.tvdb.length > 0) visibleProviders.push("tvdb");
+          if (results.fanart.length > 0) visibleProviders.push("fanart");
         }
+
+        // Auto-switch to first visible provider
+        let activeProvider = visibleProviders[0] || "tmdb";
 
         setTmdbSearch({
           ...tmdbSearch,
@@ -1068,18 +1097,34 @@ function RunModes() {
           showModal: true,
           displayedCount: 10, // Reset to show first 10
           activeProvider: activeProvider,
+          visibleProviders: visibleProviders, // Track which tabs to show
         });
 
-        const totalCount =
-          results.tmdb.length + results.tvdb.length + results.fanart.length;
+        // Check if there are any results in visible providers only
+        const visibleResultsCount = visibleProviders.reduce(
+          (count, provider) => {
+            return count + (results[provider]?.length || 0);
+          },
+          0
+        );
 
-        if (totalCount === 0) {
+        if (visibleResultsCount === 0) {
           let message = "No images found for this search";
           if (manualForm.posterType === "season") {
             message = `No season ${tmdbSearch.seasonNumber} posters found`;
           } else if (manualForm.posterType === "titlecard") {
             message = `No images found for S${tmdbSearch.seasonNumber}E${tmdbSearch.episodeNumber}`;
           }
+
+          // Add provider-specific message if prefix was used
+          if (data.detected_provider) {
+            const providerName =
+              data.detected_provider === "imdb"
+                ? "Fanart.tv (via IMDB)"
+                : data.detected_provider.toUpperCase();
+            message += ` from ${providerName}`;
+          }
+
           showError(message);
         }
       } else {
@@ -1860,6 +1905,33 @@ function RunModes() {
                   disabled={loading || status.running || tmdbSearch.searching}
                   className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                {/* Search Hint Box */}
+                <div className="mt-2 text-xs bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <div className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
+                    {t("runModes.tmdb.searchTips.title")}
+                  </div>
+                  <ul className="space-y-1 text-blue-700 dark:text-blue-400">
+                    <li>
+                      <strong>{t("runModes.tmdb.searchTips.byTitle")}</strong>{" "}
+                      {t("runModes.tmdb.searchTips.byTitleExample")}
+                    </li>
+                    <li>
+                      <strong>{t("runModes.tmdb.searchTips.byTmdbId")}</strong>{" "}
+                      {t("runModes.tmdb.searchTips.byTmdbIdExample")}
+                    </li>
+                    <li>
+                      <strong>{t("runModes.tmdb.searchTips.byTvdbId")}</strong>{" "}
+                      {t("runModes.tmdb.searchTips.byTvdbIdExample")}
+                    </li>
+                    <li>
+                      <strong>{t("runModes.tmdb.searchTips.byImdbId")}</strong>{" "}
+                      {t("runModes.tmdb.searchTips.byImdbIdExample")}
+                    </li>
+                  </ul>
+                  <div className="mt-2 text-blue-600 dark:text-blue-500 italic">
+                    {t("runModes.tmdb.searchTips.noPrefixNote")}
+                  </div>
+                </div>
               </div>
 
               {/* Year Input */}
@@ -1867,17 +1939,6 @@ function RunModes() {
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-theme-text mb-1">
                     {t("runModes.manual.yearLabel")}
-                    {/^\d+$/.test(tmdbSearch.query.trim()) &&
-                      !tmdbSearch.searchByID && (
-                        <span
-                          className="ml-1 text-yellow-500"
-                          title={t(
-                            "runModes.validation.yearRequiredForNumericTitle"
-                          )}
-                        >
-                          *
-                        </span>
-                      )}
                   </label>
                   <input
                     type="number"
@@ -1897,13 +1958,7 @@ function RunModes() {
                       tmdbSearch.searching ||
                       tmdbSearch.searchByID
                     }
-                    className={`w-full px-4 py-2 bg-theme-bg border rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed ${
-                      /^\d+$/.test(tmdbSearch.query.trim()) &&
-                      !tmdbSearch.year &&
-                      !tmdbSearch.searchByID
-                        ? "border-yellow-500 ring-2 ring-yellow-500/20"
-                        : "border-theme"
-                    }`}
+                    className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 

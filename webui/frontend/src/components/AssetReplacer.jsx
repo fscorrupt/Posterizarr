@@ -885,6 +885,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         if (data.manual_run_triggered) {
           showSuccess(t("assetReplacer.replacedAndQueued"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
 
           // Call onSuccess to delete DB entry before navigating
           console.log(
@@ -910,6 +912,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
           setTimeout(async () => {
             console.log(
               "Calling onSuccess callback to delete DB entry (upload no-queue path)"
@@ -1130,6 +1134,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         if (data.manual_run_triggered) {
           showSuccess(t("assetReplacer.replacedAndQueued"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
 
           // Call onSuccess to delete DB entry before navigating
           console.log(
@@ -1155,6 +1161,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
+          // Dispatch event to update badge counts
+          window.dispatchEvent(new Event("assetReplaced"));
           setTimeout(async () => {
             console.log(
               "Calling onSuccess callback to delete DB entry (preview no-queue path)"
@@ -1310,8 +1318,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                         Process with overlays after replace
                       </h4>
                       <p className="text-xs text-theme-muted mt-0.5 leading-relaxed">
-                        Applies borders, overlays & text to the replaced asset
-                        based on overlay settings.
+                        {processWithOverlays
+                          ? "Applies borders, overlays & text to the replaced asset based on overlay settings. Asset will be saved to assets/ folder."
+                          : "Direct replacement without overlay processing. Asset will be saved to manualassets/ folder for manual use."}
                       </p>
                     </div>
                     <button
@@ -1971,7 +1980,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         onClose={() => setShowUploadConfirm(false)}
         onConfirm={handleConfirmUpload}
         title={t("assetReplacer.confirmReplaceTitle")}
-        message={t("assetReplacer.confirmReplaceMessage")}
+        message={
+          <>
+            {t("assetReplacer.confirmReplaceMessage")}
+            {!processWithOverlays && (
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-300 leading-relaxed">
+                  <strong>ℹ️ Note:</strong> If you do not check "Process with
+                  overlays after replace", the asset will be placed in the
+                  manualassets directory and the poster will be recreated by
+                  Posterizarr during the next normal/scheduled run.
+                </p>
+              </div>
+            )}
+          </>
+        }
         confirmText={t("assetReplacer.confirmReplaceButton")}
         type="warning"
       />
@@ -1985,7 +2008,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         }}
         onConfirm={handleSelectPreview}
         title={t("assetReplacer.confirmReplaceTitle")}
-        message={t("assetReplacer.confirmReplaceMessage")}
+        message={
+          <>
+            {t("assetReplacer.confirmReplaceMessage")}
+            {!processWithOverlays && (
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-300 leading-relaxed">
+                  <strong>ℹ️ Note:</strong> If you do not check "Process with
+                  overlays after replace", the asset will be placed in the
+                  manualassets directory and the poster will be recreated by
+                  Posterizarr during the next normal/scheduled run.
+                </p>
+              </div>
+            )}
+          </>
+        }
         confirmText={t("assetReplacer.confirmReplaceButton")}
         type="warning"
       />

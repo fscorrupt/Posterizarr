@@ -444,63 +444,67 @@ function TestGallery() {
       {/* Image Modal - Enhanced */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card border border-theme-primary rounded-xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl"
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <ImageIcon className="w-6 h-6 text-white flex-shrink-0" />
-                <h3 className="text-lg font-semibold text-white truncate">
-                  {selectedImage.name}
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Image */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4">
+                <img
+                  src={selectedImage.url}
+                  alt={selectedImage.name}
+                  className="max-w-full max-h-[80vh] object-contain"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
+                  }}
+                />
+                <div className="text-center" style={{ display: "none" }}>
+                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
+                    <ImageIcon className="w-16 h-16 text-theme-primary" />
+                  </div>
+                  <p className="text-white text-lg font-semibold mb-2">
+                    {t("testGallery.imagePreviewNotAvailable")}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    {t("testGallery.useFileExplorer")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <h3 className="text-xl font-bold text-theme-text mb-4">
+                  Image Details
                 </h3>
-              </div>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded flex-shrink-0"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
 
-            {/* Modal Content */}
-            <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-theme-bg/30">
-              <img
-                src={selectedImage.url}
-                alt={selectedImage.name}
-                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "flex";
-                }}
-              />
-              <div
-                className="text-center flex-col items-center justify-center"
-                style={{ display: "none" }}
-              >
-                <ImageIcon className="w-24 h-24 text-theme-muted mx-auto mb-4" />
-                <p className="text-theme-muted text-sm">
-                  {t("testGallery.imagePreviewNotAvailable")}
-                </p>
-              </div>
-            </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-theme-muted">Filename</label>
+                    <p className="text-theme-text break-all">
+                      {selectedImage.name}
+                    </p>
+                  </div>
 
-            {/* Modal Footer */}
-            <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between items-center border-t-2 border-theme">
-              <span className="text-sm text-theme-muted font-medium">
-                {t("testGallery.size")}:{" "}
-                {(selectedImage.size / 1024).toFixed(2)} KB
-              </span>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
-              >
-                {t("testGallery.close")}
-              </button>
+                  <div>
+                    <label className="text-sm text-theme-muted">Size</label>
+                    <p className="text-theme-text">
+                      {(selectedImage.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

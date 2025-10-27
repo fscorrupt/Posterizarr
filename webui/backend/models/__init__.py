@@ -1,2 +1,41 @@
-"""Pydantic models for API validation"""
-from .requests import *
+"""Pydantic models for API request/response validation"""
+
+from .request_models import (
+    ConfigUpdate,
+    ResetPostersRequest,
+    ManualModeRequest,
+    UILogEntry,
+    UILogBatch,
+    ScheduleCreate,
+    ScheduleUpdate,
+    TMDBSearchRequest,
+    PlexValidationRequest,
+    JellyfinValidationRequest,
+    EmbyValidationRequest,
+    TMDBValidationRequest,
+    TVDBValidationRequest,
+    FanartValidationRequest,
+    DiscordValidationRequest,
+    AppriseValidationRequest,
+    UptimeKumaValidationRequest,
+)
+
+__all__ = [
+    "ConfigUpdate",
+    "ResetPostersRequest",
+    "ManualModeRequest",
+    "UILogEntry",
+    "UILogBatch",
+    "ScheduleCreate",
+    "ScheduleUpdate",
+    "TMDBSearchRequest",
+    "PlexValidationRequest",
+    "JellyfinValidationRequest",
+    "EmbyValidationRequest",
+    "TMDBValidationRequest",
+    "TVDBValidationRequest",
+    "FanartValidationRequest",
+    "DiscordValidationRequest",
+    "AppriseValidationRequest",
+    "UptimeKumaValidationRequest",
+]

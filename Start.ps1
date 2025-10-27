@@ -6,35 +6,48 @@ function ScriptSchedule {
     if (!$env:RUN_TIME) {
         $env:RUN_TIME = "disabled" # Set default value if not provided
     }
-
-    $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
-
-    # Define the URL you want to check and the timeout settings.
-    Write-Host "UI is being initialized this can take a minute..."
-    $websiteUrl = "http://localhost:8000/"
-    $retryIntervalSeconds = 5
-    $maxWaitSeconds = 60
-    $UIstartTime = Get-Date
-    $isOnline = $false
-
-    # Loop until the website is online or the timeout is reached.
-    while (((Get-Date) - $UIstartTime).TotalSeconds -lt $maxWaitSeconds) {
-        try {
-            $response = Invoke-WebRequest -Uri $websiteUrl -UseBasicParsing -TimeoutSec $retryIntervalSeconds -ErrorAction Stop
-            if ($response.StatusCode -eq 200) {
-                $isOnline = $true
-                break # Exit the loop since the website is online.
-            }
-        }
-        catch {
-        }
-        Start-Sleep -Seconds $retryIntervalSeconds
+    if (!$env:APP_PORT) {
+        $env:APP_PORT = "8000" # Set default value if not provided
     }
 
-    # Final status message after the loop exits.
-    if ($isOnline) {
-        Write-Host "UI & Cache is now builded and online."
-        Write-Host "    You can access it by going to: http://localhost:8000/"
+    # get Runtime Values
+    $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
+
+    # Check if UI is disabled
+    $disableUiValue = "$($env:DISABLE_UI)"
+    if ($disableUiValue -eq "true") {
+        Write-Host "UI is disabled, skipping UI availability check."
+    }
+    Else {
+        Write-Host "UI is being initialized this can take a minute..."
+        $websiteUrl = "http://localhost:$($env:APP_PORT)/"
+        $retryIntervalSeconds = 5
+        $maxWaitSeconds = 60
+        $UIstartTime = Get-Date
+        $isOnline = $false
+
+        # Loop until the website is online or the timeout is reached.
+        while (((Get-Date) - $UIstartTime).TotalSeconds -lt $maxWaitSeconds) {
+            try {
+                $response = Invoke-WebRequest -Uri $websiteUrl -UseBasicParsing -TimeoutSec $retryIntervalSeconds -ErrorAction Stop
+                if ($response.StatusCode -eq 200) {
+                    $isOnline = $true
+                    break # Exit the loop since the website is online.
+                }
+            }
+            catch {
+            }
+            Start-Sleep -Seconds $retryIntervalSeconds
+        }
+
+        # Final status message after the loop exits.
+        if ($isOnline) {
+            Write-Host "UI & Cache is now builded and online."
+            Write-Host "    You can access it by going to: http://localhost:$($env:APP_PORT)/"
+        }
+        Else {
+            Write-Host "UI did not become available within $maxWaitSeconds seconds." -ForegroundColor Red
+        }
     }
 
     Write-Host "File Watcher Started..."
@@ -468,11 +481,11 @@ CopyAssetFiles
 if (-not (test-path "$env:APP_DATA/config.json")) {
     Write-Host ""
     Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
-    Copy-Item "$env:APP_DATA/config.example.json" "$env:APP_DATA/config.json" -Force | out-null
+    Copy-Item "$env:APP_ROOT/config.example.json" "$env:APP_DATA/config.json" -Force | out-null
     Write-Host "Created a default 'config.json' file from 'config.example.json'" -ForegroundColor Yellow
     Write-Host "Please edit the config.json according to GH repo to match your needs.." -ForegroundColor Yellow
     do {
-        Start-Sleep 600
+        Start-Sleep 30
     } until (
         test-path "$env:APP_DATA/config.json"
     )

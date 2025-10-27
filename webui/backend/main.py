@@ -40,10 +40,13 @@ IS_DOCKER = (
     or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
 )
 
+port = int(os.environ.get("APP_PORT", 8000))
+
 if IS_DOCKER:
     BASE_DIR = Path("/config")
     APP_DIR = Path("/app")
     ASSETS_DIR = Path("/assets")
+    MANUAL_ASSETS_DIR = Path("/manualassets")
     IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
 else:
@@ -52,9 +55,11 @@ else:
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
     ASSETS_DIR = PROJECT_ROOT / "assets"
+    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
     ASSETS_DIR.mkdir(exist_ok=True)
+    MANUAL_ASSETS_DIR.mkdir(exist_ok=True)
 
 # Ensure directories exist locally
 SUBDIRS_TO_CREATE = [
@@ -123,7 +128,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "INFO",
+        "log_level": "WARNING",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -179,6 +184,25 @@ def save_log_level_config(level: str):
         pass  # Silent - no console output
         return False
 
+
+def initialize_webui_settings():
+    """Initialize webui_settings.json with default values if it doesn't exist"""
+    if not WEBUI_SETTINGS_PATH.exists():
+        default_settings = {
+            "log_level": "WARNING",
+            "theme": "dark",
+            "auto_refresh_interval": 180,
+        }
+        try:
+            WEBUI_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(WEBUI_SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            pass  # Silent - no console output
+
+
+# Initialize webui_settings.json if it doesn't exist
+initialize_webui_settings()
 
 # Get log level from config file, environment variable, or default to INFO
 LOG_LEVEL_ENV = load_log_level_config()
@@ -416,6 +440,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import logs watcher module for background process monitoring
+try:
+    logger.debug("Attempting to import logs_watcher module")
+    from logs_watcher import create_logs_watcher
+
+    LOGS_WATCHER_AVAILABLE = True
+    logger.info("Logs watcher module loaded successfully")
+except ImportError as e:
+    LOGS_WATCHER_AVAILABLE = False
+    logger.warning(
+        f"Logs watcher not available: {e}. Background process monitoring will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -423,12 +461,15 @@ logger.debug(f"Auth Middleware: {AUTH_MIDDLEWARE_AVAILABLE}")
 logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
+logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
+current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
+logs_watcher = None  # Logs directory watcher for background processes
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
@@ -775,12 +816,13 @@ def scan_and_cache_assets():
         return
 
     try:
-        all_images = (
-            list(ASSETS_DIR.rglob("*.jpg"))
-            + list(ASSETS_DIR.rglob("*.jpeg"))
-            + list(ASSETS_DIR.rglob("*.png"))
-            + list(ASSETS_DIR.rglob("*.webp"))
-        )
+        # Scan once for all image types and filter @eaDir in one pass
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+        all_images = [
+            p
+            for p in ASSETS_DIR.rglob("*")
+            if p.suffix.lower() in image_extensions and "@eaDir" not in p.parts
+        ]
 
         temp_folders = {}
 
@@ -789,11 +831,11 @@ def scan_and_cache_assets():
             if not image_data:
                 continue
 
-            folder_name = (
-                Path(image_data["path"]).parts[0]
-                if len(Path(image_data["path"]).parts) > 0
-                else "root"
-            )
+            # Get folder name from original Path object (already computed in image_path)
+            try:
+                folder_name = image_path.relative_to(ASSETS_DIR).parts[0]
+            except (ValueError, IndexError):
+                folder_name = "root"
 
             if folder_name not in temp_folders:
                 temp_folders[folder_name] = {
@@ -954,6 +996,10 @@ def find_poster_in_assets(
 
         # Search recursively for the folder
         for item in ASSETS_DIR.rglob("*"):
+            # Skip @eaDir folders from Synology NAS
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
             if item.is_dir() and item.name == rootfolder:
                 # Found the matching folder
                 image_file = None
@@ -1258,7 +1304,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db
+    global scheduler, db, config_db, logs_watcher
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1343,9 +1389,42 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Scheduler module not available, skipping scheduler initialization")
 
+    # Initialize and start logs watcher for background processes (Tautulli, Sonarr, Radarr)
+    if LOGS_WATCHER_AVAILABLE and (DATABASE_AVAILABLE or RUNTIME_DB_AVAILABLE):
+        try:
+            logger.info("Initializing logs watcher for background processes...")
+            logs_watcher = create_logs_watcher(
+                logs_dir=LOGS_DIR,
+                db_instance=db,
+                runtime_db_instance=runtime_db if RUNTIME_DB_AVAILABLE else None,
+            )
+            logs_watcher.start()
+            logger.info(
+                "✓ Logs watcher started - monitoring for Tautulli/Sonarr/Radarr changes"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize logs watcher: {e}")
+            logs_watcher = None
+    else:
+        if not LOGS_WATCHER_AVAILABLE:
+            logger.info("Logs watcher module not available, skipping initialization")
+        else:
+            logger.info(
+                "Logs watcher requires database modules, skipping initialization"
+            )
+
     yield
 
     # Shutdown
+    # Stop logs watcher
+    if logs_watcher:
+        try:
+            logger.info("Stopping logs watcher...")
+            logs_watcher.stop()
+            logger.info("Logs watcher stopped")
+        except Exception as e:
+            logger.error(f"Error stopping logs watcher: {e}")
+
     # Stop queue listener for thread-safe logging
     global queue_listener
     if queue_listener:
@@ -3900,6 +3979,9 @@ async def get_system_info():
     except Exception as e:
         logger.error(f"Error getting system info: {e}")
 
+    # Add Docker detection
+    system_info["is_docker"] = IS_DOCKER
+
     return system_info
 
 
@@ -4090,7 +4172,7 @@ async def get_upload_diagnostics():
 @app.get("/api/status")
 async def get_status():
     """Get script status with last log lines from appropriate log file"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     manual_is_running = False
     if current_process is not None:
@@ -4107,6 +4189,7 @@ async def get_status():
 
             current_process = None
             current_mode = None
+            current_start_time = None
             manual_is_running = False
 
             # Auto-trigger cache refresh after script finishes
@@ -4278,6 +4361,7 @@ async def get_status():
         "active_log": active_log,
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
+        "start_time": current_start_time if is_running else None,
     }
 
 
@@ -4644,6 +4728,31 @@ async def get_migration_status():
 
     except Exception as e:
         logger.error(f"Error getting migration status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/runtime-history/migrate-format")
+async def migrate_runtime_format():
+    """
+    Migrate all runtime_formatted entries to new format (Xh:Ym:Zs)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        updated_count = runtime_db.migrate_runtime_format()
+
+        return {
+            "success": True,
+            "updated_count": updated_count,
+            "message": f"Migrated {updated_count} runtime entries to new format (Xh:Ym:Zs)",
+        }
+
+    except Exception as e:
+        logger.error(f"Error migrating runtime format: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -5203,7 +5312,7 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
 @app.post("/api/run-manual")
 async def run_manual_mode(request: ManualModeRequest):
     """Run manual mode with custom parameters"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Debug logging
     logger.info(f"Manual mode request received: {request.model_dump()}")
@@ -5383,6 +5492,7 @@ async def run_manual_mode(request: ManualModeRequest):
             text=True,
         )
         current_mode = "manual"  # Set current mode to manual
+        current_start_time = datetime.now().isoformat()
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
@@ -5420,7 +5530,7 @@ async def run_manual_mode_upload(
     episodeNumber: str = Form(""),
 ):
     """Run manual mode with uploaded file"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     logger.info(f"Manual mode upload request received")
     logger.info(f"  File: {file.filename if file else 'None'}")
@@ -5732,6 +5842,7 @@ async def run_manual_mode_upload(
             text=True,
         )
         current_mode = "manual"
+        current_start_time = datetime.now().isoformat()
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
@@ -5791,7 +5902,7 @@ async def run_manual_mode_upload(
 @app.post("/api/run/{mode}")
 async def run_script(mode: str):
     """Run Posterizarr script in different modes"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -5836,6 +5947,7 @@ async def run_script(mode: str):
             text=True,
         )
         current_mode = mode  # Set current mode
+        current_start_time = datetime.now().isoformat()
         logger.info(
             f"Started Posterizarr in {mode} mode with PID {current_process.pid}"
         )
@@ -5856,7 +5968,7 @@ async def run_script(mode: str):
 @app.post("/api/reset-posters")
 async def reset_posters(request: ResetPostersRequest):
     """Reset all posters in a Plex library"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if script is running
     if current_process and current_process.poll() is None:
@@ -5907,6 +6019,7 @@ async def reset_posters(request: ResetPostersRequest):
             text=True,
         )
         current_mode = "reset"  # Set current mode to reset
+        current_start_time = datetime.now().isoformat()
 
         logger.info(
             f"Started poster reset for library '{request.library}' with PID {current_process.pid}"
@@ -5929,7 +6042,7 @@ async def reset_posters(request: ResetPostersRequest):
 @app.post("/api/stop")
 async def stop_script():
     """Stop running script gracefully - works for both manual and scheduled runs"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if manual process is running
     manual_running = current_process and current_process.poll() is None
@@ -5953,11 +6066,13 @@ async def stop_script():
                 current_process.wait(timeout=5)
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 stopped_processes.append("manual")
             except subprocess.TimeoutExpired:
                 current_process.kill()
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 stopped_processes.append("manual (force killed after timeout)")
 
         # Stop scheduler process if running
@@ -5990,7 +6105,7 @@ async def stop_script():
 @app.post("/api/force-kill")
 async def force_kill_script():
     """Force kill running script immediately - works for both manual and scheduled runs"""
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if manual process is running
     manual_running = current_process and current_process.poll() is None
@@ -6014,12 +6129,14 @@ async def force_kill_script():
                 current_process.wait(timeout=2)
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 killed_processes.append("manual")
                 logger.warning("Manual script was force killed")
             except Exception as e:
                 logger.error(f"Error force killing manual process: {e}")
                 current_process = None
                 current_mode = None
+                current_start_time = None
                 killed_processes.append("manual (cleared)")
 
         # Kill scheduler process if running
@@ -6048,6 +6165,7 @@ async def force_kill_script():
         # Try to set to None anyway
         current_process = None
         current_mode = None
+        current_start_time = None
         if SCHEDULER_AVAILABLE and scheduler:
             scheduler.current_process = None
             scheduler.is_running = False
@@ -6325,6 +6443,9 @@ async def delete_poster(path: str):
         file_path.unlink()
         logger.info(f"Deleted poster: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6376,6 +6497,9 @@ async def bulk_delete_posters(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted poster: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting poster {path}: {e}")
@@ -6431,6 +6555,9 @@ async def delete_background(path: str):
         file_path.unlink()
         logger.info(f"Deleted background: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6478,6 +6605,9 @@ async def bulk_delete_backgrounds(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted background: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting background {path}: {e}")
@@ -6533,6 +6663,9 @@ async def delete_season(path: str):
         file_path.unlink()
         logger.info(f"Deleted season: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6580,6 +6713,9 @@ async def bulk_delete_seasons(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted season: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting season {path}: {e}")
@@ -6635,6 +6771,9 @@ async def delete_titlecard(path: str):
         file_path.unlink()
         logger.info(f"Deleted titlecard: {file_path}")
 
+        # Delete corresponding database entries
+        delete_db_entries_for_asset(path)
+
         # Invalidate cache to reflect changes immediately
         asset_cache["last_scanned"] = 0
 
@@ -6682,6 +6821,9 @@ async def bulk_delete_titlecards(request: BulkDeleteRequest):
                 file_path.unlink()
                 deleted.append(path)
                 logger.info(f"Deleted titlecard: {file_path}")
+
+                # Delete corresponding database entries
+                delete_db_entries_for_asset(path)
             except Exception as e:
                 failed.append({"path": path, "error": str(e)})
                 logger.error(f"Error deleting titlecard {path}: {e}")
@@ -6697,6 +6839,213 @@ async def bulk_delete_titlecards(request: BulkDeleteRequest):
         }
     except Exception as e:
         logger.error(f"Error in bulk delete titlecards: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# MANUAL ASSETS GALLERY
+# ============================================================================
+
+
+@app.get("/api/manual-assets-gallery")
+async def get_manual_assets_gallery():
+    """Get all assets from manualassets directory - organized by library and folder"""
+    try:
+        if not MANUAL_ASSETS_DIR.exists():
+            logger.warning(
+                f"Manual assets directory does not exist: {MANUAL_ASSETS_DIR}"
+            )
+            return {"libraries": [], "total_assets": 0}
+
+        libraries = []
+        total_assets = 0
+
+        # Iterate through library folders
+        for library_dir in MANUAL_ASSETS_DIR.iterdir():
+            # Skip @eaDir folders from Synology NAS
+            if not library_dir.is_dir() or library_dir.name == "@eaDir":
+                continue
+
+            library_name = library_dir.name
+            folders = []
+
+            # Iterate through show/movie folders
+            for folder_dir in library_dir.iterdir():
+                # Skip @eaDir folders from Synology NAS
+                if not folder_dir.is_dir() or folder_dir.name == "@eaDir":
+                    continue
+
+                folder_name = folder_dir.name
+                assets = []
+
+                # Find all image files in this folder
+                for img_file in folder_dir.iterdir():
+                    # Skip items containing @eaDir in path
+                    if "@eaDir" in img_file.parts:
+                        continue
+
+                    if img_file.is_file() and img_file.suffix.lower() in [
+                        ".jpg",
+                        ".jpeg",
+                        ".png",
+                        ".webp",
+                    ]:
+                        # Skip backup files
+                        if img_file.suffix == ".backup" or ".backup" in img_file.name:
+                            continue
+
+                        # Determine asset type from filename
+                        filename_lower = img_file.name.lower()
+                        if (
+                            filename_lower == "poster.jpg"
+                            or filename_lower == "poster.png"
+                        ):
+                            asset_type = "poster"
+                        elif (
+                            filename_lower == "background.jpg"
+                            or filename_lower == "background.png"
+                        ):
+                            asset_type = "background"
+                        elif filename_lower.startswith("season") and any(
+                            c.isdigit() for c in filename_lower
+                        ):
+                            asset_type = "season"
+                        elif re.match(r"^s\d+e\d+\.", filename_lower):
+                            asset_type = "titlecard"
+                        else:
+                            asset_type = "other"
+
+                        # Build relative path from manual assets dir
+                        relative_path = f"{library_name}/{folder_name}/{img_file.name}"
+
+                        assets.append(
+                            {
+                                "name": img_file.name,
+                                "path": relative_path,
+                                "type": asset_type,
+                                "size": img_file.stat().st_size,
+                                "url": f"/manual_poster_assets/{relative_path}",
+                            }
+                        )
+                        total_assets += 1
+
+                if assets:
+                    folders.append(
+                        {
+                            "name": folder_name,
+                            "path": f"{library_name}/{folder_name}",
+                            "assets": assets,
+                            "asset_count": len(assets),
+                        }
+                    )
+
+            if folders:
+                libraries.append(
+                    {
+                        "name": library_name,
+                        "folders": folders,
+                        "folder_count": len(folders),
+                    }
+                )
+
+        logger.info(
+            f"Manual assets gallery: {len(libraries)} libraries, {total_assets} total assets"
+        )
+        return {"libraries": libraries, "total_assets": total_assets}
+
+    except Exception as e:
+        logger.error(f"Error getting manual assets gallery: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/manual-assets/{path:path}")
+async def delete_manual_asset(path: str):
+    """Delete an asset from the manual assets directory"""
+    try:
+        # Construct the full file path
+        file_path = MANUAL_ASSETS_DIR / path
+
+        # Security check: Ensure the path is within MANUAL_ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(MANUAL_ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted manual asset: {file_path}")
+
+        return {
+            "success": True,
+            "message": f"Manual asset '{path}' deleted successfully",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting manual asset {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/manual-assets/bulk-delete")
+async def bulk_delete_manual_assets(request: BulkDeleteRequest):
+    """Delete multiple assets from the manual assets directory"""
+    try:
+        deleted = []
+        failed = []
+
+        for path in request.paths:
+            try:
+                # Construct the full file path
+                file_path = MANUAL_ASSETS_DIR / path
+
+                # Security check: Ensure the path is within MANUAL_ASSETS_DIR
+                try:
+                    file_path = file_path.resolve()
+                    file_path.relative_to(MANUAL_ASSETS_DIR.resolve())
+                except ValueError:
+                    failed.append(
+                        {"path": path, "error": "Access denied: Invalid path"}
+                    )
+                    continue
+
+                # Check if file exists
+                if not file_path.exists():
+                    failed.append({"path": path, "error": "File not found"})
+                    continue
+
+                # Check if it's a file (not a directory)
+                if not file_path.is_file():
+                    failed.append({"path": path, "error": "Path is not a file"})
+                    continue
+
+                # Delete the file
+                file_path.unlink()
+                deleted.append(path)
+                logger.info(f"Deleted manual asset: {file_path}")
+            except Exception as e:
+                failed.append({"path": path, "error": str(e)})
+                logger.error(f"Error deleting manual asset {path}: {e}")
+
+        return {
+            "success": True,
+            "deleted": deleted,
+            "failed": failed,
+            "message": f"Successfully deleted {len(deleted)} manual asset(s). {len(failed)} failed.",
+        }
+    except Exception as e:
+        logger.error(f"Error in bulk delete manual assets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -6761,6 +7110,10 @@ async def get_folder_view_items(library_path: str):
 
         folders = []
         for item in library_full_path.iterdir():
+            # Skip @eaDir folders from Synology NAS
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
             if item.is_dir():
                 # Count assets in this folder
                 asset_count = 0
@@ -7011,6 +7364,78 @@ async def get_github_releases():
         return {"success": False, "error": str(e), "releases": []}
 
 
+@app.get("/api/dashboard/all")
+async def get_dashboard_all():
+    """
+    Combined endpoint for all dashboard data - reduces HTTP requests from 4 to 1
+    Returns: status, version, scheduler_status, system_info
+    """
+    result = {
+        "success": True,
+        "status": None,
+        "version": None,
+        "scheduler_status": None,
+        "system_info": None,
+    }
+
+    # Fetch status (always required)
+    try:
+        status_response = await get_status()
+        result["status"] = status_response
+    except Exception as e:
+        logger.error(f"Error fetching status in dashboard/all: {e}")
+        result["status"] = {
+            "running": False,
+            "last_logs": [],
+            "script_exists": False,
+            "config_exists": False,
+        }
+
+    # Fetch version (cached, so fast)
+    try:
+        version_response = await get_version()
+        result["version"] = version_response
+    except Exception as e:
+        logger.error(f"Error fetching version in dashboard/all: {e}")
+        result["version"] = {"local": None, "remote": None}
+
+    # Fetch scheduler status (if available)
+    if SCHEDULER_AVAILABLE and scheduler:
+        try:
+            scheduler_status = scheduler.get_status()
+            result["scheduler_status"] = {
+                "success": True,
+                "enabled": scheduler_status.get("enabled", False),
+                "running": scheduler_status.get("running", False),
+                "is_executing": scheduler_status.get("is_executing", False),
+                "schedules": scheduler_status.get("schedules", []),
+                "next_run": scheduler_status.get("next_run"),
+                "timezone": scheduler_status.get("timezone"),
+            }
+        except Exception as e:
+            logger.error(f"Error fetching scheduler status in dashboard/all: {e}")
+            result["scheduler_status"] = {"success": False}
+    else:
+        result["scheduler_status"] = {"success": False}
+
+    # Fetch system info
+    try:
+        system_info_response = await get_system_info()
+        result["system_info"] = system_info_response
+    except Exception as e:
+        logger.error(f"Error fetching system info in dashboard/all: {e}")
+        result["system_info"] = {
+            "platform": "Unknown",
+            "cpu_cores": 0,
+            "memory_percent": 0,
+            "total_memory": "Unknown",
+            "used_memory": "Unknown",
+            "free_memory": "Unknown",
+        }
+
+    return result
+
+
 @app.get("/api/assets/stats")
 async def get_assets_stats():
     """
@@ -7136,8 +7561,15 @@ async def get_test_gallery():
     image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
 
     try:
-        for image_path in TEST_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
+        # Filter out @eaDir during iteration
+        all_test_images = [
+            p
+            for p in TEST_DIR.rglob("*")
+            if p.suffix.lower() in image_extensions and "@eaDir" not in str(p)
+        ]
+
+        for image_path in all_test_images:
+            if image_path.is_file():
                 try:
                     relative_path = image_path.relative_to(TEST_DIR)
                     # Create URL path with forward slashes
@@ -7227,17 +7659,25 @@ async def update_scheduler_config(data: ScheduleUpdate):
 
 @app.post("/api/scheduler/schedule")
 async def add_schedule(data: ScheduleCreate):
-    """Add a new schedule"""
+    """Add a new schedule (time must be in HH:MM format, 00:00-23:59)"""
     if not SCHEDULER_AVAILABLE or not scheduler:
         raise HTTPException(status_code=503, detail="Scheduler not available")
 
     try:
+        # Validate time format before adding
+        hour, minute = scheduler.parse_schedule_time(data.time)
+        if hour is None or minute is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid time format '{data.time}'. Must be HH:MM (00:00-23:59)",
+            )
+
         success = scheduler.add_schedule(data.time, data.description)
         if success:
             return {"success": True, "message": f"Schedule added: {data.time}"}
         else:
             raise HTTPException(
-                status_code=400, detail="Invalid time format or schedule already exists"
+                status_code=400, detail=f"Schedule {data.time} already exists"
             )
     except HTTPException:
         raise
@@ -7258,7 +7698,13 @@ async def remove_schedule(time: str):
 
         success = scheduler.remove_schedule(time)
         if success:
-            return {"success": True, "message": f"Schedule removed: {time}"}
+            # Give scheduler a moment to update jobs
+            import asyncio
+
+            await asyncio.sleep(0.1)
+            # Get updated status after removal
+            status = scheduler.get_status()
+            return {"success": True, "message": f"Schedule removed: {time}", **status}
         else:
             raise HTTPException(status_code=404, detail="Schedule not found")
     except HTTPException:
@@ -7276,7 +7722,9 @@ async def clear_all_schedules():
 
     try:
         scheduler.clear_schedules()
-        return {"success": True, "message": "All schedules cleared"}
+        # Get updated status immediately after clearing
+        status = scheduler.get_status()
+        return {"success": True, "message": "All schedules cleared", **status}
     except Exception as e:
         logger.error(f"Error clearing schedules: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -7348,6 +7796,57 @@ async def run_scheduler_now():
 
 
 # ============================================================================
+# LOGS WATCHER STATUS ENDPOINT
+# ============================================================================
+
+
+@app.get("/api/logs-watcher/status")
+async def get_logs_watcher_status():
+    """Get logs watcher status and statistics"""
+    if not LOGS_WATCHER_AVAILABLE:
+        return {
+            "available": False,
+            "message": "Logs watcher module not available",
+        }
+
+    if not logs_watcher:
+        return {
+            "available": True,
+            "running": False,
+            "message": "Logs watcher not initialized",
+        }
+
+    try:
+        return {
+            "available": True,
+            "running": logs_watcher.is_running,
+            "watching_directory": str(logs_watcher.logs_dir),
+            "debounce_seconds": logs_watcher.debounce_seconds,
+            "last_csv_import": (
+                datetime.fromtimestamp(logs_watcher.last_csv_import).isoformat()
+                if logs_watcher.last_csv_import > 0
+                else None
+            ),
+            "monitored_files": {
+                "csv": "ImageChoices.csv",
+                "runtime_json": (
+                    list(logs_watcher.handler.RUNTIME_JSON_FILES)
+                    if logs_watcher.handler
+                    else []
+                ),
+            },
+            "recent_imports": {
+                "csv_count": 1 if logs_watcher.last_csv_import > 0 else 0,
+                "json_count": len(logs_watcher.last_json_imports),
+            },
+            "message": "Logs watcher is monitoring for background process changes",
+        }
+    except Exception as e:
+        logger.error(f"Error getting logs watcher status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # ASSET REPLACEMENT API
 # ============================================================================
 
@@ -7393,6 +7892,127 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         logger.info(f"  Season Number: {request.season_number}")
         logger.info(f"  Episode Number: {request.episode_number}")
         logger.info("=" * 80)
+
+        # Try to get IDs from database if not provided in request
+        if not request.tmdb_id or not request.tvdb_id:
+            try:
+                from database import ImageChoices
+
+                db = ImageChoices()
+
+                db_record = None
+                search_method = None
+
+                # Method 1: Search by asset path (for AssetReplacer)
+                if request.asset_path and not request.asset_path.startswith("manual_"):
+                    # Extract show/movie name from asset path to match against Rootfolder
+                    # Example path: "D:/Media/Shows/Show Name (2020) {tmdb-123}/Season 01/poster.jpg"
+                    import os
+
+                    path_parts = request.asset_path.replace("\\", "/").split("/")
+
+                    # Look for folder with TMDB/TVDB ID pattern in path
+                    rootfolder_candidate = None
+                    for part in path_parts:
+                        # Check if this part has an ID pattern like {tmdb-123}, [tvdb-456], etc.
+                        if any(
+                            pattern in part.lower()
+                            for pattern in ["tmdb-", "tvdb-", "imdb-"]
+                        ):
+                            rootfolder_candidate = part
+                            break
+
+                    if rootfolder_candidate:
+                        logger.info(
+                            f"Searching database by path for: {rootfolder_candidate}"
+                        )
+                        search_method = "path"
+
+                        # Search database for matching record
+                        cursor = db.connection.cursor()
+                        cursor.execute(
+                            """
+                            SELECT tmdbid, tvdbid, imdbid, Rootfolder
+                            FROM imagechoices 
+                            WHERE Rootfolder LIKE ?
+                            LIMIT 1
+                        """,
+                            (f"%{rootfolder_candidate}%",),
+                        )
+
+                        db_record = cursor.fetchone()
+
+                # Method 2: Search by title + year (for Manual Mode)
+                if not db_record and request.title:
+                    logger.info(
+                        f"Searching database by title for: '{request.title}' (year: {request.year})"
+                    )
+                    search_method = "title"
+
+                    cursor = db.connection.cursor()
+
+                    # Try exact title match first
+                    if request.year:
+                        # Search with year in Rootfolder pattern: "Title (YYYY)"
+                        cursor.execute(
+                            """
+                            SELECT tmdbid, tvdbid, imdbid, Rootfolder
+                            FROM imagechoices 
+                            WHERE Rootfolder LIKE ?
+                            LIMIT 1
+                        """,
+                            (f"%{request.title}%({request.year})%",),
+                        )
+                    else:
+                        # Search without year
+                        cursor.execute(
+                            """
+                            SELECT tmdbid, tvdbid, imdbid, Rootfolder
+                            FROM imagechoices 
+                            WHERE Rootfolder LIKE ?
+                            LIMIT 1
+                        """,
+                            (f"%{request.title}%",),
+                        )
+
+                    db_record = cursor.fetchone()
+
+                # Process database record if found
+                if db_record:
+                    db_tmdbid = db_record[0] if db_record[0] != "false" else None
+                    db_tvdbid = db_record[1] if db_record[1] != "false" else None
+                    db_imdbid = db_record[2] if db_record[2] != "false" else None
+                    db_rootfolder = db_record[3]
+
+                    logger.info(f"Found database record (via {search_method}):")
+                    logger.info(f"  Rootfolder: {db_rootfolder}")
+                    logger.info(f"  TMDB ID: {db_tmdbid}")
+                    logger.info(f"  TVDB ID: {db_tvdbid}")
+                    logger.info(f"  IMDB ID: {db_imdbid}")
+
+                    # Use database IDs if not provided in request
+                    if not request.tmdb_id and db_tmdbid:
+                        request.tmdb_id = db_tmdbid
+                        logger.info(f"Using TMDB ID from database: {db_tmdbid}")
+
+                    if not request.tvdb_id and db_tvdbid:
+                        request.tvdb_id = db_tvdbid
+                        logger.info(f"Using TVDB ID from database: {db_tvdbid}")
+
+                    # Store IMDB ID for Fanart.tv (store in request for later use)
+                    if db_imdbid:
+                        # Store it as a custom attribute (we'll use it for Fanart)
+                        if not hasattr(request, "imdb_id"):
+                            request.imdb_id = db_imdbid
+                            logger.info(f"Using IMDB ID from database: {db_imdbid}")
+                else:
+                    logger.info(
+                        f"No matching database record found (searched via {search_method})"
+                    )
+
+            except Exception as e:
+                logger.warning(f"Could not query database for IDs: {e}")
+                logger.debug("Continuing with title-based search...")
 
         # Load config to get API keys and language preferences
         if not CONFIG_PATH.exists():
@@ -7658,60 +8278,110 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         # Determine TMDB ID(s) - collect multiple IDs for dual search
         tmdb_ids_to_use = []
 
-        # If TMDB ID is provided, use it
+        # If TMDB ID is provided or found in DB, use it
         if request.tmdb_id:
             tmdb_ids_to_use.append(("provided_id", request.tmdb_id))
-            logger.info(f"Using provided TMDB ID: {request.tmdb_id}")
+            logger.info(f"Using TMDB ID from database/request: {request.tmdb_id}")
 
-        # If we have title, also search by title (even if ID was provided - for dual search)
-        if request.title and tmdb_token:
+        # Check if title contains an ID with prefix (e.g., "tmdb-123", "tvdb-456", "imdb-789")
+        # This handles manual ID entry in RunModes search bar with explicit provider prefix
+        # ONLY check for prefixes if we don't have IDs from database yet
+        potential_tmdb_id = None
+        potential_tvdb_id = None
+        potential_imdb_id = None
+        detected_provider = None  # Track which provider prefix was used
+
+        if not tmdb_ids_to_use and request.title:
+            title_lower = request.title.strip().lower()
+
+            # Check for TMDB ID: tmdb-123 or tmdb:123
+            tmdb_match = re.match(r"tmdb[-:](\d+)", title_lower)
+            if tmdb_match:
+                potential_tmdb_id = tmdb_match.group(1)
+                detected_provider = "tmdb"
+                logger.info(f"Detected TMDB ID from title prefix: {potential_tmdb_id}")
+
+            # Check for TVDB ID: tvdb-123 or tvdb:123
+            tvdb_match = re.match(r"tvdb[-:](\d+)", title_lower)
+            if tvdb_match:
+                potential_tvdb_id = tvdb_match.group(1)
+                detected_provider = "tvdb"
+                logger.info(f"Detected TVDB ID from title prefix: {potential_tvdb_id}")
+
+            # Check for IMDB ID: imdb-123 or imdb:123 or imdb-tt123 or just tt123
+            imdb_match = re.match(r"(?:imdb[-:])?(?:tt)?(\d+)", title_lower)
+            if imdb_match and (
+                title_lower.startswith("imdb") or title_lower.startswith("tt")
+            ):
+                potential_imdb_id = imdb_match.group(1)
+                detected_provider = "imdb"
+                # IMDB IDs should have the 'tt' prefix for Fanart.tv
+                if not potential_imdb_id.startswith("tt"):
+                    potential_imdb_id = f"tt{potential_imdb_id}"
+                logger.info(f"Detected IMDB ID from title prefix: {potential_imdb_id}")
+
+        # If we detected a TMDB ID in title prefix, use it
+        if not tmdb_ids_to_use and potential_tmdb_id:
+            tmdb_ids_to_use.append(("manual_id_entry", potential_tmdb_id))
             logger.info(
-                f"Searching TMDB for title: '{request.title}' (year: {request.year})"
+                f"Using manually entered TMDB ID from prefix: {potential_tmdb_id}"
+            )
+
+        # Only search by title if we don't have any TMDB ID yet AND no ID prefix was detected
+        if (
+            not tmdb_ids_to_use
+            and request.title
+            and not (potential_tmdb_id or potential_tvdb_id or potential_imdb_id)
+            and tmdb_token
+        ):
+            logger.info(
+                f"No TMDB ID available - searching TMDB by title: '{request.title}' (year: {request.year})"
             )
             found_id = await search_tmdb_id(
                 request.title, request.year, request.media_type
             )
-            if (
-                found_id
-                and ("title_search", found_id) not in tmdb_ids_to_use
-                and ("provided_id", found_id) not in tmdb_ids_to_use
-            ):
+            if found_id:
                 tmdb_ids_to_use.append(("title_search", found_id))
                 logger.info(f"Found TMDB ID from title search: {found_id}")
-            elif not found_id:
+            else:
                 logger.warning(f"No TMDB ID found for title: '{request.title}'")
 
         # Determine TVDB ID(s) - collect multiple IDs for dual search
         tvdb_ids_to_use = []
 
-        # If TVDB ID is provided, use it
+        # If TVDB ID is provided or found in DB, use it (works for both TV and Movies in TVDB API v4)
         if request.tvdb_id:
             tvdb_ids_to_use.append(("provided_id", request.tvdb_id))
-            logger.info(f"Using provided TVDB ID: {request.tvdb_id}")
-
-        # If we have title and it's TV, also search by title
-        if request.title and tvdb_api_key and request.media_type == "tv":
             logger.info(
-                f"Searching TVDB for title: '{request.title}' (year: {request.year})"
+                f"Using TVDB ID from database/request: {request.tvdb_id} (media_type: {request.media_type})"
+            )
+
+        # If we detected a TVDB ID in title prefix (only if no DB ID), use it
+        if not tvdb_ids_to_use and potential_tvdb_id:
+            tvdb_ids_to_use.append(("manual_id_entry", potential_tvdb_id))
+            logger.info(
+                f"Using manually entered TVDB ID from prefix: {potential_tvdb_id}"
+            )
+
+        # Only search by title if we don't have any TVDB ID yet AND no ID prefix was detected
+        # TVDB API v4 supports both TV shows and movies
+        if (
+            not tvdb_ids_to_use
+            and request.title
+            and not (potential_tmdb_id or potential_tvdb_id or potential_imdb_id)
+            and tvdb_api_key
+        ):
+            logger.info(
+                f"No TVDB ID available - searching TVDB by title: '{request.title}' (year: {request.year}, media_type: {request.media_type})"
             )
             found_id = await search_tvdb_id(
                 request.title, request.year, request.media_type
             )
-            if (
-                found_id
-                and ("title_search", found_id) not in tvdb_ids_to_use
-                and ("provided_id", found_id) not in tvdb_ids_to_use
-            ):
+            if found_id:
                 tvdb_ids_to_use.append(("title_search", found_id))
                 logger.info(f"Found TVDB ID from title search: {found_id}")
-            elif not found_id:
+            else:
                 logger.warning(f"No TVDB ID found for title: '{request.title}'")
-        elif request.media_type == "tv" and not tvdb_api_key:
-            logger.warning(
-                f"TVDB: Cannot search for TV show '{request.title}' - no TVDB API key configured"
-            )
-        elif request.media_type == "tv" and not request.title:
-            logger.warning(f"TVDB: Cannot search - no title provided for TV show")
 
         # Create async tasks for parallel fetching - AFTER IDs are resolved
         async def fetch_tmdb():
@@ -7899,61 +8569,240 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                             # Fetch from all collected IDs
                             for source, tvdb_id in tvdb_ids_to_use:
-                                logger.info(
-                                    f" TVDB: Fetching artwork for series ID: {tvdb_id} (from {source})"
+                                # TVDB API v4 supports both series and movies
+                                entity_type = (
+                                    "series" if request.media_type == "tv" else "movies"
                                 )
 
-                                # Fetch artwork
-                                artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/artworks"
-                                artwork_params = {
-                                    "lang": "eng",
-                                    "type": "2",
-                                }  # type=2 for posters
-
-                                if request.asset_type == "background":
-                                    artwork_params["type"] = (
-                                        "3"  # type=3 for backgrounds
-                                    )
-
-                                logger.info(
-                                    f" TVDB: Requesting {artwork_url} with params {artwork_params}"
-                                )
-                                artwork_response = await client.get(
-                                    artwork_url,
-                                    headers=auth_headers,
-                                    params=artwork_params,
-                                )
-
-                                logger.info(
-                                    f" TVDB: Response status: {artwork_response.status_code}"
-                                )
-                                if artwork_response.status_code == 200:
-                                    artwork_data = artwork_response.json()
-                                    artworks = artwork_data.get("data", {}).get(
-                                        "artworks", []
-                                    )
+                                # Handle season-specific requests
+                                if (
+                                    request.asset_type == "season"
+                                    and request.season_number
+                                    and entity_type == "series"
+                                ):
+                                    # Fetch season-specific artwork using extended endpoint
                                     logger.info(
-                                        f" TVDB: Found {len(artworks)} artworks in response"
+                                        f" TVDB: Fetching season {request.season_number} artwork for series ID: {tvdb_id} (from {source})"
+                                    )
+                                    artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/extended"
+
+                                    logger.info(f" TVDB: Requesting {artwork_url}")
+                                    artwork_response = await client.get(
+                                        artwork_url,
+                                        headers=auth_headers,
                                     )
 
-                                    for artwork in artworks:
-                                        image_url = artwork.get("image")
-                                        if image_url and image_url not in seen_urls:
-                                            seen_urls.add(image_url)
-                                            all_results.append(
-                                                {
-                                                    "url": image_url,
-                                                    "original_url": image_url,
-                                                    "source": "TVDB",
-                                                    "source_type": source,  # "provided_id" or "title_search"
-                                                    "type": request.asset_type,
-                                                    "language": artwork.get("language"),
-                                                }
-                                            )
-                                else:
-                                    logger.warning(
-                                        f" TVDB: Non-200 response: {artwork_response.status_code} - {artwork_response.text[:200]}"
+                                    logger.info(
+                                        f" TVDB: Response status: {artwork_response.status_code}"
                                     )
+                                    if artwork_response.status_code == 200:
+                                        extended_data = artwork_response.json()
+                                        seasons = extended_data.get("data", {}).get(
+                                            "seasons", []
+                                        )
+                                        logger.info(
+                                            f" TVDB: Found {len(seasons)} seasons in response"
+                                        )
+
+                                        # Find matching season
+                                        for season in seasons:
+                                            if (
+                                                season.get("number")
+                                                == request.season_number
+                                            ):
+                                                season_image = season.get("image")
+                                                if (
+                                                    season_image
+                                                    and season_image not in seen_urls
+                                                ):
+                                                    seen_urls.add(season_image)
+                                                    all_results.append(
+                                                        {
+                                                            "url": season_image,
+                                                            "original_url": season_image,
+                                                            "source": "TVDB",
+                                                            "source_type": source,
+                                                            "type": "season",
+                                                            "language": "eng",
+                                                        }
+                                                    )
+                                                    logger.info(
+                                                        f" TVDB: Added season {request.season_number} poster"
+                                                    )
+                                                break
+                                    else:
+                                        logger.warning(
+                                            f" TVDB: Non-200 response: {artwork_response.status_code} - {artwork_response.text[:200]}"
+                                        )
+                                else:
+                                    # Regular artwork fetch (posters, backgrounds)
+                                    logger.info(
+                                        f" TVDB: Fetching artwork for {entity_type} ID: {tvdb_id} (from {source})"
+                                    )
+
+                                    # For manual ID entry (prefix detected), try both movies and series
+                                    # This handles cases where user enters tvdb:28 without knowing if it's a movie or series
+                                    should_try_both_types = source == "manual_id_entry"
+
+                                    # Try movies first (if entity_type is movies OR if manual entry)
+                                    if entity_type == "movies" or should_try_both_types:
+                                        artwork_url = f"https://api4.thetvdb.com/v4/movies/{tvdb_id}/extended"
+
+                                        logger.info(
+                                            f" TVDB: Requesting {artwork_url} (movies extended)"
+                                        )
+                                        artwork_response = await client.get(
+                                            artwork_url,
+                                            headers=auth_headers,
+                                        )
+
+                                        logger.info(
+                                            f" TVDB: Movies response status: {artwork_response.status_code}"
+                                        )
+
+                                        if artwork_response.status_code == 200:
+                                            movie_data = artwork_response.json()
+                                            artworks = movie_data.get("data", {}).get(
+                                                "artworks", []
+                                            )
+                                            logger.info(
+                                                f" TVDB: Found {len(artworks)} artworks in movies extended response"
+                                            )
+
+                                            # Debug: Log first few artwork types to understand the structure
+                                            if artworks:
+                                                sample_types = {}
+                                                for artwork in artworks[:10]:
+                                                    art_type = artwork.get("type")
+                                                    if art_type not in sample_types:
+                                                        sample_types[art_type] = 0
+                                                    sample_types[art_type] += 1
+                                                logger.info(
+                                                    f" TVDB: Sample artwork types from first 10: {sample_types}"
+                                                )
+
+                                            # Filter artworks by type
+                                            poster_count = 0
+                                            background_count = 0
+                                            for artwork in artworks:
+                                                artwork_type = artwork.get("type")
+                                                image_url = artwork.get("image")
+
+                                                # Movies endpoint uses different type codes than series
+                                                # type=14 for posters, type=15 for backgrounds
+                                                # "standard" asset type is treated as posters
+                                                if (
+                                                    request.asset_type
+                                                    in ["poster", "standard"]
+                                                ) and artwork_type == 14:
+                                                    poster_count += 1
+                                                    if (
+                                                        image_url
+                                                        and image_url not in seen_urls
+                                                    ):
+                                                        seen_urls.add(image_url)
+                                                        all_results.append(
+                                                            {
+                                                                "url": image_url,
+                                                                "original_url": image_url,
+                                                                "source": "TVDB",
+                                                                "source_type": source,
+                                                                "type": request.asset_type,
+                                                                "language": artwork.get(
+                                                                    "language"
+                                                                ),
+                                                            }
+                                                        )
+                                                elif (
+                                                    request.asset_type == "background"
+                                                    and artwork_type == 15
+                                                ):
+                                                    background_count += 1
+                                                    if (
+                                                        image_url
+                                                        and image_url not in seen_urls
+                                                    ):
+                                                        seen_urls.add(image_url)
+                                                        all_results.append(
+                                                            {
+                                                                "url": image_url,
+                                                                "original_url": image_url,
+                                                                "source": "TVDB",
+                                                                "source_type": source,
+                                                                "type": request.asset_type,
+                                                                "language": artwork.get(
+                                                                    "language"
+                                                                ),
+                                                            }
+                                                        )
+
+                                            logger.info(
+                                                f" TVDB: Movies artwork types - Posters (type=14): {poster_count}, Backgrounds (type=15): {background_count}, Added to results: {len(all_results)}"
+                                            )
+                                        else:
+                                            logger.info(
+                                                f" TVDB: Movies endpoint returned {artwork_response.status_code} - {'Success but no artworks' if artwork_response.status_code == 200 else 'trying series endpoint'}"
+                                            )
+
+                                    # Try series endpoint (if entity_type is series OR if manual entry and movies didn't work)
+                                    if entity_type == "series" or (
+                                        should_try_both_types and len(all_results) == 0
+                                    ):
+                                        artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id}/artworks"
+                                        artwork_params = {
+                                            "lang": "eng",
+                                            "type": "2",
+                                        }  # type=2 for posters
+
+                                        if request.asset_type == "background":
+                                            artwork_params["type"] = (
+                                                "3"  # type=3 for backgrounds
+                                            )
+
+                                        logger.info(
+                                            f" TVDB: Requesting {artwork_url} with params {artwork_params} (series)"
+                                        )
+                                        artwork_response = await client.get(
+                                            artwork_url,
+                                            headers=auth_headers,
+                                            params=artwork_params,
+                                        )
+
+                                        logger.info(
+                                            f" TVDB: Series response status: {artwork_response.status_code}"
+                                        )
+                                        if artwork_response.status_code == 200:
+                                            artwork_data = artwork_response.json()
+                                            artworks = artwork_data.get("data", {}).get(
+                                                "artworks", []
+                                            )
+                                            logger.info(
+                                                f" TVDB: Found {len(artworks)} artworks in series response"
+                                            )
+
+                                            for artwork in artworks:
+                                                image_url = artwork.get("image")
+                                                if (
+                                                    image_url
+                                                    and image_url not in seen_urls
+                                                ):
+                                                    seen_urls.add(image_url)
+                                                    all_results.append(
+                                                        {
+                                                            "url": image_url,
+                                                            "original_url": image_url,
+                                                            "source": "TVDB",
+                                                            "source_type": source,  # "provided_id" or "title_search"
+                                                            "type": request.asset_type,
+                                                            "language": artwork.get(
+                                                                "language"
+                                                            ),
+                                                        }
+                                                    )
+                                        else:
+                                            logger.info(
+                                                f" TVDB: Series endpoint returned {artwork_response.status_code}"
+                                            )
 
                 logger.info(
                     f" TVDB: Collected {len(all_results)} unique images from {len(tvdb_ids_to_use)} ID(s)"
@@ -7965,13 +8814,26 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             return all_results
 
         async def fetch_fanart():
-            """Fetch Fanart.tv assets asynchronously from all collected IDs"""
+            """Fetch Fanart.tv assets asynchronously from all collected IDs
+
+            ID Usage:
+            - Movies: TMDB ID + IMDB ID
+            - TV Shows: TVDB ID only
+            """
             if not fanart_api_key:
                 logger.warning("Fanart.tv: No API key configured")
                 return []
 
-            if not (tmdb_ids_to_use or tvdb_ids_to_use):
-                logger.warning("Fanart.tv: No TMDB IDs or TVDB IDs available")
+            # Check if we have any IDs to use
+            imdb_id = getattr(request, "imdb_id", None)
+
+            # If we detected a manual IMDB ID entry, use it for Fanart (Movies only!)
+            if not imdb_id and potential_imdb_id and request.media_type == "movie":
+                imdb_id = potential_imdb_id
+                logger.info(f"Using manually entered IMDB ID for Fanart.tv: {imdb_id}")
+
+            if not (tmdb_ids_to_use or tvdb_ids_to_use or imdb_id):
+                logger.warning("Fanart.tv: No TMDB, TVDB, or IMDB IDs available")
                 return []
 
             all_results = []
@@ -7979,13 +8841,50 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
-                    # Fetch from TMDB IDs for movies
-                    if request.media_type == "movie" and tmdb_ids_to_use:
-                        for source, tmdb_id in tmdb_ids_to_use:
+                    # ========== MOVIES: Use TMDB ID + IMDB ID ==========
+                    if request.media_type == "movie":
+                        # Try TMDB IDs first
+                        if tmdb_ids_to_use:
+                            for source, tmdb_id in tmdb_ids_to_use:
+                                logger.info(
+                                    f" Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
+                                )
+                                url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id}?api_key={fanart_api_key}"
+                                response = await client.get(url)
+                                if response.status_code == 200:
+                                    data = response.json()
+
+                                    # Map asset types to fanart.tv keys
+                                    if request.asset_type == "poster":
+                                        fanart_keys = ["movieposter"]
+                                    elif request.asset_type == "background":
+                                        fanart_keys = ["moviebackground"]
+                                    else:
+                                        fanart_keys = []
+
+                                    for key in fanart_keys:
+                                        for item in data.get(key, []):
+                                            item_url = item.get("url")
+                                            if item_url and item_url not in seen_urls:
+                                                seen_urls.add(item_url)
+                                                all_results.append(
+                                                    {
+                                                        "url": item_url,
+                                                        "original_url": item_url,
+                                                        "source": "Fanart.tv",
+                                                        "source_type": source,
+                                                        "type": request.asset_type,
+                                                        "language": item.get("lang"),
+                                                        "likes": item.get("likes", 0),
+                                                    }
+                                                )
+
+                        # Also try IMDB ID if available (Movies only!)
+                        if imdb_id:
                             logger.info(
-                                f" Fanart.tv: Fetching movie artwork for TMDB ID: {tmdb_id} (from {source})"
+                                f" Fanart.tv: Fetching movie artwork for IMDB ID: {imdb_id} (from database)"
                             )
-                            url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id}?api_key={fanart_api_key}"
+                            url = f"https://webservice.fanart.tv/v3/movies/{imdb_id}?api_key={fanart_api_key}"
                             response = await client.get(url)
                             if response.status_code == 200:
                                 data = response.json()
@@ -8008,14 +8907,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                     "url": item_url,
                                                     "original_url": item_url,
                                                     "source": "Fanart.tv",
-                                                    "source_type": source,  # "provided_id" or "title_search"
+                                                    "source_type": "imdb_id",
                                                     "type": request.asset_type,
                                                     "language": item.get("lang"),
                                                     "likes": item.get("likes", 0),
                                                 }
                                             )
 
-                    # Fetch from TVDB IDs for TV shows
+                    # ========== TV SHOWS: Use TVDB ID only ==========
                     elif request.media_type == "tv" and tvdb_ids_to_use:
                         logger.info(
                             f" Fanart.tv: Processing {len(tvdb_ids_to_use)} TVDB IDs for TV show"
@@ -8034,7 +8933,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                                 # Map asset types to fanart.tv keys
                                 if request.asset_type == "poster":
+                                    # Standard TV show posters
                                     fanart_keys = ["tvposter"]
+                                elif request.asset_type == "season":
+                                    # Season-specific posters
+                                    # Fanart.tv has seasonposter but requires season filtering
+                                    fanart_keys = ["seasonposter"]
                                 elif request.asset_type == "background":
                                     fanart_keys = ["showbackground"]
                                 else:
@@ -8049,6 +8953,32 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         f" Fanart.tv: Found {len(items)} items for key '{key}'"
                                     )
                                     for item in items:
+                                        # For season posters, filter by season number
+                                        if (
+                                            key == "seasonposter"
+                                            and request.season_number
+                                        ):
+                                            item_season = item.get("season")
+                                            # Convert to int for comparison, handle string seasons like "1" or "01"
+                                            try:
+                                                item_season_num = (
+                                                    int(item_season)
+                                                    if item_season
+                                                    else None
+                                                )
+                                            except (ValueError, TypeError):
+                                                item_season_num = None
+
+                                            if item_season_num != request.season_number:
+                                                logger.debug(
+                                                    f" Fanart.tv: Skipping season {item_season} poster (looking for season {request.season_number})"
+                                                )
+                                                continue
+                                            else:
+                                                logger.info(
+                                                    f" Fanart.tv: Found matching season {request.season_number} poster"
+                                                )
+
                                         item_url = item.get("url")
                                         if item_url and item_url not in seen_urls:
                                             seen_urls.add(item_url)
@@ -8157,6 +9087,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             "success": True,
             "results": results,
             "total_count": total_count,
+            "detected_provider": detected_provider,  # Let frontend know if a prefix was used
         }
 
     except Exception as e:
@@ -8223,17 +9154,28 @@ async def upload_asset_replacement(
             # Normalize the path to handle different path separators (Windows/Linux/Docker)
             normalized_path = Path(asset_path)
 
+            # Determine target directory based on process_with_overlays flag
+            # If NOT processing with overlays, save to manualassets folder
+            if not process_with_overlays:
+                target_base_dir = MANUAL_ASSETS_DIR
+                logger.info(
+                    f"Saving to manual assets directory (no overlay processing)"
+                )
+            else:
+                target_base_dir = ASSETS_DIR
+                logger.info(f"Saving to assets directory (with overlay processing)")
+
             # Handle absolute paths (for assets outside app root)
             if normalized_path.is_absolute():
                 full_asset_path = normalized_path.resolve()
                 logger.info(f"Using absolute asset path: {full_asset_path}")
             else:
-                full_asset_path = (ASSETS_DIR / normalized_path).resolve()
+                full_asset_path = (target_base_dir / normalized_path).resolve()
                 logger.info(f"Using relative asset path: {full_asset_path}")
 
-            # Security: For relative paths, ensure they don't escape ASSETS_DIR
+            # Security: For relative paths, ensure they don't escape target directory
             if not normalized_path.is_absolute():
-                if not str(full_asset_path).startswith(str(ASSETS_DIR.resolve())):
+                if not str(full_asset_path).startswith(str(target_base_dir.resolve())):
                     logger.error(f"Path traversal attempt detected: {asset_path}")
                     raise HTTPException(
                         status_code=400,
@@ -8247,7 +9189,7 @@ async def upload_asset_replacement(
                 logger.info(f"Creating new asset: {full_asset_path}")
 
             logger.info(f"Full asset path: {full_asset_path}")
-            logger.info(f"Is Docker: {IS_DOCKER}, Assets Dir: {ASSETS_DIR}")
+            logger.info(f"Is Docker: {IS_DOCKER}, Target Dir: {target_base_dir}")
 
         except (ValueError, OSError) as e:
             logger.error(f"Invalid asset path '{asset_path}': {e}")
@@ -8365,10 +9307,17 @@ async def upload_asset_replacement(
             logger.warning(f"Could not validate image dimensions: {e}")
             # Don't fail upload if dimension check itself fails, just log it
 
-        # Track if this is a replacement or new asset
+        # Check if asset exists in alternate location (for moving between folders)
+        alternate_base_dir = (
+            ASSETS_DIR if not process_with_overlays else MANUAL_ASSETS_DIR
+        )
+        alternate_asset_path = alternate_base_dir / normalized_path
+        asset_exists_in_alternate = alternate_asset_path.exists()
+
+        # Track if this is a replacement or new asset in target location
         is_replacement = full_asset_path.exists()
 
-        # Create backup of original if replacing
+        # Create backup of original if replacing in target location
         if is_replacement:
             try:
                 backup_path = full_asset_path.with_suffix(
@@ -8381,6 +9330,25 @@ async def upload_asset_replacement(
                     logger.info(f"Created backup: {backup_path}")
             except Exception as e:
                 logger.warning(f"Failed to create backup (continuing anyway): {e}")
+
+        # Delete old asset from alternate location if moving between folders
+        if asset_exists_in_alternate and not is_replacement:
+            try:
+                logger.info(
+                    f"Deleting old asset from alternate location: {alternate_asset_path}"
+                )
+                alternate_asset_path.unlink()
+                # Also delete backup if exists
+                alternate_backup = alternate_asset_path.with_suffix(
+                    alternate_asset_path.suffix + ".backup"
+                )
+                if alternate_backup.exists():
+                    alternate_backup.unlink()
+                    logger.info(f"Deleted old backup: {alternate_backup}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not delete old asset from alternate location: {e}"
+                )
 
         # Save new image
         try:
@@ -8403,7 +9371,9 @@ async def upload_asset_replacement(
                 )
 
             action = "Replaced" if is_replacement else "Created"
-            logger.info(f"{action} asset: {asset_path} (size: {len(contents)} bytes)")
+            logger.info(
+                f"{action} asset: {asset_path} (size: {len(contents)} bytes, target: {target_base_dir.name})"
+            )
         except PermissionError as e:
             logger.error(f"Permission denied writing to {full_asset_path}: {e}")
             raise HTTPException(
@@ -8497,7 +9467,7 @@ async def upload_asset_replacement(
                     )
 
                     # Start the Manual Run process
-                    global current_process, current_mode
+                    global current_process, current_mode, current_start_time
                     current_process = subprocess.Popen(
                         command,
                         cwd=str(BASE_DIR),
@@ -8506,6 +9476,7 @@ async def upload_asset_replacement(
                         text=True,
                     )
                     current_mode = "manual"
+                    current_start_time = datetime.now().isoformat()
 
                     logger.info(
                         f"Manual Run started (PID: {current_process.pid}) for overlay processing"
@@ -8543,6 +9514,125 @@ async def upload_asset_replacement(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+def delete_db_entries_for_asset(asset_path: str):
+    """
+    Delete database entries for a given asset path.
+    Matches entries based on Rootfolder, Type, and filename pattern.
+
+    Args:
+        asset_path: Path to the asset (e.g., "TestSerien/Show Name (2020)/Season02.jpg")
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        logger.debug("Database not available, skipping DB entry deletion")
+        return
+
+    try:
+        # Parse the asset path to extract metadata
+        # Normalize path separators to forward slashes
+        normalized_path = asset_path.replace("\\", "/")
+        path_parts = normalized_path.split("/")
+
+        if len(path_parts) < 2:
+            logger.warning(f"Asset path too short to extract metadata: {asset_path}")
+            return
+
+        # Extract folder name and filename
+        folder_name = path_parts[1] if len(path_parts) > 1 else ""
+        filename = path_parts[-1] if len(path_parts) > 0 else ""
+
+        # Determine asset type from filename
+        # Note: Database uses different type names than our internal naming
+        # Database types: "Movie", "Movie Background", "Show", "Show Background", "Season", "Episode"
+        is_background = "background" in filename.lower()
+        is_season = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
+        is_episode = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
+
+        # Determine the database Type values to search for
+        # For posters/backgrounds, we need to check both Movie and Show types
+        search_types = []
+        if is_season:
+            search_types = ["Season"]
+        elif is_episode:
+            search_types = ["Episode"]
+        elif is_background:
+            search_types = ["Movie Background", "Show Background"]
+        else:
+            # Regular poster - could be Movie or Show or Poster
+            search_types = ["Movie", "Show", "Poster"]
+
+        cursor = db.connection.cursor()
+
+        # Collect all matching entries across all possible type names
+        all_entries = []
+
+        logger.debug(
+            f"Searching for DB entries: folder={folder_name}, types={search_types}, is_episode={bool(is_episode)}, is_season={bool(is_season)}"
+        )
+
+        for db_type in search_types:
+            if is_season:
+                # For seasons, find entries with matching season number in title
+                season_num = is_season.group(1)
+                cursor.execute(
+                    """SELECT id, Title, Type FROM imagechoices 
+                       WHERE Rootfolder = ? AND Type = ? 
+                       AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                    (
+                        folder_name,
+                        db_type,
+                        f"%Season{season_num}%",
+                        f"%Season {season_num}%",
+                        f"%Season0{season_num}%",
+                    ),
+                )
+            elif is_episode:
+                # For episodes, find entries with matching episode pattern in title
+                season_num = is_episode.group(1)
+                episode_num = is_episode.group(2)
+                pattern1 = f"%S{season_num}E{episode_num}%"
+                pattern2 = f"%S0{season_num}E0{episode_num}%"
+                logger.debug(
+                    f"Episode search: folder={folder_name}, type={db_type}, patterns={pattern1}, {pattern2}"
+                )
+                cursor.execute(
+                    """SELECT id, Title, Type FROM imagechoices 
+                       WHERE Rootfolder = ? AND Type = ? 
+                       AND (Title LIKE ? OR Title LIKE ?)""",
+                    (folder_name, db_type, pattern1, pattern2),
+                )
+            else:
+                # For poster/background, match on Rootfolder + Type only
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                    (folder_name, db_type),
+                )
+
+            # Fetch and extend results for this type
+            found = cursor.fetchall()
+            logger.debug(f"Found {len(found)} entries for type {db_type}")
+            all_entries.extend(found)
+
+        if all_entries:
+            for entry in all_entries:
+                record_id = entry["id"]
+                title = entry["Title"]
+                entry_type = entry["Type"]
+                db.delete_choice(record_id)
+                logger.info(
+                    f"Deleted DB entry #{record_id} for deleted asset: {title} ({entry_type})"
+                )
+        else:
+            logger.debug(
+                f"No DB entries found for deleted asset: {filename} in {folder_name}"
+            )
+
+    except Exception as e:
+        logger.error(f"Error deleting database entries for asset {asset_path}: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+
+
 async def update_asset_db_entry_as_manual(
     asset_path: str,
     image_url: str,
@@ -8551,8 +9641,9 @@ async def update_asset_db_entry_as_manual(
     title_text: Optional[str] = None,
 ):
     """
-    Create or update a database entry for a manually replaced asset.
-    This ensures the asset appears in Recently Assets with Manual=Yes flag.
+    Delete existing database entries for a manually replaced asset.
+    The new entry will be created by the CSV import after the Posterizarr script completes.
+    This prevents duplicate entries with different title formats.
 
     Args:
         asset_path: Path to the asset (e.g., "4K/Movie Name (2024)/poster.jpg")
@@ -8598,57 +9689,109 @@ async def update_asset_db_entry_as_manual(
                 title_text = final_folder_name
 
         # Determine asset type from filename
-        asset_type = "Poster"
+        # Match database Type column values: "Show", "Movie", "Show Background", "Movie Background", "Season", "Episode"
+        asset_type = "Poster"  # Default, will be refined below
+
         if "background" in filename.lower():
+            # Could be "Show Background" or "Movie Background"
             asset_type = "Background"
         elif re.match(r"^Season\d+\.jpg$", filename, re.IGNORECASE):
             asset_type = "Season"
         elif re.match(r"^S\d+E\d+\.jpg$", filename, re.IGNORECASE):
-            asset_type = "TitleCard"
+            asset_type = "Episode"
+        # For poster.jpg files, asset_type remains "Poster"
+        # We'll match both "Show" and "Movie" types in the query
 
-        # Check if entry already exists for this asset
-        # We match on Title, Rootfolder, and Type (same as CSV import logic)
+        # Delete any existing database entries for this specific asset
+        # This prevents duplicates - the CSV import will create the new entry after the script finishes
+        # We need to match more specifically to avoid deleting unrelated assets:
+        # - For seasons: match on Rootfolder + Type + season number in Title
+        # - For episodes: match on Rootfolder + Type + episode pattern in Title
+        # - For poster/background: match on Rootfolder + Type
+
         cursor = db.connection.cursor()
-        cursor.execute(
-            "SELECT id, Manual FROM imagechoices WHERE Title = ? AND Rootfolder = ? AND Type = ?",
-            (title_text, final_folder_name, asset_type),
-        )
-        existing = cursor.fetchone()
 
-        if existing:
-            # Update existing entry to mark as Manual (only update Manual field, nothing else)
-            record_id = existing["id"]
-            current_manual = existing["Manual"]
+        # Extract season/episode info from filename for more specific matching
+        season_match = re.match(r"^Season(\d+)\.jpg$", filename, re.IGNORECASE)
+        episode_match = re.match(r"^S(\d+)E(\d+)\.jpg$", filename, re.IGNORECASE)
 
-            # Only update Manual field if not already set to "true"
-            if current_manual != "true":
-                db.update_choice(
-                    record_id,
-                    Manual="true",  # Use lowercase "true" for consistency
+        if season_match:
+            # For seasons, find entries with matching season number in title
+            season_num = season_match.group(1)
+            # Also try without leading zero
+            season_num_int = str(int(season_num))
+            logger.info(
+                f"Searching for Season: folder='{final_folder_name}', season_num='{season_num}', season_num_int='{season_num_int}'"
+            )
+            cursor.execute(
+                """SELECT id, Title, Type FROM imagechoices 
+                   WHERE Rootfolder = ? AND Type = ? 
+                   AND (Title LIKE ? OR Title LIKE ? OR Title LIKE ? OR Title LIKE ?)""",
+                (
+                    final_folder_name,
+                    asset_type,
+                    f"%Season{season_num}%",
+                    f"%Season {season_num}%",
+                    f"%Season {season_num_int}%",
+                    f"%Season{season_num_int}%",
+                ),
+            )
+        elif episode_match:
+            # For episodes, find entries with matching episode pattern in title
+            season_num = episode_match.group(1)
+            episode_num = episode_match.group(2)
+            cursor.execute(
+                """SELECT id, Title FROM imagechoices 
+                   WHERE Rootfolder = ? AND Type = ? 
+                   AND (Title LIKE ? OR Title LIKE ?)""",
+                (
+                    final_folder_name,
+                    asset_type,
+                    f"%S{season_num}E{episode_num}%",
+                    f"%S0{season_num}E0{episode_num}%",
+                ),
+            )
+        else:
+            # For poster/background, match on Rootfolder + Type
+            # For posters, match both "Show" and "Movie" types
+            # For backgrounds, match both "Show Background" and "Movie Background" types
+            if asset_type == "Poster":
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Show', 'Movie')",
+                    (final_folder_name,),
                 )
-                logger.info(
-                    f"Updated DB entry #{record_id}: Manual=true for: {title_text} ({asset_type})"
+            elif asset_type == "Background":
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type IN ('Show Background', 'Movie Background')",
+                    (final_folder_name,),
                 )
             else:
-                logger.info(
-                    f"DB entry #{record_id} already has Manual=true for: {title_text} ({asset_type})"
+                cursor.execute(
+                    "SELECT id, Title, Type FROM imagechoices WHERE Rootfolder = ? AND Type = ?",
+                    (final_folder_name, asset_type),
                 )
+
+        existing_entries = cursor.fetchall()
+
+        if existing_entries:
+            for entry in existing_entries:
+                record_id = entry["id"]
+                old_title = entry["Title"]
+                # sqlite3.Row objects use dictionary-style access, not .get()
+                entry_type = entry["Type"] if "Type" in entry.keys() else asset_type
+                db.delete_choice(record_id)
+                logger.info(
+                    f"Deleted DB entry #{record_id} for manual replacement: {old_title} ({entry_type})"
+                )
+            logger.info(
+                f"New entry will be created by CSV import after script completes"
+            )
         else:
-            # Create new entry with Manual="true"
-            record_id = db.insert_choice(
-                title=title_text,
-                type_=asset_type,
-                rootfolder=final_folder_name,
-                library_name=final_library_name,
-                language="N/A",  # Not known for manual replacements
-                fallback="false",
-                text_truncated="false",
-                download_source=image_url,
-                fav_provider_link="N/A",
-                manual="true",  # Use lowercase "true" for consistency
+            logger.info(
+                f"No existing DB entries found for: {filename} in {final_folder_name}"
             )
             logger.info(
-                f"Created new DB entry #{record_id} with Manual=true for: {title_text} ({asset_type})"
+                f"New entry will be created by CSV import after script completes"
             )
 
     except Exception as e:
@@ -8686,9 +9829,32 @@ async def replace_asset_from_url(
             )
 
         # Validate asset path exists
-        full_asset_path = ASSETS_DIR / asset_path
-        if not full_asset_path.exists():
-            raise HTTPException(status_code=404, detail="Asset not found")
+        # Determine target directory based on process_with_overlays flag
+        if not process_with_overlays:
+            target_base_dir = MANUAL_ASSETS_DIR
+            logger.info(f"Saving to manual assets directory (no overlay processing)")
+        else:
+            target_base_dir = ASSETS_DIR
+            logger.info(f"Saving to assets directory (with overlay processing)")
+
+        full_asset_path = target_base_dir / asset_path
+
+        # Check if asset exists in either location (for replacement)
+        # First check target location, then check alternate location
+        asset_exists_in_target = full_asset_path.exists()
+
+        # Also check the alternate location (in case user is moving between folders)
+        alternate_base_dir = (
+            ASSETS_DIR if not process_with_overlays else MANUAL_ASSETS_DIR
+        )
+        alternate_asset_path = alternate_base_dir / asset_path
+        asset_exists_in_alternate = alternate_asset_path.exists()
+
+        if not asset_exists_in_target and not asset_exists_in_alternate:
+            logger.warning(
+                f"Asset not found in either location, will create new: {asset_path}"
+            )
+            # Don't fail - just create new asset
 
         # Download image from URL
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -8700,20 +9866,45 @@ async def replace_asset_from_url(
 
             contents = response.content
 
-        # Create backup of original
-        backup_path = full_asset_path.with_suffix(full_asset_path.suffix + ".backup")
-        if full_asset_path.exists() and not backup_path.exists():
-            import shutil
+        # Ensure target directory exists
+        full_asset_path.parent.mkdir(parents=True, exist_ok=True)
 
-            shutil.copy2(full_asset_path, backup_path)
-            logger.info(f"Created backup: {backup_path}")
+        # Create backup of original if it exists in target location
+        if asset_exists_in_target:
+            backup_path = full_asset_path.with_suffix(
+                full_asset_path.suffix + ".backup"
+            )
+            if not backup_path.exists():
+                import shutil
+
+                shutil.copy2(full_asset_path, backup_path)
+                logger.info(f"Created backup: {backup_path}")
+
+        # Delete old asset from alternate location if moving between folders
+        if asset_exists_in_alternate and not asset_exists_in_target:
+            try:
+                logger.info(
+                    f"Deleting old asset from alternate location: {alternate_asset_path}"
+                )
+                alternate_asset_path.unlink()
+                # Also delete backup if exists
+                alternate_backup = alternate_asset_path.with_suffix(
+                    alternate_asset_path.suffix + ".backup"
+                )
+                if alternate_backup.exists():
+                    alternate_backup.unlink()
+                    logger.info(f"Deleted old backup: {alternate_backup}")
+            except Exception as e:
+                logger.warning(
+                    f"Could not delete old asset from alternate location: {e}"
+                )
 
         # Save new image
         with open(full_asset_path, "wb") as f:
             f.write(contents)
 
         logger.info(
-            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes)"
+            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes, target: {target_base_dir.name})"
         )
 
         # Add/Update database entry for this replaced asset (mark as Manual)
@@ -8884,7 +10075,7 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
     Internal function to trigger manual run without HTTP overhead
     This is called from replace_asset_from_url
     """
-    global current_process, current_mode
+    global current_process, current_mode, current_start_time
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -8986,6 +10177,7 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
         text=True,
     )
     current_mode = "manual"
+    current_start_time = datetime.now().isoformat()
 
     logger.info(f"Manual Run process started (PID: {current_process.pid})")
 
@@ -9049,6 +10241,7 @@ async def get_assets_overview():
 
         # Initialize categories
         missing_assets = []
+        missing_assets_fav_provider = []
         non_primary_lang = []
         non_primary_provider = []
         truncated_text = []
@@ -9066,7 +10259,6 @@ async def get_assets_overview():
             has_issue = False
 
             # Missing Assets: DownloadSource == "false" (string) or False (boolean) or empty
-            # OR FavProviderLink is missing
             download_source = record_dict.get("DownloadSource")
             provider_link = record_dict.get("FavProviderLink", "")
 
@@ -9080,8 +10272,14 @@ async def get_assets_overview():
                 provider_link == "false" or provider_link == False or not provider_link
             )
 
-            if is_download_missing or is_provider_link_missing:
+            # Category 1: Missing Asset (DownloadSource is missing)
+            if is_download_missing:
                 missing_assets.append(record_dict)
+                has_issue = True
+
+            # Category 2: Missing Asset at Favorite Provider (FavProviderLink is missing)
+            if is_provider_link_missing:
+                missing_assets_fav_provider.append(record_dict)
                 has_issue = True
 
             # Non-Primary Language: Check language against config
@@ -9154,6 +10352,10 @@ async def get_assets_overview():
                 "missing_assets": {
                     "count": len(missing_assets),
                     "assets": missing_assets,
+                },
+                "missing_assets_fav_provider": {
+                    "count": len(missing_assets_fav_provider),
+                    "assets": missing_assets_fav_provider,
                 },
                 "non_primary_lang": {
                     "count": len(non_primary_lang),
@@ -9424,6 +10626,16 @@ if ASSETS_DIR.exists():
     )
     logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
 
+if MANUAL_ASSETS_DIR.exists():
+    app.mount(
+        "/manual_poster_assets",
+        CachedStaticFiles(directory=str(MANUAL_ASSETS_DIR), max_age=86400),  # 24h Cache
+        name="manual_poster_assets",
+    )
+    logger.info(
+        f"Mounted /manual_poster_assets -> {MANUAL_ASSETS_DIR} (with 24h cache)"
+    )
+
 if TEST_DIR.exists():
     app.mount(
         "/test",
@@ -9474,4 +10686,4 @@ async def spa_fallback(request: Request, exc: HTTPException):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
