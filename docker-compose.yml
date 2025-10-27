@@ -1,23 +1,26 @@
 ---
-version: "3"
 services:
   posterizarr:
     hostname: "posterizarr"
     container_name: "posterizarr"
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file:
-      - .env
+    environment:
+      - "TZ=Europe/Berlin"
+      - "TERM=xterm"
+      - "RUN_TIME=disabled"
+      # OPTIONAL: This tells uvicorn to run on port 9000 inside the container
+      #- APP_PORT=9000      
+      # OPTIONAL: Disable UI
+      #- DISABLE_UI=true   
+    image: "ghcr.io/fscorrupt/posterizarr:latest"
     restart: "unless-stopped"
     user: "1000:1000"
     ports:
-      - "8000:8000"
+      - "8000:8000" # if you want to change the port inside container, also change APP_PORT env variable
     networks:
       - "proxy"
     volumes:
       - "/opt/appdata/posterizarr:/config:rw"
-      - "/opt/appdata/kometa/assets:/assets:rw"
+      - "/opt/appdata/posterizarr/assets:/assets:rw"
       - "/opt/appdata/posterizarr/assetsbackup:/assetsbackup:rw"
       - "/opt/appdata/posterizarr/manualassets:/manualassets:rw"
 networks:

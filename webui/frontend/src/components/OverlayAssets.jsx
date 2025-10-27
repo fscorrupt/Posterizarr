@@ -11,6 +11,7 @@ import {
   Download,
   Type,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
@@ -140,9 +141,12 @@ const OverlayAssets = () => {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(`/api/overlayfiles/${filename}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/overlayfiles/${encodeURIComponent(filename)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 
@@ -254,7 +258,7 @@ const OverlayAssets = () => {
             <div className="flex flex-col items-center gap-3">
               <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center">
                 {uploading ? (
-                  <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                  <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
                 ) : (
                   <Upload className="w-8 h-8 text-theme-primary" />
                 )}
@@ -336,7 +340,7 @@ const OverlayAssets = () => {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+            <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
           </div>
         ) : filteredFiles.length === 0 ? (
           <div className="text-center py-12">
@@ -480,88 +484,64 @@ const OverlayAssets = () => {
       {/* Preview Modal */}
       {previewFile && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setPreviewFile(null)}
         >
           <div
-            className="bg-theme-card border border-theme rounded-lg max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
-              <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPreviewFile(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Preview Content */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4">
                 {previewFile.type === "image" ? (
-                  <ImageIcon className="w-5 h-5 text-theme-primary" />
-                ) : (
-                  <Type className="w-5 h-5 text-theme-primary" />
-                )}
-                <h3 className="text-lg font-semibold text-theme-text">
-                  {previewFile.type === "image"
-                    ? t("overlayAssets.imagePreview")
-                    : t("overlayAssets.fontPreview")}
-                </h3>
-              </div>
-              <button
-                onClick={() => setPreviewFile(null)}
-                className="p-2 hover:bg-theme-hover rounded-lg transition-all"
-              >
-                <X className="w-5 h-5 text-theme-text" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6">
-              <div className="mb-4">
-                <p className="text-sm text-theme-muted mb-1">
-                  {t("overlayAssets.filename")}:
-                </p>
-                <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
-                  {previewFile.name}
-                </p>
-              </div>
-
-              {previewFile.type === "image" ? (
-                /* Image Preview with Checkered Background */
-                <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
-                  {/* Checkered background for transparency */}
-                  <div
-                    className="absolute inset-0 rounded-lg"
-                    style={{
-                      backgroundImage: `
-                        linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
-                        linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
-                        linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
-                      `,
-                      backgroundSize: "20px 20px",
-                      backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-                    }}
-                  ></div>
-                  <img
-                    src={`/api/overlayfiles/preview/${previewFile.name}`}
-                    alt={previewFile.name}
-                    className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
-                    style={{ maxHeight: "55vh" }}
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-                  <div
-                    className="hidden flex-col items-center gap-3 text-theme-muted relative z-10"
-                    style={{ display: "none" }}
-                  >
-                    <AlertCircle className="w-12 h-12" />
-                    <p>{t("overlayAssets.failedToLoad")}</p>
+                  /* Image Preview with Checkered Background */
+                  <div className="relative max-w-full max-h-[80vh] flex items-center justify-center">
+                    {/* Checkered background for transparency */}
+                    <div
+                      className="absolute inset-0 rounded-lg"
+                      style={{
+                        backgroundImage: `
+                          linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
+                          linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
+                          linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
+                          linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
+                        `,
+                        backgroundSize: "20px 20px",
+                        backgroundPosition:
+                          "0 0, 0 10px, 10px -10px, -10px 0px",
+                      }}
+                    ></div>
+                    <img
+                      src={`/api/overlayfiles/preview/${previewFile.name}`}
+                      alt={previewFile.name}
+                      className="relative z-10 max-w-full max-h-[80vh] object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                    <div
+                      className="hidden flex-col items-center gap-3 text-white relative z-10"
+                      style={{ display: "none" }}
+                    >
+                      <AlertCircle className="w-12 h-12" />
+                      <p>{t("overlayAssets.failedToLoad")}</p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                /* Font Preview */
-                <div className="space-y-3">
-                  <div className="bg-theme-bg rounded-lg border border-theme p-4">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                ) : (
+                  /* Font Preview */
+                  <div className="w-full max-h-[80vh] overflow-y-auto px-4">
+                    <div className="space-y-4">
+                      <div className="bg-theme-card rounded-lg p-4">
+                        <p className="text-xs text-theme-muted mb-2">
                           {t("overlayAssets.uppercase")}:
                         </p>
                         <img
@@ -571,8 +551,8 @@ const OverlayAssets = () => {
                           loading="lazy"
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-theme-card rounded-lg p-4">
+                        <p className="text-xs text-theme-muted mb-2">
                           {t("overlayAssets.lowercase")}:
                         </p>
                         <img
@@ -582,8 +562,8 @@ const OverlayAssets = () => {
                           loading="lazy"
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-theme-card rounded-lg p-4">
+                        <p className="text-xs text-theme-muted mb-2">
                           {t("overlayAssets.numbers")}:
                         </p>
                         <img
@@ -593,8 +573,8 @@ const OverlayAssets = () => {
                           loading="lazy"
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-theme-card rounded-lg p-4">
+                        <p className="text-xs text-theme-muted mb-2">
                           {t("overlayAssets.sample")}:
                         </p>
                         <img
@@ -606,30 +586,67 @@ const OverlayAssets = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-theme-muted bg-theme-bg rounded-lg border border-theme p-3">
-                    <p className="font-semibold mb-2">
-                      {t("overlayAssets.fontInfo")}:
+                )}
+              </div>
+
+              {/* Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <h3 className="text-xl font-bold text-theme-text mb-4">
+                  {previewFile.type === "image"
+                    ? "Overlay Image Details"
+                    : "Font Details"}
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-theme-muted">Type</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {previewFile.type === "image" ? (
+                        <ImageIcon className="w-4 h-4 text-theme-primary" />
+                      ) : (
+                        <Type className="w-4 h-4 text-theme-primary" />
+                      )}
+                      <p className="text-theme-text capitalize">
+                        {previewFile.type}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted">Filename</label>
+                    <p className="text-theme-text break-all font-mono text-sm mt-1">
+                      {previewFile.name}
                     </p>
-                    <p>
-                      {t("overlayAssets.type")}:{" "}
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      Extension
+                    </label>
+                    <p className="text-theme-text">
                       {previewFile.extension.toUpperCase()}
                     </p>
-                    <p>
-                      {t("overlayAssets.size")}:{" "}
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted">Size</label>
+                    <p className="text-theme-text">
                       {formatFileSize(previewFile.size)}
                     </p>
                   </div>
-                </div>
-              )}
 
-              {/* Modal Footer */}
-              <div className="mt-4 flex justify-end gap-3">
-                <button
-                  onClick={() => setPreviewFile(null)}
-                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
-                >
-                  {t("overlayAssets.close")}
-                </button>
+                  {previewFile.type === "font" && (
+                    <div className="pt-4 border-t border-theme">
+                      <p className="text-xs text-theme-muted mb-2">
+                        {t("overlayAssets.fontInfo")}
+                      </p>
+                      <p className="text-sm text-theme-text">
+                        Font files can be used for custom text overlays in your
+                        posters and title cards.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

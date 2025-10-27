@@ -10,6 +10,7 @@ import {
   FileImage,
   ExternalLink,
   RefreshCw,
+  Loader2,
   ImageOff,
   ChevronLeft,
   ChevronRight,
@@ -24,7 +25,7 @@ const API_URL = "/api";
 
 let cachedAssets = null;
 
-function RecentAssets() {
+function RecentAssets({ refreshTrigger = 0 }) {
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const { startLoading, finishLoading } = useDashboardLoading();
@@ -113,13 +114,27 @@ function RecentAssets() {
     }
 
     // Background refresh every 2 minutes (silent)
-    const interval = setInterval(() => fetchRecentAssets(true), 2 * 60 * 1000);
+    const interval = setInterval(() => {
+      console.log("Auto-refreshing recent assets...");
+      fetchRecentAssets(true);
+    }, 2 * 60 * 1000);
 
     return () => {
       clearInterval(interval);
       // Don't finish loading on unmount - that happens when data is fetched
     };
-  }, [startLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Watch for external refresh triggers (e.g., when a run finishes)
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log(
+        "External refresh trigger received, updating recent assets..."
+      );
+      fetchRecentAssets(true);
+    }
+  }, [refreshTrigger]);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10
@@ -309,11 +324,13 @@ function RecentAssets() {
           <button
             onClick={() => fetchRecentAssets()}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             title={t("recentAssets.refreshTooltip")}
           >
             <RefreshCw
-              className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+              className={`w-5 h-5 text-theme-primary ${
+                refreshing ? "animate-spin" : ""
+              }`}
             />
             <span className="text-sm font-medium">{t("common.refresh")}</span>
           </button>
@@ -355,7 +372,7 @@ function RecentAssets() {
       {/* Content */}
       {loading && assets.length === 0 ? (
         <div className="flex justify-center items-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin text-theme-primary" />
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       ) : error && assets.length === 0 ? (
         <div className="text-center py-8 text-red-400">

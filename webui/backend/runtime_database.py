@@ -33,17 +33,25 @@ class RuntimeDatabase:
 
     def init_database(self):
         """Initialize the database and create tables if they don't exist"""
+        logger.info("=" * 60)
+        logger.info("INITIALIZING RUNTIME DATABASE")
+        logger.debug(f"Database path: {self.db_path}")
+
         try:
             # Check if database is being created for the first time
             is_new_database = not self.db_path.exists()
+            logger.debug(f"Is new database: {is_new_database}")
 
             # Ensure database directory exists
+            logger.debug(f"Ensuring directory exists: {self.db_path.parent}")
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+            logger.debug("Connecting to database...")
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
 
             # Create runtime_stats table
+            logger.debug("Creating runtime_stats table if not exists...")
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS runtime_stats (
@@ -59,10 +67,11 @@ class RuntimeDatabase:
                     titlecards INTEGER DEFAULT 0,
                     collections INTEGER DEFAULT 0,
                     errors INTEGER DEFAULT 0,
+                    fallbacks INTEGER DEFAULT 0,
                     tba_skipped INTEGER DEFAULT 0,
                     jap_chines_skipped INTEGER DEFAULT 0,
                     notification_sent INTEGER DEFAULT 0,
-                    uptime_kuma TEXT,
+                    uptime_kuma INTEGER DEFAULT 0,
                     images_cleared INTEGER DEFAULT 0,
                     folders_cleared INTEGER DEFAULT 0,
                     space_saved TEXT,
@@ -72,23 +81,28 @@ class RuntimeDatabase:
                     end_time TEXT,
                     log_file TEXT,
                     status TEXT DEFAULT 'completed',
-                    notes TEXT
+                    notes TEXT,
+                    textless INTEGER DEFAULT 0,
+                    truncated INTEGER DEFAULT 0,
+                    text INTEGER DEFAULT 0
                 )
             """
             )
 
             # Add migration for new columns (for existing databases)
+            logger.debug("Checking for column migrations...")
             try:
                 # Check if columns exist, if not add them
                 cursor.execute("PRAGMA table_info(runtime_stats)")
                 existing_columns = [row[1] for row in cursor.fetchall()]
+                logger.debug(f"Existing columns: {len(existing_columns)}")
 
                 new_columns = {
                     "collections": "INTEGER DEFAULT 0",
                     "tba_skipped": "INTEGER DEFAULT 0",
                     "jap_chines_skipped": "INTEGER DEFAULT 0",
                     "notification_sent": "INTEGER DEFAULT 0",
-                    "uptime_kuma": "TEXT",
+                    "uptime_kuma": "INTEGER DEFAULT 0",
                     "images_cleared": "INTEGER DEFAULT 0",
                     "folders_cleared": "INTEGER DEFAULT 0",
                     "space_saved": "TEXT",
@@ -96,10 +110,15 @@ class RuntimeDatabase:
                     "im_version": "TEXT",
                     "start_time": "TEXT",
                     "end_time": "TEXT",
+                    "fallbacks": "INTEGER DEFAULT 0",
+                    "textless": "INTEGER DEFAULT 0",
+                    "truncated": "INTEGER DEFAULT 0",
+                    "text": "INTEGER DEFAULT 0",
                 }
 
                 for col_name, col_type in new_columns.items():
                     if col_name not in existing_columns:
+                        logger.debug(f"Adding missing column: {col_name}")
                         cursor.execute(
                             f"ALTER TABLE runtime_stats ADD COLUMN {col_name} {col_type}"
                         )
@@ -108,6 +127,7 @@ class RuntimeDatabase:
                 logger.debug(f"Column migration check: {e}")
 
             # Create index for faster queries
+            logger.debug("Creating timestamp index if not exists...")
             cursor.execute(
                 """
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
@@ -116,6 +136,7 @@ class RuntimeDatabase:
             )
 
             # Create migration tracking table
+            logger.debug("Creating migration_info table if not exists...")
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS migration_info (
@@ -128,22 +149,34 @@ class RuntimeDatabase:
 
             conn.commit()
             conn.close()
+            logger.debug("Database initialization committed and connection closed")
 
             if is_new_database:
                 logger.info(f"Runtime database created at {self.db_path}")
+                file_size = self.db_path.stat().st_size
+                logger.debug(f"New database file size: {file_size} bytes")
                 # Auto-run migration for new database
                 self._auto_migrate()
             else:
                 logger.info(f"Runtime database initialized at {self.db_path}")
+                file_size = self.db_path.stat().st_size
+                logger.debug(
+                    f"Database file size: {file_size} bytes ({file_size/1024:.2f} KB)"
+                )
                 # Check if migration was already done
                 if not self._is_migrated():
                     logger.info(
                         "Migration not yet performed, running auto-migration..."
                     )
                     self._auto_migrate()
+                else:
+                    logger.debug("Migration already completed, skipping")
+
+            logger.info("=" * 60)
 
         except Exception as e:
             logger.error(f"Error initializing runtime database: {e}")
+            logger.exception("Full traceback:")
             raise
 
     def _is_migrated(self) -> bool:
@@ -232,7 +265,8 @@ class RuntimeDatabase:
                 ("arr.json", "arr"),
                 ("syncjelly.json", "syncjelly"),
                 ("syncemby.json", "syncemby"),
-                ("backup.json", "backup")
+                ("backup.json", "backup"),
+                ("scheduled.json", "scheduled"),
             ]
 
             logger.info("Checking for JSON files...")
@@ -246,7 +280,7 @@ class RuntimeDatabase:
                             imported_count += 1
                             logger.info(f"Imported from {json_file}")
                     except Exception as e:
-                        logger.debug(f"  ⏭️  Skipped {json_file}: {e}")
+                        logger.debug(f"  [SKIP]  Skipped {json_file}: {e}")
                         skipped_count += 1
 
             # Fallback: Import from log files if no JSON files found
@@ -322,7 +356,7 @@ class RuntimeDatabase:
         tba_skipped: int = 0,
         jap_chines_skipped: int = 0,
         notification_sent: bool = False,
-        uptime_kuma: str = None,
+        uptime_kuma: bool = False,
         images_cleared: int = 0,
         folders_cleared: int = 0,
         space_saved: str = None,
@@ -333,6 +367,10 @@ class RuntimeDatabase:
         log_file: str = None,
         status: str = "completed",
         notes: str = None,
+        fallbacks: int = 0,
+        textless: int = 0,
+        truncated: int = 0,
+        text: int = 0,
     ) -> int:
         """
         Add a new runtime entry to the database
@@ -353,8 +391,9 @@ class RuntimeDatabase:
                     total_images, posters, seasons, backgrounds, titlecards, collections,
                     errors, tba_skipped, jap_chines_skipped, notification_sent, uptime_kuma,
                     images_cleared, folders_cleared, space_saved, script_version, im_version,
-                    start_time, end_time, log_file, status, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    start_time, end_time, log_file, status, notes,
+                    fallbacks, textless, truncated, text
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     timestamp,
@@ -371,7 +410,7 @@ class RuntimeDatabase:
                     tba_skipped,
                     jap_chines_skipped,
                     1 if notification_sent else 0,
-                    uptime_kuma,
+                    1 if uptime_kuma else 0,
                     images_cleared,
                     folders_cleared,
                     space_saved,
@@ -382,6 +421,10 @@ class RuntimeDatabase:
                     log_file,
                     status,
                     notes,
+                    fallbacks,
+                    textless,
+                    truncated,
+                    text,
                 ),
             )
 
@@ -472,6 +515,44 @@ class RuntimeDatabase:
             logger.error(f"Error getting runtime history: {e}")
             return []
 
+    def get_runtime_history_total_count(self, mode: str = None) -> int:
+        """
+        Get total count of runtime history entries
+
+        Args:
+            mode: Filter by mode (optional)
+
+        Returns:
+            Total count of entries
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            if mode:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats 
+                    WHERE mode = ?
+                """,
+                    (mode,),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats
+                """
+                )
+
+            total = cursor.fetchone()[0]
+            conn.close()
+
+            return total
+
+        except Exception as e:
+            logger.error(f"Error getting runtime history total count: {e}")
+            return 0
+
     def get_runtime_stats_summary(self, days: int = 30) -> Dict:
         """
         Get summary statistics for the last N days
@@ -545,9 +626,52 @@ class RuntimeDatabase:
             )
             mode_counts = {row[0]: row[1] for row in cursor.fetchall()}
 
+            # Get latest run details
+            cursor.execute(
+                """
+                SELECT * FROM runtime_stats 
+                ORDER BY timestamp DESC 
+                LIMIT 1
+            """
+            )
+            latest_row = cursor.fetchone()
+            latest_run = None
+
+            if latest_row:
+                columns = [desc[0] for desc in cursor.description]
+                latest_run_dict = dict(zip(columns, latest_row))
+                latest_run = {
+                    "total_images": latest_run_dict.get("total_images", 0),
+                    "posters": latest_run_dict.get("posters", 0),
+                    "seasons": latest_run_dict.get("seasons", 0),
+                    "backgrounds": latest_run_dict.get("backgrounds", 0),
+                    "titlecards": latest_run_dict.get("titlecards", 0),
+                    "collections": latest_run_dict.get("collections", 0),
+                    "errors": latest_run_dict.get("errors", 0),
+                    "fallbacks": latest_run_dict.get("fallbacks", 0),
+                    "textless": latest_run_dict.get("textless", 0),
+                    "truncated": latest_run_dict.get("truncated", 0),
+                    "text": latest_run_dict.get("text", 0),
+                    "tba_skipped": latest_run_dict.get("tba_skipped", 0),
+                    "jap_chines_skipped": latest_run_dict.get("jap_chines_skipped", 0),
+                    "notification_sent": bool(
+                        latest_run_dict.get("notification_sent", 0)
+                    ),
+                    "uptime_kuma": bool(latest_run_dict.get("uptime_kuma", 0)),
+                    "images_cleared": latest_run_dict.get("images_cleared", 0),
+                    "folders_cleared": latest_run_dict.get("folders_cleared", 0),
+                    "space_saved": latest_run_dict.get("space_saved"),
+                    "script_version": latest_run_dict.get("script_version"),
+                    "im_version": latest_run_dict.get("im_version"),
+                    "start_time": latest_run_dict.get("start_time"),
+                    "end_time": latest_run_dict.get("end_time"),
+                    "runtime_formatted": latest_run_dict.get("runtime_formatted"),
+                    "mode": latest_run_dict.get("mode"),
+                }
+
             conn.close()
 
-            return {
+            summary = {
                 "total_runs": total_runs,
                 "total_images": total_images,
                 "average_runtime_seconds": int(avg_runtime),
@@ -557,13 +681,19 @@ class RuntimeDatabase:
                 "days": days,
             }
 
+            # Only include latest_run if we found one
+            if latest_run:
+                summary["latest_run"] = latest_run
+
+            return summary
+
         except Exception as e:
             logger.error(f"Error getting runtime summary: {e}")
             return {
                 "total_runs": 0,
                 "total_images": 0,
                 "average_runtime_seconds": 0,
-                "average_runtime_formatted": "0h 0m 0s",
+                "average_runtime_formatted": "0h:0m:0s",
                 "total_errors": 0,
                 "mode_counts": {},
                 "days": days,
@@ -607,11 +737,56 @@ class RuntimeDatabase:
 
     @staticmethod
     def _format_seconds(seconds: int) -> str:
-        """Format seconds to 'Xh Ym Zs' format"""
+        """Format seconds to 'Xh:Ym:Zs' format"""
         hours = seconds // 3600
         minutes = (seconds % 3600) // 60
         secs = seconds % 60
         return f"{hours}h {minutes}m {secs}s"
+
+    def migrate_runtime_format(self) -> int:
+        """
+        Migrate all runtime_formatted entries to new format (Xh:Ym:Zs)
+        Returns the number of updated entries
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            # Get all entries with runtime_seconds
+            cursor.execute(
+                """
+                SELECT id, runtime_seconds FROM runtime_stats 
+                WHERE runtime_seconds IS NOT NULL
+                """
+            )
+            entries = cursor.fetchall()
+
+            updated_count = 0
+            for entry_id, runtime_seconds in entries:
+                # Reformat using the new format
+                new_format = self._format_seconds(runtime_seconds)
+
+                cursor.execute(
+                    """
+                    UPDATE runtime_stats 
+                    SET runtime_formatted = ? 
+                    WHERE id = ?
+                    """,
+                    (new_format, entry_id),
+                )
+                updated_count += 1
+
+            conn.commit()
+            conn.close()
+            logger.info(f"Migrated {updated_count} runtime entries to new format")
+            return updated_count
+
+        except Exception as e:
+            logger.error(f"Error migrating runtime format: {e}")
+            if "conn" in locals():
+                conn.rollback()
+                conn.close()
+            return 0
 
 
 # Global database instance

@@ -487,63 +487,67 @@ function TestGalleryTab() {
       {/* Image Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card border-0 sm:border border-theme-primary rounded-none sm:rounded-xl max-w-6xl w-full h-full sm:h-auto sm:max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto"
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="sticky top-0 z-10 bg-theme-primary px-4 sm:px-6 py-3 sm:py-4 rounded-t-none sm:rounded-t-xl flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />
-                <h3 className="text-base sm:text-lg font-semibold text-white break-words">
-                  {selectedImage.name}
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Image */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4">
+                <img
+                  src={selectedImage.url}
+                  alt={selectedImage.name}
+                  className="max-w-full max-h-[80vh] object-contain"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
+                  }}
+                />
+                <div className="text-center" style={{ display: "none" }}>
+                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
+                    <ImageIcon className="w-16 h-16 text-theme-primary" />
+                  </div>
+                  <p className="text-white text-lg font-semibold mb-2">
+                    {t("testGallery.imagePreviewNotAvailable")}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Image could not be loaded
+                  </p>
+                </div>
+              </div>
+
+              {/* Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <h3 className="text-xl font-bold text-theme-text mb-4">
+                  Image Details
                 </h3>
-              </div>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded flex-shrink-0"
-              >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-            </div>
 
-            {/* Modal Content */}
-            <div className="flex-1 flex items-center justify-center p-4 sm:p-6 bg-theme-bg/30">
-              <img
-                src={selectedImage.url}
-                alt={selectedImage.name}
-                className="max-w-full max-h-[50vh] sm:max-h-[70vh] object-contain rounded-lg shadow-lg"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "flex";
-                }}
-              />
-              <div
-                className="text-center flex-col items-center justify-center"
-                style={{ display: "none" }}
-              >
-                <ImageIcon className="w-16 h-16 sm:w-24 sm:h-24 text-theme-muted mx-auto mb-4" />
-                <p className="text-theme-muted text-xs sm:text-sm">
-                  {t("testGallery.imagePreviewNotAvailable")}
-                </p>
-              </div>
-            </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-theme-muted">Filename</label>
+                    <p className="text-theme-text break-all">
+                      {selectedImage.name}
+                    </p>
+                  </div>
 
-            {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-theme-bg px-4 sm:px-6 py-3 sm:py-4 rounded-b-none sm:rounded-b-xl flex flex-col sm:flex-row justify-between items-center gap-3 border-t-2 border-theme">
-              <span className="text-xs sm:text-sm text-theme-muted font-medium">
-                {t("testGallery.size")}:{" "}
-                {(selectedImage.size / 1024).toFixed(2)} KB
-              </span>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
-              >
-                {t("testGallery.close")}
-              </button>
+                  <div>
+                    <label className="text-sm text-theme-muted">Size</label>
+                    <p className="text-theme-text">
+                      {(selectedImage.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -663,9 +667,12 @@ function OverlayAssetsTab() {
 
   const handleDelete = async (filename) => {
     try {
-      const response = await fetch(`/api/overlayfiles/${filename}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/overlayfiles/${encodeURIComponent(filename)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 
@@ -736,7 +743,7 @@ function OverlayAssetsTab() {
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-theme-primary/10 rounded-full flex items-center justify-center">
                     {uploading ? (
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                      <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-theme-primary animate-spin" />
                     ) : (
                       <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-theme-primary" />
                     )}
@@ -894,7 +901,7 @@ function OverlayAssetsTab() {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+            <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
           </div>
         ) : filteredFiles.length === 0 ? (
           <div className="text-center py-12">
@@ -928,7 +935,8 @@ function OverlayAssetsTab() {
             {filteredFiles.map((file) => (
               <div
                 key={file.name}
-                className="bg-theme-card border-2 border-theme rounded-lg overflow-hidden group hover:border-theme-primary hover:shadow-lg hover:shadow-theme-primary/20 transition-all duration-300"
+                onClick={() => setPreviewFile(file)}
+                className="bg-theme-card border-2 border-theme rounded-lg overflow-hidden group hover:border-theme-primary hover:shadow-lg hover:shadow-theme-primary/20 transition-all duration-300 cursor-pointer"
               >
                 {/* Image/Font Preview */}
                 <div className="aspect-square relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900">
@@ -978,31 +986,6 @@ function OverlayAssetsTab() {
                       </div>
                     </div>
                   )}
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 sm:gap-2 z-20">
-                    <button
-                      onClick={() => setPreviewFile(file)}
-                      className="p-2 sm:p-3 bg-theme-primary hover:bg-theme-primary/80 rounded-lg transition-all hover:scale-110 shadow-lg"
-                      title={t("overlayAssets.preview")}
-                    >
-                      <Eye className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(file)}
-                      className="p-2 sm:p-3 bg-red-500 hover:bg-red-600 rounded-lg transition-all hover:scale-110 shadow-lg"
-                      title={t("overlayAssets.delete")}
-                    >
-                      <Trash2 className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                    </button>
-                    <a
-                      href={`/api/overlayfiles/preview/${file.name}`}
-                      download={file.name}
-                      className="p-2 sm:p-3 bg-green-500 hover:bg-green-600 rounded-lg transition-all hover:scale-110 shadow-lg inline-block"
-                      title={t("overlayAssets.download")}
-                    >
-                      <Download className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                    </a>
-                  </div>
                 </div>
 
                 {/* File Info */}
@@ -1031,74 +1014,51 @@ function OverlayAssetsTab() {
       {/* Preview Modal */}
       {previewFile && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setPreviewFile(null)}
         >
           <div
-            className="bg-theme-card border-0 sm:border border-theme rounded-none sm:rounded-lg max-w-3xl w-full h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto shadow-2xl"
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
-              <div className="flex items-center gap-3">
+            {/* Floating Close Button */}
+            <button
+              onClick={() => setPreviewFile(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Left Side - Preview */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4 overflow-auto">
                 {previewFile.type === "image" ? (
-                  <ImageIcon className="w-5 h-5 text-theme-primary" />
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `
+                          linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
+                          linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
+                          linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
+                          linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
+                        `,
+                        backgroundSize: "20px 20px",
+                        backgroundPosition:
+                          "0 0, 0 10px, 10px -10px, -10px 0px",
+                      }}
+                    ></div>
+                    <img
+                      src={`/api/overlayfiles/preview/${previewFile.name}`}
+                      alt={previewFile.name}
+                      className="relative z-10 max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-lg shadow-lg"
+                    />
+                  </div>
                 ) : (
-                  <Type className="w-5 h-5 text-theme-primary" />
-                )}
-                <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words">
-                  {previewFile.type === "image"
-                    ? t("overlayAssets.imagePreview")
-                    : t("overlayAssets.fontPreview")}
-                </h3>
-              </div>
-              <button
-                onClick={() => setPreviewFile(null)}
-                className="p-2 hover:bg-theme-hover rounded-lg transition-all flex-shrink-0"
-              >
-                <X className="w-5 h-5 text-theme-text" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-4 sm:p-6">
-              <div className="mb-4">
-                <p className="text-xs sm:text-sm text-theme-muted mb-1">
-                  {t("overlayAssets.filename")}:
-                </p>
-                <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme text-xs sm:text-sm break-all">
-                  {previewFile.name}
-                </p>
-              </div>
-
-              {previewFile.type === "image" ? (
-                <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
-                  <div
-                    className="absolute inset-0 rounded-lg"
-                    style={{
-                      backgroundImage: `
-                        linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
-                        linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
-                        linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
-                      `,
-                      backgroundSize: "20px 20px",
-                      backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-                    }}
-                  ></div>
-                  <img
-                    src={`/api/overlayfiles/preview/${previewFile.name}`}
-                    alt={previewFile.name}
-                    className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
-                    style={{ maxHeight: "55vh" }}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="bg-theme-bg rounded-lg border border-theme p-4">
+                  <div className="w-full space-y-4 max-h-[80vh] overflow-y-auto pr-2">
                     <div className="space-y-3">
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-xs text-gray-600 mb-2">
                           {t("overlayAssets.uppercase")}:
                         </p>
                         <img
@@ -1108,8 +1068,8 @@ function OverlayAssetsTab() {
                           loading="lazy"
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-xs text-gray-600 mb-2">
                           {t("overlayAssets.lowercase")}:
                         </p>
                         <img
@@ -1119,8 +1079,8 @@ function OverlayAssetsTab() {
                           loading="lazy"
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-xs text-gray-600 mb-2">
                           {t("overlayAssets.numbers")}:
                         </p>
                         <img
@@ -1130,8 +1090,8 @@ function OverlayAssetsTab() {
                           loading="lazy"
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-theme-muted mb-1">
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-xs text-gray-600 mb-2">
                           {t("overlayAssets.sample")}:
                         </p>
                         <img
@@ -1143,17 +1103,76 @@ function OverlayAssetsTab() {
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Modal Footer */}
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => setPreviewFile(null)}
-                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-sm"
-                >
-                  {t("overlayAssets.close")}
-                </button>
+              {/* Right Side - Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <div className="flex items-center gap-3 mb-6">
+                  {previewFile.type === "image" ? (
+                    <ImageIcon className="w-5 h-5 text-theme-primary" />
+                  ) : (
+                    <Type className="w-5 h-5 text-theme-primary" />
+                  )}
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {previewFile.type === "image"
+                      ? t("overlayAssets.imagePreview")
+                      : t("overlayAssets.fontPreview")}
+                  </h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-theme-muted mb-2">
+                      {t("overlayAssets.filename")}:
+                    </p>
+                    <p className="text-sm text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme break-all">
+                      {previewFile.name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-theme-muted mb-2">
+                      {t("overlayAssets.type")}:
+                    </p>
+                    <p className="text-sm text-theme-text">
+                      {previewFile.type === "image" ? "Image" : "Font"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-theme-muted mb-2">
+                      {t("overlayAssets.size")}:
+                    </p>
+                    <p className="text-sm text-theme-text">
+                      {formatFileSize(previewFile.size)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-6 space-y-3">
+                  <a
+                    href={`/api/overlayfiles/preview/${previewFile.name}`}
+                    download={previewFile.name}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Download className="w-4 h-4" />
+                    {t("overlayAssets.download")}
+                  </a>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteConfirm(previewFile);
+                      setPreviewFile(null);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {t("overlayAssets.delete")}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

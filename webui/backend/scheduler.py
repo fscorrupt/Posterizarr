@@ -42,6 +42,12 @@ class PosterizarrScheduler:
     """Manages scheduled execution of Posterizarr script in normal mode"""
 
     def __init__(self, base_dir: Path, script_path: Path):
+        logger.info("=" * 60)
+        logger.info("INITIALIZING POSTERIZARR SCHEDULER")
+        logger.info(f"Base directory: {base_dir}")
+        logger.info(f"Script path: {script_path}")
+        logger.debug(f"Docker environment: {IS_DOCKER}")
+
         self.base_dir = base_dir
         self.script_path = script_path
         self.config_path = base_dir / "scheduler.json"
@@ -51,8 +57,12 @@ class PosterizarrScheduler:
         self._scheduler_initialized = False
         self._lock = asyncio.Lock()  # Lock for thread-safe operations
 
+        logger.debug(f"Config file path: {self.config_path}")
+        logger.debug(f"psutil available: {PSUTIL_AVAILABLE}")
+
         # Determine initial timezone (ENV has priority in Docker)
         initial_timezone = self._get_timezone()
+        logger.debug(f"Timezone determined: {initial_timezone}")
 
         # Initialize scheduler with timezone support
         jobstores = {"default": MemoryJobStore()}
@@ -63,6 +73,8 @@ class PosterizarrScheduler:
             "misfire_grace_time": 300,
         }
 
+        logger.debug(f"Job defaults: {job_defaults}")
+
         self.scheduler = AsyncIOScheduler(
             jobstores=jobstores,
             executors=executors,
@@ -71,6 +83,7 @@ class PosterizarrScheduler:
         )
 
         logger.info(f"Scheduler initialized with timezone: {initial_timezone}")
+        logger.info("=" * 60)
 
     def _get_timezone(self) -> str:
         """
@@ -80,27 +93,40 @@ class PosterizarrScheduler:
         2. Config file timezone setting
         3. Default: Europe/Berlin
         """
+        logger.debug("Determining timezone...")
+
         # 1. If Docker, try to read TZ from ENV
         if IS_DOCKER:
             env_tz = os.environ.get("TZ")
             if env_tz:
                 logger.info(f"Using timezone from ENV (Docker): {env_tz}")
+                logger.debug(f"IS_DOCKER={IS_DOCKER}, TZ environment variable found")
                 return env_tz
+            else:
+                logger.debug(
+                    f"IS_DOCKER={IS_DOCKER}, but no TZ environment variable found"
+                )
 
         # 2. Fallback: Config file
         config = self.load_config()
         config_tz = config.get("timezone")
         if config_tz:
             logger.info(f"Using timezone from config: {config_tz}")
+            logger.debug(f"Loaded from config file: {self.config_path}")
             return config_tz
+        else:
+            logger.debug("No timezone found in config file")
 
         # 3. Fallback: Default
         default_tz = "Europe/Berlin"
         logger.info(f"Using default timezone: {default_tz}")
+        logger.debug("No timezone found in ENV or config, using default")
         return default_tz
 
     def load_config(self) -> Dict:
         """Load scheduler configuration from JSON file"""
+        logger.debug(f"Loading scheduler config from: {self.config_path}")
+
         default_config = {
             "enabled": False,
             "schedules": [],
@@ -111,41 +137,62 @@ class PosterizarrScheduler:
         }
 
         if not self.config_path.exists():
+            logger.info("Config file does not exist, creating default config")
+            logger.debug(f"Default config: {default_config}")
             self.save_config(default_config)
             return default_config
 
         try:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
+            logger.debug(f"Config loaded successfully: {len(config)} keys")
+            logger.debug(
+                f"Enabled: {config.get('enabled')}, Schedules: {len(config.get('schedules', []))}"
+            )
             return {**default_config, **config}  # Merge with defaults
         except Exception as e:
             logger.error(f"Error loading scheduler config: {e}")
+            logger.exception("Full traceback:")
             return default_config
 
     def save_config(self, config: Dict) -> bool:
         """Save scheduler configuration to JSON file"""
+        logger.debug(f"Saving scheduler config to: {self.config_path}")
+        logger.debug(f"Config to save: {len(config)} keys")
+
         try:
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
+            logger.info("Scheduler config saved successfully")
+            logger.debug(f"File size: {self.config_path.stat().st_size} bytes")
             return True
         except Exception as e:
             logger.error(f"Error saving scheduler config: {e}")
+            logger.exception("Full traceback:")
             return False
 
     def update_config(self, updates: Dict) -> Dict:
         """Update specific config values"""
+        logger.info("=" * 60)
+        logger.info("UPDATING SCHEDULER CONFIG")
+        logger.info(f"Updates: {list(updates.keys())}")
+        logger.debug(f"Full updates: {updates}")
+
         config = self.load_config()
         config.update(updates)
         self.save_config(config)
 
         # Update scheduler timezone if changed
         if "timezone" in updates and self.scheduler:
+            logger.info(f"Timezone change detected: {updates['timezone']}")
             self.scheduler.configure(timezone=updates["timezone"])
             logger.info(f"Scheduler timezone updated to {updates['timezone']}")
             # Recalculate next_run with new timezone
             if config.get("schedules"):
+                logger.debug("Recalculating next_run with new timezone...")
                 self.update_next_run_from_schedules()
 
+        logger.info("=" * 60)
         return config
 
     def _is_posterizarr_actually_running(self) -> bool:
@@ -240,7 +287,7 @@ class PosterizarrScheduler:
             else:
                 ps_command = "pwsh"
 
-            command = [ps_command, "-File", str(self.script_path)]
+            command = [ps_command, "-File", str(self.script_path), "-UISchedule"]
 
             logger.info(f"Executing scheduled run: {' '.join(command)}")
 
@@ -277,6 +324,25 @@ class PosterizarrScheduler:
 
             logger.info(f"Scheduled run finished with return code: {returncode}")
 
+            # Import schedule.json to runtime database after successful run
+            if returncode == 0:
+                try:
+                    from runtime_parser import save_runtime_to_db
+
+                    # schedule.json is created in Logs directory
+                    logs_dir = self.base_dir / "Logs"
+                    schedule_json = logs_dir / "scheduled.json"
+
+                    if schedule_json.exists():
+                        # Use the Scriptlog.log path as base, mode will determine JSON file
+                        log_path = logs_dir / "Scriptlog.log"
+                        save_runtime_to_db(log_path, "scheduled")
+                        logger.info("scheduled.json runtime data saved to database")
+                    else:
+                        logger.warning("scheduled.json not found after scheduled run")
+                except Exception as e:
+                    logger.error(f"Error saving schedule runtime to database: {e}")
+
         except Exception as e:
             # Better error logging with full stack trace
             logger.error(f"Error during scheduled script execution: {e}", exc_info=True)
@@ -287,10 +353,44 @@ class PosterizarrScheduler:
             self.update_next_run()
 
     def parse_schedule_time(self, time_str: str) -> tuple:
-        """Parse time string (HH:MM) into hour and minute"""
+        """
+        Parse and validate time string (HH:MM) into hour and minute
+        Only accepts times between 00:00 and 23:59
+        """
         try:
-            hour, minute = time_str.split(":")
-            return int(hour), int(minute)
+            # Check format
+            if not time_str or ":" not in time_str:
+                logger.error(f"Invalid time format '{time_str}': must be HH:MM")
+                return None, None
+
+            parts = time_str.split(":")
+            if len(parts) != 2:
+                logger.error(f"Invalid time format '{time_str}': must be HH:MM")
+                return None, None
+
+            hour = int(parts[0])
+            minute = int(parts[1])
+
+            # Validate ranges
+            if hour < 0 or hour > 23:
+                logger.error(
+                    f"Invalid hour '{hour}' in time '{time_str}': must be 00-23"
+                )
+                return None, None
+
+            if minute < 0 or minute > 59:
+                logger.error(
+                    f"Invalid minute '{minute}' in time '{time_str}': must be 00-59"
+                )
+                return None, None
+
+            return hour, minute
+
+        except ValueError as e:
+            logger.error(
+                f"Error parsing time '{time_str}': {e} (must be numeric HH:MM)"
+            )
+            return None, None
         except Exception as e:
             logger.error(f"Error parsing time '{time_str}': {e}")
             return None, None
@@ -299,8 +399,10 @@ class PosterizarrScheduler:
         """Apply all configured schedules to the scheduler"""
         config = self.load_config()
 
-        # Remove all existing jobs
-        self.scheduler.remove_all_jobs()
+        # Remove all existing jobs first
+        if self.scheduler.running:
+            self.scheduler.remove_all_jobs()
+            logger.debug("Removed all existing scheduler jobs")
 
         if not config.get("enabled", False):
             logger.info("Scheduler is disabled, not applying schedules")
@@ -564,21 +666,23 @@ class PosterizarrScheduler:
 
         logger.info(f"Removed schedule: {time_str}")
 
+        # Save config first before applying changes
         # If no schedules left, reset next_run
         if len(new_schedules) == 0:
             config["next_run"] = None
             logger.info("Last schedule removed, resetting next_run to None")
-            self.save_config(config)
-        else:
-            # Save config first
-            self.save_config(config)
 
-            if config.get("enabled", False) and self.scheduler.running:
-                logger.info("Scheduler is running, reapplying schedules...")
-                self.apply_schedules()
-            else:
-                # Even if not running, recalculate next_run for UI display
-                self.update_next_run_from_schedules()
+        self.save_config(config)
+
+        # Always reapply schedules if scheduler is enabled and running
+        if config.get("enabled", False) and self.scheduler.running:
+            logger.info(
+                "Scheduler is running, reapplying schedules to remove deleted job..."
+            )
+            self.apply_schedules()
+        else:
+            # Even if not running, recalculate next_run for UI display
+            self.update_next_run_from_schedules()
 
         return True
 

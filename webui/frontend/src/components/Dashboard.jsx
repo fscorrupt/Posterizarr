@@ -20,16 +20,20 @@ import {
   Edit3,
   X,
   GripVertical,
+  Cpu,
+  HardDrive,
+  Server,
+  Globe,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
-import SystemInfo from "./SystemInfo";
 import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
+import { formatDateTimeInTimezone } from "../utils/timeUtils";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -73,6 +77,7 @@ function Dashboard() {
       active_log: null,
       already_running_detected: false,
       running_file_exists: false,
+      start_time: null,
     }
   );
   const [loading, setLoading] = useState(false);
@@ -80,16 +85,38 @@ function Dashboard() {
   const [version, setVersion] = useState(
     cachedVersion || { local: null, remote: null }
   );
+  const [schedulerStatus, setSchedulerStatus] = useState({
+    enabled: false,
+    running: false,
+    is_executing: false,
+    schedules: [],
+    next_run: null,
+    timezone: null,
+  });
+  const [systemInfo, setSystemInfo] = useState({
+    platform: "...",
+    os_version: "...",
+    cpu_model: "...",
+    cpu_cores: 0,
+    memory_percent: 0,
+    total_memory: "...",
+    used_memory: "...",
+    free_memory: "...",
+    is_docker: false,
+  });
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [allLogs, setAllLogs] = useState([]); // Store all logs
+  const [runtimeStatsRefreshTrigger, setRuntimeStatsRefreshTrigger] =
+    useState(0);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const logContainerRef = useRef(null);
   const userHasScrolled = useRef(false);
   const lastScrollTop = useRef(0);
+  const previousRunningState = useRef(null);
 
   // Card visibility settings
   const [showCardsModal, setShowCardsModal] = useState(false);
@@ -99,11 +126,16 @@ function Dashboard() {
       ? JSON.parse(saved)
       : {
           statusCards: true,
-          systemInfo: true,
           runtimeStats: true,
           recentAssets: true,
           logViewer: true,
         };
+  });
+
+  // Scrollbar visibility settings
+  const [hideScrollbars, setHideScrollbars] = useState(() => {
+    const saved = localStorage.getItem("hide_scrollbars");
+    return saved ? JSON.parse(saved) : false;
   });
 
   // Card order settings
@@ -111,17 +143,88 @@ function Dashboard() {
     const saved = localStorage.getItem("dashboard_card_order");
     return saved
       ? JSON.parse(saved)
-      : [
-          "statusCards",
-          "systemInfo",
-          "runtimeStats",
-          "recentAssets",
-          "logViewer",
-        ];
+      : ["statusCards", "runtimeStats", "recentAssets", "logViewer"];
   });
 
   const [draggedItem, setDraggedItem] = useState(null);
   const hasInitiallyLoaded = useRef(false);
+
+  // Combined fetch for initial dashboard load - reduces HTTP requests from 4 to 1
+  const fetchDashboardData = async (silent = false) => {
+    if (!silent) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/dashboard/all`);
+      const data = await response.json();
+
+      if (data.success) {
+        // Update status
+        if (data.status) {
+          cachedStatus = data.status;
+          setStatus(data.status);
+
+          // Initialize allLogs with the initial logs from status
+          if (data.status.last_logs && data.status.last_logs.length > 0) {
+            setAllLogs(data.status.last_logs);
+          }
+        }
+
+        // Update version
+        if (data.version) {
+          cachedVersion = data.version;
+          setVersion(data.version);
+        }
+
+        // Update scheduler status
+        if (data.scheduler_status && data.scheduler_status.success) {
+          setSchedulerStatus({
+            enabled: data.scheduler_status.enabled || false,
+            running: data.scheduler_status.running || false,
+            is_executing: data.scheduler_status.is_executing || false,
+            schedules: data.scheduler_status.schedules || [],
+            next_run: data.scheduler_status.next_run || null,
+            timezone: data.scheduler_status.timezone || null,
+          });
+        }
+
+        // Update system info
+        if (data.system_info) {
+          setSystemInfo({
+            platform: data.system_info.platform || "Unknown",
+            os_version: data.system_info.os_version || "Unknown",
+            cpu_model: data.system_info.cpu_model || "Unknown",
+            cpu_cores: data.system_info.cpu_cores || 0,
+            memory_percent: data.system_info.memory_percent || 0,
+            total_memory: data.system_info.total_memory || "Unknown",
+            used_memory: data.system_info.used_memory || "Unknown",
+            free_memory: data.system_info.free_memory || "Unknown",
+            is_docker: data.system_info.is_docker || false,
+          });
+        }
+      }
+
+      // Mark dashboard as loaded after first successful fetch
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("dashboard");
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      // Even on error, mark as loaded to show the page
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("dashboard");
+      }
+    } finally {
+      if (!silent) {
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      }
+    }
+  };
 
   const fetchStatus = async (silent = false) => {
     if (!silent) {
@@ -232,8 +335,70 @@ function Dashboard() {
     }
   };
 
+  const fetchSchedulerStatus = async (silent = false) => {
+    try {
+      const response = await fetch(`${API_URL}/scheduler/status`);
+      if (!response.ok) {
+        if (!silent) {
+          console.warn(
+            "Scheduler status endpoint not available:",
+            response.status
+          );
+        }
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setSchedulerStatus({
+          enabled: data.enabled || false,
+          running: data.running || false,
+          is_executing: data.is_executing || false,
+          schedules: data.schedules || [],
+          next_run: data.next_run || null,
+          timezone: data.timezone || null,
+        });
+      }
+    } catch (error) {
+      if (!silent) {
+        console.error("Error fetching scheduler status:", error);
+      }
+    }
+  };
+
+  const fetchSystemInfo = async (silent = false) => {
+    try {
+      const response = await fetch(`${API_URL}/system-info`);
+      if (!response.ok) {
+        if (!silent) {
+          console.warn("System info endpoint not available:", response.status);
+        }
+        return;
+      }
+
+      const data = await response.json();
+      setSystemInfo({
+        platform: data.platform || "Unknown",
+        os_version: data.os_version || "Unknown",
+        cpu_model: data.cpu_model || "Unknown",
+        cpu_cores: data.cpu_cores || 0,
+        memory_percent: data.memory_percent || 0,
+        total_memory: data.total_memory || "Unknown",
+        used_memory: data.used_memory || "Unknown",
+        free_memory: data.free_memory || "Unknown",
+        is_docker: data.is_docker || false,
+      });
+    } catch (error) {
+      if (!silent) {
+        console.error("Error fetching system info:", error);
+      }
+    }
+  };
+
   const connectDashboardWebSocket = () => {
+    // Prevent multiple simultaneous connections
     if (wsRef.current) {
+      console.log("Dashboard WebSocket already exists, skipping connection");
       return;
     }
 
@@ -246,6 +411,9 @@ function Dashboard() {
       console.log(`🔌 Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
+
+      // Store reference immediately to prevent race conditions
+      wsRef.current = ws;
 
       ws.onopen = () => {
         console.log(`Dashboard WebSocket connected to ${logFile}`);
@@ -284,17 +452,18 @@ function Dashboard() {
         setWsConnected(false);
         wsRef.current = null;
 
+        // Only reconnect if still running and not manually disconnected
         reconnectTimeoutRef.current = setTimeout(() => {
-          if (status.running) {
+          if (status.running && !document.hidden) {
+            console.log("WebSocket closed, attempting reconnect...");
             connectDashboardWebSocket();
           }
         }, 3000);
       };
-
-      wsRef.current = ws;
     } catch (error) {
       console.error("Failed to create WebSocket:", error);
       setWsConnected(false);
+      wsRef.current = null;
     }
   };
 
@@ -312,14 +481,15 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Register dashboard as loading and fetch initial data
+    // Register dashboard as loading and fetch all initial data in one call
     startLoading("dashboard");
-    fetchStatus(true);
-    fetchVersion(true); // Uses cache if < 24h old, fetches new if older
+    fetchDashboardData(false);
 
-    // Poll status every 3 seconds to detect when script finishes
+    // Poll individual endpoints every 3 seconds for updates (lighter requests)
     const statusInterval = setInterval(() => {
       fetchStatus(true);
+      fetchSchedulerStatus(true);
+      fetchSystemInfo(true);
     }, 3000);
 
     // Interval for force refresh every 24 hours (if page stays open)
@@ -328,30 +498,88 @@ function Dashboard() {
       24 * 60 * 60 * 1000
     );
 
+    // Page Visibility API: Refresh data when tab becomes visible again
+    // This ensures data is fresh when switching back to the dashboard tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Dashboard tab became visible, refreshing data...");
+        // Fetch latest status first
+        fetchStatus(true).then(() => {
+          // Need to fetch status synchronously to get the latest value
+          fetch(`${API_URL}/status`)
+            .then((response) => response.json())
+            .then((data) => {
+              // After status is updated, check if script finished while tab was hidden
+              // If so, trigger instant refresh of runtime stats and recent assets
+              if (!data.running) {
+                console.log(
+                  "Script not running, triggering instant stats refresh..."
+                );
+                setRuntimeStatsRefreshTrigger((prev) => prev + 1);
+              }
+            })
+            .catch((err) => console.error("Error checking status:", err));
+          // WebSocket reconnection will be handled by the status.running useEffect below
+        });
+        fetchSchedulerStatus(true);
+        fetchSystemInfo(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearInterval(statusInterval);
       clearInterval(versionInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       disconnectDashboardWebSocket();
     };
   }, [startLoading]);
 
   useEffect(() => {
+    // Skip WebSocket management when tab is hidden to prevent unnecessary connections
+    if (document.hidden) {
+      return;
+    }
+
     if (status.running && !wsRef.current) {
+      console.log("Script is running, connecting WebSocket...");
       connectDashboardWebSocket();
     } else if (!status.running && wsRef.current) {
+      console.log("Script stopped, disconnecting WebSocket...");
       disconnectDashboardWebSocket();
     }
+
+    // Trigger runtime stats refresh when run finishes
+    if (previousRunningState.current === true && status.running === false) {
+      console.log("Run finished, triggering runtime stats refresh...");
+      setRuntimeStatsRefreshTrigger((prev) => prev + 1);
+    }
+
+    // Update previous state
+    previousRunningState.current = status.running;
   }, [status.running]);
 
   useEffect(() => {
-    if (status.running && status.current_mode && wsRef.current) {
+    // Skip if tab is hidden or not running
+    if (document.hidden || !status.running || !status.current_mode) {
+      return;
+    }
+
+    // Only reconnect if we have an active connection
+    if (wsRef.current) {
       const expectedLogFile = getLogFileForMode(status.current_mode);
       console.log(
         `Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
       );
 
+      // Disconnect and reconnect with new log file
       disconnectDashboardWebSocket();
-      setTimeout(() => connectDashboardWebSocket(), 300);
+      setTimeout(() => {
+        if (!document.hidden && status.running) {
+          connectDashboardWebSocket();
+        }
+      }, 300);
     }
   }, [status.current_mode]);
 
@@ -449,6 +677,17 @@ function Dashboard() {
     saveVisibilitySettings(newSettings);
   };
 
+  // Toggle scrollbar visibility
+  const toggleScrollbarVisibility = () => {
+    const newValue = !hideScrollbars;
+    console.log("Toggling scrollbars:", newValue);
+    setHideScrollbars(newValue);
+    localStorage.setItem("hide_scrollbars", JSON.stringify(newValue));
+
+    // Dispatch custom event to notify App.jsx
+    window.dispatchEvent(new Event("scrollbarToggle"));
+  };
+
   // Save card order to localStorage
   const saveCardOrder = (order) => {
     setCardOrder(order);
@@ -483,7 +722,6 @@ function Dashboard() {
   // Card labels for display
   const cardLabels = {
     statusCards: t("dashboard.statusCards"),
-    systemInfo: t("dashboard.systemInfo"),
     runtimeStats: t("dashboard.runtimeStats"),
     recentAssets: t("dashboard.recentAssets"),
     logViewer: t("dashboard.liveLogFeed"),
@@ -550,7 +788,7 @@ function Dashboard() {
       statusCards: visibleCards.statusCards && (
         <div
           key="statusCards"
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {/* Script Status Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
@@ -570,23 +808,110 @@ function Dashboard() {
                 </p>
                 {status.running && (
                   <div className="space-y-1">
+                    {status.current_mode && (
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-1">
+                        {t("dashboard.mode")}: {status.current_mode}
+                      </div>
+                    )}
                     {status.pid && (
                       <p className="text-sm text-theme-muted">
                         {t("dashboard.pid")}:{" "}
                         <span className="font-mono">{status.pid}</span>
                       </p>
                     )}
-                    {status.current_mode && (
-                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                        {t("dashboard.mode")}: {status.current_mode}
-                      </div>
+                    {status.start_time && (
+                      <p className="text-xs text-theme-muted">
+                        Started:{" "}
+                        <span className="font-mono">
+                          {formatDateTimeInTimezone(
+                            status.start_time,
+                            schedulerStatus?.timezone || "Europe/Berlin",
+                            "N/A"
+                          )}
+                        </span>
+                      </p>
                     )}
                   </div>
                 )}
               </div>
               <div className="p-3 rounded-lg bg-theme-primary/10">
                 {status.running ? (
-                  <CheckCircle className="w-12 h-12 text-green-400" />
+                  <Activity className="w-12 h-12 text-green-400" />
+                ) : (
+                  <Activity className="w-12 h-12 text-gray-500" />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Scheduler Jobs Card */}
+          <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-theme-muted text-sm mb-1 font-medium">
+                  {t("dashboard.schedulerJobs")}
+                </p>
+                <p
+                  className={`text-2xl font-bold mb-2 ${
+                    schedulerStatus.enabled && schedulerStatus.running
+                      ? "text-green-400"
+                      : schedulerStatus.enabled
+                      ? "text-yellow-400"
+                      : "text-gray-400"
+                  }`}
+                >
+                  {schedulerStatus.enabled
+                    ? schedulerStatus.running
+                      ? t("dashboard.active")
+                      : t("dashboard.configured")
+                    : t("dashboard.disabled")}
+                </p>
+                {schedulerStatus.enabled && (
+                  <div className="space-y-1">
+                    {schedulerStatus.schedules &&
+                    schedulerStatus.schedules.length > 0 ? (
+                      <>
+                        <p className="text-xs text-theme-muted">
+                          ⏰{" "}
+                          {schedulerStatus.schedules
+                            .map((s) => s.time)
+                            .join(", ")}
+                        </p>
+                        {schedulerStatus.timezone && (
+                          <p className="text-xs text-theme-muted flex items-center gap-1">
+                            <Globe className="w-3 h-3" />
+                            {schedulerStatus.timezone}
+                          </p>
+                        )}
+                        {schedulerStatus.next_run && (
+                          <p className="text-xs text-blue-400">
+                            {t("dashboard.nextRun")}:{" "}
+                            {formatDateTimeInTimezone(
+                              schedulerStatus.next_run,
+                              schedulerStatus.timezone || "Europe/Berlin",
+                              "N/A"
+                            )}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-yellow-400">
+                        {t("dashboard.noSchedulesRegistered")}
+                      </p>
+                    )}
+                    {schedulerStatus.is_executing && (
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        {t("dashboard.executing")}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="p-3 rounded-lg bg-theme-primary/10">
+                {schedulerStatus.enabled && schedulerStatus.running ? (
+                  <Clock className="w-12 h-12 text-green-400" />
+                ) : schedulerStatus.enabled ? (
+                  <Clock className="w-12 h-12 text-yellow-400" />
                 ) : (
                   <Clock className="w-12 h-12 text-gray-500" />
                 )}
@@ -594,44 +919,88 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Script File Card */}
+          {/* Script & Config Files Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  {t("dashboard.scriptFile")}
+                  {t("dashboard.scriptFile")} & {t("dashboard.configFile")}
                 </p>
-                <p
-                  className={`text-2xl font-bold mb-2 ${
-                    status.script_exists ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {status.script_exists
-                    ? t("dashboard.found")
-                    : t("dashboard.missing")}
-                </p>
-                {status.script_exists && (version.local || version.remote) && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
-                      v{version.local || version.remote}
-                    </span>
-                    {version.is_update_available && (
-                      <a
-                        href="https://github.com/fscorrupt/Posterizarr/releases/latest"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center"
-                      >
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
-                          v{version.remote} available
-                        </span>
-                      </a>
+                <div className="space-y-3">
+                  {/* Script Status */}
+                  <div className="flex items-center gap-2">
+                    {status.script_exists ? (
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                     )}
+                    <span
+                      className={`text-lg font-bold ${
+                        status.script_exists ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {t("dashboard.scriptFile")}:{" "}
+                      {status.script_exists
+                        ? t("dashboard.found")
+                        : t("dashboard.missing")}
+                    </span>
                   </div>
-                )}
+                  {status.script_exists &&
+                    (version.local || version.remote) && (
+                      <div className="flex items-center gap-2 flex-wrap ml-7">
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-card border border-theme-primary text-theme-primary shadow-sm">
+                          v{version.local || version.remote}
+                        </span>
+                        {version.is_update_available && (
+                          <a
+                            href="https://github.com/fscorrupt/Posterizarr/releases/latest"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center"
+                          >
+                            <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/20 border border-green-500/50 text-green-400 shadow-sm animate-pulse hover:scale-105 transition-transform">
+                              v{version.remote} available
+                            </span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                  {/* Config Status */}
+                  <div className="flex items-center gap-2">
+                    {status.config_exists ? (
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                    )}
+                    <span
+                      className={`text-lg font-bold ${
+                        status.config_exists ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {t("dashboard.configFile")}:{" "}
+                      {status.config_exists
+                        ? t("dashboard.found")
+                        : t("dashboard.missing")}
+                    </span>
+                  </div>
+                  {status.config_exists && (
+                    <div className="ml-7">
+                      <Link
+                        to="/config"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                      >
+                        <Settings className="w-4 h-4 text-theme-primary" />
+                        <span className="text-theme-text">
+                          {t("dashboard.configureNow")}
+                        </span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="p-3 rounded-lg bg-theme-primary/10">
-                {status.script_exists ? (
+                {status.script_exists && status.config_exists ? (
                   <CheckCircle className="w-12 h-12 text-green-400" />
                 ) : (
                   <AlertCircle className="w-12 h-12 text-red-400" />
@@ -640,49 +1009,113 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Config File Card */}
+          {/* System Info Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  {t("dashboard.configFile")}
+                  {t("dashboard.systemInfo")}
                 </p>
-                <p
-                  className={`text-2xl font-bold mb-2 ${
-                    status.config_exists ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {status.config_exists
-                    ? t("dashboard.found")
-                    : t("dashboard.missing")}
-                </p>
-                {status.config_exists && (
-                  <Link
-                    to="/config"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-theme-primary/20 hover:bg-theme-primary text-theme-primary hover:text-white border border-theme-primary/30 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-sm"
-                  >
-                    <Settings className="w-4 h-4" />
-                    {t("common.edit")}
-                  </Link>
-                )}
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <p className="text-xl font-bold text-theme-text">
+                    {systemInfo.platform}
+                  </p>
+                  {systemInfo.is_docker && (
+                    <span className="px-2 py-0.5 text-xs font-semibold bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
+                      Docker
+                    </span>
+                  )}
+                </div>
+                {systemInfo.os_version &&
+                  systemInfo.os_version !== "Unknown" && (
+                    <p
+                      className="text-xs text-theme-muted mb-2 truncate"
+                      title={systemInfo.os_version}
+                    >
+                      {systemInfo.os_version}
+                    </p>
+                  )}
+                <div className="space-y-1.5">
+                  {systemInfo.cpu_model &&
+                    systemInfo.cpu_model !== "Unknown" && (
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Cpu className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                        <span
+                          className="text-xs text-theme-muted truncate"
+                          title={systemInfo.cpu_model}
+                        >
+                          {systemInfo.cpu_model}
+                        </span>
+                      </div>
+                    )}
+                  <div className="flex items-center gap-2">
+                    <Cpu className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                    <span className="text-xs text-theme-muted">
+                      {systemInfo.cpu_cores} {t("dashboard.cores")}
+                    </span>
+                  </div>
+                  {systemInfo.memory_percent > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <HardDrive className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                        <span className="text-xs text-theme-muted truncate">
+                          {systemInfo.used_memory} / {systemInfo.total_memory}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-theme-muted truncate">
+                          {systemInfo.free_memory} {t("dashboard.free")}
+                        </span>
+                        <span
+                          className={`text-xs font-medium flex-shrink-0 ${
+                            systemInfo.memory_percent >= 90
+                              ? "text-red-400"
+                              : systemInfo.memory_percent >= 75
+                              ? "text-orange-400"
+                              : systemInfo.memory_percent >= 50
+                              ? "text-yellow-400"
+                              : "text-green-400"
+                          }`}
+                        >
+                          {systemInfo.memory_percent.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-theme-hover rounded-full h-1.5">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${
+                            systemInfo.memory_percent >= 90
+                              ? "bg-red-500"
+                              : systemInfo.memory_percent >= 75
+                              ? "bg-orange-500"
+                              : systemInfo.memory_percent >= 50
+                              ? "bg-yellow-500"
+                              : "bg-green-500"
+                          }`}
+                          style={{ width: `${systemInfo.memory_percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-theme-primary/10">
-                {status.config_exists ? (
-                  <CheckCircle className="w-12 h-12 text-green-400" />
-                ) : (
-                  <AlertCircle className="w-12 h-12 text-red-400" />
-                )}
+              <div className="p-3 rounded-lg bg-theme-primary/10 flex-shrink-0">
+                <Server className="w-10 h-10 text-purple-400" />
               </div>
             </div>
           </div>
         </div>
       ),
-      systemInfo: visibleCards.systemInfo && <SystemInfo key="systemInfo" />,
       runtimeStats: visibleCards.runtimeStats && (
-        <RuntimeStats key="runtimeStats" />
+        <RuntimeStats
+          key="runtimeStats"
+          refreshTrigger={runtimeStatsRefreshTrigger}
+        />
       ),
       recentAssets: visibleCards.recentAssets && (
-        <RecentAssets key="recentAssets" />
+        <RecentAssets
+          key="recentAssets"
+          refreshTrigger={runtimeStatsRefreshTrigger}
+        />
       ),
       logViewer: visibleCards.logViewer && (
         <div
@@ -726,34 +1159,41 @@ function Dashboard() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  const newAutoScrollState = !autoScroll;
-                  setAutoScroll(newAutoScrollState);
-                  userHasScrolled.current = false;
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-sm font-medium text-theme-text">
+                  {t("dashboard.autoScroll")}
+                </span>
+                <button
+                  onClick={() => {
+                    const newAutoScrollState = !autoScroll;
+                    setAutoScroll(newAutoScrollState);
+                    userHasScrolled.current = false;
 
-                  if (newAutoScrollState && logContainerRef.current) {
-                    setTimeout(() => {
-                      if (logContainerRef.current) {
-                        logContainerRef.current.scrollTop =
-                          logContainerRef.current.scrollHeight;
-                      }
-                    }, 100);
+                    if (newAutoScrollState && logContainerRef.current) {
+                      setTimeout(() => {
+                        if (logContainerRef.current) {
+                          logContainerRef.current.scrollTop =
+                            logContainerRef.current.scrollHeight;
+                        }
+                      }, 100);
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    autoScroll ? "bg-theme-primary" : "bg-theme-hover"
+                  }`}
+                  title={
+                    autoScroll
+                      ? t("dashboard.autoScrollEnabled")
+                      : t("dashboard.autoScrollDisabled")
                   }
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  autoScroll
-                    ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
-                    : "bg-theme-hover text-theme-muted border border-theme"
-                }`}
-                title={
-                  autoScroll
-                    ? t("dashboard.autoScrollEnabled")
-                    : t("dashboard.autoScrollDisabled")
-                }
-              >
-                <span>{t("dashboard.autoScroll")}</span>
-              </button>
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      autoScroll ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </label>
             </div>
           </div>
 
@@ -839,7 +1279,39 @@ function Dashboard() {
       ),
     };
 
-    return cardOrder.map((cardKey) => cardComponents[cardKey]).filter(Boolean);
+    return cardOrder
+      .map((cardKey, index) => {
+        const card = cardComponents[cardKey];
+
+        // Insert running banner after statusCards
+        if (cardKey === "statusCards" && status.running) {
+          return (
+            <React.Fragment key={cardKey}>
+              {card}
+              <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-600/20">
+                      <AlertCircle className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-orange-200 text-lg">
+                        Script is running
+                      </p>
+                      <p className="text-sm text-orange-300/80">
+                        Monitor progress in logs below or stop the script
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        }
+
+        return card;
+      })
+      .filter(Boolean);
   };
 
   return (
@@ -899,27 +1371,6 @@ function Dashboard() {
 
       {/* Dashboard Cards in Custom Order */}
       {renderDashboardCards()}
-
-      {/* Running Script Controls */}
-      {status.running && (
-        <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-600/20">
-                <AlertCircle className="w-6 h-6 text-orange-400" />
-              </div>
-              <div>
-                <p className="font-medium text-orange-200 text-lg">
-                  Script is running
-                </p>
-                <p className="text-sm text-orange-300/80">
-                  Monitor progress in logs below or stop the script
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Danger Zone - Using DangerZone Component */}
       <DangerZone
@@ -1002,6 +1453,33 @@ function Dashboard() {
                   </label>
                 </label>
               ))}
+
+              {/* Scrollbar Visibility Toggle */}
+              <div className="pt-4 border-t border-theme">
+                <div className="flex items-center justify-between p-3 bg-theme-hover rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Settings className="w-5 h-5 text-theme-primary flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="font-medium text-theme-text">
+                        {t("dashboard.hideScrollbars") || "Hide Scrollbars"}
+                      </span>
+                      <span className="text-xs text-theme-muted">
+                        {t("dashboard.hideScrollbarsDesc") ||
+                          "Hide scrollbars throughout the UI"}
+                      </span>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hideScrollbars}
+                      onChange={toggleScrollbarVisibility}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
+                  </label>
+                </div>
+              </div>
             </div>
 
             {/* Modal Footer */}

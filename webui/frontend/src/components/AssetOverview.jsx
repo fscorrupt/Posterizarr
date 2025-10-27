@@ -7,15 +7,199 @@ import {
   Edit,
   FileQuestion,
   RefreshCw,
+  Loader2,
   Search,
   Replace,
   ChevronDown,
+  CheckIcon,
+  Star,
+  ExternalLink,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
+import ScrollToButtons from "./ScrollToButtons";
+
+// Helper function to detect provider from URL and return badge styling
+const getProviderBadge = (url) => {
+  if (!url || url === "false" || url === false) {
+    return {
+      name: "Missing",
+      color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      logo: null,
+    };
+  }
+
+  const urlLower = url.toLowerCase();
+
+  if (urlLower.includes("tmdb") || urlLower.includes("themoviedb")) {
+    return {
+      name: "TMDB",
+      color:
+        "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30",
+      logo: "/tmdb.png",
+    };
+  } else if (urlLower.includes("tvdb") || urlLower.includes("thetvdb")) {
+    return {
+      name: "TVDB",
+      color:
+        "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30",
+      logo: "/tvdb.png",
+    };
+  } else if (urlLower.includes("fanart")) {
+    return {
+      name: "Fanart.tv",
+      color:
+        "bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30",
+      logo: "/fanart.png",
+    };
+  } else if (urlLower.includes("plex")) {
+    return {
+      name: "Plex",
+      color:
+        "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30",
+      logo: "/plex.png",
+    };
+  } else if (urlLower.includes("imdb")) {
+    return {
+      name: "IMDb",
+      color:
+        "bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30",
+      logo: "/imdb.png",
+    };
+  } else {
+    return {
+      name: "Other",
+      color:
+        "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30",
+      logo: null,
+    };
+  }
+};
+
+// Asset Row Component - Memoized to prevent unnecessary re-renders
+const AssetRow = React.memo(
+  ({ asset, tags, showName, onNoEditsNeeded, onReplace }) => {
+    const { t } = useTranslation();
+    const [logoError, setLogoError] = useState(false);
+
+    // Memoize badge computation based on DownloadSource
+    const badge = useMemo(
+      () => getProviderBadge(asset.DownloadSource),
+      [asset.DownloadSource]
+    );
+
+    return (
+      <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-theme-text break-words">
+              {showName ? (
+                <>
+                  <span className="text-theme-primary">{showName}</span>
+                  <span className="text-theme-muted mx-2">|</span>
+                  <span>{asset.Title}</span>
+                </>
+              ) : (
+                asset.Title
+              )}
+            </h3>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
+              <span className="font-medium">{t("assetOverview.type")}:</span>
+              <span className="bg-theme-card px-2 py-0.5 rounded">
+                {asset.Type || "Unknown"}
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="font-medium">
+                {t("assetOverview.language")}:
+              </span>
+              <span className="bg-theme-card px-2 py-0.5 rounded">
+                {asset.Language &&
+                asset.Language !== "false" &&
+                asset.Language !== false
+                  ? asset.Language
+                  : "Unknown"}
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="font-medium">{t("assetOverview.source")}:</span>
+              {asset.DownloadSource &&
+              asset.DownloadSource !== "false" &&
+              asset.DownloadSource !== false ? (
+                <a
+                  href={asset.DownloadSource}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                  title={asset.DownloadSource}
+                >
+                  {badge.logo && !logoError ? (
+                    <img
+                      src={badge.logo}
+                      alt={badge.name}
+                      className="h-[35px] object-contain"
+                      onError={() => setLogoError(true)}
+                    />
+                  ) : (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                    >
+                      {badge.name}
+                    </span>
+                  )}
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+              ) : (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                >
+                  {badge.name}
+                </span>
+              )}
+            </div>
+
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-start gap-2">
+            <button
+              onClick={() => onNoEditsNeeded(asset)}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+              title={t("assetOverview.noEditsNeededTooltip")}
+            >
+              <CheckIcon className="w-4 h-4 text-theme-primary" />
+              {t("assetOverview.noEditsNeeded")}
+            </button>
+            <button
+              onClick={() => onReplace(asset)}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+              title={t("assetOverview.replaceTooltip")}
+            >
+              <Replace className="w-4 h-4 text-theme-primary" />
+              {t("assetOverview.replace")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+AssetRow.displayName = "AssetRow";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,6 +244,21 @@ const AssetOverview = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Helper function to parse clean show name from Rootfolder
+  const parseShowName = (rootfolder) => {
+    if (!rootfolder) return null;
+
+    // Remove TMDB/TVDB/IMDB IDs from the folder name
+    // Pattern matches: [tvdb-123456], [tmdb-123456], [imdb-tt123456], etc.
+    const cleanName = rootfolder
+      .replace(/\s*\[tvdb-[^\]]+\]/gi, "")
+      .replace(/\s*\[tmdb-[^\]]+\]/gi, "")
+      .replace(/\s*\[imdb-[^\]]+\]/gi, "")
+      .trim();
+
+    return cleanName;
+  };
 
   // Function to calculate dropdown position
   const calculateDropdownPosition = (ref) => {
@@ -287,26 +486,39 @@ const AssetOverview = () => {
 
   // Handle successful replacement
   const handleReplaceSuccess = async () => {
+    console.log("handleReplaceSuccess called for asset ID:", selectedAsset?.id);
+
     // Delete the DB entry after successful replacement
     try {
+      console.log(
+        "Sending DELETE request to /api/imagechoices/" + selectedAsset.id
+      );
       const response = await fetch(`/api/imagechoices/${selectedAsset.id}`, {
         method: "DELETE",
       });
 
+      console.log("DELETE response status:", response.status);
+
       if (response.ok) {
-        console.log("DB entry deleted after successful replacement");
+        console.log("DB entry deleted successfully after replacement");
+
         // Refresh the data to update the UI
+        console.log("Refreshing asset data...");
         await fetchData();
+        console.log("Asset data refreshed");
 
         // Trigger event to update sidebar badge count
+        console.log("Dispatching assetReplaced event");
         window.dispatchEvent(new Event("assetReplaced"));
       } else {
-        console.error("Failed to delete DB entry");
+        const errorText = await response.text();
+        console.error("Failed to delete DB entry:", response.status, errorText);
       }
     } catch (error) {
       console.error("Error deleting DB entry:", error);
     }
 
+    console.log("Closing replacer modal");
     setShowReplacer(false);
     setSelectedAsset(null);
   };
@@ -315,6 +527,90 @@ const AssetOverview = () => {
   const handleCloseReplacer = () => {
     setShowReplacer(false);
     setSelectedAsset(null);
+  };
+
+  // Handle marking asset as "No Edits Needed"
+  const handleNoEditsNeeded = async (asset) => {
+    console.log(`[AssetOverview] Marking asset as "No Edits Needed":`, {
+      id: asset.id,
+      title: asset.Title,
+      type: asset.Type,
+      library: asset.LibraryName,
+    });
+
+    try {
+      // Build the complete record with all required fields
+      const updateRecord = {
+        Title: asset.Title,
+        Type: asset.Type || null,
+        Rootfolder: asset.Rootfolder || null,
+        LibraryName: asset.LibraryName || null,
+        Language: asset.Language || null,
+        Fallback: asset.Fallback || null,
+        TextTruncated: asset.TextTruncated || null,
+        DownloadSource: asset.DownloadSource || null,
+        FavProviderLink: asset.FavProviderLink || null,
+        Manual: "true", // Mark as manually reviewed
+      };
+
+      console.log(
+        `[AssetOverview] Sending PUT request to /api/imagechoices/${asset.id}`,
+        {
+          method: "PUT",
+          payload: updateRecord,
+        }
+      );
+
+      const response = await fetch(`/api/imagechoices/${asset.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateRecord),
+      });
+
+      const responseData = await response.json();
+      console.log(`[AssetOverview] PUT response:`, {
+        ok: response.ok,
+        status: response.status,
+        data: responseData,
+      });
+
+      if (response.ok) {
+        console.log(
+          `[AssetOverview] ✅ Asset ${asset.id} marked as Manual=true (No Edits Needed)`
+        );
+        showSuccess(
+          t("assetOverview.markedAsReviewed", { title: asset.Title })
+        );
+
+        // Refresh the data to update the UI
+        await fetchData();
+
+        // Trigger event to update sidebar badge count
+        window.dispatchEvent(new Event("assetReplaced"));
+      } else {
+        console.error(
+          `[AssetOverview] ❌ Failed to update asset Manual field:`,
+          {
+            status: response.status,
+            statusText: response.statusText,
+            error: responseData,
+          }
+        );
+        showError(t("assetOverview.updateFailed", { title: asset.Title }));
+      }
+    } catch (error) {
+      console.error(`[AssetOverview] ❌ Error updating asset:`, {
+        error: error.message,
+        stack: error.stack,
+        asset: {
+          id: asset.id,
+          title: asset.Title,
+        },
+      });
+      showError(t("assetOverview.updateError", { error: error.message }));
+    }
   };
 
   // Get all assets from all categories
@@ -359,6 +655,74 @@ const AssetOverview = () => {
     return ["All Libraries", ...Array.from(uniqueLibs).sort()];
   }, [allAssets]);
 
+  // Category cards configuration (must be before filteredAssets to avoid circular dependency)
+  const categoryCards = useMemo(() => {
+    if (!data) return [];
+
+    return [
+      {
+        key: "assets_with_issues",
+        label: t("assetOverview.assetsWithIssues"),
+        count: data.categories.assets_with_issues.count,
+        icon: AlertTriangle,
+        color: "text-yellow-400",
+        bgColor: "bg-gradient-to-br from-yellow-900/30 to-yellow-950/20",
+        borderColor: "border-yellow-900/40",
+        hoverBorderColor: "hover:border-yellow-500/50",
+      },
+      {
+        key: "missing_assets",
+        label: t("assetOverview.missingAssets"),
+        count: data.categories.missing_assets.count,
+        icon: FileQuestion,
+        color: "text-red-400",
+        bgColor: "bg-gradient-to-br from-red-900/30 to-red-950/20",
+        borderColor: "border-red-900/40",
+        hoverBorderColor: "hover:border-red-500/50",
+      },
+      {
+        key: "missing_assets_fav_provider",
+        label: t("assetOverview.missingAssetsAtFavProvider"),
+        count: data.categories.missing_assets_fav_provider.count,
+        icon: Star,
+        color: "text-orange-400",
+        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
+        borderColor: "border-orange-900/40",
+        hoverBorderColor: "hover:border-orange-500/50",
+      },
+      {
+        key: "non_primary_lang",
+        label: t("assetOverview.nonPrimaryLang"),
+        count: data.categories.non_primary_lang.count,
+        icon: Globe,
+        color: "text-sky-400",
+        bgColor: "bg-gradient-to-br from-sky-900/30 to-sky-950/20",
+        borderColor: "border-sky-900/40",
+        hoverBorderColor: "hover:border-sky-500/50",
+      },
+      {
+        key: "non_primary_provider",
+        label: t("assetOverview.nonPrimaryProvider"),
+        count: data.categories.non_primary_provider.count,
+        icon: Database,
+        color: "text-emerald-400",
+        bgColor: "bg-gradient-to-br from-emerald-900/30 to-emerald-950/20",
+        borderColor: "border-emerald-900/40",
+        hoverBorderColor: "hover:border-emerald-500/50",
+      },
+      {
+        key: "truncated_text",
+        label: t("assetOverview.truncatedTextCategory"),
+        count: data.categories.truncated_text.count,
+        icon: Type,
+        color: "text-purple-400",
+        bgColor: "bg-gradient-to-br from-purple-900/30 to-purple-950/20",
+        borderColor: "border-purple-900/40",
+        hoverBorderColor: "hover:border-purple-500/50",
+      },
+    ];
+  }, [data, t]);
+
   // Filter assets based on selected category and filters
   const filteredAssets = useMemo(() => {
     if (!data) return [];
@@ -369,8 +733,12 @@ const AssetOverview = () => {
     if (selectedCategory === "All Categories") {
       assets = allAssets;
     } else {
-      const categoryKey = selectedCategory.toLowerCase().replace(/[- ]/g, "_");
-      assets = data.categories[categoryKey]?.assets || [];
+      // Find the category card with matching label to get the correct key
+      const categoryCard = categoryCards.find(
+        (card) => card.label === selectedCategory
+      );
+      const categoryKey = categoryCard?.key;
+      assets = categoryKey ? data.categories[categoryKey]?.assets || [] : [];
     }
 
     // Filter out Manual entries (Manual === "true" or true)
@@ -408,6 +776,7 @@ const AssetOverview = () => {
     selectedType,
     selectedLibrary,
     allAssets,
+    categoryCards,
   ]);
 
   // Get tags for an asset
@@ -415,7 +784,7 @@ const AssetOverview = () => {
     const tags = [];
 
     // 1. MISSING ASSET CHECK
-    // Missing if: DownloadSource is false/empty OR FavProviderLink is false/empty
+    // Missing Asset Badge -> if DownloadSource is empty
     const downloadSource = asset.DownloadSource;
     const providerLink = asset.FavProviderLink;
 
@@ -425,10 +794,19 @@ const AssetOverview = () => {
     const isProviderLinkMissing =
       providerLink === "false" || providerLink === false || !providerLink;
 
-    if (isDownloadMissing || isProviderLinkMissing) {
+    // Missing Asset Badge (red) - only if DownloadSource is empty
+    if (isDownloadMissing) {
       tags.push({
         label: t("assetOverview.missingAsset"),
         color: "bg-red-500/20 text-red-400 border-red-500/30",
+      });
+    }
+
+    // Missing Asset at Favorite Provider Badge (orange) - only if FavProviderLink is empty
+    if (isProviderLinkMissing) {
+      tags.push({
+        label: t("assetOverview.missingAssetAtFavProvider"),
+        color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
       });
     }
 
@@ -462,15 +840,22 @@ const AssetOverview = () => {
         if (!isDownloadFromPrimaryProvider || !isFavLinkFromPrimaryProvider) {
           tags.push({
             label: t("assetOverview.notPrimaryProvider"),
-            color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+            color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
           });
         }
       }
     }
 
     // 3. NON-PRIMARY LANGUAGE CHECK
+    // Check for "Unknown" language first (add badge for non-primary language)
+    if (asset.Language && asset.Language.toLowerCase() === "unknown") {
+      tags.push({
+        label: t("assetOverview.notPrimaryLanguage"),
+        color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+      });
+    }
     // Language is either a valid language code/string or "false" (string)
-    if (
+    else if (
       asset.Language &&
       asset.Language !== "false" &&
       asset.Language !== false &&
@@ -488,7 +873,7 @@ const AssetOverview = () => {
       if (langNormalized !== primaryNormalized) {
         tags.push({
           label: t("assetOverview.notPrimaryLanguage"),
-          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+          color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
     } else if (
@@ -501,7 +886,7 @@ const AssetOverview = () => {
       if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
         tags.push({
           label: t("assetOverview.notPrimaryLanguage"),
-          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+          color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
     }
@@ -521,69 +906,11 @@ const AssetOverview = () => {
     return tags;
   };
 
-  // Category cards configuration
-  const categoryCards = useMemo(() => {
-    if (!data) return [];
-
-    return [
-      {
-        key: "assets_with_issues",
-        label: t("assetOverview.assetsWithIssues"),
-        count: data.categories.assets_with_issues.count,
-        icon: AlertTriangle,
-        color: "text-yellow-400",
-        bgColor: "bg-gradient-to-br from-black/80 to-black/60",
-        borderColor: "border-black/40",
-        hoverBorderColor: "hover:border-yellow-500/50",
-      },
-      {
-        key: "missing_assets",
-        label: t("assetOverview.missingAssets"),
-        count: data.categories.missing_assets.count,
-        icon: FileQuestion,
-        color: "text-red-400",
-        bgColor: "bg-gradient-to-br from-red-900/30 to-red-950/20",
-        borderColor: "border-red-900/40",
-        hoverBorderColor: "hover:border-red-500/50",
-      },
-      {
-        key: "non_primary_lang",
-        label: t("assetOverview.nonPrimaryLang"),
-        count: data.categories.non_primary_lang.count,
-        icon: Globe,
-        color: "text-yellow-400",
-        bgColor: "bg-gradient-to-br from-yellow-900/20 to-yellow-950/10",
-        borderColor: "border-yellow-900/40",
-        hoverBorderColor: "hover:border-yellow-500/50",
-      },
-      {
-        key: "non_primary_provider",
-        label: t("assetOverview.nonPrimaryProvider"),
-        count: data.categories.non_primary_provider.count,
-        icon: Database,
-        color: "text-orange-400",
-        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
-        borderColor: "border-orange-900/40",
-        hoverBorderColor: "hover:border-orange-500/50",
-      },
-      {
-        key: "truncated_text",
-        label: t("assetOverview.truncatedTextCategory"),
-        count: data.categories.truncated_text.count,
-        icon: Type,
-        color: "text-purple-400",
-        bgColor: "bg-gradient-to-br from-purple-900/30 to-purple-950/20",
-        borderColor: "border-purple-900/40",
-        hoverBorderColor: "hover:border-purple-500/50",
-      },
-    ];
-  }, [data]);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">{t("assetOverview.loading")}</p>
         </div>
       </div>
@@ -608,30 +935,8 @@ const AssetOverview = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-orange-400" />
-            <h1 className="text-3xl font-bold text-theme-text">
-              {t("assetOverview.title")}
-            </h1>
-          </div>
-          <p className="text-theme-muted mt-2">
-            {t("assetOverview.description")}
-          </p>
-        </div>
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-        >
-          <RefreshCw className="w-4 h-4 text-theme-primary" />
-          <span className="text-theme-text">{t("common.refresh")}</span>
-        </button>
-      </div>
-
       {/* Category Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {categoryCards.map((card) => {
           const Icon = card.icon;
           const isSelected = selectedCategory === card.label;
@@ -847,14 +1152,23 @@ const AssetOverview = () => {
 
       {/* Assets Grid */}
       <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-xl font-bold text-theme-text mb-4">
-          {selectedCategory === "All Categories"
-            ? t("assetOverview.allAssets")
-            : selectedCategory}
-          <span className="text-theme-muted ml-2">
-            ({filteredAssets.length})
-          </span>
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-theme-text">
+            {selectedCategory === "All Categories"
+              ? t("assetOverview.allAssets")
+              : selectedCategory}
+            <span className="text-theme-muted ml-2">
+              ({filteredAssets.length})
+            </span>
+          </h2>
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4 text-theme-primary" />
+            <span className="text-theme-text">{t("common.refresh")}</span>
+          </button>
+        </div>
 
         {filteredAssets.length === 0 ? (
           <div className="text-center py-12">
@@ -868,95 +1182,24 @@ const AssetOverview = () => {
             {filteredAssets.map((asset) => {
               const tags = getAssetTags(asset);
 
+              // Parse show name for episodes and titlecards only (not seasons)
+              const assetType = (asset.Type || "").toLowerCase();
+              const isEpisodeType =
+                assetType.includes("episode") ||
+                assetType.includes("titlecard");
+              const showName = isEpisodeType
+                ? parseShowName(asset.Rootfolder)
+                : null;
+
               return (
-                <div
+                <AssetRow
                   key={asset.id}
-                  className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-theme-text break-words">
-                        {asset.Title}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
-                        <span className="font-medium">
-                          {t("assetOverview.type")}:
-                        </span>
-                        <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.Type || "Unknown"}
-                        </span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="font-medium">
-                          {t("assetOverview.language")}:
-                        </span>
-                        <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.Language &&
-                          asset.Language !== "false" &&
-                          asset.Language !== false
-                            ? asset.Language
-                            : "Unknown"}
-                        </span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="font-medium">
-                          {t("assetOverview.source")}:
-                        </span>
-                        {asset.FavProviderLink &&
-                        asset.FavProviderLink !== "false" &&
-                        asset.FavProviderLink !== false ? (
-                          <a
-                            href={asset.FavProviderLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-theme-card px-2 py-0.5 rounded text-theme-primary hover:text-theme-primary/80 hover:underline transition-colors break-all"
-                            title={asset.DownloadSource || "View Source"}
-                          >
-                            {asset.DownloadSource &&
-                            asset.DownloadSource !== "false" &&
-                            asset.DownloadSource !== false
-                              ? asset.DownloadSource.length > 50
-                                ? `${asset.DownloadSource.substring(0, 50)}...`
-                                : asset.DownloadSource
-                              : "View Source"}
-                          </a>
-                        ) : (
-                          <span className="bg-theme-card px-2 py-0.5 rounded break-all">
-                            {asset.DownloadSource &&
-                            asset.DownloadSource !== "false" &&
-                            asset.DownloadSource !== false
-                              ? asset.DownloadSource.length > 50
-                                ? `${asset.DownloadSource.substring(0, 50)}...`
-                                : asset.DownloadSource
-                              : "Missing"}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
-                          >
-                            {tag.label}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Replace Button */}
-                    <div className="flex items-start">
-                      <button
-                        onClick={() => handleReplace(asset)}
-                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-                        title={t("assetOverview.replaceTooltip")}
-                      >
-                        <Replace className="w-4 h-4 text-theme-primary" />
-                        {t("assetOverview.replace")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  asset={asset}
+                  tags={tags}
+                  showName={showName}
+                  onNoEditsNeeded={handleNoEditsNeeded}
+                  onReplace={handleReplace}
+                />
               );
             })}
           </div>
@@ -971,6 +1214,9 @@ const AssetOverview = () => {
           onSuccess={handleReplaceSuccess}
         />
       )}
+
+      {/* Scroll To Buttons */}
+      <ScrollToButtons />
     </div>
   );
 };

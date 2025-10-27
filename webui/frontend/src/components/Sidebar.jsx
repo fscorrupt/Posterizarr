@@ -28,6 +28,8 @@ import {
   TrendingUp,
   Zap,
   FolderKanban,
+  GripVertical,
+  MoreVertical,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -43,6 +45,9 @@ const Sidebar = () => {
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [missingAssetsCount, setMissingAssetsCount] = useState(0);
+  const [manualAssetsCount, setManualAssetsCount] = useState(0);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [hoveredItem, setHoveredItem] = useState(null);
 
   // Check if Folder View is active
   const [viewMode, setViewMode] = useState(() => {
@@ -81,6 +86,37 @@ const Sidebar = () => {
     };
   }, []);
 
+  // Fetch manual assets count
+  React.useEffect(() => {
+    const fetchManualAssetsCount = async () => {
+      try {
+        const response = await fetch("/api/manual-assets-gallery");
+        if (response.ok) {
+          const data = await response.json();
+          setManualAssetsCount(data.total_assets || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch manual assets count:", error);
+      }
+    };
+
+    fetchManualAssetsCount();
+
+    // Listen for assetReplaced event to refresh immediately
+    const handleAssetReplaced = () => {
+      fetchManualAssetsCount();
+    };
+    window.addEventListener("assetReplaced", handleAssetReplaced);
+
+    // Refresh every 3 seconds for instant updates
+    const interval = setInterval(fetchManualAssetsCount, 3000);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("assetReplaced", handleAssetReplaced);
+    };
+  }, []);
+
   // Update viewMode when localStorage changes (listen to storage events)
   React.useEffect(() => {
     const handleStorageChange = () => {
@@ -104,27 +140,41 @@ const Sidebar = () => {
     color: config.variables["--theme-primary"],
   }));
 
-  const navItems = [
-    { path: "/", label: t("nav.dashboard"), icon: Activity },
-    { path: "/run-modes", label: t("nav.runModes"), icon: Play },
+  // Define all nav items with unique IDs
+  const defaultNavItems = [
+    { id: "dashboard", path: "/", label: t("nav.dashboard"), icon: Activity },
     {
+      id: "runModes",
+      path: "/run-modes",
+      label: t("nav.runModes"),
+      icon: Play,
+    },
+    {
+      id: "scheduler",
+      path: "/scheduler",
+      label: t("nav.scheduler"),
+      icon: Clock,
+    },
+    {
+      id: "runtimeHistory",
       path: "/runtime-history",
       label: t("nav.runtimeHistory"),
       icon: TrendingUp,
     },
     {
+      id: "gallery",
       path: "/gallery",
       label: t("nav.assets"),
       icon: Image,
       hasSubItems: true,
       subItems:
-        // In Folder View: Only show "Posters" tab, in Grid View: show all tabs
+        // In Folder View: Only show "Assets Folders" tab, in Grid View: show all tabs
         viewMode === "folder"
           ? [
               {
                 path: "/gallery/posters",
-                label: t("assets.posters"),
-                icon: Image,
+                label: t("assets.assetsFolders"),
+                icon: FolderKanban,
               },
             ]
           : [
@@ -151,17 +201,29 @@ const Sidebar = () => {
             ],
     },
     {
+      id: "assetOverview",
       path: "/asset-overview",
       label: t("nav.assetOverview"),
       icon: AlertTriangle,
       badge: missingAssetsCount,
+      badgeColor: "red",
     },
     {
+      id: "assetsManager",
       path: "/assets-manager",
       label: t("nav.assetsManager"),
       icon: FolderKanban,
     },
     {
+      id: "manualAssets",
+      path: "/manual-assets",
+      label: "Manual Assets",
+      icon: FileImage,
+      badge: manualAssetsCount,
+      badgeColor: "green",
+    },
+    {
+      id: "config",
       path: "/config",
       label: t("nav.config"),
       icon: Settings,
@@ -186,12 +248,77 @@ const Sidebar = () => {
         },
       ],
     },
-    { path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
-    { path: "/logs", label: t("nav.logs"), icon: FileText },
-    { path: "/how-it-works", label: t("nav.howItWorks"), icon: Lightbulb },
-    { path: "/auto-triggers", label: t("nav.autoTriggers"), icon: Zap },
-    { path: "/about", label: t("nav.about"), icon: Info },
+    { id: "logs", path: "/logs", label: t("nav.logs"), icon: FileText },
+    {
+      id: "howItWorks",
+      path: "/how-it-works",
+      label: t("nav.howItWorks"),
+      icon: Lightbulb,
+    },
+    {
+      id: "autoTriggers",
+      path: "/auto-triggers",
+      label: t("nav.autoTriggers"),
+      icon: Zap,
+    },
+    { id: "about", path: "/about", label: t("nav.about"), icon: Info },
   ];
+
+  // Load nav order from localStorage or use default
+  const [navOrder, setNavOrder] = React.useState(() => {
+    const saved = localStorage.getItem("sidebar_nav_order");
+    if (saved) {
+      try {
+        const savedOrder = JSON.parse(saved);
+        // Ensure all items exist and add new ones
+        const savedIds = new Set(savedOrder);
+        const defaultIds = defaultNavItems.map((item) => item.id);
+        const missingIds = defaultIds.filter((id) => !savedIds.has(id));
+        return [...savedOrder, ...missingIds];
+      } catch (e) {
+        return defaultNavItems.map((item) => item.id);
+      }
+    }
+    return defaultNavItems.map((item) => item.id);
+  });
+
+  // Create ordered nav items based on saved order
+  const navItems = React.useMemo(() => {
+    return navOrder
+      .map((id) => defaultNavItems.find((item) => item.id === id))
+      .filter(Boolean);
+  }, [navOrder, viewMode, missingAssetsCount, manualAssetsCount]);
+
+  // Save nav order to localStorage
+  const saveNavOrder = (order) => {
+    setNavOrder(order);
+    localStorage.setItem("sidebar_nav_order", JSON.stringify(order));
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedItem(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedItem === null || draggedItem === index) return;
+
+    const newOrder = [...navOrder];
+    const draggedId = newOrder[draggedItem];
+    newOrder.splice(draggedItem, 1);
+    newOrder.splice(index, 0, draggedId);
+
+    setDraggedItem(index);
+    setNavOrder(newOrder);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedItem !== null) {
+      saveNavOrder(navOrder);
+    }
+    setDraggedItem(null);
+  };
 
   const isInAssetsSection = location.pathname.startsWith("/gallery");
   const isInConfigSection = location.pathname.startsWith("/config");
@@ -226,9 +353,10 @@ const Sidebar = () => {
         {/* Navigation Items - Desktop */}
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="space-y-1 px-3">
-            {navItems.map((item) => {
+            {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
+              const isDragging = draggedItem === index;
 
               if (item.hasSubItems) {
                 const isAssetsItem = item.path === "/gallery";
@@ -244,7 +372,16 @@ const Sidebar = () => {
                   : () => setIsConfigExpanded(!isConfigExpanded);
 
                 return (
-                  <div key={item.path}>
+                  <div
+                    key={item.id}
+                    draggable={!isCollapsed}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onMouseEnter={() => setHoveredItem(index)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    className={`relative ${isDragging ? "opacity-50" : ""}`}
+                  >
                     <button
                       onClick={toggleExpanded}
                       className={`w-full flex items-center ${
@@ -262,15 +399,20 @@ const Sidebar = () => {
                           <span className="ml-3">{item.label}</span>
                         )}
                       </div>
-                      {!isCollapsed && (
-                        <div>
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {!isCollapsed && (
+                          <>
+                            {hoveredItem === index && (
+                              <GripVertical className="w-4 h-4 text-theme-muted opacity-60 cursor-grab active:cursor-grabbing" />
+                            )}
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </>
+                        )}
+                      </div>
                     </button>
 
                     {isExpanded && !isCollapsed && (
@@ -302,30 +444,53 @@ const Sidebar = () => {
               }
 
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center ${
-                    isCollapsed ? "justify-center" : "justify-between px-3"
-                  } py-3 rounded-lg text-sm font-medium transition-all group ${
-                    isActive
-                      ? "bg-theme-primary text-white shadow-lg"
-                      : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
-                  }`}
-                  title={isCollapsed ? item.label : ""}
+                <div
+                  key={item.id}
+                  draggable={!isCollapsed}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onMouseEnter={() => setHoveredItem(index)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  className={`relative ${isDragging ? "opacity-50" : ""}`}
                 >
-                  <div className="flex items-center">
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    {!isCollapsed && <span className="ml-3">{item.label}</span>}
-                  </div>
-                  {!isCollapsed &&
-                    item.badge !== undefined &&
-                    item.badge > 0 && (
-                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
-                        {item.badge}
-                      </span>
-                    )}
-                </Link>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center ${
+                      isCollapsed ? "justify-center" : "justify-between px-3"
+                    } py-3 rounded-lg text-sm font-medium transition-all group ${
+                      isActive
+                        ? "bg-theme-primary text-white shadow-lg"
+                        : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
+                    }`}
+                    title={isCollapsed ? item.label : ""}
+                  >
+                    <div className="flex items-center">
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      {!isCollapsed && (
+                        <span className="ml-3">{item.label}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!isCollapsed && hoveredItem === index && (
+                        <GripVertical className="w-4 h-4 text-theme-muted opacity-60 cursor-grab active:cursor-grabbing" />
+                      )}
+                      {!isCollapsed &&
+                        item.badge !== undefined &&
+                        item.badge > 0 && (
+                          <span
+                            className={`${
+                              item.badgeColor === "green"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            } text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                    </div>
+                  </Link>
+                </div>
               );
             })}
           </div>
@@ -437,9 +602,10 @@ const Sidebar = () => {
             {/* Scrollable Navigation Area */}
             <nav className="flex-1 overflow-y-auto py-4">
               <div className="space-y-1 px-3">
-                {navItems.map((item) => {
+                {navItems.map((item, index) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
+                  const isDragging = draggedItem === index;
 
                   if (item.hasSubItems) {
                     const isAssetsItem = item.path === "/gallery";
@@ -455,7 +621,16 @@ const Sidebar = () => {
                       : () => setIsConfigExpanded(!isConfigExpanded);
 
                     return (
-                      <div key={item.path}>
+                      <div
+                        key={item.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        onMouseEnter={() => setHoveredItem(index)}
+                        onMouseLeave={() => setHoveredItem(null)}
+                        className={`relative ${isDragging ? "opacity-50" : ""}`}
+                      >
                         <button
                           onClick={toggleExpanded}
                           className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
@@ -468,11 +643,16 @@ const Sidebar = () => {
                             <Icon className="w-5 h-5 mr-3" />
                             <span>{item.label}</span>
                           </div>
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
+                          <div className="flex items-center gap-1">
+                            {hoveredItem === index && (
+                              <GripVertical className="w-4 h-4 text-theme-muted opacity-60 cursor-grab active:cursor-grabbing" />
+                            )}
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </div>
                         </button>
 
                         {isExpanded && (
@@ -505,26 +685,47 @@ const Sidebar = () => {
                   }
 
                   return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
-                        isActive
-                          ? "bg-theme-primary text-white shadow-lg"
-                          : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
-                      }`}
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                      onMouseEnter={() => setHoveredItem(index)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      className={`relative ${isDragging ? "opacity-50" : ""}`}
                     >
-                      <div className="flex items-center">
-                        <Icon className="w-5 h-5 mr-3" />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
+                      <Link
+                        to={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                          isActive
+                            ? "bg-theme-primary text-white shadow-lg"
+                            : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <Icon className="w-5 h-5 mr-3" />
+                          <span>{item.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {hoveredItem === index && (
+                            <GripVertical className="w-4 h-4 text-theme-muted opacity-60 cursor-grab active:cursor-grabbing" />
+                          )}
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <span
+                              className={`${
+                                item.badgeColor === "green"
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              } text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </div>
                   );
                 })}
               </div>

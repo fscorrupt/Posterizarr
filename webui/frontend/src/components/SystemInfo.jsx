@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Cpu, HardDrive, Server, RefreshCw, Monitor } from "lucide-react";
+import {
+  Cpu,
+  HardDrive,
+  Server,
+  RefreshCw,
+  Monitor,
+  Loader2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
 
@@ -96,7 +103,7 @@ function SystemInfo() {
     return (
       <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       </div>
     );

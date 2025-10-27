@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Image, FolderOpen, HardDrive, Layers, RefreshCw } from "lucide-react";
+import {
+  Image,
+  FolderOpen,
+  HardDrive,
+  Layers,
+  RefreshCw,
+  Loader2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const API_URL = "/api";
@@ -75,7 +82,7 @@ function AssetsStats({ onSuccess, onError }) {
           {t("assetsStats.title")}
         </h2>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
+          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
         </div>
       </div>
     );
@@ -108,11 +115,13 @@ function AssetsStats({ onSuccess, onError }) {
         <button
           onClick={refreshCache}
           disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all disabled:opacity-50 text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           title={t("assetsStats.refreshTooltip")}
         >
           <RefreshCw
-            className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+            className={`w-4 h-4 text-theme-primary ${
+              refreshing ? "animate-spin" : ""
+            }`}
           />
           <span className="text-theme-text">{t("common.refresh")}</span>
         </button>

@@ -7,6 +7,7 @@ import {
   AlertCircle,
   CheckCircle,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ReleasesSection from "./ReleasesSection";
@@ -67,7 +68,7 @@ function About() {
       return (
         <div className="flex items-center gap-2">
           <span className="text-theme-text">{t("common.loading")}</span>
-          <RefreshCw className="w-4 h-4 text-theme-muted animate-spin" />
+          <Loader2 className="w-4 h-4 text-theme-muted animate-spin" />
         </div>
       );
     }
@@ -127,10 +128,12 @@ function About() {
           <button
             onClick={fetchVersion}
             disabled={refreshing}
-            className="flex items-center gap-2 px-3 py-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           >
             <RefreshCw
-              className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              className={`w-4 h-4 text-theme-primary ${
+                refreshing ? "animate-spin" : ""
+              }`}
             />
             <span className="text-sm">{t("common.refresh")}</span>
           </button>

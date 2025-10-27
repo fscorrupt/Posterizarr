@@ -6,6 +6,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -24,6 +25,7 @@ import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
 import GalleryHub from "./components/GalleryHub";
 import AssetsManager from "./components/AssetsManager";
+import ManualAssets from "./components/ManualAssets";
 import About from "./components/About";
 import HowItWorks from "./components/HowItWorks";
 import AutoTriggers from "./components/AutoTriggers";
@@ -58,6 +60,64 @@ function AppContent() {
       resetLoading();
     }
   }, [location.pathname, isDashboardRoute, resetLoading]);
+
+  // Global scrollbar visibility management
+  useEffect(() => {
+    const updateScrollbarVisibility = () => {
+      const hideScrollbars = localStorage.getItem("hide_scrollbars");
+      const shouldHide = hideScrollbars ? JSON.parse(hideScrollbars) : false;
+
+      console.log(
+        "App.jsx: Updating scrollbar visibility, shouldHide:",
+        shouldHide
+      );
+      console.log("App.jsx: Current body classes:", document.body.className);
+      console.log(
+        "App.jsx: Current html classes:",
+        document.documentElement.className
+      );
+
+      if (shouldHide) {
+        document.body.classList.add("hide-scrollbars");
+        document.documentElement.classList.add("hide-scrollbars");
+        console.log("App.jsx: Added hide-scrollbars class to body and html");
+      } else {
+        document.body.classList.remove("hide-scrollbars");
+        document.documentElement.classList.remove("hide-scrollbars");
+        console.log(
+          "App.jsx: Removed hide-scrollbars class from body and html"
+        );
+      }
+
+      console.log("App.jsx: New body classes:", document.body.className);
+      console.log(
+        "App.jsx: New html classes:",
+        document.documentElement.className
+      );
+    };
+
+    // Initial check
+    console.log("App.jsx: Setting up scrollbar visibility management");
+    updateScrollbarVisibility();
+
+    // Listen for storage changes (including from Dashboard component)
+    window.addEventListener("storage", updateScrollbarVisibility);
+
+    // Custom event for same-window updates
+    const handleScrollbarToggle = () => {
+      console.log("App.jsx: Received scrollbarToggle event");
+      updateScrollbarVisibility();
+    };
+    window.addEventListener("scrollbarToggle", handleScrollbarToggle);
+
+    return () => {
+      window.removeEventListener("storage", updateScrollbarVisibility);
+      window.removeEventListener("scrollbarToggle", handleScrollbarToggle);
+      // Clean up classes on unmount
+      document.body.classList.remove("hide-scrollbars");
+      document.documentElement.classList.remove("hide-scrollbars");
+    };
+  }, []);
 
   useEffect(() => {
     console.log("Posterizarr UI started - UI-Logger active");
@@ -116,7 +176,7 @@ function AppContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <Loader2 className="w-16 h-16 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">Loading...</p>
         </div>
       </div>
@@ -155,7 +215,9 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/run-modes" element={<RunModes />} />
+                <Route path="/scheduler" element={<SchedulerSettings />} />
                 <Route path="/assets-manager" element={<AssetsManager />} />
+                <Route path="/manual-assets" element={<ManualAssets />} />
                 <Route path="/asset-overview" element={<AssetOverview />} />
                 <Route path="/runtime-history" element={<RuntimeHistory />} />
 
@@ -209,7 +271,6 @@ function AppContent() {
                   element={<ConfigEditor tab="Notifications" />}
                 />
 
-                <Route path="/scheduler" element={<SchedulerSettings />} />
                 <Route path="/logs" element={<LogViewer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/auto-triggers" element={<AutoTriggers />} />
