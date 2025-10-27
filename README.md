@@ -801,15 +801,15 @@ To use it we need to configure a script in Tautulli, please follow these instruc
    </p>
    </details>
 1. Go to `Triggers`, scroll down and select `Recently Added`.
-<details close>
-<summary>🖼️Example [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
-  </a>
-</p>
-</details>
+  <details close>
+  <summary>🖼️Example [click to unfold]</summary>
+  <br>
+  <p>
+    <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+      <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+    </a>
+  </p>
+  </details>
 1. Go to `Conditions`, you can now specify when the script should get called.
    - In my case i specified the **Media Type**: `episode, movie, show and season`
    - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
@@ -825,9 +825,11 @@ To use it we need to configure a script in Tautulli, please follow these instruc
      </details>
 1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
    - **Please do not change the Argument otherwise the script could fail.**
-   ```sh
-   <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
-   ```
+
+  ```sh
+  <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+  ```
+
    <details close>
    <summary>🖼️Example [click to unfold]</summary>
    <br>
@@ -860,15 +862,15 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
    </p>
    </details>
 1. Go to `Triggers`, scroll down and select `Recently Added`.
-<details close>
-<summary>🖼️Example [click to unfold]</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
-  </a>
-</p>
-</details>
+    <details close>
+    <summary>🖼️Example [click to unfold]</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+      </a>
+    </p>
+    </details>
 1. Go to `Conditions`, you can now specify when the script should get called.
    - In my case i specified the **Media Type**: `episode, movie, show and season`
    - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
@@ -884,9 +886,11 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
      </details>
 1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
    - **Please do not change the Argument otherwise the script could fail.**
+   
    ```sh
    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
    ```
+
    <details close>
    <summary>🖼️Example [click to unfold]</summary>
    <br>
