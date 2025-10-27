@@ -1602,7 +1602,7 @@
             "title": "Download the Trigger Script",
             "description": "Download trigger.py from GitHub and place it in your Tautulli scripts directory.",
             "substeps": [
-              "Download from: https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
+              "Download from: https://github.com/fscorrupt/Posterizarr/blob/main/modules/trigger.py",
               "Place in Tautulli script directory (see Tautulli Wiki for location)",
               "Set executable permissions: chmod +x trigger.py"
             ]
@@ -1720,7 +1720,7 @@
           "title": "Download the Trigger Script",
           "description": "Download ArrTrigger.sh from GitHub and place it in your Sonarr scripts directory.",
           "substeps": [
-            "Download from: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Download from: https://github.com/fscorrupt/Posterizarr/blob/main/modules/ArrTrigger.sh",
             "Example: Create /opt/appdata/sonarr/scripts/ directory",
             "Place ArrTrigger.sh in this directory",
             "Set executable permissions: chmod +x ArrTrigger.sh"
@@ -1792,7 +1792,7 @@
           "title": "Download the Trigger Script",
           "description": "Download ArrTrigger.sh from GitHub and place it in your Radarr scripts directory.",
           "substeps": [
-            "Download from: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
+            "Download from: https://github.com/fscorrupt/Posterizarr/blob/main/modules/ArrTrigger.sh",
             "Example: Create /opt/appdata/radarr/scripts/ directory",
             "Place ArrTrigger.sh in this directory",
             "Set executable permissions: chmod +x ArrTrigger.sh"
