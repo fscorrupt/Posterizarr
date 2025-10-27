@@ -3,6 +3,7 @@
 *.jpg
 *.xlsm
 *.otf
+*.db
 
 #
 .env
@@ -14,3 +15,17 @@ coverage.*
 
 # mounted volumes
 config/
+4k.png
+config.json
+posteroverlay_0.7.png
+/Logs
+/magick
+/RotatedLogs
+/temp
+scheduler.json
+/test
+/UILogs
+/assets
+/uploads
+/Overlayfiles
+/webui tests-infos

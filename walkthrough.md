@@ -107,30 +107,6 @@
         ```bash
         cd Posterizarr
         ```
-    - You should see something like this:
-        ```
-        .
-        ├── backgroundoverlay.png
-        ├── config.example.json
-        ├── docker-compose.yml
-        ├── images
-        │   ├── backgroundtesting.png
-        │   ├── folder.png
-        │   ├── imagecsv.png
-        │   ├── kometa-overview.png
-        │   ├── output.png
-        │   ├── posterizarr-overview.png
-        │   ├── posterizarr-xlsm.gif
-        │   ├── testing.png
-        │   ├── titlecardtesting.png
-        │   ├── versioning.png
-        │   ├── webhook.png
-        │   └── webhookexample.png
-        ├── overlay.png
-        ├── Posterizarr.ps1
-        ├── README.md
-        ├── Release.txt
-        └── Rocky.ttf
 1. Copy the `config.example.json` to `config.json` and adjust the settings.
     - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#configuration)
         - tvdbapi
@@ -141,6 +117,11 @@
         - On Linux, like this: `/PathToAsset/Dir`
         - On Windows, like this: `C:\\PathToAsset\\Dir`
             - **Important** - you have to use double `\\` in Json.
+
+    **Manual install of Web UI (Windows/Linux)**
+
+    If you want to use the UI please have a look at this part of the [Readme.](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#ui-installation-manual) (default url http://localhost:8000)
+
 1. Please start the Script **(On first run, ensure its run as Administrator/Sudo, because it has to install a Powershell Module)**
     - Linux:
         ```
@@ -164,20 +145,20 @@
 
     *[Example Images](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#images-from-testing-mode)*
 
-    - Linux:
+    - Linux (or via Web UI):
         ```
         cd /opt/appdata/Posterizarr
         pwsh Posterizarr.ps1 -Testing
         ```
-    - Windows:
+    - Windows (or via Web UI):
         ```
         cd C:\Github\Posterizarr
         .\Posterizarr.ps1 -Testing
         ```
-5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
+5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json (or via Web UI)
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
 6. The final step is to set a schedule and let the script run.
-    - You can also trigger the poster creation on-demand, like this:
+    - You can also trigger the poster creation on-demand, like this (or via Web UI):
         - Linux:
             ```
             cd /opt/appdata/Posterizarr
@@ -211,27 +192,36 @@
 1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/raw/main/docker-compose.example.yml) to fit your environment.
     - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#docker)
 
-      Docker-Compose example on Linux:
+        Docker-Compose example on Linux:
         ```yml
         ---
-        version: "3"
         services:
-          posterizarr:
+        posterizarr:
             hostname: "posterizarr"
             container_name: "posterizarr"
             environment:
-              - "TZ=Europe/Berlin"
-              - "TERM=xterm"
-              - "RUN_TIME=10:30,19:30"
+                - "TZ=Europe/Berlin"
+                - "TERM=xterm"
+                - "RUN_TIME=disabled"
             image: "ghcr.io/fscorrupt/posterizarr:latest"
             restart: "unless-stopped"
             user: "1000:1000"
+            ports:
+                - "8000:8000"
+            networks:
+                - "proxy"
             volumes:
-              - "/opt/appdata/posterizarr:/config:rw"
-              - "/opt/appdata/posterizarr/assets:/assets:rw"
+                - "/opt/appdata/posterizarr:/config:rw"
+                - "/opt/appdata/posterizarr/assets:/assets:rw"
+                - "/opt/appdata/posterizarr/assetsbackup:/assetsbackup:rw"
+                - "/opt/appdata/posterizarr/manualassets:/manualassets:rw"
+        networks:
+        proxy:
+            driver: bridge
+            external: true
         ```
 
-      Docker-Compose example on Windows:
+        Docker-Compose example on Windows:
         ```yml
         ---
         version: "3"
@@ -240,14 +230,18 @@
             hostname: "posterizarr"
             container_name: "posterizarr"
             environment:
-              - "TZ=Europe/Berlin"
-              - "TERM=xterm"
-              - "RUN_TIME=10:30,19:30"
+                - "TZ=Europe/Berlin"
+                - "TERM=xterm"
+                - "RUN_TIME=disabled"
             image: "ghcr.io/fscorrupt/posterizarr:latest"
             restart: "unless-stopped"
+            ports:
+                - "8000:8000"
             volumes:
-              - "C:/Docker/Posterizarr:/config:rw"
-              - "C:/Docker/Posterizarr/assets:/assets:rw"
+                - "C:/Docker/Posterizarr:/config:rw"
+                - "C:/Docker/Posterizarr/assets:/assets:rw"
+                - "C:/Docker/Posterizarr/assetsbackup:/assetsbackup:rw"
+                - "C:/Docker/Posterizarr/manualassets:/manualassets:rw"
         ```
 2. Switch to the Directory where you want to build/start the container and place the `docker-compose.yml` there.
 
@@ -278,7 +272,7 @@
         ```
     - Now it should download everything and start up your container.
 4. On first run the container will download the required files and also create the folder structure for you.
-5. Copy the `config.example.json` to `config.json` and adjust the settings.
+5. Adjust the settings of your `config.json` either in file or via Web UI http://localhost:8000.
     - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#configuration)
         - tvdbapi
         - tmdbtoken
@@ -286,11 +280,11 @@
         - PlexToken
     - If you are happy with the default values, you should still ensure that the AssetPath value is set properly.
         - On Linux, like this: `/PathToAsset/Dir`
-        - On Docker you have to use the binded volume path you specified in `docker-compose.yml`. If you use `/assets` without an extra volume binding it will create a folder in your scriptroot where all the artwork lands.
+        - On Docker you have to use the binded volume path from your `docker-compose.yml` it has to match `/assets`.
             - In the case from above, do not use `C:/Docker/Posterizarr/assets` or `/opt/appdata/posterizarr/assets` as asset path, you have to use `/assets` as path.
         - On Windows, like this: `C:\\PathToAsset\\Dir`
             - **Important** - you have to use double `\\` in json.
-1. After that it is recommended to run the script in `-Testing` Mode.
+1. After that it is recommended to run the script in `-Testing` Mode either in cli or via Web UI http://localhost:8000.
 > [!TIP]
 >
 >*In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
@@ -309,7 +303,7 @@ docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
 
 6. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
-7. The final step is to set a schedule and let the script run.
+7. The final step is to set a schedule and let the script run either via compose and `RUN_TIME` env or via Web UI.
     - You can also trigger the poster creation on-demand, like this:
 
         ```sh

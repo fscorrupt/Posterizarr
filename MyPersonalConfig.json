@@ -1,4 +1,9 @@
 {
+  "WebUI": {
+    "basicAuthEnabled": false,
+    "basicAuthUsername": "admin",
+    "basicAuthPassword": "posterizarr"
+  },
   "ApiPart": {
     "tvdbapi": "xxxxxxxxxxxxx",
     "tmdbtoken": "xxxxxxxxxxxxx",
@@ -84,11 +89,9 @@
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "font": "Colus-Regular.ttf",
-    "collectionfont": "Colus-Regular.ttf",
     "backgroundfont": "Colus-Regular.ttf",
     "titlecardfont": "Colus-Regular.ttf",
     "overlayfile": "overlay-innerglow.png",
-    "collectionoverlayfile": "overlay-innerglow.png",
     "backgroundoverlayfile": "backgroundoverlay-innerglow.png",
     "titlecardoverlayfile": "backgroundoverlay-innerglow.png",
     "LibraryFolders": "true",
@@ -126,7 +129,10 @@
     "TC4k": "backgroundoverlay-innerglow.png",
     "TC1080p": "backgroundoverlay-innerglow.png",
     "UseBackgroundResolutionOverlays": "false",
-    "UseTCResolutionOverlays": "false"
+    "UseTCResolutionOverlays": "false",
+    "DisableOnlineAssetFetch": "false",
+    "collectionfont": "Colus-Regular.ttf",
+    "collectionoverlayfile": "overlay-innerglow.png"
   },
   "OverlayPart": {
     "ImageProcessing": "true",

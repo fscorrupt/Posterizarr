@@ -1,0 +1,792 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   THEME CSS VARIABLES
+   ======================================== */
+
+:root {
+  /* Default Theme (Plex) */
+  --theme-primary: #e5a00d;
+  --theme-primary-hover: #cc8f0c;
+  --theme-accent: #282a2d;
+  --theme-bg: radial-gradient(
+      circle farthest-side at 0% 100%,
+      rgb(47, 47, 47) 0%,
+      rgba(47, 47, 47, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 100%,
+      rgb(63, 63, 63) 0%,
+      rgba(63, 63, 63, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 0%,
+      rgb(76, 76, 76) 0%,
+      rgba(76, 76, 76, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 0% 0%,
+      rgb(58, 58, 58) 0%,
+      rgba(58, 58, 58, 0) 100%
+    ),
+    black;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a1a1a;
+  --theme-bg-hover: #2a2a2a;
+  --theme-border: #3a3a3a;
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #cc7b19;
+  --button-color-hover: #e59029;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #e5a00d;
+  --link-color-hover: #ffffff;
+  --label-text-color: #333333;
+  --modal-bg-color: #282828;
+  --modal-header-color: #323232;
+  --modal-footer-color: #323232;
+  --drop-down-menu-bg: #191a1c;
+  --accent-color: 229, 160, 13;
+  --accent-color-hover: #ffc107;
+  --arr-queue-color: #27c24c;
+  --plex-poster-unwatched: #e5a00d;
+}
+
+/* Plex Theme (explicit) */
+[data-theme="plex"] {
+  --theme-primary: #e5a00d;
+  --theme-primary-hover: #cc8f0c;
+  --theme-accent: #282a2d;
+  --theme-bg: radial-gradient(
+      circle farthest-side at 0% 100%,
+      rgb(47, 47, 47) 0%,
+      rgba(47, 47, 47, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 100%,
+      rgb(63, 63, 63) 0%,
+      rgba(63, 63, 63, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 0%,
+      rgb(76, 76, 76) 0%,
+      rgba(76, 76, 76, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 0% 0%,
+      rgb(58, 58, 58) 0%,
+      rgba(58, 58, 58, 0) 100%
+    ),
+    black;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a1a1a;
+  --theme-bg-hover: #2a2a2a;
+  --theme-border: #3a3a3a;
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #cc7b19;
+  --button-color-hover: #e59029;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #e5a00d;
+  --link-color-hover: #ffffff;
+  --label-text-color: #333333;
+  --modal-bg-color: #282828;
+  --modal-header-color: #323232;
+  --modal-footer-color: #323232;
+  --drop-down-menu-bg: #191a1c;
+  --accent-color: 229, 160, 13;
+  --accent-color-hover: #ffc107;
+  --arr-queue-color: #27c24c;
+  --plex-poster-unwatched: #e5a00d;
+}
+
+/* Jellyfin Theme */
+[data-theme="jellyfin"] {
+  --theme-primary: #aa5cc3;
+  --theme-primary-hover: #9a4cb3;
+  --theme-accent: #00a4dc;
+  --theme-bg: #0b0b0f;
+  --theme-bg-dark: #0b0b0f;
+  --theme-bg-card: #1a1a24;
+  --theme-bg-hover: #252535;
+  --theme-border: #2a2a3a;
+  --theme-text: #e5f6fb;
+  --theme-text-muted: #8ca7b3;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #aa5cc3;
+  --button-color-hover: #c77ddb;
+  --button-text: #e5f6fb;
+  --button-text-hover: #ffffff;
+  --link-color: #aa5cc3;
+  --link-color-hover: #c77ddb;
+  --label-text-color: #ffffff;
+  --modal-bg-color: #1a1a24;
+  --modal-header-color: #0f0f18;
+  --modal-footer-color: #0f0f18;
+  --drop-down-menu-bg: #0b0b0f;
+  --accent-color: 170, 92, 195;
+  --accent-color-hover: rgba(170, 92, 195, 0.8);
+  --arr-queue-color: #aa5cc3;
+  --plex-poster-unwatched: #aa5cc3;
+}
+
+/* Emby Theme */
+[data-theme="emby"] {
+  --theme-primary: #52b54b;
+  --theme-primary-hover: #469d40;
+  --theme-accent: #2c3e50;
+  --theme-bg: #1c1c1c;
+  --theme-bg-dark: #1c1c1c;
+  --theme-bg-card: #252525;
+  --theme-bg-hover: #2f2f2f;
+  --theme-border: #3a3a3a;
+  --theme-text: #ecf0f1;
+  --theme-text-muted: #95a5a6;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #52b54b;
+  --button-color-hover: #469d40;
+  --button-text: #ecf0f1;
+  --button-text-hover: #ffffff;
+  --link-color: #52b54b;
+  --link-color-hover: #6ac963;
+  --label-text-color: #ffffff;
+  --modal-bg-color: #252525;
+  --modal-header-color: #1c1c1c;
+  --modal-footer-color: #1c1c1c;
+  --drop-down-menu-bg: #1c1c1c;
+  --accent-color: 82, 181, 75;
+  --accent-color-hover: rgba(82, 181, 75, 0.8);
+  --arr-queue-color: #52b54b;
+  --plex-poster-unwatched: #52b54b;
+}
+
+/* Mind Stone Theme */
+[data-theme="mind"] {
+  --theme-primary: #e1d500;
+  --theme-primary-hover: #c3b900;
+  --theme-accent: #fff200;
+  --theme-bg: #0d0400;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a1800;
+  --theme-bg-hover: rgba(51, 49, 0, 0.5);
+  --theme-border: rgba(228, 216, 0, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #e1d500;
+  --button-color-hover: #c3b900;
+  --button-text: #000000;
+  --button-text-hover: #000000;
+  --link-color: #fff200;
+  --link-color-hover: #fff200cc;
+  --label-text-color: #000000;
+  --modal-bg-color: #1a1800;
+  --modal-header-color: #1a1800;
+  --modal-footer-color: #1a1800;
+  --drop-down-menu-bg: #1a1800;
+  --accent-color: 228, 216, 0;
+  --accent-color-hover: rgba(228, 216, 0, 0.8);
+  --arr-queue-color: #e1d500;
+  --plex-poster-unwatched: #e1d500;
+}
+
+/* Power Stone Theme */
+[data-theme="power"] {
+  --theme-primary: #a6288c;
+  --theme-primary-hover: #85096b;
+  --theme-accent: #df15b3;
+  --theme-bg: #0b0833;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a0028;
+  --theme-bg-hover: rgba(35, 0, 57, 0.5);
+  --theme-border: rgba(166, 40, 140, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #85096b;
+  --button-color-hover: #85096bcc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #df15b3;
+  --link-color-hover: #ff00c8;
+  --label-text-color: #ffffff;
+  --modal-bg-color: #1a0028;
+  --modal-header-color: #1a0028;
+  --modal-footer-color: #1a0028;
+  --drop-down-menu-bg: #1a0028;
+  --accent-color: 166, 40, 140;
+  --accent-color-hover: rgba(166, 40, 140, 0.8);
+  --arr-queue-color: #d816ae;
+  --plex-poster-unwatched: #d816ae;
+}
+
+/* Reality Stone Theme */
+[data-theme="reality"] {
+  --theme-primary: #e80c0b;
+  --theme-primary-hover: #e80c0bcc;
+  --theme-accent: #e80c0b;
+  --theme-bg: #08000d;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #2a0000;
+  --theme-bg-hover: rgba(102, 5, 5, 0.5);
+  --theme-border: rgba(232, 12, 11, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #e80c0b;
+  --button-color-hover: #e80c0bcc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #e80c0b;
+  --link-color-hover: rgba(232, 12, 11, 0.8);
+  --label-text-color: #ffffff;
+  --modal-bg-color: #2a0000;
+  --modal-header-color: #2a0000;
+  --modal-footer-color: #2a0000;
+  --drop-down-menu-bg: #2a0000;
+  --accent-color: 232, 12, 11;
+  --accent-color-hover: rgba(232, 12, 11, 0.8);
+  --arr-queue-color: #e80c0b;
+  --plex-poster-unwatched: #e80c0b;
+}
+
+/* Soul Stone Theme */
+[data-theme="soul"] {
+  --theme-primary: #ff9900;
+  --theme-primary-hover: #ff99cc;
+  --theme-accent: #ff9900;
+  --theme-bg: #3c0015;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #2a1000;
+  --theme-bg-hover: rgba(140, 64, 2, 0.5);
+  --theme-border: rgba(255, 153, 0, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #ff9900;
+  --button-color-hover: #ff99cc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #ff9900;
+  --link-color-hover: rgba(255, 153, 0, 0.8);
+  --label-text-color: #ffffff;
+  --modal-bg-color: #2a1000;
+  --modal-header-color: #2a1000;
+  --modal-footer-color: #2a1000;
+  --drop-down-menu-bg: #2a1000;
+  --accent-color: 255, 153, 0;
+  --accent-color-hover: rgba(255, 153, 0, 0.8);
+  --arr-queue-color: #ff9900;
+  --plex-poster-unwatched: #880030;
+}
+
+/* Space Stone Theme */
+[data-theme="space"] {
+  --theme-primary: #0062ff;
+  --theme-primary-hover: #0062ffcc;
+  --theme-accent: #3d7eff;
+  --theme-bg: #020013;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #001a3d;
+  --theme-bg-hover: rgba(0, 57, 148, 0.5);
+  --theme-border: rgba(0, 98, 255, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #0062ff;
+  --button-color-hover: #0062ffcc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #3d7eff;
+  --link-color-hover: #0062ff;
+  --label-text-color: #ffffff;
+  --modal-bg-color: #001a3d;
+  --modal-header-color: #001a3d;
+  --modal-footer-color: #001a3d;
+  --drop-down-menu-bg: #001a3d;
+  --accent-color: 0, 98, 255;
+  --accent-color-hover: rgba(0, 98, 255, 0.8);
+  --arr-queue-color: #0062ffcc;
+  --plex-poster-unwatched: #0062ff;
+}
+
+/* Time Stone Theme */
+[data-theme="time"] {
+  --theme-primary: #6df751;
+  --theme-primary-hover: #04a800;
+  --theme-accent: #6df751;
+  --theme-bg: #00130c;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #001a00;
+  --theme-bg-hover: rgba(2, 77, 0, 0.5);
+  --theme-border: rgba(109, 247, 81, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #04a800;
+  --button-color-hover: rgba(4, 168, 0, 0.8);
+  --button-text: #000000;
+  --button-text-hover: #000000;
+  --link-color: #6df751;
+  --link-color-hover: rgba(109, 247, 81, 0.8);
+  --label-text-color: #000000;
+  --modal-bg-color: #001a00;
+  --modal-header-color: #001a00;
+  --modal-footer-color: #001a00;
+  --drop-down-menu-bg: #001a00;
+  --accent-color: 109, 247, 81;
+  --accent-color-hover: rgba(109, 247, 81, 0.8);
+  --arr-queue-color: #6df751cc;
+  --plex-poster-unwatched: #6df751;
+}
+
+/* Seerr Theme */
+[data-theme="seerr"] {
+  --theme-primary: #6366f1;
+  --theme-primary-hover: #4f46e5;
+  --theme-accent: #a78bfa;
+  --theme-bg: hsl(221, 39%, 11%);
+  --theme-bg-dark: hsl(215, 28%, 17%);
+  --theme-bg-card: #1f2937;
+  --theme-bg-hover: #374151;
+  --theme-border: #374151;
+  --theme-text: #d1d5db;
+  --theme-text-muted: #9ca3af;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #4f46e5;
+  --button-color-hover: #6366f1;
+  --button-text: #e5e7eb;
+  --button-text-hover: #ffffff;
+  --link-color: #6366f1;
+  --link-color-hover: #a78bfa;
+  --label-text-color: #000000;
+  --modal-bg-color: #1f2937;
+  --modal-header-color: #1f2937;
+  --modal-footer-color: #1f2937;
+  --drop-down-menu-bg: #374151;
+  --accent-color: 167, 139, 250;
+  --accent-color-hover: rgba(167, 139, 250, 0.8);
+  --arr-queue-color: #6366f1;
+  --plex-poster-unwatched: #6366f1;
+}
+
+/* ========================================
+   TRANSPARENCY VARIABLES
+   ======================================== */
+
+:root {
+  --transparency-dark-05: rgba(0, 0, 0, 0.05);
+  --transparency-dark-10: rgba(0, 0, 0, 0.1);
+  --transparency-dark-15: rgba(0, 0, 0, 0.15);
+  --transparency-dark-25: rgba(0, 0, 0, 0.25);
+  --transparency-dark-35: rgba(0, 0, 0, 0.35);
+  --transparency-dark-40: rgba(0, 0, 0, 0.4);
+  --transparency-dark-45: rgba(0, 0, 0, 0.45);
+  --transparency-dark-50: rgba(0, 0, 0, 0.5);
+  --transparency-dark-55: rgba(0, 0, 0, 0.55);
+  --transparency-dark-60: rgba(0, 0, 0, 0.6);
+  --transparency-dark-65: rgba(0, 0, 0, 0.65);
+  --transparency-dark-70: rgba(0, 0, 0, 0.7);
+  --transparency-dark-75: rgba(0, 0, 0, 0.75);
+  --transparency-dark-80: rgba(0, 0, 0, 0.8);
+  --transparency-dark-85: rgba(0, 0, 0, 0.85);
+  --transparency-dark-90: rgba(0, 0, 0, 0.9);
+  --transparency-light-05: rgba(255, 255, 255, 0.05);
+  --transparency-light-10: rgba(255, 255, 255, 0.1);
+  --transparency-light-15: rgba(255, 255, 255, 0.15);
+  --transparency-light-20: rgba(255, 255, 255, 0.2);
+  --transparency-light-25: rgba(255, 255, 255, 0.25);
+  --transparency-light-30: rgba(255, 255, 255, 0.3);
+  --transparency-light-35: rgba(255, 255, 255, 0.35);
+  --transparency-light-45: rgba(255, 255, 255, 0.45);
+  --transparency-light-50: rgba(255, 255, 255, 0.5);
+  --transparency-light-55: rgba(255, 255, 255, 0.55);
+  --transparency-light-95: rgba(255, 255, 255, 0.95);
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--theme-bg);
+  color: var(--theme-text);
+}
+
+/* Plex Theme Body with Gradient */
+html[data-theme="plex"] body {
+  background: radial-gradient(
+      circle farthest-side at 0% 100%,
+      rgb(47, 47, 47) 0%,
+      rgba(47, 47, 47, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 100%,
+      rgb(63, 63, 63) 0%,
+      rgba(63, 63, 63, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 0%,
+      rgb(76, 76, 76) 0%,
+      rgba(76, 76, 76, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 0% 0%,
+      rgb(58, 58, 58) 0%,
+      rgba(58, 58, 58, 0) 100%
+    ),
+    black;
+  background-attachment: fixed;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-bg-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-bg-hover);
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR - HIDDEN
+   ======================================== */
+
+/* Hide scrollbars when enabled - Apply to all scrollable elements */
+body.hide-scrollbars *::-webkit-scrollbar,
+body.hide-scrollbars::-webkit-scrollbar,
+html.hide-scrollbars *::-webkit-scrollbar,
+html.hide-scrollbars::-webkit-scrollbar {
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
+}
+
+body.hide-scrollbars *::-webkit-scrollbar-track,
+body.hide-scrollbars::-webkit-scrollbar-track,
+html.hide-scrollbars *::-webkit-scrollbar-track,
+html.hide-scrollbars::-webkit-scrollbar-track {
+  display: none !important;
+}
+
+body.hide-scrollbars *::-webkit-scrollbar-thumb,
+body.hide-scrollbars::-webkit-scrollbar-thumb,
+html.hide-scrollbars *::-webkit-scrollbar-thumb,
+html.hide-scrollbars::-webkit-scrollbar-thumb {
+  display: none !important;
+}
+
+body.hide-scrollbars *::-webkit-scrollbar-thumb:hover,
+body.hide-scrollbars::-webkit-scrollbar-thumb:hover,
+html.hide-scrollbars *::-webkit-scrollbar-thumb:hover,
+html.hide-scrollbars::-webkit-scrollbar-thumb:hover {
+  display: none !important;
+}
+
+/* Hide scrollbars for Firefox */
+body.hide-scrollbars,
+body.hide-scrollbars *,
+html.hide-scrollbars,
+html.hide-scrollbars * {
+  scrollbar-width: none !important;
+}
+
+/* Hide scrollbars for IE and Edge Legacy */
+body.hide-scrollbars,
+body.hide-scrollbars *,
+html.hide-scrollbars,
+html.hide-scrollbars * {
+  -ms-overflow-style: none !important;
+}
+
+/* ========================================
+   THEME UTILITY CLASSES
+   ======================================== */
+
+/* Background Colors */
+.bg-theme-bg {
+  background: var(--theme-bg);
+}
+
+.bg-theme-dark {
+  background: var(--theme-bg-dark);
+}
+
+.bg-theme-card {
+  background-color: var(--theme-bg-card);
+}
+
+.bg-theme-hover {
+  background-color: var(--theme-bg-hover);
+}
+
+.hover\:bg-theme-hover:hover {
+  background-color: var(--theme-bg-hover);
+}
+
+.bg-theme-primary {
+  background-color: var(--theme-primary);
+}
+
+.hover\:bg-theme-primary:hover {
+  background-color: var(--theme-primary);
+}
+
+.hover\:bg-theme-primary\/90:hover {
+  background-color: var(--theme-primary-hover);
+}
+
+.bg-theme-accent {
+  background-color: var(--theme-accent);
+}
+
+.hover\:bg-theme-accent:hover {
+  background-color: var(--theme-accent);
+}
+
+/* Button Colors */
+.bg-button {
+  background-color: var(--button-color);
+}
+
+.hover\:bg-button:hover {
+  background-color: var(--button-color-hover);
+}
+
+.text-button {
+  color: var(--button-text);
+}
+
+.hover\:text-button:hover {
+  color: var(--button-text-hover);
+}
+
+/* Border Colors */
+.border-theme {
+  border-color: var(--theme-border);
+}
+
+.border-theme-primary {
+  border-color: var(--theme-primary);
+}
+
+.hover\:border-theme-primary:hover {
+  border-color: var(--theme-primary);
+}
+
+.border-theme-accent {
+  border-color: var(--theme-accent);
+}
+
+/* Text Colors */
+.text-theme-text {
+  color: var(--theme-text);
+}
+
+.text-theme-muted {
+  color: var(--theme-text-muted);
+}
+
+.hover\:text-theme-hover:hover {
+  color: var(--theme-text-hover);
+}
+
+.text-theme-primary {
+  color: var(--theme-primary);
+}
+
+.hover\:text-theme-primary:hover {
+  color: var(--theme-primary);
+}
+
+.text-theme-accent {
+  color: var(--theme-accent);
+}
+
+.text-link {
+  color: var(--link-color);
+}
+
+.hover\:text-link:hover {
+  color: var(--link-color-hover);
+}
+
+/* Modal Colors */
+.bg-modal {
+  background-color: var(--modal-bg-color);
+}
+
+.bg-modal-header {
+  background-color: var(--modal-header-color);
+}
+
+.bg-modal-footer {
+  background-color: var(--modal-footer-color);
+}
+
+/* ========================================
+   PLACEHOLDER STYLES
+   ======================================== */
+
+*::-webkit-input-placeholder {
+  color: var(--theme-text-muted) !important;
+}
+
+*:focus::-webkit-input-placeholder {
+  color: var(--theme-text-hover) !important;
+}
+
+/* Firefox < 19 */
+*:-moz-placeholder {
+  color: var(--theme-text-muted) !important;
+}
+
+*:focus:-moz-placeholder {
+  color: var(--theme-text-hover) !important;
+}
+
+/* Firefox > 19 */
+*::-moz-placeholder {
+  color: var(--theme-text-muted) !important;
+}
+
+*:focus::-moz-placeholder {
+  color: var(--theme-text-hover) !important;
+}
+
+/* Internet Explorer 10 */
+*:-ms-input-placeholder {
+  color: var(--theme-text-muted) !important;
+}
+
+*:focus:-ms-input-placeholder {
+  color: var(--theme-text-hover) !important;
+}
+
+/* ========================================
+   SELECT & OPTION STYLING
+   ======================================== */
+
+select {
+  background-color: var(--theme-bg-card) !important;
+  color: var(--theme-text) !important;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+select option {
+  background-color: var(--theme-bg-card) !important;
+  color: var(--theme-text) !important;
+  padding: 0.5rem 1rem;
+}
+
+select option:hover,
+select option:focus,
+select option:active,
+select option:checked,
+select option[selected] {
+  background-color: var(--theme-primary) !important;
+  background: var(--theme-primary) !important;
+  color: white !important;
+}
+
+/* Firefox specific */
+@-moz-document url-prefix() {
+  select option:checked {
+    background-color: var(--theme-primary) !important;
+    background: var(--theme-primary) !important;
+    color: white !important;
+  }
+}
+
+/* Webkit/Chrome specific */
+select option:checked {
+  background: linear-gradient(
+    var(--theme-primary),
+    var(--theme-primary)
+  ) !important;
+  color: white !important;
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY FOR MOBILE
+   ======================================== */
+
+/* H1 Titel auf Mobile kleiner machen */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem !important; /* 24px statt der normalen text-3xl (30px) */
+    line-height: 2rem !important;
+  }
+}
+
+/* Optional: Auch h2 und h3 anpassen */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.25rem !important; /* 20px */
+    line-height: 1.75rem !important;
+  }
+
+  h3 {
+    font-size: 1.125rem !important; /* 18px */
+    line-height: 1.5rem !important;
+  }
+}

@@ -1,0 +1,516 @@
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  RefreshCw,
+  Image as ImageIcon,
+  Search,
+  Play,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  X,
+  TestTube,
+  Expand,
+  Minimize,
+} from "lucide-react";
+import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
+import ScrollToButtons from "./ScrollToButtons";
+
+const API_URL = "/api";
+
+function TestGallery() {
+  const { t } = useTranslation();
+  const { showSuccess, showError, showInfo } = useToast();
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Local error state for loading display
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const [scriptLoading, setScriptLoading] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState({
+    posters: false,
+    backgrounds: false,
+    seasonPosters: false,
+    titleCards: false,
+  });
+  const [status, setStatus] = useState({
+    running: false,
+    current_mode: null,
+  });
+
+  // Categorization function
+  const categorizeImages = (images) => {
+    const categories = {
+      posters: [],
+      backgrounds: [],
+      seasonPosters: [],
+      titleCards: [],
+    };
+
+    images.forEach((img) => {
+      const name = img.name.toLowerCase();
+
+      if (name.includes("poster") && !name.includes("season")) {
+        categories.posters.push(img);
+      } else if (name.includes("background")) {
+        categories.backgrounds.push(img);
+      } else if (name.includes("seasonposter")) {
+        categories.seasonPosters.push(img);
+      } else if (name.includes("titlecard")) {
+        categories.titleCards.push(img);
+      }
+    });
+
+    return categories;
+  };
+
+  const toggleCategory = (category, event) => {
+    // Prevent scrolling to top
+    if (event) {
+      event.preventDefault();
+    }
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
+  const fetchImages = async (showToast = false) => {
+    setLoading(true);
+    showError(null);
+    try {
+      const response = await fetch(`${API_URL}/test-gallery`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setImages(data.images || []);
+
+      if (showToast && data.images && data.images.length > 0) {
+        showSuccess(
+          t("testGallery.success.filesLoaded", { count: data.images.length })
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching test images:", error);
+      const errorMsg = error.message || t("testGallery.errors.loadFailed");
+      setError(errorMsg);
+      showError(errorMsg);
+      setImages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/status`);
+      const data = await response.json();
+      setStatus(data);
+    } catch (error) {
+      console.error("Error fetching status:", error);
+    }
+  };
+
+  const runTestMode = async () => {
+    if (status.running) {
+      showError(t("testGallery.errors.scriptRunning"));
+      return;
+    }
+
+    setScriptLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/run/testing`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        showSuccess(t("testGallery.success.testModeStarted"));
+        fetchStatus();
+      } else {
+        showError(
+          t("testGallery.errors.withMessage", { message: data.message })
+        );
+      }
+    } catch (error) {
+      showError(
+        t("testGallery.errors.withMessage", { message: error.message })
+      );
+    } finally {
+      setScriptLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchImages(false);
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Filter images based on search term
+  const filteredImages = images.filter(
+    (img) =>
+      img.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      img.path.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Categorize filtered images
+  const categorizedImages = categorizeImages(filteredImages);
+
+  // Category Component
+  const CategorySection = ({ title, images, categoryKey, description }) => {
+    if (images.length === 0) return null;
+
+    const isExpanded = expandedCategories[categoryKey];
+
+    // Aspect ratio based on category
+    const isPortrait =
+      categoryKey === "posters" || categoryKey === "seasonPosters";
+    const aspectRatio = isPortrait ? "aspect-[2/3]" : "aspect-[16/9]";
+    const gridCols = isPortrait
+      ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
+      : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
+
+    return (
+      <div className="mb-6">
+        <button
+          onClick={(e) => toggleCategory(categoryKey, e)}
+          className="w-full flex items-center justify-between p-5 bg-theme-card border border-theme rounded-xl hover:bg-theme-hover hover:border-theme-primary/50 transition-all group shadow-sm"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-theme-primary/10 group-hover:bg-theme-primary/20 rounded-lg text-sm font-bold text-theme-primary transition-all group-hover:scale-110">
+              {images.length}
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-semibold text-theme-primary">
+                {title}
+              </h3>
+              {description && (
+                <p className="text-xs text-theme-muted mt-1">{description}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                isExpanded
+                  ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
+                  : "bg-theme-bg text-theme-muted border border-theme"
+              }`}
+            >
+              {isExpanded ? t("testGallery.open") : t("testGallery.closed")}
+            </span>
+            {isExpanded ? (
+              <ChevronUp className="w-6 h-6 text-theme-primary transition-transform" />
+            ) : (
+              <ChevronDown className="w-6 h-6 text-theme-muted transition-transform" />
+            )}
+          </div>
+        </button>
+
+        {isExpanded && (
+          <div className={`mt-4 grid ${gridCols} gap-4`}>
+            {images.map((image, index) => (
+              <div
+                key={index}
+                className="group relative bg-theme-card rounded-xl overflow-hidden border border-theme hover:border-theme-primary hover:shadow-lg transition-all cursor-pointer"
+                onClick={() => setSelectedImage(image)}
+              >
+                <div
+                  className={`${aspectRatio} bg-theme-bg flex items-center justify-center overflow-hidden`}
+                >
+                  <img
+                    src={image.url}
+                    alt={image.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
+                    }}
+                  />
+                  <div
+                    className="hidden flex-col items-center justify-center text-theme-muted p-4"
+                    style={{ display: "none" }}
+                  >
+                    <ImageIcon className="w-12 h-12 mb-2" />
+                    <span className="text-xs text-center">
+                      {t("testGallery.previewUnavailable")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 border-t border-theme">
+                  <p
+                    className="text-xs text-theme-text truncate font-medium"
+                    title={image.name}
+                  >
+                    {image.name}
+                  </p>
+                  <p className="text-[10px] text-theme-muted mt-1">
+                    {(image.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <ScrollToButtons />
+      {/* Header - Modernized to match RunModes & ConfigEditor */}
+      <div className="flex items-center justify-end">
+        <div className="flex gap-3">
+          <button
+            onClick={() => fetchImages(true)}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <RefreshCw
+              className={`w-4 h-4 text-theme-primary ${
+                loading ? "animate-spin" : ""
+              }`}
+            />
+            <span className="text-theme-text">{t("testGallery.refresh")}</span>
+          </button>
+
+          <button
+            onClick={runTestMode}
+            disabled={scriptLoading || status.running}
+            className="flex items-center gap-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-500 border border-yellow-700 hover:border-yellow-600 disabled:bg-gray-600 disabled:border-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            {scriptLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            <span>{t("testGallery.startTestMode")}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Running Status */}
+      {status.running && (
+        <div className="bg-orange-950/40 rounded-xl p-4 border border-orange-600/50 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+            <div>
+              <p className="font-medium text-orange-200">
+                {t("testGallery.scriptRunning")}
+              </p>
+              <p className="text-sm text-orange-300/80">
+                {t("testGallery.mode")}:{" "}
+                {status.current_mode || t("testGallery.unknown")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search bar */}
+      {images.length > 0 && (
+        <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-theme-muted" />
+            <input
+              type="text"
+              placeholder={t("testGallery.searchPlaceholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            />
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+            <p className="text-theme-muted">{t("testGallery.loading")}</p>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 text-center shadow-sm">
+          <ImageIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-red-300 mb-2">
+            {t("testGallery.errorLoadingTitle")}
+          </h3>
+          <p className="text-red-200">{error}</p>
+        </div>
+      ) : filteredImages.length === 0 ? (
+        <div className="bg-theme-card border border-theme rounded-xl p-12 text-center shadow-sm">
+          <ImageIcon className="w-16 h-16 text-theme-muted mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-theme-text mb-2">
+            {t("testGallery.noFilesTitle")}
+          </h3>
+          <p className="text-theme-muted text-sm">
+            {searchTerm
+              ? t("testGallery.noFilesSearchHint")
+              : t("testGallery.noFilesHint")}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Gesamtanzahl & Controls */}
+          <div className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-theme-text">
+                  {t("testGallery.total")}:{" "}
+                  <span className="font-bold text-theme-primary text-lg">
+                    {filteredImages.length}
+                  </span>{" "}
+                  {t("testGallery.testFiles")}
+                </span>
+                {images.length !== filteredImages.length && (
+                  <span className="ml-2 text-theme-muted text-sm bg-theme-bg px-2 py-1 rounded">
+                    {t("testGallery.filteredFrom", { total: images.length })}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    setExpandedCategories({
+                      posters: true,
+                      backgrounds: true,
+                      seasonPosters: true,
+                      titleCards: true,
+                    })
+                  }
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
+                >
+                  <Expand className="w-4 h-4" />
+                  {t("testGallery.expandAll")}
+                </button>
+                <button
+                  onClick={() =>
+                    setExpandedCategories({
+                      posters: false,
+                      backgrounds: false,
+                      seasonPosters: false,
+                      titleCards: false,
+                    })
+                  }
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
+                >
+                  <Minimize className="w-4 h-4" />
+                  {t("testGallery.collapseAll")}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Kategorien */}
+          <CategorySection
+            title={t("testGallery.categories.posters")}
+            images={categorizedImages.posters}
+            categoryKey="posters"
+            description={t("testGallery.categories.postersDesc")}
+          />
+
+          <CategorySection
+            title={t("testGallery.categories.backgrounds")}
+            images={categorizedImages.backgrounds}
+            categoryKey="backgrounds"
+            description={t("testGallery.categories.backgroundsDesc")}
+          />
+
+          <CategorySection
+            title={t("testGallery.categories.seasonPosters")}
+            images={categorizedImages.seasonPosters}
+            categoryKey="seasonPosters"
+            description={t("testGallery.categories.seasonPostersDesc")}
+          />
+
+          <CategorySection
+            title={t("testGallery.categories.titleCards")}
+            images={categorizedImages.titleCards}
+            categoryKey="titleCards"
+            description={t("testGallery.categories.titleCardsDesc")}
+          />
+        </>
+      )}
+
+      {/* Image Modal - Enhanced */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Image */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4">
+                <img
+                  src={selectedImage.url}
+                  alt={selectedImage.name}
+                  className="max-w-full max-h-[80vh] object-contain"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
+                  }}
+                />
+                <div className="text-center" style={{ display: "none" }}>
+                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
+                    <ImageIcon className="w-16 h-16 text-theme-primary" />
+                  </div>
+                  <p className="text-white text-lg font-semibold mb-2">
+                    {t("testGallery.imagePreviewNotAvailable")}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    {t("testGallery.useFileExplorer")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <h3 className="text-xl font-bold text-theme-text mb-4">
+                  Image Details
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-theme-muted">Filename</label>
+                    <p className="text-theme-text break-all">
+                      {selectedImage.name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted">Size</label>
+                    <p className="text-theme-text">
+                      {(selectedImage.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default TestGallery;

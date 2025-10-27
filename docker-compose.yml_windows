@@ -9,8 +9,10 @@ services:
       - "RUN_TIME=03:30"
     image: "ghcr.io/fscorrupt/posterizarr:latest"
     restart: "unless-stopped"
+    ports:
+      - "8000:8000"
     volumes:
       - 'C:\Docker\Posterizarr:/config:rw'
-      - 'C:\Docker\Kometa\assets:/assets:rw'
+      - 'C:\Docker\Posterizarr\assets:/assets:rw'
       - 'C:\Docker\Posterizarr\assetsbackup:/assetsbackup:rw'
       - 'C:\Docker\Posterizarr\manualassets:/manualassets:rw'
