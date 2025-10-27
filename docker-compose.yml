@@ -7,14 +7,15 @@ services:
       - "TZ=Europe/Berlin"
       - "TERM=xterm"
       - "RUN_TIME=disabled"
-      # --- SET THE INTERNAL PORT HERE ---
-      # This tells uvicorn to run on port 8000 inside the container
-      - APP_PORT=8000      
+      # OPTIONAL: This tells uvicorn to run on port 9000 inside the container
+      #- APP_PORT=9000      
+      # OPTIONAL: Disable UI
+      #- DISABLE_UI=true   
     image: "ghcr.io/fscorrupt/posterizarr:latest"
     restart: "unless-stopped"
     user: "1000:1000"
     ports:
-      - "8000:8000"
+      - "8000:8000" # if you want to change the port inside container, also change APP_PORT env variable
     networks:
       - "proxy"
     volumes:

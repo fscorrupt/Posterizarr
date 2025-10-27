@@ -1065,8 +1065,11 @@ If you have Library Folders set to `false`, it will look like this:
     - The Script gets executed on the Times you specified
     - Before starting the scheduled run it checks if another Posterizarr process is running, if yes - the scheduled run will be skipped.
     - If set to `disabled`, the script will **not** run on a schedule but will still watch for file triggers and respond to manual triggers.
+      - Required at `disabled` for the UI & if you want to set the schedules there.
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
+  - Add `DISABLE_UI` and set it to `true` if you want to disable the UI.
+  - Change `APP_PORT` and set it to your prefered port (`9000` also update it in compose ports block)
   - You may also have to change `user: "1000:1000"` (PUID/PGID)
 
   If you manually want to run the Script you can do it this way:
