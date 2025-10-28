@@ -15,7 +15,7 @@ import logging
 import time
 import threading
 from pathlib import Path
-from typing import Optional, Dict, Set, Any
+from typing import Optional, Dict, Any
 from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileModifiedEvent
@@ -53,8 +53,8 @@ class LogsWatcher:
         self.import_callback = import_callback
         self.runtime_callback = runtime_callback
 
-        self.observer: Optional[Any] = None  # Observer instance from watchdog
-        self.handler: Optional[Any] = None  # LogsFileHandler instance
+        self.observer: Any = None  # watchdog.observers.Observer instance
+        self.handler: Any = None  # LogsFileHandler instance
         self.is_running = False
 
         # Debouncing: Track last import times
