@@ -51,7 +51,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "2.0.3"
+$CurrentScriptVersion = "2.0.4"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -6354,10 +6354,10 @@ function MassDownloadPlexArtwork {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters              = $posterCount
-        Backgrounds          = $BackgroundCount
-        Titlecards           = $EpisodeCount
-        Seasons              = $SeasonCount
+        Posters              = if ($posterCount) { $posterCount } Else { 0 }
+        Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+        Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+        Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
         Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
         Mode                 = $Mode
         Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -8344,10 +8344,10 @@ if ($Manual) {
 
         # Export json
         $jsonObject = [PSCustomObject]@{
-            Posters              = $posterCount
-            Backgrounds          = $BackgroundCount
-            Titlecards           = $EpisodeCount
-            Seasons              = $SeasonCount
+            Posters              = if ($posterCount) { $posterCount } Else { 0 }
+            Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+            Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+            Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
             Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
             Mode                 = $Mode
             Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -9525,10 +9525,10 @@ Elseif ($Testing) {
     }
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters              = $posterscount
-        Backgrounds          = $backgroundsscount
-        Titlecards           = $titlecardscount
-        Seasons              = $seasonscount
+        Posters              = if ($posterscount) { $posterscount } Else { 0 }
+        Backgrounds          = if ($backgroundsscount) { $backgroundsscount } Else { 0 }
+        Titlecards           = if ($titlecardscount) { $titlecardscount } Else { 0 }
+        Seasons              = if ($seasonscount) { $seasonscount } Else { 0 }
         Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
         Mode                 = $Mode
         Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -13758,10 +13758,10 @@ Elseif ($Tautulli) {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters              = $posterCount
-        Backgrounds          = $BackgroundCount
-        Titlecards           = $EpisodeCount
-        Seasons              = $SeasonCount
+        Posters              = if ($posterCount) { $posterCount } Else { 0 }
+        Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+        Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+        Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
         Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
         Mode                 = $Mode
         Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -18081,10 +18081,10 @@ Elseif ($ArrTrigger) {
 
         # Export json
         $jsonObject = [PSCustomObject]@{
-            Posters              = $posterCount
-            Backgrounds          = $BackgroundCount
-            Titlecards           = $EpisodeCount
-            Seasons              = $SeasonCount
+            Posters              = if ($posterCount) { $posterCount } Else { 0 }
+            Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+            Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+            Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
             Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
             Mode                 = $Mode
             Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -22461,10 +22461,10 @@ Elseif ($ArrTrigger) {
 
         # Export json
         $jsonObject = [PSCustomObject]@{
-            Posters              = $posterCount
-            Backgrounds          = $BackgroundCount
-            Titlecards           = $EpisodeCount
-            Seasons              = $SeasonCount
+            Posters              = if ($posterCount) { $posterCount } Else { 0 }
+            Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+            Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+            Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
             Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
             Mode                 = $Mode
             Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -23770,10 +23770,10 @@ Elseif ($SyncJelly -or $SyncEmby) {
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters              = $posterCount
-        Backgrounds          = $BackgroundCount
-        Titlecards           = $EpisodeCount
-        Seasons              = $SeasonCount
+        Posters              = if ($posterCount) { $posterCount } Else { 0 }
+        Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+        Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+        Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
         Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
         Mode                 = $Mode
         Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -28222,13 +28222,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             }
         }
     }
+    # Calculate Counts
+    $CalculatedCount = $($posterCount - $SeasonCount - $BackgroundCount - $EpisodeCount)
 
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters              = $($posterCount - $SeasonCount - $BackgroundCount - $EpisodeCount)
-        Backgrounds          = $BackgroundCount
-        Titlecards           = $EpisodeCount
-        Seasons              = $SeasonCount
+        Posters              = if ($CalculatedCount) { $CalculatedCount } Else { 0 }
+        Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+        Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+        Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
         Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
         Mode                 = $Mode
         Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
@@ -33466,13 +33468,14 @@ else {
             }
         }
     }
-
+    # Calculate Counts
+    $CalculatedCount = $($posterCount - $SeasonCount - $BackgroundCount - $EpisodeCount)
     # Export json
     $jsonObject = [PSCustomObject]@{
-        Posters              = $($posterCount - $SeasonCount - $BackgroundCount - $EpisodeCount)
-        Backgrounds          = $BackgroundCount
-        Titlecards           = $EpisodeCount
-        Seasons              = $SeasonCount
+        Posters              = if ($CalculatedCount) { $CalculatedCount } Else { 0 }
+        Backgrounds          = if ($BackgroundCount) { $BackgroundCount } Else { 0 }
+        Titlecards           = if ($EpisodeCount) { $EpisodeCount } Else { 0 }
+        Seasons              = if ($SeasonCount) { $SeasonCount } Else { 0 }
         Collections          = if ($collectionCount) { $collectionCount } Else { 0 }
         Mode                 = $Mode
         Runtime              = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
