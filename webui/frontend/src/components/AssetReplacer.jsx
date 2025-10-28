@@ -714,7 +714,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     // Store the file for later upload
     setUploadedFile(file);
 
-    // Show preview of uploaded image and check dimensions
+    // Show preview of uploaded image and check ratio
     const reader = new FileReader();
     reader.onloadend = () => {
       setUploadedImage(reader.result);
@@ -726,34 +726,56 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         const height = img.height;
         setImageDimensions({ width, height });
 
-        // Determine required dimensions based on asset type
-        let minWidth, minHeight;
+        // Define target ratios and tolerance
+        const POSTER_RATIO = 2 / 3;    // ~0.667
+        const BACKGROUND_RATIO = 16 / 9; // ~1.778
+        // Using 0.05 absolute tolerance (matches the 5% relative tolerance on 16:9, and is close for 2:3)
+        const TOLERANCE = 0.05;
+
+        // Check for zero height
+        if (height === 0) {
+          setIsDimensionValid(false);
+          // You may need to add this new translation key
+          showError(t("assetReplacer.imageHeightZero", "Image height cannot be zero.")); 
+          return;
+        }
+
+        const imageRatio = width / height;
+        let isValid = false;
+        let expectedRatio = 0;
+        let expectedRatioString = "";
+
+        // Determine required ratio based on asset type
         if (
           metadata.asset_type === "poster" ||
           metadata.asset_type === "season"
         ) {
-          minWidth = 2000;
-          minHeight = 3000;
+          expectedRatio = POSTER_RATIO;
+          expectedRatioString = "2:3";
+          isValid = Math.abs(imageRatio - POSTER_RATIO) <= TOLERANCE;
         } else {
           // background or titlecard
-          minWidth = 3840;
-          minHeight = 2160;
+          expectedRatio = BACKGROUND_RATIO;
+          expectedRatioString = "16:9";
+          isValid = Math.abs(imageRatio - BACKGROUND_RATIO) <= TOLERANCE;
         }
 
-        // Check if dimensions are valid
-        const isValid = width >= minWidth && height >= minHeight;
+        // Check if ratio is valid
         setIsDimensionValid(isValid);
 
         if (!isValid) {
+          // You will need to add/update this translation key
           showError(
-            t("assetReplacer.imageDimensionsTooSmall", {
+            t("assetReplacer.invalidImageRatio", {
               width,
               height,
-              minWidth,
-              minHeight,
+              ratio: imageRatio.toFixed(3),
+              expectedRatioString: expectedRatioString,
+              expectedRatio: expectedRatio.toFixed(3),
             })
           );
         } else {
+          // Re-use existing success message
           showSuccess(
             t("assetReplacer.imageDimensionsValid", { width, height })
           );
@@ -1621,10 +1643,10 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                     <span className="font-semibold">ℹ️ Recommended sizes:</span>
                     {metadata.asset_type === "poster" ||
                     metadata.asset_type === "season" ? (
-                      <span>Posters: 2000×3000px or higher (2:3 ratio)</span>
+                      <span>Posters: 1000×1500px or higher (2:3 ratio)</span>
                     ) : (
                       <span>
-                        Backgrounds/Title Cards: 3840×2160px or higher (16:9
+                        Backgrounds/Title Cards: 1920×1080px or higher (16:9
                         ratio)
                       </span>
                     )}
