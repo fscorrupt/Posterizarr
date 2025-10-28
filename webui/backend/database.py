@@ -649,6 +649,7 @@ def import_imagechoices_to_db(db_instance=None, logs_dir=None):
         logs_dir: The logs directory path. If None, will use default LOGS_DIR
     """
     import logging
+    from pathlib import Path
 
     logger = logging.getLogger(__name__)
 
@@ -668,7 +669,6 @@ def import_imagechoices_to_db(db_instance=None, logs_dir=None):
     # Determine logs directory
     if logs_dir is None:
         import os
-        from pathlib import Path
 
         IS_DOCKER = os.getenv("POSTERIZARR_NON_ROOT") == "TRUE"
         if IS_DOCKER:

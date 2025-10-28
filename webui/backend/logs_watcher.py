@@ -187,15 +187,27 @@ class LogsWatcher:
 
                 # Check JSON files (case-insensitive by scanning directory)
                 try:
+                    logger.debug(f"Polling: Checking JSON files in {self.logs_dir}")
+                    json_files_found = 0
                     for file in self.logs_dir.iterdir():
                         if file.is_file() and file.suffix.lower() == ".json":
+                            json_files_found += 1
                             filename_lower = file.name.lower()
+                            logger.debug(
+                                f"Polling: Found JSON file: {file.name} (lowercase: {filename_lower})"
+                            )
                             # Check if this file matches one of our monitored JSON files
                             if filename_lower in json_files:
+                                logger.debug(
+                                    f"Polling: {file.name} is in monitored list"
+                                )
                                 try:
                                     mtime = file.stat().st_mtime
                                     last_mtime = self.last_file_mtimes.get(
                                         filename_lower, 0
+                                    )
+                                    logger.debug(
+                                        f"Polling: {file.name} - mtime={mtime}, last={last_mtime}"
                                     )
 
                                     if mtime > last_mtime and last_mtime > 0:
@@ -209,6 +221,11 @@ class LogsWatcher:
                                     logger.debug(
                                         f"Error checking {file.name} mtime: {e}"
                                     )
+                            else:
+                                logger.debug(
+                                    f"Polling: {file.name} NOT in monitored list"
+                                )
+                    logger.debug(f"Polling: Checked {json_files_found} JSON files")
                 except Exception as e:
                     logger.debug(f"Error scanning directory for JSON files: {e}")
 
