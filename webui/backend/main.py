@@ -440,6 +440,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import logs watcher module for background process monitoring
+try:
+    logger.debug("Attempting to import logs_watcher module")
+    from logs_watcher import create_logs_watcher
+
+    LOGS_WATCHER_AVAILABLE = True
+    logger.info("Logs watcher module loaded successfully")
+except ImportError as e:
+    LOGS_WATCHER_AVAILABLE = False
+    logger.warning(
+        f"Logs watcher not available: {e}. Background process monitoring will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -447,6 +461,7 @@ logger.debug(f"Auth Middleware: {AUTH_MIDDLEWARE_AVAILABLE}")
 logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
+logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -454,6 +469,7 @@ current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
+logs_watcher = None  # Logs directory watcher for background processes
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
@@ -800,12 +816,13 @@ def scan_and_cache_assets():
         return
 
     try:
-        all_images = (
-            list(ASSETS_DIR.rglob("*.jpg"))
-            + list(ASSETS_DIR.rglob("*.jpeg"))
-            + list(ASSETS_DIR.rglob("*.png"))
-            + list(ASSETS_DIR.rglob("*.webp"))
-        )
+        # Scan once for all image types and filter @eaDir in one pass
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+        all_images = [
+            p
+            for p in ASSETS_DIR.rglob("*")
+            if p.suffix.lower() in image_extensions and "@eaDir" not in p.parts
+        ]
 
         temp_folders = {}
 
@@ -814,11 +831,11 @@ def scan_and_cache_assets():
             if not image_data:
                 continue
 
-            folder_name = (
-                Path(image_data["path"]).parts[0]
-                if len(Path(image_data["path"]).parts) > 0
-                else "root"
-            )
+            # Get folder name from original Path object (already computed in image_path)
+            try:
+                folder_name = image_path.relative_to(ASSETS_DIR).parts[0]
+            except (ValueError, IndexError):
+                folder_name = "root"
 
             if folder_name not in temp_folders:
                 temp_folders[folder_name] = {
@@ -979,6 +996,10 @@ def find_poster_in_assets(
 
         # Search recursively for the folder
         for item in ASSETS_DIR.rglob("*"):
+            # Skip @eaDir folders from Synology NAS
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
             if item.is_dir() and item.name == rootfolder:
                 # Found the matching folder
                 image_file = None
@@ -1283,7 +1304,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db
+    global scheduler, db, config_db, logs_watcher
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1368,9 +1389,42 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Scheduler module not available, skipping scheduler initialization")
 
+    # Initialize and start logs watcher for background processes (Tautulli, Sonarr, Radarr)
+    if LOGS_WATCHER_AVAILABLE and (DATABASE_AVAILABLE or RUNTIME_DB_AVAILABLE):
+        try:
+            logger.info("Initializing logs watcher for background processes...")
+            logs_watcher = create_logs_watcher(
+                logs_dir=LOGS_DIR,
+                db_instance=db,
+                runtime_db_instance=runtime_db if RUNTIME_DB_AVAILABLE else None,
+            )
+            logs_watcher.start()
+            logger.info(
+                "✓ Logs watcher started - monitoring for Tautulli/Sonarr/Radarr changes"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize logs watcher: {e}")
+            logs_watcher = None
+    else:
+        if not LOGS_WATCHER_AVAILABLE:
+            logger.info("Logs watcher module not available, skipping initialization")
+        else:
+            logger.info(
+                "Logs watcher requires database modules, skipping initialization"
+            )
+
     yield
 
     # Shutdown
+    # Stop logs watcher
+    if logs_watcher:
+        try:
+            logger.info("Stopping logs watcher...")
+            logs_watcher.stop()
+            logger.info("Logs watcher stopped")
+        except Exception as e:
+            logger.error(f"Error stopping logs watcher: {e}")
+
     # Stop queue listener for thread-safe logging
     global queue_listener
     if queue_listener:
@@ -6808,7 +6862,8 @@ async def get_manual_assets_gallery():
 
         # Iterate through library folders
         for library_dir in MANUAL_ASSETS_DIR.iterdir():
-            if not library_dir.is_dir():
+            # Skip @eaDir folders from Synology NAS
+            if not library_dir.is_dir() or library_dir.name == "@eaDir":
                 continue
 
             library_name = library_dir.name
@@ -6816,7 +6871,8 @@ async def get_manual_assets_gallery():
 
             # Iterate through show/movie folders
             for folder_dir in library_dir.iterdir():
-                if not folder_dir.is_dir():
+                # Skip @eaDir folders from Synology NAS
+                if not folder_dir.is_dir() or folder_dir.name == "@eaDir":
                     continue
 
                 folder_name = folder_dir.name
@@ -6824,6 +6880,10 @@ async def get_manual_assets_gallery():
 
                 # Find all image files in this folder
                 for img_file in folder_dir.iterdir():
+                    # Skip items containing @eaDir in path
+                    if "@eaDir" in img_file.parts:
+                        continue
+
                     if img_file.is_file() and img_file.suffix.lower() in [
                         ".jpg",
                         ".jpeg",
@@ -7050,6 +7110,10 @@ async def get_folder_view_items(library_path: str):
 
         folders = []
         for item in library_full_path.iterdir():
+            # Skip @eaDir folders from Synology NAS
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
             if item.is_dir():
                 # Count assets in this folder
                 asset_count = 0
@@ -7497,8 +7561,15 @@ async def get_test_gallery():
     image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
 
     try:
-        for image_path in TEST_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
+        # Filter out @eaDir during iteration
+        all_test_images = [
+            p
+            for p in TEST_DIR.rglob("*")
+            if p.suffix.lower() in image_extensions and "@eaDir" not in str(p)
+        ]
+
+        for image_path in all_test_images:
+            if image_path.is_file():
                 try:
                     relative_path = image_path.relative_to(TEST_DIR)
                     # Create URL path with forward slashes
@@ -7721,6 +7792,57 @@ async def run_scheduler_now():
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error triggering scheduled run: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# LOGS WATCHER STATUS ENDPOINT
+# ============================================================================
+
+
+@app.get("/api/logs-watcher/status")
+async def get_logs_watcher_status():
+    """Get logs watcher status and statistics"""
+    if not LOGS_WATCHER_AVAILABLE:
+        return {
+            "available": False,
+            "message": "Logs watcher module not available",
+        }
+
+    if not logs_watcher:
+        return {
+            "available": True,
+            "running": False,
+            "message": "Logs watcher not initialized",
+        }
+
+    try:
+        return {
+            "available": True,
+            "running": logs_watcher.is_running,
+            "watching_directory": str(logs_watcher.logs_dir),
+            "debounce_seconds": logs_watcher.debounce_seconds,
+            "last_csv_import": (
+                datetime.fromtimestamp(logs_watcher.last_csv_import).isoformat()
+                if logs_watcher.last_csv_import > 0
+                else None
+            ),
+            "monitored_files": {
+                "csv": "ImageChoices.csv",
+                "runtime_json": (
+                    list(logs_watcher.handler.RUNTIME_JSON_FILES)
+                    if logs_watcher.handler
+                    else []
+                ),
+            },
+            "recent_imports": {
+                "csv_count": 1 if logs_watcher.last_csv_import > 0 else 0,
+                "json_count": len(logs_watcher.last_json_imports),
+            },
+            "message": "Logs watcher is monitoring for background process changes",
+        }
+    except Exception as e:
+        logger.error(f"Error getting logs watcher status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
