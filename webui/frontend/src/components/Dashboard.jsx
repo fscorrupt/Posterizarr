@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
-import { useDashboardWebSocket } from "../hooks/useDashboardWebSocket";
 import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
@@ -490,7 +489,7 @@ function Dashboard() {
     const statusInterval = setInterval(() => {
       fetchStatus(true);
       fetchSchedulerStatus(true);
-      // Note: fetchSystemInfo removed - now using WebSocket for real-time updates
+      fetchSystemInfo(true);
     }, 3000);
 
     // Interval for force refresh every 24 hours (if page stays open)
@@ -523,7 +522,7 @@ function Dashboard() {
           // WebSocket reconnection will be handled by the status.running useEffect below
         });
         fetchSchedulerStatus(true);
-        // Note: fetchSystemInfo removed - WebSocket will update automatically
+        fetchSystemInfo(true);
       }
     };
 
@@ -536,30 +535,6 @@ function Dashboard() {
       disconnectDashboardWebSocket();
     };
   }, [startLoading]);
-
-  // WebSocket connection for real-time dashboard updates (system info, etc.)
-  useDashboardWebSocket({
-    onSystemInfo: (data) => {
-      console.log("[Dashboard] Received WebSocket system info update:", data);
-      setSystemInfo({
-        platform: data.platform || "Unknown",
-        os_version: data.os_version || "Unknown",
-        cpu_model: data.cpu_model || "Unknown",
-        cpu_cores: data.cpu_cores || 0,
-        memory_percent: data.memory_percent || 0,
-        total_memory: data.total_memory || "Unknown",
-        used_memory: data.used_memory || "Unknown",
-        free_memory: data.free_memory || "Unknown",
-        is_docker: data.is_docker || false,
-      });
-    },
-    onConnected: () => {
-      console.log("[Dashboard] Dashboard WebSocket connected");
-    },
-    onDisconnected: () => {
-      console.log("[Dashboard] Dashboard WebSocket disconnected");
-    },
-  });
 
   useEffect(() => {
     // Skip WebSocket management when tab is hidden to prevent unnecessary connections

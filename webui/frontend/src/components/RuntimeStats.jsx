@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
-import { useDashboardWebSocket } from "../hooks/useDashboardWebSocket";
 import {
   formatDateToLocale,
   formatTimestampWithTzInfo,
@@ -147,38 +146,18 @@ function RuntimeStats({ refreshTrigger = 0 }) {
 
     fetchMigrationStatus();
 
-    // NOTE: Removed polling interval - now using WebSocket for real-time updates
+    // Refresh every 30 seconds (silent)
+    const interval = setInterval(() => {
+      console.log("Auto-refreshing runtime stats...");
+      fetchRuntimeStats(true);
+    }, 30 * 1000);
 
     return () => {
+      clearInterval(interval);
       // Don't finish loading on unmount - that happens when data is fetched
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // WebSocket connection for real-time updates
-  useDashboardWebSocket({
-    onRuntimeStats: (data) => {
-      console.log("[RuntimeStats] Received WebSocket update:", data);
-
-      // Update runtime stats from WebSocket
-      if (data.success !== false) {
-        cachedRuntimeStats = data;
-        setRuntimeStats(data);
-
-        // Mark as loaded if this is the first update
-        if (!hasInitiallyLoaded.current) {
-          hasInitiallyLoaded.current = true;
-          finishLoading("runtime-stats");
-        }
-      }
-    },
-    onConnected: () => {
-      console.log("[RuntimeStats] WebSocket connected");
-    },
-    onDisconnected: () => {
-      console.log("[RuntimeStats] WebSocket disconnected");
-    },
-  });
 
   // Watch for external refresh triggers (e.g., when a run finishes)
   useEffect(() => {

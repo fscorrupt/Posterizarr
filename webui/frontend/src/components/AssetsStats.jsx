@@ -8,7 +8,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useDashboardWebSocket } from "../hooks/useDashboardWebSocket";
 
 const API_URL = "/api";
 
@@ -22,30 +21,6 @@ function AssetsStats({ onSuccess, onError }) {
   useEffect(() => {
     fetchStats();
   }, []);
-
-  // WebSocket connection for real-time updates
-  useDashboardWebSocket({
-    onAssetStats: (data) => {
-      console.log("[AssetsStats] Received WebSocket update:", data);
-
-      // Update stats from WebSocket
-      setStats({
-        posters: data.posters || 0,
-        backgrounds: data.backgrounds || 0,
-        seasons: data.seasons || 0,
-        titlecards: data.titlecards || 0,
-        folders: data.folders || 0,
-        total_size: data.total_size || 0,
-      });
-      setError(null);
-    },
-    onConnected: () => {
-      console.log("[AssetsStats] WebSocket connected");
-    },
-    onDisconnected: () => {
-      console.log("[AssetsStats] WebSocket disconnected");
-    },
-  });
 
   const fetchStats = async () => {
     setLoading(true);
