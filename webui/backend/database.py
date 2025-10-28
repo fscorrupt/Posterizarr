@@ -649,12 +649,21 @@ def import_imagechoices_to_db(db_instance=None, logs_dir=None):
         logs_dir: The logs directory path. If None, will use default LOGS_DIR
     """
     import logging
-    from utils import state
+    from pathlib import Path
 
     logger = logging.getLogger(__name__)
 
     # Use provided db or get from state
-    db = db_instance if db_instance else getattr(state, "db", None)
+    if db_instance:
+        db = db_instance
+    else:
+        try:
+            from utils import state  # type: ignore
+
+            db = getattr(state, "db", None)
+        except ImportError:
+            logger.warning("utils module not available and no db_instance provided")
+            db = None
 
     if not db:
         logger.debug("Database not available, skipping CSV import")
@@ -678,7 +687,7 @@ def import_imagechoices_to_db(db_instance=None, logs_dir=None):
         return
 
     try:
-        logger.info("📊 Importing ImageChoices.csv to database...")
+        logger.info("Importing ImageChoices.csv to database...")
         stats = db.import_from_csv(csv_path)
 
         if stats["added"] > 0:

@@ -440,6 +440,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import logs watcher module
+try:
+    logger.debug("Attempting to import logs_watcher module")
+    from logs_watcher import create_logs_watcher
+
+    LOGS_WATCHER_AVAILABLE = True
+    logger.info("Logs watcher module loaded successfully")
+except ImportError as e:
+    LOGS_WATCHER_AVAILABLE = False
+    logger.warning(
+        f"Logs watcher not available: {e}. Automatic file monitoring will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -447,6 +461,7 @@ logger.debug(f"Auth Middleware: {AUTH_MIDDLEWARE_AVAILABLE}")
 logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
+logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -1288,7 +1303,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db
+    global scheduler, db, config_db, logs_watcher
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1361,6 +1376,33 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Database module not available, skipping database initialization")
 
+    # Initialize and start logs watcher if available
+    logs_watcher = None
+    if LOGS_WATCHER_AVAILABLE and DATABASE_AVAILABLE and RUNTIME_DB_AVAILABLE:
+        try:
+            logger.info(
+                "Initializing logs watcher for background process monitoring..."
+            )
+            logs_watcher = create_logs_watcher(
+                logs_dir=LOGS_DIR,
+                db_instance=db,
+                runtime_db_instance=runtime_db,
+            )
+            logs_watcher.start()
+            logger.info(
+                "✓ Logs watcher started - monitoring for background process files"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize logs watcher: {e}")
+            logs_watcher = None
+    else:
+        if not LOGS_WATCHER_AVAILABLE:
+            logger.info("Logs watcher module not available, skipping")
+        elif not DATABASE_AVAILABLE:
+            logger.info("Database not available, skipping logs watcher")
+        elif not RUNTIME_DB_AVAILABLE:
+            logger.info("Runtime database not available, skipping logs watcher")
+
     # Initialize and start scheduler if available
     if SCHEDULER_AVAILABLE:
         try:
@@ -1376,6 +1418,15 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+
+    # Stop logs watcher
+    if logs_watcher:
+        try:
+            logger.info("Stopping logs watcher...")
+            logs_watcher.stop()
+            logger.info("Logs watcher stopped")
+        except Exception as e:
+            logger.error(f"Error stopping logs watcher: {e}")
 
     # Stop queue listener for thread-safe logging
     global queue_listener
@@ -7748,8 +7799,65 @@ async def run_scheduler_now():
 
 
 # ============================================================================
+# LOGS WATCHER API
+# ============================================================================
+
+
+@app.get("/api/logs-watcher/status")
+async def get_logs_watcher_status():
+    """Get current logs watcher status"""
+    try:
+        if not LOGS_WATCHER_AVAILABLE:
+            return {
+                "success": True,
+                "available": False,
+                "running": False,
+                "message": "Logs watcher module not available",
+            }
+
+        if not logs_watcher:
+            return {
+                "success": True,
+                "available": True,
+                "running": False,
+                "message": "Logs watcher not initialized (database may not be available)",
+            }
+
+        return {
+            "success": True,
+            "available": True,
+            "running": logs_watcher.is_running,
+            "logs_dir": str(logs_watcher.logs_dir),
+            "debounce_seconds": logs_watcher.debounce_seconds,
+            "poll_interval": logs_watcher.poll_interval,
+            "monitored_files": {
+                "csv": "ImageChoices.csv",
+                "json": sorted(
+                    [
+                        "tautulli.json",
+                        "arr.json",
+                        "normal.json",
+                        "manual.json",
+                        "testing.json",
+                        "backup.json",
+                        "syncjelly.json",
+                        "syncemby.json",
+                        "scheduled.json",
+                        "replace.json",
+                    ]
+                ),
+            },
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting logs watcher status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # ASSET REPLACEMENT API
 # ============================================================================
+
 
 class AssetReplaceRequest(BaseModel):
     """Request to fetch asset previews from services or upload custom"""
@@ -7770,6 +7878,7 @@ class AssetUploadRequest(BaseModel):
 
     asset_path: str
     image_data: str  # Base64 encoded image
+
 
 @app.post("/api/assets/fetch-replacements")
 async def fetch_asset_replacements(request: AssetReplaceRequest):
@@ -10568,7 +10677,7 @@ async def spa_fallback(request: Request, exc: HTTPException):
     """
     # Don't intercept API calls or WebSocket connections
     if request.url.path.startswith(("/api/", "/ws/")):
-        return exc
+        raise exc
 
     # Return index.html for all other 404s (client-side routes)
     index_path = FRONTEND_DIR / "index.html"
@@ -10576,7 +10685,7 @@ async def spa_fallback(request: Request, exc: HTTPException):
         return FileResponse(index_path)
 
     # If index.html doesn't exist, return the original 404
-    return exc
+    raise exc
 
 
 # ============================================================================
