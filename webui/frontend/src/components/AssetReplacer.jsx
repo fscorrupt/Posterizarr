@@ -1426,7 +1426,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                                 seasonPosterName: e.target.value,
                               })
                             }
-                            placeholder="e.g., Season 01 or Season 00 (Specials)"
+                            placeholder="Season 01 or Season 00 (Specials) or 'Title | Season 01' (to apply Title Text)"
                             className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                           />
                         </div>

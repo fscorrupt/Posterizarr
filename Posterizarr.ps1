@@ -51,7 +51,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "2.0.4"
+$CurrentScriptVersion = "2.0.5"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7645,11 +7645,15 @@ if ($Manual) {
     # Regex to find a positive number (1 or greater) at the end of the string
     $seasonNumberPattern = '([1-9]\d*)$'
 
+    # Regex to extract title excluding "Season X" patterns
+    $ExtractedTitleRegex = '^\s*(?:Season\s*\d+\s*\|\s*)?(.*?)(?:\s*\|\s*Season\s*\d+)?\s*$'
+
     # Regex to find "Specials" keywords or the numbers 0/00
     $specialsPattern = '^(?:Specials|Extras|Spéciaux|0{1,2}|[Ss]eason 0)$' # Add any other language keywords here
 
     if ([string]::IsNullOrEmpty($PicturePath)) {
         $PicturePath = Read-Host "Enter local path or url to source picture"
+        $TriggeredViaCli = 'true'
     }
     if ([string]::IsNullOrEmpty($PicturePath)) {
         if (-not $PSBoundParameters.ContainsKey('SeasonPoster')) {
@@ -7673,7 +7677,14 @@ if ($Manual) {
         if (-not ($SeasonPoster -or $TitleCard -or $CollectionCard -or $BackgroundCard)) {
             Write-Entry -Message "No poster type selected. Please select at least one type." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Red -log Error
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning -Force
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "No poster type selected"
@@ -7686,7 +7697,14 @@ if ($Manual) {
     if ([string]::IsNullOrEmpty($PicturePath)) {
         Write-Entry -Message "No picture path provided. A source picture is required." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Red -log Error
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning -Force
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Missing picture path"
@@ -7744,23 +7762,44 @@ if ($Manual) {
             $PosterType = "Season"
             if ([string]::IsNullOrEmpty($SeasonPosterName)) {
                 $SeasonPosterName = Read-Host "Enter Season Name"
+                if ($SeasonPosterName -match $ExtractedTitleRegex) {
+                    $global:ExtractedTitle = $Matches[1]
+                }
             }
             if ($SeasonPosterName -match $seasonNumberPattern) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                if ($SeasonPosterName -match $ExtractedTitleRegex) {
+                    $global:ExtractedTitle = $Matches[1]
+                }
             }
             Elseif ($SeasonPosterName -match $specialsPattern) {
                 $global:seasontmp = "Season00"
+                if ($SeasonPosterName -match $ExtractedTitleRegex) {
+                    $global:ExtractedTitle = $Matches[1]
+                }
             }
             Else {
                 Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
-                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season 0 or Season 1....)"
+                if ($TriggeredViaCli -eq 'true'){
+                    $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season 0 or Season 1....)"
+                }
                 if ($seasontemp -match $seasonNumberPattern) {
                     $global:SeasonNumber = $Matches[1]
                     $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                 }
                 else {
                     Write-Entry -Subtext "Invalid season format. Please enter something like Season00 or Season01." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
                     Exit
                 }
             }
@@ -7829,23 +7868,44 @@ if ($Manual) {
             $PosterType = "Season"
             if ([string]::IsNullOrEmpty($SeasonPosterName)) {
                 $SeasonPosterName = Read-Host "Enter Season Name"
+                if ($SeasonPosterName -match $ExtractedTitleRegex) {
+                    $global:ExtractedTitle = $Matches[1]
+                }
             }
             if ($SeasonPosterName -match $seasonNumberPattern) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                if ($SeasonPosterName -match $ExtractedTitleRegex) {
+                    $global:ExtractedTitle = $Matches[1]
+                }
             }
             Elseif ($SeasonPosterName -eq $specialsPattern) {
                 $global:seasontmp = "Season00"
+                if ($SeasonPosterName -match $ExtractedTitleRegex) {
+                    $global:ExtractedTitle = $Matches[1]
+                }
             }
             Else {
                 Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
-                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season 0 or Season 1....)"
+                if ($TriggeredViaCli -eq 'true'){
+                    $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season 0 or Season 1....)"
+                }
                 if ($seasontemp -match $seasonNumberPattern) {
                     $global:SeasonNumber = $Matches[1]
                     $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                 }
                 else {
                     Write-Entry -Subtext "Invalid season format. Please enter something like Season00 or Season01." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
+                    if (Test-Path $CurrentlyRunning) {
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
+                    }
                     Exit
                 }
             }
@@ -7921,10 +7981,20 @@ if ($Manual) {
             }
             Else {
                 if ($fontAllCaps -eq 'true') {
-                    $joinedTitle = $SeasonPosterName.ToUpper()
+                    if ($global:ExtractedTitle) {
+                        $joinedTitle = $global:ExtractedTitle.ToUpper()
+                    }
+                    else {
+                        $joinedTitle = $SeasonPosterName.ToUpper()
+                    }
                 }
                 Else {
-                    $joinedTitle = $SeasonPosterName
+                    if ($global:ExtractedTitle) {
+                        $joinedTitle = $global:ExtractedTitle
+                    }
+                    else {
+                        $joinedTitle = $SeasonPosterName
+                    }
                 }
             }
         }
