@@ -848,19 +848,20 @@ const AssetOverview = () => {
 
     // 3. NON-PRIMARY LANGUAGE CHECK
     // Check for "Unknown" language first (add badge for non-primary language)
-    if (asset.Language && asset.Language.toLowerCase() === "unknown") {
+    // This includes when Language is "unknown", "false", false, or missing
+    if (
+      !asset.Language ||
+      asset.Language === "false" ||
+      asset.Language === false ||
+      asset.Language.toLowerCase() === "unknown"
+    ) {
       tags.push({
         label: t("assetOverview.notPrimaryLanguage"),
         color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
       });
     }
-    // Language is either a valid language code/string or "false" (string)
-    else if (
-      asset.Language &&
-      asset.Language !== "false" &&
-      asset.Language !== false &&
-      data?.config?.primary_language
-    ) {
+    // Language is a valid language code/string
+    else if (data?.config?.primary_language) {
       const langNormalized =
         asset.Language.toLowerCase() === "textless"
           ? "xx"
@@ -876,12 +877,7 @@ const AssetOverview = () => {
           color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
-    } else if (
-      asset.Language &&
-      asset.Language !== "false" &&
-      asset.Language !== false &&
-      !data?.config?.primary_language
-    ) {
+    } else if (!data?.config?.primary_language) {
       // No primary language set, anything that's not Textless/xx is non-primary
       if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
         tags.push({
