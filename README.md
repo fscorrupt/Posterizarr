@@ -642,6 +642,7 @@ docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -PicturePath "/pat
 > [!NOTE]
 >
 > Any season name ending in 0 or 00 (e.g., "Season 0", "Staffel 00") or matching a keyword like "Specials" will be handled as a Specials season.
+> If you want to add Custom Text to Season poster please enter it via prefix `Title | Season 01` in `-SeasonPosterName`
 
 To create a poster for a specific season of a TV show, use the -SeasonPoster switch and provide the season name:
 
