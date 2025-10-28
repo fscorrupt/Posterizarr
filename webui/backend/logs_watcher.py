@@ -501,6 +501,27 @@ def create_logs_watcher(
                     logger.debug("Adding runtime entry to database...")
                     runtime_db.add_runtime_entry(**runtime_data)
                     logger.info(f"Runtime data from {json_path.name} saved to database")
+
+                    # Broadcast update to dashboard clients
+                    try:
+                        # Import here to avoid circular imports
+                        import main
+
+                        if hasattr(main, "dashboard_manager"):
+                            main.dashboard_manager.broadcast_sync(
+                                {
+                                    "type": "runtime_stats",
+                                    "data": runtime_data,
+                                    "timestamp": datetime.now().isoformat(),
+                                }
+                            )
+                            logger.debug(
+                                "Broadcasted runtime stats update to dashboard clients"
+                            )
+                    except Exception as broadcast_error:
+                        logger.debug(
+                            f"Failed to broadcast runtime stats: {broadcast_error}"
+                        )
                 else:
                     logger.warning("runtime_db is None, cannot save to database")
             else:

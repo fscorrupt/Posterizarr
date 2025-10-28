@@ -477,6 +477,84 @@ cache_refresh_running = False
 cache_scan_in_progress = False
 
 
+# ============================================================================
+# WEBSOCKET CONNECTION MANAGER FOR REAL-TIME UPDATES
+# ============================================================================
+class ConnectionManager:
+    """
+    Manages WebSocket connections for real-time dashboard updates.
+    Broadcasts updates to all connected clients when data changes.
+    """
+
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+        self.lock = threading.Lock()
+
+    async def connect(self, websocket: WebSocket):
+        """Accept and register a new WebSocket connection"""
+        await websocket.accept()
+        with self.lock:
+            self.active_connections.append(websocket)
+        logger.info(
+            f"Dashboard WebSocket connected. Total connections: {len(self.active_connections)}"
+        )
+
+    def disconnect(self, websocket: WebSocket):
+        """Remove a WebSocket connection"""
+        with self.lock:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+        logger.info(
+            f"Dashboard WebSocket disconnected. Total connections: {len(self.active_connections)}"
+        )
+
+    async def broadcast(self, message: dict):
+        """
+        Broadcast a message to all connected clients.
+        Automatically removes dead connections.
+        """
+        dead_connections = []
+
+        with self.lock:
+            connections = self.active_connections.copy()
+
+        for connection in connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                logger.debug(f"Failed to send to WebSocket: {e}")
+                dead_connections.append(connection)
+
+        # Clean up dead connections
+        if dead_connections:
+            with self.lock:
+                for conn in dead_connections:
+                    if conn in self.active_connections:
+                        self.active_connections.remove(conn)
+            logger.debug(f"Removed {len(dead_connections)} dead WebSocket connections")
+
+    def broadcast_sync(self, message: dict):
+        """
+        Synchronous version of broadcast for use in non-async contexts.
+        Creates a new event loop if needed.
+        """
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If loop is running, schedule as a task
+                asyncio.create_task(self.broadcast(message))
+            else:
+                # If no loop, run directly
+                loop.run_until_complete(self.broadcast(message))
+        except RuntimeError:
+            # No event loop in current thread, create a new one
+            asyncio.run(self.broadcast(message))
+
+
+# Initialize the connection manager
+dashboard_manager = ConnectionManager()
+
+
 def check_directory_permissions(
     directory: Path, directory_name: str = "directory"
 ) -> dict:
@@ -894,6 +972,33 @@ def scan_and_cache_assets():
             f"{len(asset_cache['titlecards'])} titlecards, "
             f"{len(asset_cache['folders'])} folders."
         )
+
+        # Broadcast update to all connected dashboard clients
+        try:
+            stats = {
+                "posters": len(asset_cache["posters"]),
+                "backgrounds": len(asset_cache["backgrounds"]),
+                "seasons": len(asset_cache["seasons"]),
+                "titlecards": len(asset_cache["titlecards"]),
+                "folders": len(asset_cache["folders"]),
+                "total_size": sum(
+                    img["size"]
+                    for category in ["posters", "backgrounds", "seasons", "titlecards"]
+                    for img in asset_cache[category]
+                ),
+                "last_scanned": asset_cache["last_scanned"],
+            }
+
+            dashboard_manager.broadcast_sync(
+                {
+                    "type": "asset_stats",
+                    "data": stats,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+            logger.debug("Broadcasted asset stats update to dashboard clients")
+        except Exception as broadcast_error:
+            logger.debug(f"Failed to broadcast asset stats: {broadcast_error}")
 
 
 def background_cache_refresh():
@@ -6245,6 +6350,112 @@ async def check_log_exists(log_name: str):
         "log_name": log_name,
         "path": str(log_path) if exists else None,
     }
+
+
+# ============================================================================
+# WEBSOCKET ENDPOINT FOR REAL-TIME DASHBOARD UPDATES
+# ============================================================================
+@app.websocket("/ws/dashboard")
+async def websocket_dashboard(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time dashboard updates.
+    Clients connect here to receive instant notifications when:
+    - Asset stats change (cache refresh, new posters generated)
+    - Runtime stats change (script completes, new run data)
+    - System info updates (CPU, memory usage)
+    - Any other dashboard-relevant data changes
+    """
+    await dashboard_manager.connect(websocket)
+
+    try:
+        # Send initial data immediately upon connection
+        try:
+            # Fetch current asset stats
+            asset_stats_response = await get_assets_stats()
+            if asset_stats_response.get("success"):
+                await websocket.send_json(
+                    {
+                        "type": "asset_stats",
+                        "data": asset_stats_response["stats"],
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            # Fetch current runtime stats
+            runtime_stats_response = await get_runtime_stats()
+            if runtime_stats_response.get("success"):
+                await websocket.send_json(
+                    {
+                        "type": "runtime_stats",
+                        "data": runtime_stats_response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            # Fetch current system info
+            system_info_response = await get_system_info()
+            await websocket.send_json(
+                {
+                    "type": "system_info",
+                    "data": system_info_response,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error sending initial dashboard data: {e}")
+
+        # Start periodic system info updates (every 10 seconds)
+        async def send_system_info_updates():
+            """Send system info updates periodically"""
+            while True:
+                try:
+                    await asyncio.sleep(10)  # Update every 10 seconds
+                    system_info = await get_system_info()
+                    await websocket.send_json(
+                        {
+                            "type": "system_info",
+                            "data": system_info,
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                    )
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    logger.debug(f"Error sending system info update: {e}")
+                    break
+
+        # Start the periodic update task
+        update_task = asyncio.create_task(send_system_info_updates())
+
+        # Keep connection alive and handle incoming messages (if any)
+        while True:
+            try:
+                # Wait for messages from client (mostly just keepalive/ping)
+                data = await websocket.receive_text()
+
+                # Handle ping/pong for keepalive
+                if data == "ping":
+                    await websocket.send_text("pong")
+
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Error in dashboard WebSocket loop: {e}")
+                break
+
+    except Exception as e:
+        logger.error(f"Dashboard WebSocket error: {e}")
+    finally:
+        # Cancel the periodic update task
+        if "update_task" in locals():
+            update_task.cancel()
+            try:
+                await update_task
+            except asyncio.CancelledError:
+                pass
+
+        dashboard_manager.disconnect(websocket)
 
 
 @app.websocket("/ws/logs")
