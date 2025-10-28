@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sync Jellyfin",
-        "description": "Synchroniser les affiches vers Jellyfin"
+        "description": "Synchroniser les affiches Plex vers Jellyfin"
       },
       "syncEmby": {
         "title": "Sync Emby",
-        "description": "Synchroniser les affiches vers Emby"
+        "description": "Synchroniser les affiches Plex vers Emby"
       }
     },
     "manual": {

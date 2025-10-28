@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sincronizza Jellyfin",
-        "description": "Sincronizza le locandine su Jellyfin"
+        "description": "Sincronizza i poster di Plex su Jellyfin"
       },
       "syncEmby": {
         "title": "Sincronizza Emby",
-        "description": "Sincronizza le locandine su Emby"
+        "description": "Sincronizza i poster di Plex su Emby"
       }
     },
     "manual": {

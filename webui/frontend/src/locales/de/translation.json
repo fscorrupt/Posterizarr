@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Jellyfin Sync",
-        "description": "Poster zu Jellyfin synchronisieren"
+        "description": "Plex Poster zu Jellyfin synchronisieren"
       },
       "syncEmby": {
         "title": "Emby Sync",
-        "description": "Poster zu Emby synchronisieren"
+        "description": "Plex Poster zu Emby synchronisieren"
       }
     },
     "manual": {
