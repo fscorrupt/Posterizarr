@@ -637,3 +637,63 @@ def init_database(db_path: Path) -> ImageChoicesDB:
     db = ImageChoicesDB(db_path)
     db.initialize()
     return db
+
+
+def import_imagechoices_to_db(db_instance=None, logs_dir=None):
+    """
+    Import ImageChoices.csv from Logs directory to database
+    Only imports new records that don't already exist
+
+    Args:
+        db_instance: The database instance to use. If None, will use state.db
+        logs_dir: The logs directory path. If None, will use default LOGS_DIR
+    """
+    import logging
+    from utils import state
+
+    logger = logging.getLogger(__name__)
+
+    # Use provided db or get from state
+    db = db_instance if db_instance else getattr(state, "db", None)
+
+    if not db:
+        logger.debug("Database not available, skipping CSV import")
+        return
+
+    # Determine logs directory
+    if logs_dir is None:
+        import os
+        from pathlib import Path
+
+        IS_DOCKER = os.getenv("POSTERIZARR_NON_ROOT") == "TRUE"
+        if IS_DOCKER:
+            BASE_DIR = Path("/config")
+        else:
+            BASE_DIR = Path(__file__).parent.parent.parent
+        logs_dir = BASE_DIR / "Logs"
+
+    csv_path = Path(logs_dir) / "ImageChoices.csv"
+    if not csv_path.exists():
+        logger.debug("ImageChoices.csv does not exist yet, skipping import")
+        return
+
+    try:
+        logger.info("📊 Importing ImageChoices.csv to database...")
+        stats = db.import_from_csv(csv_path)
+
+        if stats["added"] > 0:
+            logger.info(
+                f"CSV import successful: {stats['added']} new record(s) added, "
+                f"{stats['skipped']} skipped (already exist), "
+                f"{stats['errors']} error(s)"
+            )
+        else:
+            logger.debug(
+                f"CSV import: No new records to add ({stats['skipped']} already exist)"
+            )
+
+        if stats["errors"] > 0:
+            logger.warning(f"Import errors: {stats['error_details']}")
+
+    except Exception as e:
+        logger.error(f"Error importing CSV to database: {e}")
