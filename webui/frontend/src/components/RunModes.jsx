@@ -2067,10 +2067,10 @@ function RunModes() {
                 {manualForm.posterType === "background" ||
                 manualForm.posterType === "titlecard" ? (
                   <span>
-                    Backgrounds/Title Cards: 3840×2160px or higher (16:9 ratio)
+                    Backgrounds/Title Cards: 1920×1080px or higher (16:9 ratio)
                   </span>
                 ) : (
-                  <span>Posters: 2000×3000px or higher (2:3 ratio)</span>
+                  <span>Posters: 1000×1500px or higher (2:3 ratio)</span>
                 )}
               </p>
             </div>
