@@ -164,39 +164,53 @@ class LogsWatcher:
 
         while self.is_running:
             try:
-                # Check CSV file
-                if csv_file.exists():
-                    try:
-                        mtime = csv_file.stat().st_mtime
-                        last_mtime = self.last_file_mtimes.get("csv", 0)
+                # Check CSV file (case-insensitive by scanning directory)
+                try:
+                    for file in self.logs_dir.iterdir():
+                        if file.is_file() and file.name.lower() == "imagechoices.csv":
+                            try:
+                                mtime = file.stat().st_mtime
+                                last_mtime = self.last_file_mtimes.get("csv", 0)
 
-                        if mtime > last_mtime and last_mtime > 0:
-                            logger.debug(
-                                f"Polling: Detected CSV modification (mtime: {mtime}, last: {last_mtime})"
-                            )
-                            self.on_csv_modified()
+                                if mtime > last_mtime and last_mtime > 0:
+                                    logger.debug(
+                                        f"Polling: Detected CSV modification (mtime: {mtime}, last: {last_mtime})"
+                                    )
+                                    self.on_csv_modified()
 
-                        self.last_file_mtimes["csv"] = mtime
-                    except Exception as e:
-                        logger.debug(f"Error checking CSV mtime: {e}")
+                                self.last_file_mtimes["csv"] = mtime
+                                break  # Found the file, stop checking
+                            except Exception as e:
+                                logger.debug(f"Error checking CSV mtime: {e}")
+                except Exception as e:
+                    logger.debug(f"Error scanning directory for CSV: {e}")
 
-                # Check JSON files
-                for json_filename in json_files:
-                    json_file = self.logs_dir / json_filename
-                    if json_file.exists():
-                        try:
-                            mtime = json_file.stat().st_mtime
-                            last_mtime = self.last_file_mtimes.get(json_filename, 0)
+                # Check JSON files (case-insensitive by scanning directory)
+                try:
+                    for file in self.logs_dir.iterdir():
+                        if file.is_file() and file.suffix.lower() == ".json":
+                            filename_lower = file.name.lower()
+                            # Check if this file matches one of our monitored JSON files
+                            if filename_lower in json_files:
+                                try:
+                                    mtime = file.stat().st_mtime
+                                    last_mtime = self.last_file_mtimes.get(
+                                        filename_lower, 0
+                                    )
 
-                            if mtime > last_mtime and last_mtime > 0:
-                                logger.debug(
-                                    f"Polling: Detected {json_filename} modification (mtime: {mtime}, last: {last_mtime})"
-                                )
-                                self.on_runtime_json_modified(json_filename)
+                                    if mtime > last_mtime and last_mtime > 0:
+                                        logger.debug(
+                                            f"Polling: Detected {file.name} modification (mtime: {mtime}, last: {last_mtime})"
+                                        )
+                                        self.on_runtime_json_modified(file.name)
 
-                            self.last_file_mtimes[json_filename] = mtime
-                        except Exception as e:
-                            logger.debug(f"Error checking {json_filename} mtime: {e}")
+                                    self.last_file_mtimes[filename_lower] = mtime
+                                except Exception as e:
+                                    logger.debug(
+                                        f"Error checking {file.name} mtime: {e}"
+                                    )
+                except Exception as e:
+                    logger.debug(f"Error scanning directory for JSON files: {e}")
 
                 # Sleep until next check
                 time.sleep(self.poll_interval)
@@ -384,14 +398,15 @@ class LogsFileHandler(FileSystemEventHandler):
         try:
             file_path = Path(event.src_path)
             filename = file_path.name
+            filename_lower = filename.lower()
             logger.debug(f"File MODIFIED event: {filename} (path: {file_path})")
 
-            # Check if it's a file we're interested in
-            if filename == self.CSV_FILE:
+            # Check if it's a file we're interested in (case-insensitive)
+            if filename_lower == self.CSV_FILE.lower():
                 logger.debug(f"Detected modification of monitored CSV file: {filename}")
                 self.watcher.on_csv_modified()
 
-            elif filename in self.RUNTIME_JSON_FILES:
+            elif filename_lower in self.RUNTIME_JSON_FILES:
                 logger.debug(
                     f"Detected modification of monitored JSON file: {filename}"
                 )
@@ -414,10 +429,11 @@ class LogsFileHandler(FileSystemEventHandler):
         try:
             file_path = Path(event.src_path)
             filename = file_path.name
+            filename_lower = filename.lower()
             logger.debug(f"File CREATED event: {filename} (path: {file_path})")
 
-            # Check if it's a file we're interested in
-            if filename == self.CSV_FILE:
+            # Check if it's a file we're interested in (case-insensitive)
+            if filename_lower == self.CSV_FILE.lower():
                 logger.debug(f"Detected creation of monitored CSV file: {filename}")
                 logger.debug("Waiting 0.5s for file to be fully written...")
                 # Give the file a moment to be fully written
@@ -425,7 +441,7 @@ class LogsFileHandler(FileSystemEventHandler):
                 logger.debug("File write buffer complete, triggering import")
                 self.watcher.on_csv_modified()
 
-            elif filename in self.RUNTIME_JSON_FILES:
+            elif filename_lower in self.RUNTIME_JSON_FILES:
                 logger.debug(f"Detected creation of monitored JSON file: {filename}")
                 logger.debug("Waiting 0.5s for file to be fully written...")
                 # Give the file a moment to be fully written
@@ -438,6 +454,67 @@ class LogsFileHandler(FileSystemEventHandler):
 
         except Exception as e:
             logger.error(f"Error processing file creation event: {e}", exc_info=True)
+
+    def on_closed(self, event):
+        """
+        Handle file close events (Linux inotify IN_CLOSE_WRITE).
+        This is critical for Docker containers where files might not trigger on_modified.
+        """
+        if event.is_directory:
+            return
+
+        try:
+            file_path = Path(event.src_path)
+            filename = file_path.name
+            filename_lower = filename.lower()
+            logger.debug(f"File CLOSED event: {filename} (path: {file_path})")
+
+            # Only process files we're monitoring (case-insensitive)
+            if filename_lower == self.CSV_FILE.lower():
+                logger.debug(f"Detected close of monitored CSV file: {filename}")
+                self.watcher.on_csv_modified()
+
+            elif filename_lower in self.RUNTIME_JSON_FILES:
+                logger.debug(f"Detected close of monitored JSON file: {filename}")
+                self.watcher.on_runtime_json_modified(filename)
+
+        except Exception as e:
+            logger.error(f"Error processing file close event: {e}", exc_info=True)
+
+    def on_moved(self, event):
+        """
+        Handle file move events (atomic write pattern used by many editors).
+        Files are often written to temp location then moved to final location.
+        """
+        if event.is_directory:
+            return
+
+        try:
+            # Check the destination file (where it was moved TO)
+            dest_path = Path(event.dest_path)
+            filename = dest_path.name
+            filename_lower = filename.lower()
+            logger.debug(
+                f"File MOVED event: {filename} (from: {event.src_path}, to: {event.dest_path})"
+            )
+
+            # Only process files we're monitoring (case-insensitive)
+            if filename_lower == self.CSV_FILE.lower():
+                logger.debug(f"Detected move to monitored CSV file: {filename}")
+                logger.debug("Waiting 0.5s for file to be fully written...")
+                time.sleep(0.5)
+                logger.debug("File write buffer complete, triggering import")
+                self.watcher.on_csv_modified()
+
+            elif filename_lower in self.RUNTIME_JSON_FILES:
+                logger.debug(f"Detected move to monitored JSON file: {filename}")
+                logger.debug("Waiting 0.5s for file to be fully written...")
+                time.sleep(0.5)
+                logger.debug("File write buffer complete, triggering import")
+                self.watcher.on_runtime_json_modified(filename)
+
+        except Exception as e:
+            logger.error(f"Error processing file move event: {e}", exc_info=True)
 
 
 def create_logs_watcher(
