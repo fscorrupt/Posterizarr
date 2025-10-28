@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sincronizar Jellyfin",
-        "description": "Sincronizar cartazes para o Jellyfin"
+        "description": "Sincronizar os posters do Plex para o Jellyfin"
       },
       "syncEmby": {
         "title": "Sincronizar Emby",
-        "description": "Sincronizar cartazes para o Emby"
+        "description": "Sincronizar os posters do Plex para o Emby"
       }
     },
     "manual": {

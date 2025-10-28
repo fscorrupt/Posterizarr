@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sync Jellyfin",
-        "description": "Sync posters to Jellyfin"
+        "description": "Sync plex posters to Jellyfin"
       },
       "syncEmby": {
         "title": "Sync Emby",
-        "description": "Sync posters to Emby"
+        "description": "Sync plex posters to Emby"
       }
     },
     "manual": {
