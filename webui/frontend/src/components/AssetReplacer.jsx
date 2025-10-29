@@ -433,6 +433,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             configSource.preferredseasonlanguageorder ||
             [];
 
+          let tcOrder =
+            configSource.PreferredTCLanguageOrder ||
+            configSource.preferredtclanguageorder ||
+            [];
+
           if (
             backgroundOrder.length === 1 &&
             backgroundOrder[0] === "PleaseFillMe"
@@ -441,17 +446,25 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             backgroundOrder = posterOrder;
           }
 
+          if (tcOrder.length === 1 && tcOrder[0] === "PleaseFillMe") {
+            // Use poster language order as fallback
+            tcOrder = posterOrder;
+          }
+
           setLanguageOrder({
             poster: posterOrder,
             background: backgroundOrder,
             season: seasonOrder,
+            titlecard: tcOrder,
           });
 
           console.log("Loaded language preferences:", {
             poster: posterOrder,
             background: backgroundOrder,
             season: seasonOrder,
+            titlecard: tcOrder,
             rawBackground: configSource.PreferredBackgroundLanguageOrder,
+            rawTitleCard: configSource.PreferredTCLanguageOrder,
           });
         }
       } catch (error) {

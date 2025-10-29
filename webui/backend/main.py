@@ -4876,6 +4876,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             preferred_background_language_order = flat_config.get(
                 "PreferredBackgroundLanguageOrder", ""
             )
+            preferred_tc_language_order = flat_config.get(
+                "PreferredTCLanguageOrder", ""
+            )
         else:
             # Fallback: Try both structures
             tmdb_token = grouped_config.get("tmdbtoken")
@@ -4889,6 +4892,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             )
             preferred_background_language_order = grouped_config.get(
                 "PreferredBackgroundLanguageOrder", ""
+            )
+            preferred_tc_language_order = grouped_config.get(
+                "PreferredTCLanguageOrder", ""
             )
 
             # If not found at root, try in ApiPart
@@ -4909,6 +4915,12 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             ):
                 preferred_background_language_order = grouped_config["ApiPart"].get(
                     "PreferredBackgroundLanguageOrder", ""
+                )
+            if not preferred_tc_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_tc_language_order = grouped_config["ApiPart"].get(
+                    "PreferredTCLanguageOrder", ""
                 )
 
         # Parse language preferences (handle both string and list formats)
@@ -4931,9 +4943,20 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         background_language_order_list = parse_language_order(
             preferred_background_language_order
         )
+        tc_language_order_list = parse_language_order(preferred_tc_language_order)
+
+        # If TC language order is empty or "PleaseFillMe", fall back to standard poster language order
+        if not tc_language_order_list or (
+            len(tc_language_order_list) == 1
+            and tc_language_order_list[0].lower() == "pleasefillme"
+        ):
+            logger.info(
+                "TC language order not configured, using standard poster language order"
+            )
+            tc_language_order_list = language_order_list
 
         logger.info(
-            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}"
+            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}, TitleCard: {tc_language_order_list}"
         )
 
         if not tmdb_token:
@@ -5090,15 +5113,13 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
 
                     title = f"{base_title} - S{request.season_number:02d}E{request.episode_number:02d}: {episode_title}"
 
-                    # Filter: Only 'xx' (no language/international) for title cards
-                    filtered_stills = [
-                        still
-                        for still in stills
-                        if (still.get("iso_639_1") or "xx").lower() == "xx"
-                    ]
+                    # Filter and sort by PreferredTCLanguageOrder
+                    filtered_stills = filter_and_sort_posters_by_language(
+                        stills, tc_language_order_list
+                    )
 
                     logger.info(
-                        f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering (xx only)"
+                        f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering by language preferences"
                     )
 
                     for still in filtered_stills:  # Load all stills
@@ -8067,6 +8088,9 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             preferred_background_language_order = flat_config.get(
                 "PreferredBackgroundLanguageOrder", ""
             )
+            preferred_tc_language_order = flat_config.get(
+                "PreferredTCLanguageOrder", ""
+            )
         else:
             api_part = grouped_config.get("ApiPart", {})
             tmdb_token = api_part.get("tmdbtoken", "")
@@ -8088,6 +8112,9 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             preferred_background_language_order = grouped_config.get(
                 "PreferredBackgroundLanguageOrder", ""
             )
+            preferred_tc_language_order = grouped_config.get(
+                "PreferredTCLanguageOrder", ""
+            )
 
             # If not found at root, try in ApiPart
             if not preferred_language_order and isinstance(
@@ -8107,6 +8134,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             ):
                 preferred_background_language_order = grouped_config["ApiPart"].get(
                     "PreferredBackgroundLanguageOrder", ""
+                )
+            if not preferred_tc_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_tc_language_order = grouped_config["ApiPart"].get(
+                    "PreferredTCLanguageOrder", ""
                 )
 
         # Parse language preferences (handle both string and list formats)
@@ -8129,9 +8162,10 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         background_language_order_list = parse_language_order(
             preferred_background_language_order
         )
+        tc_language_order_list = parse_language_order(preferred_tc_language_order)
 
         logger.info(
-            f"Language preferences loaded - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}"
+            f"Language preferences loaded - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}, TitleCard: {tc_language_order_list}"
         )
 
         # Helper function to filter and sort by language preference
