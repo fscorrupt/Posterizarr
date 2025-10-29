@@ -778,33 +778,37 @@ function RecentAssets({ refreshTrigger = 0 }) {
                     )}
 
                   {/* Additional Badges */}
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      Properties
-                    </label>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {/* Manual Badge */}
-                      {selectedAsset.is_manually_created && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/50">
-                          Manual
-                        </span>
-                      )}
+                  {(selectedAsset.is_manually_created ||
+                    selectedAsset.fallback ||
+                    selectedAsset.text_truncated) && (
+                    <div>
+                      <label className="text-sm text-theme-muted">
+                        Properties
+                      </label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {/* Manual Badge */}
+                        {selectedAsset.is_manually_created && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/50">
+                            Manual
+                          </span>
+                        )}
 
-                      {/* Fallback Badge */}
-                      {selectedAsset.fallback && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/50">
-                          Fallback
-                        </span>
-                      )}
+                        {/* Fallback Badge */}
+                        {selectedAsset.fallback && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/50">
+                            Fallback
+                          </span>
+                        )}
 
-                      {/* Text Truncated Badge */}
-                      {selectedAsset.text_truncated && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/50">
-                          Text Truncated
-                        </span>
-                      )}
+                        {/* Text Truncated Badge */}
+                        {selectedAsset.text_truncated && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/50">
+                            Text Truncated
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Provider Link Button */}
                   {selectedAsset.provider_link && (
