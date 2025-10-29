@@ -215,7 +215,6 @@ class LogsWatcher:
 
         poll_count = 0
 
-
         while self.is_running:
             try:
                 poll_count += 1
@@ -239,16 +238,14 @@ class LogsWatcher:
                                         f"  CSV: {file.name} (mtime: {mtime}, last: {last_mtime})"
                                     )
 
-                                # Trigger import on first detection (last_mtime == 0) or modification (mtime > last_mtime)
+                                # Only trigger import on MODIFICATION (mtime > last_mtime)
+                                # Skip first detection (last_mtime == 0) to prevent restart duplicates
                                 if last_mtime == 0:
-                                    logger.info(
-                                        f"POLLING DETECTED: NEW CSV FILE {file.name}!"
-                                    )
-                                    logger.debug(f"  File mtime: {mtime}")
-                                    logger.debug(
-                                        "  First detection - triggering import"
-                                    )
-                                    self.on_csv_modified()
+                                    # First detection - just record mtime, don't import
+                                    if poll_count % 12 == 1:
+                                        logger.debug(
+                                            f"  [SKIP] First detection of {file.name}, recording mtime only (no import)"
+                                        )
                                 elif mtime > last_mtime:
                                     logger.info(f"POLLING DETECTED: CSV modification!")
                                     logger.debug(f"  File: {file.name}")
@@ -292,16 +289,14 @@ class LogsWatcher:
                                             f"  JSON: {file.name} (mtime: {mtime}, last: {last_mtime})"
                                         )
 
-                                    # Trigger import on first detection (last_mtime == 0) or modification (mtime > last_mtime)
+                                    # Only trigger import on MODIFICATION (mtime > last_mtime)
+                                    # Skip first detection (last_mtime == 0) to prevent restart duplicates
                                     if last_mtime == 0:
-                                        logger.info(
-                                            f"POLLING DETECTED: NEW JSON FILE {file.name}!"
-                                        )
-                                        logger.debug(f"  File mtime: {mtime}")
-                                        logger.debug(
-                                            "  First detection - triggering import"
-                                        )
-                                        self.on_runtime_json_modified(file.name)
+                                        # First detection - just record mtime, don't import
+                                        if poll_count % 12 == 1:
+                                            logger.debug(
+                                                f"  [SKIP] First detection of {file.name}, recording mtime only (no import)"
+                                            )
                                     elif mtime > last_mtime:
                                         logger.info(
                                             f"POLLING DETECTED: {file.name} modification!"

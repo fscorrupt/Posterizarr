@@ -4225,13 +4225,20 @@ async def get_status():
                     log_filename = mode_log_map.get(finished_mode, "Scriptlog.log")
                     log_path = LOGS_DIR / log_filename
 
+                    # Runtime import is now handled by logs_watcher automatically
+                    # Commenting out to prevent duplicate entries
+                    # if log_path.exists():
+                    #     save_runtime_to_db(log_path, finished_mode)
+                    #     logger.info(
+                    #         f"Runtime statistics saved to database for {finished_mode} mode"
+                    #     )
+                    # else:
+                    #     logger.warning(f"Log file not found: {log_path}")
+
                     if log_path.exists():
-                        save_runtime_to_db(log_path, finished_mode)
                         logger.info(
-                            f"Runtime statistics saved to database for {finished_mode} mode"
+                            f"Runtime statistics will be imported by logs_watcher for {finished_mode} mode"
                         )
-                    else:
-                        logger.warning(f"Log file not found: {log_path}")
                 except Exception as e:
                     logger.error(f"Error saving runtime to database: {e}")
 
@@ -4275,10 +4282,17 @@ async def get_status():
                 if RUNTIME_DB_AVAILABLE:
                     try:
                         log_path = LOGS_DIR / "Scriptlog.log"
+                        # Runtime import is now handled by logs_watcher automatically
+                        # Commenting out to prevent duplicate entries
+                        # if log_path.exists():
+                        #     save_runtime_to_db(log_path, "scheduled")
+                        #     logger.info(
+                        #         "Runtime statistics saved to database for scheduled run"
+                        #     )
+
                         if log_path.exists():
-                            save_runtime_to_db(log_path, "scheduled")
                             logger.info(
-                                "Runtime statistics saved to database for scheduled run"
+                                "Runtime statistics will be imported by logs_watcher for scheduled run"
                             )
                     except Exception as e:
                         logger.error(f"Error saving scheduler runtime to database: {e}")
