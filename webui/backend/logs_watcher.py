@@ -215,7 +215,6 @@ class LogsWatcher:
 
         poll_count = 0
 
-        poll_count = 0
 
         while self.is_running:
             try:
