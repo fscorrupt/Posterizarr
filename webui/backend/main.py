@@ -30,6 +30,7 @@ import threading
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import sys
+from urllib.parse import quote
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -778,11 +779,13 @@ def process_image_path(image_path: Path):
     try:
         relative_path = image_path.relative_to(ASSETS_DIR)
         url_path = str(relative_path).replace("\\", "/")
+        # URL encode the path to handle special characters like #
+        encoded_url_path = quote(url_path, safe="/")
         return {
             "path": str(relative_path),
             "name": image_path.name,
             "size": image_path.stat().st_size,
-            "url": f"/poster_assets/{url_path}",
+            "url": f"/poster_assets/{encoded_url_path}",
         }
     except Exception as e:
         logger.error(f"Error processing image path {image_path}: {e}")
@@ -1068,10 +1071,12 @@ def find_poster_in_assets(
                     relative_path = image_file.relative_to(ASSETS_DIR)
                     # Create URL path with forward slashes
                     url_path = str(relative_path).replace("\\", "/")
+                    # URL encode the path to handle special characters like #
+                    encoded_url_path = quote(url_path, safe="/")
                     # Add cache busting parameter using file modification time
                     mtime = int(image_file.stat().st_mtime)
                     logger.info(f"Found image: {url_path} (mtime: {mtime})")
-                    return f"/poster_assets/{url_path}?t={mtime}"
+                    return f"/poster_assets/{encoded_url_path}?t={mtime}"
 
         logger.warning(
             f"No image found for rootfolder: {rootfolder}, type: {asset_type}"
@@ -6955,6 +6960,8 @@ async def get_manual_assets_gallery():
 
                         # Build relative path from manual assets dir
                         relative_path = f"{library_name}/{folder_name}/{img_file.name}"
+                        # URL encode the path to handle special characters like #
+                        encoded_relative_path = quote(relative_path, safe="/")
 
                         assets.append(
                             {
@@ -6962,7 +6969,7 @@ async def get_manual_assets_gallery():
                                 "path": relative_path,
                                 "type": asset_type,
                                 "size": img_file.stat().st_size,
-                                "url": f"/manual_poster_assets/{relative_path}",
+                                "url": f"/manual_poster_assets/{encoded_relative_path}",
                             }
                         )
                         total_assets += 1
@@ -7192,12 +7199,14 @@ async def get_folder_view_assets(item_path: str):
                     # Create relative path from ASSETS_DIR
                     relative_path = image_path.relative_to(ASSETS_DIR)
                     url_path = str(relative_path).replace("\\", "/")
+                    # URL encode the path to handle special characters like #
+                    encoded_url_path = quote(url_path, safe="/")
 
                     assets.append(
                         {
                             "name": image_path.name,
                             "path": str(relative_path).replace("\\", "/"),
-                            "url": f"/poster_assets/{url_path}",
+                            "url": f"/poster_assets/{encoded_url_path}",
                             "size": image_path.stat().st_size,
                         }
                     )
@@ -10645,13 +10654,15 @@ async def find_asset_for_imagechoice(record_id: int):
         )
         relative_path = asset_file.relative_to(ASSETS_DIR)
         path_str = str(relative_path).replace("\\", "/")
+        # URL encode the path to handle special characters like #
+        encoded_path_str = quote(path_str, safe="/")
 
         return {
             "success": True,
             "asset": {
                 "name": asset_file.name,
                 "path": path_str,
-                "url": f"/poster_assets/{path_str}",
+                "url": f"/poster_assets/{encoded_path_str}",
                 "type": asset_type,
                 "library": library,
             },
