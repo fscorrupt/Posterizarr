@@ -10,6 +10,8 @@ import {
   CheckSquare,
   Square,
   X,
+  Calendar,
+  HardDrive,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -182,6 +184,83 @@ function Gallery() {
 
   const formatDisplayPath = (path) => {
     return path;
+  };
+
+  // Helper function to get media type from filename/path
+  const getMediaType = (imagePath, imageName) => {
+    const path = imagePath.toLowerCase();
+    const name = imageName.toLowerCase();
+
+    // Check the folder structure
+    if (path.includes("/seasons/") || path.includes("\\seasons\\")) {
+      return "Season";
+    }
+    if (path.includes("/titlecards/") || path.includes("\\titlecards\\")) {
+      return "Episode";
+    }
+    if (path.includes("/backgrounds/") || path.includes("\\backgrounds\\")) {
+      return "Background";
+    }
+
+    // Check filename patterns
+    if (
+      name.includes("season") &&
+      (name.includes("poster") || name.match(/s\d+/i))
+    ) {
+      return "Season";
+    }
+    if (name.includes("background")) {
+      return "Background";
+    }
+
+    // Check if it's a show (has series/show in path or multiple seasons)
+    if (
+      path.includes("/series/") ||
+      path.includes("\\series\\") ||
+      path.includes("/shows/") ||
+      path.includes("\\shows\\")
+    ) {
+      return "Show";
+    }
+
+    // Default to Movie for posters folder
+    return "Movie";
+  };
+
+  // Get color for media type badge
+  const getTypeColor = (type) => {
+    switch (type) {
+      case "Movie":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+      case "Show":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/50";
+      case "Season":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/50";
+      case "Episode":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/50";
+      case "Background":
+        return "bg-pink-500/20 text-pink-400 border-pink-500/50";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+    }
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = (filePath) => {
+    try {
+      // Try to get file modification time from the file system
+      // Since we don't have direct access, we'll show when it was loaded
+      return new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      return "Unknown";
+    }
   };
 
   const deletePoster = async (imagePath, imageName, event) => {
@@ -907,11 +986,27 @@ function Gallery() {
                 </h3>
 
                 <div className="space-y-4">
+                  {/* Media Type */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      Media Type
+                    </label>
+                    <div className="mt-1">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
+                          getMediaType(selectedImage.path, selectedImage.name)
+                        )}`}
+                      >
+                        {getMediaType(selectedImage.path, selectedImage.name)}
+                      </span>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-sm text-theme-muted">
                       Show/Movie
                     </label>
-                    <p className="text-theme-text break-all">
+                    <p className="text-theme-text break-all mt-1">
                       {selectedImage.path.split(/[\\/]/).slice(-2, -1)[0] ||
                         "Unknown"}
                     </p>
@@ -919,21 +1014,35 @@ function Gallery() {
 
                   <div>
                     <label className="text-sm text-theme-muted">Filename</label>
-                    <p className="text-theme-text break-all">
+                    <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
                   </div>
 
+                  {/* Timestamp - using current time as placeholder since file metadata isn't available */}
                   <div>
-                    <label className="text-sm text-theme-muted">Path</label>
-                    <p className="text-theme-text text-sm break-all">
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Last Viewed
+                    </label>
+                    <p className="text-theme-text mt-1 text-sm">
+                      {formatTimestamp(selectedImage.path)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <HardDrive className="w-3.5 h-3.5" />
+                      Path
+                    </label>
+                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
                       {formatDisplayPath(selectedImage.path)}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-sm text-theme-muted">Size</label>
-                    <p className="text-theme-text">
+                    <p className="text-theme-text mt-1">
                       {(selectedImage.size / 1024).toFixed(2)} KB
                     </p>
                   </div>

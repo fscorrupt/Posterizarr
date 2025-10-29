@@ -10,6 +10,8 @@ import {
   CheckSquare,
   Square,
   X,
+  Calendar,
+  HardDrive,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -200,6 +202,22 @@ function BackgroundsGallery() {
 
   const formatDisplayPath = (path) => {
     return path;
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = () => {
+    try {
+      return new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      return "Unknown";
+    }
   };
 
   const deleteBackground = async (imagePath, imageName, event) => {
@@ -911,11 +929,23 @@ function BackgroundsGallery() {
                 </h3>
 
                 <div className="space-y-4">
+                  {/* Media Type */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      Media Type
+                    </label>
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium bg-pink-500/20 text-pink-400 border-pink-500/50">
+                        Background
+                      </span>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-sm text-theme-muted">
                       Show/Movie
                     </label>
-                    <p className="text-theme-text break-all">
+                    <p className="text-theme-text break-all mt-1">
                       {selectedImage.path.split(/[\\/]/).slice(-2, -1)[0] ||
                         "Unknown"}
                     </p>
@@ -923,21 +953,35 @@ function BackgroundsGallery() {
 
                   <div>
                     <label className="text-sm text-theme-muted">Filename</label>
-                    <p className="text-theme-text break-all">
+                    <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
                   </div>
 
+                  {/* Timestamp */}
                   <div>
-                    <label className="text-sm text-theme-muted">Path</label>
-                    <p className="text-theme-text text-sm break-all">
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Last Viewed
+                    </label>
+                    <p className="text-theme-text mt-1 text-sm">
+                      {formatTimestamp()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <HardDrive className="w-3.5 h-3.5" />
+                      Path
+                    </label>
+                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
                       {formatDisplayPath(selectedImage.path)}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-sm text-theme-muted">Size</label>
-                    <p className="text-theme-text">
+                    <p className="text-theme-text mt-1">
                       {(selectedImage.size / 1024).toFixed(2)} KB
                     </p>
                   </div>

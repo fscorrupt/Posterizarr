@@ -14,6 +14,10 @@ import {
   ImageOff,
   ChevronLeft,
   ChevronRight,
+  X,
+  Calendar,
+  Folder,
+  HardDrive,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLoading } from "../context/DashboardLoadingContext";
@@ -35,6 +39,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
   const [error, setError] = useState(null); // Error state
 
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null); // For modal
 
   // Tab filter state with localStorage
   const [activeTab, setActiveTab] = useState(() => {
@@ -244,6 +249,53 @@ function RecentAssets({ refreshTrigger = 0 }) {
     }
   };
 
+  // Get the media type label (Movie, Show, Season, Episode, Background)
+  const getMediaTypeLabel = (asset) => {
+    const type = asset.type?.toLowerCase() || "";
+
+    switch (type) {
+      case "movie":
+      case "poster":
+        return "Movie";
+      case "show":
+        return "Show";
+      case "season":
+        return "Season";
+      case "episode":
+      case "titlecard":
+      case "title_card":
+        return "Episode";
+      case "background":
+        return "Background";
+      default:
+        return "Asset";
+    }
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "Unknown";
+
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return "Unknown";
+
+      // Format: "Oct 29, 2025 at 3:45 PM"
+      const options = {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      return date.toLocaleString("en-US", options);
+    } catch (e) {
+      return "Unknown";
+    }
+  };
+
   // Determine if asset should use landscape aspect ratio
   const isLandscapeAsset = (type) => {
     const typeStr = type?.toLowerCase() || "";
@@ -418,7 +470,8 @@ function RecentAssets({ refreshTrigger = 0 }) {
               {displayedAssets.map((asset, index) => (
                 <div
                   key={index}
-                  className="bg-theme-bg rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all group flex flex-col"
+                  onClick={() => setSelectedAsset(asset)}
+                  className="bg-theme-bg rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all group flex flex-col cursor-pointer"
                 >
                   {/* Poster/Background Image - Dynamic Aspect Ratio */}
                   <div
@@ -455,6 +508,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
                         href={asset.provider_link}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="absolute top-2 right-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100"
                         title="View on provider"
                       >
@@ -577,6 +631,196 @@ function RecentAssets({ refreshTrigger = 0 }) {
             </div>
           </div>
         </>
+      )}
+
+      {/* Asset Details Modal */}
+      {selectedAsset && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedAsset(null)}
+        >
+          <div
+            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedAsset(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="flex flex-col md:flex-row max-h-[90vh]">
+              {/* Image */}
+              <div className="flex-1 flex items-center justify-center bg-black p-4">
+                {selectedAsset.has_poster ? (
+                  <img
+                    src={selectedAsset.poster_url}
+                    alt={selectedAsset.title}
+                    className="max-w-full max-h-[80vh] object-contain"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="text-center flex-col items-center justify-center"
+                  style={{
+                    display: selectedAsset.has_poster ? "none" : "flex",
+                  }}
+                >
+                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
+                    <ImageOff className="w-16 h-16 text-theme-primary" />
+                  </div>
+                  <p className="text-white text-lg font-semibold mb-2">
+                    Preview Not Available
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    The image could not be loaded
+                  </p>
+                </div>
+              </div>
+
+              {/* Info Panel */}
+              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
+                <h3 className="text-xl font-bold text-theme-text mb-4">
+                  Asset Details
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Media Type */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      Media Type
+                    </label>
+                    <div className="mt-1">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
+                          selectedAsset.type
+                        )}`}
+                      >
+                        {getMediaTypeLabel(selectedAsset)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title/Name */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      {getMediaTypeLabel(selectedAsset) === "Episode"
+                        ? "Episode Title"
+                        : "Title"}
+                    </label>
+                    <p className="text-theme-text break-all mt-1">
+                      {selectedAsset.title}
+                    </p>
+                  </div>
+
+                  {/* Timestamp */}
+                  {selectedAsset.created_at && (
+                    <div>
+                      <label className="text-sm text-theme-muted flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        Added On
+                      </label>
+                      <p className="text-theme-text mt-1">
+                        {formatTimestamp(selectedAsset.created_at)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Library */}
+                  {selectedAsset.library && (
+                    <div>
+                      <label className="text-sm text-theme-muted flex items-center gap-1">
+                        <Folder className="w-3.5 h-3.5" />
+                        Library
+                      </label>
+                      <p className="text-theme-text mt-1">
+                        {selectedAsset.library}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Path */}
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <HardDrive className="w-3.5 h-3.5" />
+                      Path
+                    </label>
+                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
+                      {selectedAsset.rootfolder}
+                    </p>
+                  </div>
+
+                  {/* Language Badge */}
+                  {selectedAsset.language &&
+                    selectedAsset.language !== "N/A" && (
+                      <div>
+                        <label className="text-sm text-theme-muted">
+                          Language
+                        </label>
+                        <div className="mt-1">
+                          <span
+                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getLanguageColor(
+                              selectedAsset.language
+                            )}`}
+                          >
+                            {selectedAsset.language}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Additional Badges */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      Properties
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {/* Manual Badge */}
+                      {selectedAsset.is_manually_created && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/50">
+                          Manual
+                        </span>
+                      )}
+
+                      {/* Fallback Badge */}
+                      {selectedAsset.fallback && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/50">
+                          Fallback
+                        </span>
+                      )}
+
+                      {/* Text Truncated Badge */}
+                      {selectedAsset.text_truncated && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/50">
+                          Text Truncated
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Provider Link Button */}
+                  {selectedAsset.provider_link && (
+                    <div className="pt-4 border-t border-theme">
+                      <a
+                        href={selectedAsset.provider_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-all"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View on Provider
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Poster Grid Styles */}
