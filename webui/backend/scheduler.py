@@ -324,24 +324,30 @@ class PosterizarrScheduler:
 
             logger.info(f"Scheduled run finished with return code: {returncode}")
 
-            # Import schedule.json to runtime database after successful run
+            # Runtime import is now handled by logs_watcher automatically
+            # Commenting out to prevent duplicate entries
+            # if returncode == 0:
+            #     try:
+            #         from runtime_parser import save_runtime_to_db
+            #
+            #         # schedule.json is created in Logs directory
+            #         logs_dir = self.base_dir / "Logs"
+            #         schedule_json = logs_dir / "scheduled.json"
+            #
+            #         if schedule_json.exists():
+            #             # Use the Scriptlog.log path as base, mode will determine JSON file
+            #             log_path = logs_dir / "Scriptlog.log"
+            #             save_runtime_to_db(log_path, "scheduled")
+            #             logger.info("scheduled.json runtime data saved to database")
+            #         else:
+            #             logger.warning("scheduled.json not found after scheduled run")
+            #     except Exception as e:
+            #         logger.error(f"Error saving schedule runtime to database: {e}")
+
             if returncode == 0:
-                try:
-                    from runtime_parser import save_runtime_to_db
-
-                    # schedule.json is created in Logs directory
-                    logs_dir = self.base_dir / "Logs"
-                    schedule_json = logs_dir / "scheduled.json"
-
-                    if schedule_json.exists():
-                        # Use the Scriptlog.log path as base, mode will determine JSON file
-                        log_path = logs_dir / "Scriptlog.log"
-                        save_runtime_to_db(log_path, "scheduled")
-                        logger.info("scheduled.json runtime data saved to database")
-                    else:
-                        logger.warning("scheduled.json not found after scheduled run")
-                except Exception as e:
-                    logger.error(f"Error saving schedule runtime to database: {e}")
+                logger.info(
+                    "Scheduled run completed successfully - runtime will be imported by logs_watcher"
+                )
 
         except Exception as e:
             # Better error logging with full stack trace
