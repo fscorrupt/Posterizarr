@@ -1312,6 +1312,9 @@
     "allTypes": "Tous les types",
     "allLibraries": "Toutes les bibliothèques",
     "allCategories": "Toutes les catégories",
+    "allStatuses": "Tous",
+    "resolved": "Résolu",
+    "unresolved": "Non résolu",
     "allAssets": "Toutes les ressources",
     "noAssetsFound": "Aucune ressource trouvée",
     "type": "Type",
@@ -1322,9 +1325,14 @@
     "replaceTooltip": "Remplacer cette ressource",
     "noEditsNeeded": "Marquer comme résolu",
     "noEditsNeededTooltip": "Marquer cette ressource comme vérifiée et la masquer de la liste",
+    "unresolve": "Réactiver",
+    "unresolveTooltip": "Marquer comme non résolu",
     "markedAsReviewed": "{{title}} marqué comme vérifié et masqué de la liste",
+    "markedAsUnresolved": "{{title}} marqué comme non résolu",
     "updateFailed": "Échec de la mise à jour de {{title}}",
-    "updateError": "Erreur lors de la mise à jour de la ressource : {{error}}"
+    "unresolveFailed": "Échec de la réactivation de {{title}}",
+    "updateError": "Erreur lors de la mise à jour de la ressource : {{error}}",
+    "unresolveError": "Erreur : {{error}}"
   },
   "common": {
     "save": "Enregistrer",

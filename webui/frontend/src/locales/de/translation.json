@@ -1365,6 +1365,9 @@
     "allTypes": "Alle Typen",
     "allLibraries": "Alle Bibliotheken",
     "allCategories": "Alle Kategorien",
+    "allStatuses": "Alle",
+    "resolved": "Gelöst",
+    "unresolved": "Ungelöst",
     "allAssets": "Alle Assets",
     "noAssetsFound": "Keine Assets gefunden",
     "type": "Typ",
@@ -1375,9 +1378,14 @@
     "replaceTooltip": "Dieses Asset ersetzen",
     "noEditsNeeded": "Als gelöst markieren",
     "noEditsNeededTooltip": "Dieses Asset als überprüft markieren und aus der Liste ausblenden",
+    "unresolve": "Reaktivieren",
+    "unresolveTooltip": "Als ungelöst markieren",
     "markedAsReviewed": "{{title}} als überprüft markiert und aus der Liste ausgeblendet",
+    "markedAsUnresolved": "{{title}} als ungelöst markiert",
     "updateFailed": "Aktualisierung von {{title}} fehlgeschlagen",
-    "updateError": "Fehler beim Aktualisieren des Assets: {{error}}"
+    "unresolveFailed": "Reaktivierung von {{title}} fehlgeschlagen",
+    "updateError": "Fehler beim Aktualisieren des Assets: {{error}}",
+    "unresolveError": "Fehler: {{error}}"
   },
   "common": {
     "save": "Speichern",

@@ -1314,6 +1314,9 @@
     "allTypes": "All Types",
     "allLibraries": "All Libraries",
     "allCategories": "All Categories",
+    "allStatuses": "All",
+    "resolved": "Resolved",
+    "unresolved": "Unresolved",
     "allAssets": "All Assets",
     "noAssetsFound": "No assets found",
     "type": "Type",
@@ -1324,9 +1327,14 @@
     "replaceTooltip": "Replace this asset",
     "noEditsNeeded": "Mark as resolved",
     "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list",
+    "unresolve": "Unresolve",
+    "unresolveTooltip": "Mark as unresolved",
     "markedAsReviewed": "{{title}} marked as reviewed and hidden from list",
+    "markedAsUnresolved": "{{title}} marked as unresolved",
     "updateFailed": "Failed to update {{title}}",
-    "updateError": "Error updating asset: {{error}}"
+    "unresolveFailed": "Failed to unresolve {{title}}",
+    "updateError": "Error updating asset: {{error}}",
+    "unresolveError": "Error: {{error}}"
   },
   "common": {
     "save": "Save",

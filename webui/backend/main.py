@@ -5663,8 +5663,8 @@ async def run_manual_mode_upload(
                 logger.info(f"Manual upload image dimensions: {width}x{height} pixels")
 
                 # Define target ratios and tolerance
-                POSTER_RATIO = 2 / 3    # 0.666...
-                BACKGROUND_RATIO = 16 / 9 # 1.777...
+                POSTER_RATIO = 2 / 3  # 0.666...
+                BACKGROUND_RATIO = 16 / 9  # 1.777...
                 # Tolerance allows for minor pixel deviations
                 TOLERANCE = 0.05
 
@@ -9270,15 +9270,15 @@ async def upload_asset_replacement(
                 error_msg = "Image height cannot be zero."
                 logger.error(error_msg)
                 raise HTTPException(status_code=400, detail=error_msg)
-            
+
             # Calculate ratio
             ratio = width / height
             logger.info(f"Image aspect ratio: {ratio:.3f}")
 
             # Define expected ratios
-            POSTER_RATIO = 2 / 3   # ≈ 0.667
-            BG_TC_RATIO = 16 / 9   # ≈ 1.778
-            TOLERANCE = 0.05       # ±5% tolerance
+            POSTER_RATIO = 2 / 3  # ≈ 0.667
+            BG_TC_RATIO = 16 / 9  # ≈ 1.778
+            TOLERANCE = 0.05  # ±5% tolerance
 
             def ratio_within_tolerance(actual, expected, tolerance):
                 return abs(actual - expected) / expected <= tolerance
@@ -10207,8 +10207,8 @@ class ImageChoiceRecord(BaseModel):
 async def get_assets_overview():
     """
     Get asset overview with categorized issues.
-    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Total with Issues
-    Note: Manual entries are excluded from all categories
+    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Total with Issues, Resolved
+    Note: Manual entries are categorized separately as "Resolved"
     """
     if not DATABASE_AVAILABLE or db is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -10247,15 +10247,17 @@ async def get_assets_overview():
         non_primary_provider = []
         truncated_text = []
         assets_with_issues = []
+        resolved_assets = []  # New category for Manual=true items
 
         # Categorize each record
         for record in records:
             record_dict = dict(record)
 
-            # Skip Manual entries entirely (Manual == "True" or "true")
+            # Check if this is a Manual entry (resolved)
             manual_value = str(record_dict.get("Manual", "")).lower()
             if manual_value == "true":
-                continue
+                resolved_assets.append(record_dict)
+                continue  # Skip issue categorization for resolved items
 
             has_issue = False
 
@@ -10373,6 +10375,10 @@ async def get_assets_overview():
                 "assets_with_issues": {
                     "count": len(assets_with_issues),
                     "assets": assets_with_issues,
+                },
+                "resolved": {
+                    "count": len(resolved_assets),
+                    "assets": resolved_assets,
                 },
             },
             "config": {

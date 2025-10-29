@@ -1312,6 +1312,9 @@
     "allTypes": "Todos os tipos",
     "allLibraries": "Todas as bibliotecas",
     "allCategories": "Todas as categorias",
+    "allStatuses": "Todos",
+    "resolved": "Resolvido",
+    "unresolved": "Não resolvido",
     "allAssets": "Todos os ativos",
     "noAssetsFound": "Nenhum ativo encontrado",
     "type": "Tipo",
@@ -1322,9 +1325,14 @@
     "replaceTooltip": "Substituir este ativo",
     "noEditsNeeded": "Marcar como resolvido",
     "noEditsNeededTooltip": "Marcar este ativo como revisado e ocultá-lo da lista",
+    "unresolve": "Reativar",
+    "unresolveTooltip": "Marcar como não resolvido",
     "markedAsReviewed": "{{title}} marcado como revisado e oculto da lista",
+    "markedAsUnresolved": "{{title}} marcado como não resolvido",
     "updateFailed": "Falha ao atualizar {{title}}",
-    "updateError": "Erro ao atualizar ativo: {{error}}"
+    "unresolveFailed": "Falha ao reativar {{title}}",
+    "updateError": "Erro ao atualizar ativo: {{error}}",
+    "unresolveError": "Erro: {{error}}"
   },
   "common": {
     "save": "Salvar",

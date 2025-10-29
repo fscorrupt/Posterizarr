@@ -1312,6 +1312,9 @@
     "allTypes": "Tutti i tipi",
     "allLibraries": "Tutte le librerie",
     "allCategories": "Tutte le categorie",
+    "allStatuses": "Tutti",
+    "resolved": "Risolto",
+    "unresolved": "Non risolto",
     "allAssets": "Tutti gli asset",
     "noAssetsFound": "Nessun asset trovato",
     "type": "Tipo",
@@ -1322,9 +1325,14 @@
     "replaceTooltip": "Sostituisci questo asset",
     "noEditsNeeded": "Contrassegna come risolto",
     "noEditsNeededTooltip": "Contrassegna questo asset come verificato e nascondilo dall'elenco",
+    "unresolve": "Riattiva",
+    "unresolveTooltip": "Contrassegna come non risolto",
     "markedAsReviewed": "{{title}} contrassegnato come verificato e nascosto dall'elenco",
+    "markedAsUnresolved": "{{title}} contrassegnato come non risolto",
     "updateFailed": "Aggiornamento di {{title}} non riuscito",
-    "updateError": "Errore durante l'aggiornamento dell'asset: {{error}}"
+    "unresolveFailed": "Riattivazione di {{title}} non riuscita",
+    "updateError": "Errore durante l'aggiornamento dell'asset: {{error}}",
+    "unresolveError": "Errore: {{error}}"
   },
   "common": {
     "save": "Salva",
