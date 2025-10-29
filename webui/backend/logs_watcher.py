@@ -423,7 +423,7 @@ class LogsWatcher:
         try:
             if self.runtime_callback:
                 logger.info(
-                    f"� Triggering runtime import for {json_filename} in background thread..."
+                    f"Triggering runtime import for {json_filename} in background thread..."
                 )
                 logger.debug(f"  Callback function: {self.runtime_callback}")
                 logger.debug(f"  JSON path: {self.logs_dir / json_filename}")
