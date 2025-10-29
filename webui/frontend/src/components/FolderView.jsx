@@ -1073,7 +1073,12 @@ function FolderView() {
                           getMediaType(selectedImage.path, selectedImage.name)
                         )}`}
                       >
-                        {t(`common.${getMediaType(selectedImage.path, selectedImage.name).toLowerCase()}`)}
+                        {t(
+                          `common.${getMediaType(
+                            selectedImage.path,
+                            selectedImage.name
+                          ).toLowerCase()}`
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1088,7 +1093,9 @@ function FolderView() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">{t("common.filename")}</label>
+                    <label className="text-sm text-theme-muted">
+                      {t("common.filename")}
+                    </label>
                     <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
@@ -1116,7 +1123,9 @@ function FolderView() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">{t("common.size")}</label>
+                    <label className="text-sm text-theme-muted">
+                      {t("common.size")}
+                    </label>
                     <p className="text-theme-text mt-1">
                       {formatFileSize(selectedImage.size)}
                     </p>

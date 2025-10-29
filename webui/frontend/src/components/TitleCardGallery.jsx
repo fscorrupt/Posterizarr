@@ -945,7 +945,9 @@ function TitleCardGallery() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">{t("common.filename")}</label>
+                    <label className="text-sm text-theme-muted">
+                      {t("common.filename")}
+                    </label>
                     <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
@@ -973,7 +975,9 @@ function TitleCardGallery() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">{t("common.size")}</label>
+                    <label className="text-sm text-theme-muted">
+                      {t("common.size")}
+                    </label>
                     <p className="text-theme-text mt-1">
                       {(selectedImage.size / 1024).toFixed(2)} KB
                     </p>
