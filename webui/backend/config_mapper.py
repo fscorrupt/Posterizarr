@@ -277,6 +277,7 @@ CONFIG_GROUPS = {
     "JellyfinAPIKey": "ApiPart",
     "EmbyAPIKey": "ApiPart",
     "PreferredBackgroundLanguageOrder": "ApiPart",
+    "PreferredTCLanguageOrder": "ApiPart",
     # PlexPart
     "PlexLibstoExclude": "PlexPart",
     "PlexUrl": "PlexPart",
@@ -533,6 +534,7 @@ UI_GROUPS = {
         "PreferredLanguageOrder",
         "PreferredSeasonLanguageOrder",
         "PreferredBackgroundLanguageOrder",
+        "PreferredTCLanguageOrder",
     ],
     "Image Filters": [
         "WidthHeightFilter",
@@ -918,6 +920,7 @@ DISPLAY_NAMES = {
     "PreferredLanguageOrder": "Preferred Language Order",
     "PreferredSeasonLanguageOrder": "Season Language Order",
     "PreferredBackgroundLanguageOrder": "Background Language Order",
+    "PreferredTCLanguageOrder": "TitleCard Language Order",
     # Image Filters
     "WidthHeightFilter": "Width/Height Filter",
     "PosterMinWidth": "Poster Min Width",

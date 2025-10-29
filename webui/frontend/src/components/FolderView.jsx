@@ -15,6 +15,8 @@ import {
   Square,
   Check,
   X,
+  Calendar,
+  HardDrive,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -420,6 +422,84 @@ function FolderView() {
     if (name.includes("titlecard") || /s\d{2}e\d{2}/i.test(name))
       return "titlecard";
     return "poster"; // default
+  };
+
+  // Helper function to get media type from filename/path
+  const getMediaType = (assetPath, assetName) => {
+    const path = assetPath.toLowerCase();
+    const name = assetName.toLowerCase();
+
+    // Check the folder structure
+    if (path.includes("/seasons/") || path.includes("\\seasons\\")) {
+      return "Season";
+    }
+    if (path.includes("/titlecards/") || path.includes("\\titlecards\\")) {
+      return "Episode";
+    }
+    if (path.includes("/backgrounds/") || path.includes("\\backgrounds\\")) {
+      return "Background";
+    }
+
+    // Check filename patterns
+    if (
+      name.includes("season") &&
+      (name.includes("poster") || name.match(/s\d+/i))
+    ) {
+      return "Season";
+    }
+    if (name.includes("background")) {
+      return "Background";
+    }
+    if (name.includes("titlecard") || /s\d{2}e\d{2}/i.test(name)) {
+      return "Episode";
+    }
+
+    // Check if it's a show (has series/show in path)
+    if (
+      path.includes("/series/") ||
+      path.includes("\\series\\") ||
+      path.includes("/shows/") ||
+      path.includes("\\shows\\")
+    ) {
+      return "Show";
+    }
+
+    // Default to Movie for posters
+    return "Movie";
+  };
+
+  // Get color for media type badge
+  const getTypeColor = (type) => {
+    switch (type) {
+      case "Movie":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+      case "Show":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/50";
+      case "Season":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/50";
+      case "Episode":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/50";
+      case "Background":
+        return "bg-pink-500/20 text-pink-400 border-pink-500/50";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+    }
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = () => {
+    try {
+      return new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      return "Unknown";
+    }
   };
 
   return (
@@ -982,9 +1062,30 @@ function FolderView() {
                 </h3>
 
                 <div className="space-y-4">
+                  {/* Media Type */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      {t("common.mediaType")}
+                    </label>
+                    <div className="mt-1">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
+                          getMediaType(selectedImage.path, selectedImage.name)
+                        )}`}
+                      >
+                        {t(
+                          `common.${getMediaType(
+                            selectedImage.path,
+                            selectedImage.name
+                          ).toLowerCase()}`
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-sm text-theme-muted">Folder</label>
-                    <p className="text-theme-text break-all">
+                    <p className="text-theme-text break-all mt-1">
                       {currentPath.length > 0
                         ? currentPath[currentPath.length - 1]
                         : "Unknown"}
@@ -992,22 +1093,40 @@ function FolderView() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">Filename</label>
-                    <p className="text-theme-text break-all">
+                    <label className="text-sm text-theme-muted">
+                      {t("common.filename")}
+                    </label>
+                    <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
                   </div>
 
+                  {/* Timestamp */}
                   <div>
-                    <label className="text-sm text-theme-muted">Path</label>
-                    <p className="text-theme-text text-sm break-all">
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {t("common.lastViewed")}
+                    </label>
+                    <p className="text-theme-text mt-1 text-sm">
+                      {formatTimestamp()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <HardDrive className="w-3.5 h-3.5" />
+                      {t("common.path")}
+                    </label>
+                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
                       /{currentPath.join("/")}/{selectedImage.name}
                     </p>
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">Size</label>
-                    <p className="text-theme-text">
+                    <label className="text-sm text-theme-muted">
+                      {t("common.size")}
+                    </label>
+                    <p className="text-theme-text mt-1">
                       {formatFileSize(selectedImage.size)}
                     </p>
                   </div>

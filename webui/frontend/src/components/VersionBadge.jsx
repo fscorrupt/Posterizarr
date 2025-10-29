@@ -15,8 +15,9 @@ function VersionBadge() {
 
   useEffect(() => {
     checkVersion();
-
-    const interval = setInterval(checkVersion, 12 * 60 * 60 * 1000);
+    // Check version on every component mount (dashboard view load)
+    // Also check in background every hour
+    const interval = setInterval(checkVersion, 1 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -85,7 +86,12 @@ function VersionBadge() {
             >
               v{version}
             </span>
-            {!isOutOfDate && (
+            {isOutOfDate ? (
+              <span className="px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded-full text-xs font-medium border border-orange-500/40 flex items-center gap-1 animate-pulse">
+                <AlertCircle className="w-3 h-3" />
+                {t("versionBadge.updateAvailable")}
+              </span>
+            ) : (
               <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/30 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
                 {t("versionBadge.upToDate")}

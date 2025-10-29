@@ -534,16 +534,48 @@ function RuntimeHistory() {
       {/* Runtime Stats Section */}
       {summary && summary.latest_run && (
         <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-theme-primary/10">
-                <Clock className="w-5 h-5 text-theme-primary" />
+          {/* Header with Mode and Last Run */}
+          <div className="bg-theme-hover rounded-lg p-4 mb-6 border border-theme">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-primary/10">
+                  <Clock className="w-5 h-5 text-theme-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-theme-text">
+                    {t("dashboard.runtimeStats")}
+                  </h2>
+                </div>
               </div>
-              {t("dashboard.runtimeStats")}
-            </h2>
-            <p className="text-sm text-theme-muted ml-11">
-              Latest run statistics
-            </p>
+            </div>
+
+            {/* Mode and Timestamp Row */}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-theme">
+              {summary.latest_run.mode && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-theme-muted font-medium">
+                    {t("dashboard.mode")}:
+                  </span>
+                  <span
+                    className={`inline-flex px-3 py-1 rounded-full text-xs border capitalize font-semibold ${getModeColor(
+                      summary.latest_run.mode
+                    )}`}
+                  >
+                    {summary.latest_run.mode}
+                  </span>
+                </div>
+              )}
+              {summary.latest_run.start_time && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-theme-muted font-medium">
+                    {t("runtimeStats.lastRun")}:
+                  </span>
+                  <span className="text-sm text-theme-text font-mono">
+                    {formatDateToLocale(summary.latest_run.start_time)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Runtime Card */}

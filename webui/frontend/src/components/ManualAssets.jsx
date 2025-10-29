@@ -24,6 +24,8 @@ import {
   CheckSquare,
   Square,
   Check,
+  Calendar,
+  HardDrive,
 } from "lucide-react";
 import { useToast } from "../context/ToastContext";
 import ScrollToButtons from "./ScrollToButtons";
@@ -303,6 +305,54 @@ function ManualAssets() {
       case "season":
       default:
         return "aspect-[2/3]"; // Portrait for posters and seasons
+    }
+  };
+
+  // Helper function to get media type label
+  const getMediaTypeLabel = (type) => {
+    switch (type) {
+      case "poster":
+        return "Movie";
+      case "background":
+        return "Background";
+      case "season":
+        return "Season";
+      case "titlecard":
+        return "Episode";
+      default:
+        return "Asset";
+    }
+  };
+
+  // Get color for media type badge
+  const getMediaTypeColor = (type) => {
+    switch (type) {
+      case "poster":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+      case "background":
+        return "bg-pink-500/20 text-pink-400 border-pink-500/50";
+      case "season":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/50";
+      case "titlecard":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/50";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+    }
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = () => {
+    try {
+      return new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      return "Unknown";
     }
   };
 
@@ -1108,9 +1158,29 @@ function ManualAssets() {
                 </h3>
 
                 <div className="space-y-4">
+                  {/* Media Type */}
+                  <div>
+                    <label className="text-sm text-theme-muted">
+                      {t("common.mediaType")}
+                    </label>
+                    <div className="mt-1">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getMediaTypeColor(
+                          selectedImage.type
+                        )}`}
+                      >
+                        {t(
+                          `common.${getMediaTypeLabel(
+                            selectedImage.type
+                          ).toLowerCase()}`
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-sm text-theme-muted">Name</label>
-                    <p className="text-theme-text break-all">
+                    <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
                   </div>
@@ -1127,16 +1197,32 @@ function ManualAssets() {
                     </div>
                   </div>
 
+                  {/* Timestamp */}
                   <div>
-                    <label className="text-sm text-theme-muted">Path</label>
-                    <p className="text-theme-text text-sm break-all">
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {t("common.lastViewed")}
+                    </label>
+                    <p className="text-theme-text mt-1 text-sm">
+                      {formatTimestamp()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <HardDrive className="w-3.5 h-3.5" />
+                      {t("common.path")}
+                    </label>
+                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
                       {selectedImage.path}
                     </p>
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">Size</label>
-                    <p className="text-theme-text">
+                    <label className="text-sm text-theme-muted">
+                      {t("common.size")}
+                    </label>
+                    <p className="text-theme-text mt-1">
                       {(selectedImage.size / 1024).toFixed(2)} KB
                     </p>
                   </div>

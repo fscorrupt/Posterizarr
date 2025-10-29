@@ -134,6 +134,8 @@ const getConfigTooltips = (language) => {
         "Specify language preferences for seasons. Default is xx,en,de (xx is Textless). Use 2-digit ISO 3166-1 language codes",
       PreferredBackgroundLanguageOrder:
         "Specify language preferences for backgrounds. Default is PleaseFillMe (will take your poster lang order). Setting to 'xx' only searches for textless",
+      PreferredTCLanguageOrder:
+        "Specify language preferences for title cards/episode stills. Default is PleaseFillMe (will take your poster lang order). Use 2-digit ISO 3166-1 language codes",
       WidthHeightFilter:
         "If set to true, an additional resolution filter will be applied to Posters/Backgrounds (TMDB and TVDB) and Titlecards (TMDB only)",
       PosterMinWidth:
@@ -540,6 +542,8 @@ const getConfigTooltips = (language) => {
         "Sprachpräferenzen für Staffeln festlegen. Standard ist xx,en,de (xx ist Textlos). Verwenden Sie 2-stellige ISO 3166-1 Sprachcodes",
       PreferredBackgroundLanguageOrder:
         "Sprachpräferenzen für Hintergründe festlegen. Standard ist PleaseFillMe (übernimmt Ihre Poster-Sprachreihenfolge). Einstellung auf 'xx' sucht nur nach textlosen",
+      PreferredTCLanguageOrder:
+        "Sprachpräferenzen für Titelkarten/Episodenbilder festlegen. Standard ist PleaseFillMe (übernimmt Ihre Poster-Sprachreihenfolge). Verwenden Sie 2-stellige ISO 3166-1 Sprachcodes",
       WidthHeightFilter:
         "Wenn auf true gesetzt, wird ein zusätzlicher Auflösungsfilter auf Poster/Hintergründe (TMDB und TVDB) und Titelkarten (nur TMDB) angewendet",
       PosterMinWidth:
@@ -2296,7 +2300,8 @@ function ConfigEditor() {
     if (
       key === "PreferredLanguageOrder" ||
       key === "PreferredSeasonLanguageOrder" ||
-      key === "PreferredBackgroundLanguageOrder"
+      key === "PreferredBackgroundLanguageOrder" ||
+      key === "PreferredTCLanguageOrder"
     ) {
       return (
         <LanguageOrderSelector

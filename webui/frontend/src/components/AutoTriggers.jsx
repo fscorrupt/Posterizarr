@@ -17,7 +17,43 @@ import {
   Info,
   Copy,
   Check,
+  Download,
 } from "lucide-react";
+
+// Helper function to render step title with optional download button
+const StepTitle = ({ step, hasCode, isExpanded, onDownload }) => {
+  const showDownloadButton = step.title.includes("Download the Trigger Script");
+
+  return (
+    <div className="flex items-start justify-between mb-2 gap-2">
+      <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words leading-tight flex-1">
+        {step.title}
+      </h3>
+      <div className="flex items-center gap-2">
+        {showDownloadButton && onDownload && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload();
+            }}
+            className="px-3 py-1.5 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium flex-shrink-0"
+            title="Download script"
+          >
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Download</span>
+          </button>
+        )}
+        {hasCode && (
+          <ChevronRight
+            className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 mt-0.5 ${
+              isExpanded ? "rotate-90" : ""
+            }`}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
 
 function AutoTriggers() {
   const { t } = useTranslation();
@@ -126,6 +162,12 @@ function TautulliContent() {
     navigator.clipboard.writeText(code);
     setCopiedCode(id);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleDownloadScript = () => {
+    const url =
+      "https://github.com/fscorrupt/Posterizarr/blob/main/modules/trigger.py";
+    window.open(url, "_blank");
   };
 
   const dockerSteps = t("autoTriggers.tautulli.docker.steps", {
@@ -278,18 +320,12 @@ function TautulliContent() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2 gap-2">
-                        <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words leading-tight flex-1">
-                          {step.title}
-                        </h3>
-                        {hasCode && (
-                          <ChevronRight
-                            className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 mt-0.5 ${
-                              isExpanded ? "rotate-90" : ""
-                            }`}
-                          />
-                        )}
-                      </div>
+                      <StepTitle
+                        step={step}
+                        hasCode={hasCode}
+                        isExpanded={isExpanded}
+                        onDownload={handleDownloadScript}
+                      />
                       <p className="text-theme-muted text-xs sm:text-sm mb-2 sm:mb-3 break-words leading-relaxed">
                         {step.description}
                       </p>
@@ -428,6 +464,12 @@ function SonarrContent() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleDownloadScript = () => {
+    const url =
+      "https://github.com/fscorrupt/Posterizarr/blob/main/modules/ArrTrigger.sh";
+    window.open(url, "_blank");
+  };
+
   const steps = t("autoTriggers.sonarr.steps", { returnObjects: true });
 
   return (
@@ -507,18 +549,12 @@ function SonarrContent() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2 gap-2">
-                        <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words leading-tight flex-1">
-                          {step.title}
-                        </h3>
-                        {hasCode && (
-                          <ChevronRight
-                            className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 mt-0.5 ${
-                              isExpanded ? "rotate-90" : ""
-                            }`}
-                          />
-                        )}
-                      </div>
+                      <StepTitle
+                        step={step}
+                        hasCode={hasCode}
+                        isExpanded={isExpanded}
+                        onDownload={handleDownloadScript}
+                      />
                       <p className="text-theme-muted text-xs sm:text-sm mb-2 sm:mb-3 break-words leading-relaxed">
                         {step.description}
                       </p>
@@ -655,6 +691,12 @@ function RadarrContent() {
     navigator.clipboard.writeText(code);
     setCopiedCode(id);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleDownloadScript = () => {
+    const url =
+      "https://github.com/fscorrupt/Posterizarr/blob/main/modules/ArrTrigger.sh";
+    window.open(url, "_blank");
   };
 
   const steps = t("autoTriggers.radarr.steps", { returnObjects: true });

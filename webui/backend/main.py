@@ -30,6 +30,7 @@ import threading
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import sys
+from urllib.parse import quote
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -440,6 +441,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import logs watcher module
+try:
+    logger.debug("Attempting to import logs_watcher module")
+    from logs_watcher import create_logs_watcher
+
+    LOGS_WATCHER_AVAILABLE = True
+    logger.info("Logs watcher module loaded successfully")
+except ImportError as e:
+    LOGS_WATCHER_AVAILABLE = False
+    logger.warning(
+        f"Logs watcher not available: {e}. Automatic file monitoring will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -447,6 +462,7 @@ logger.debug(f"Auth Middleware: {AUTH_MIDDLEWARE_AVAILABLE}")
 logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
+logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -763,11 +779,13 @@ def process_image_path(image_path: Path):
     try:
         relative_path = image_path.relative_to(ASSETS_DIR)
         url_path = str(relative_path).replace("\\", "/")
+        # URL encode the path to handle special characters like #
+        encoded_url_path = quote(url_path, safe="/")
         return {
             "path": str(relative_path),
             "name": image_path.name,
             "size": image_path.stat().st_size,
-            "url": f"/poster_assets/{url_path}",
+            "url": f"/poster_assets/{encoded_url_path}",
         }
     except Exception as e:
         logger.error(f"Error processing image path {image_path}: {e}")
@@ -1053,10 +1071,12 @@ def find_poster_in_assets(
                     relative_path = image_file.relative_to(ASSETS_DIR)
                     # Create URL path with forward slashes
                     url_path = str(relative_path).replace("\\", "/")
+                    # URL encode the path to handle special characters like #
+                    encoded_url_path = quote(url_path, safe="/")
                     # Add cache busting parameter using file modification time
                     mtime = int(image_file.stat().st_mtime)
                     logger.info(f"Found image: {url_path} (mtime: {mtime})")
-                    return f"/poster_assets/{url_path}?t={mtime}"
+                    return f"/poster_assets/{encoded_url_path}?t={mtime}"
 
         logger.warning(
             f"No image found for rootfolder: {rootfolder}, type: {asset_type}"
@@ -1288,7 +1308,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db
+    global scheduler, db, config_db, logs_watcher
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1361,6 +1381,33 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Database module not available, skipping database initialization")
 
+    # Initialize and start logs watcher if available
+    logs_watcher = None
+    if LOGS_WATCHER_AVAILABLE and DATABASE_AVAILABLE and RUNTIME_DB_AVAILABLE:
+        try:
+            logger.info(
+                "Initializing logs watcher for background process monitoring..."
+            )
+            logs_watcher = create_logs_watcher(
+                logs_dir=LOGS_DIR,
+                db_instance=db,
+                runtime_db_instance=runtime_db,
+            )
+            logs_watcher.start()
+            logger.info(
+                "✓ Logs watcher started - monitoring for background process files"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize logs watcher: {e}")
+            logs_watcher = None
+    else:
+        if not LOGS_WATCHER_AVAILABLE:
+            logger.info("Logs watcher module not available, skipping")
+        elif not DATABASE_AVAILABLE:
+            logger.info("Database not available, skipping logs watcher")
+        elif not RUNTIME_DB_AVAILABLE:
+            logger.info("Runtime database not available, skipping logs watcher")
+
     # Initialize and start scheduler if available
     if SCHEDULER_AVAILABLE:
         try:
@@ -1376,6 +1423,15 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+
+    # Stop logs watcher
+    if logs_watcher:
+        try:
+            logger.info("Stopping logs watcher...")
+            logs_watcher.stop()
+            logger.info("Logs watcher stopped")
+        except Exception as e:
+            logger.error(f"Error stopping logs watcher: {e}")
 
     # Stop queue listener for thread-safe logging
     global queue_listener
@@ -4174,13 +4230,20 @@ async def get_status():
                     log_filename = mode_log_map.get(finished_mode, "Scriptlog.log")
                     log_path = LOGS_DIR / log_filename
 
+                    # Runtime import is now handled by logs_watcher automatically
+                    # Commenting out to prevent duplicate entries
+                    # if log_path.exists():
+                    #     save_runtime_to_db(log_path, finished_mode)
+                    #     logger.info(
+                    #         f"Runtime statistics saved to database for {finished_mode} mode"
+                    #     )
+                    # else:
+                    #     logger.warning(f"Log file not found: {log_path}")
+
                     if log_path.exists():
-                        save_runtime_to_db(log_path, finished_mode)
                         logger.info(
-                            f"Runtime statistics saved to database for {finished_mode} mode"
+                            f"Runtime statistics will be imported by logs_watcher for {finished_mode} mode"
                         )
-                    else:
-                        logger.warning(f"Log file not found: {log_path}")
                 except Exception as e:
                     logger.error(f"Error saving runtime to database: {e}")
 
@@ -4224,10 +4287,17 @@ async def get_status():
                 if RUNTIME_DB_AVAILABLE:
                     try:
                         log_path = LOGS_DIR / "Scriptlog.log"
+                        # Runtime import is now handled by logs_watcher automatically
+                        # Commenting out to prevent duplicate entries
+                        # if log_path.exists():
+                        #     save_runtime_to_db(log_path, "scheduled")
+                        #     logger.info(
+                        #         "Runtime statistics saved to database for scheduled run"
+                        #     )
+
                         if log_path.exists():
-                            save_runtime_to_db(log_path, "scheduled")
                             logger.info(
-                                "Runtime statistics saved to database for scheduled run"
+                                "Runtime statistics will be imported by logs_watcher for scheduled run"
                             )
                     except Exception as e:
                         logger.error(f"Error saving scheduler runtime to database: {e}")
@@ -4825,6 +4895,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             preferred_background_language_order = flat_config.get(
                 "PreferredBackgroundLanguageOrder", ""
             )
+            preferred_tc_language_order = flat_config.get(
+                "PreferredTCLanguageOrder", ""
+            )
         else:
             # Fallback: Try both structures
             tmdb_token = grouped_config.get("tmdbtoken")
@@ -4838,6 +4911,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             )
             preferred_background_language_order = grouped_config.get(
                 "PreferredBackgroundLanguageOrder", ""
+            )
+            preferred_tc_language_order = grouped_config.get(
+                "PreferredTCLanguageOrder", ""
             )
 
             # If not found at root, try in ApiPart
@@ -4858,6 +4934,12 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             ):
                 preferred_background_language_order = grouped_config["ApiPart"].get(
                     "PreferredBackgroundLanguageOrder", ""
+                )
+            if not preferred_tc_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_tc_language_order = grouped_config["ApiPart"].get(
+                    "PreferredTCLanguageOrder", ""
                 )
 
         # Parse language preferences (handle both string and list formats)
@@ -4880,9 +4962,20 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         background_language_order_list = parse_language_order(
             preferred_background_language_order
         )
+        tc_language_order_list = parse_language_order(preferred_tc_language_order)
+
+        # If TC language order is empty or "PleaseFillMe", fall back to standard poster language order
+        if not tc_language_order_list or (
+            len(tc_language_order_list) == 1
+            and tc_language_order_list[0].lower() == "pleasefillme"
+        ):
+            logger.info(
+                "TC language order not configured, using standard poster language order"
+            )
+            tc_language_order_list = language_order_list
 
         logger.info(
-            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}"
+            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}, TitleCard: {tc_language_order_list}"
         )
 
         if not tmdb_token:
@@ -5039,15 +5132,13 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
 
                     title = f"{base_title} - S{request.season_number:02d}E{request.episode_number:02d}: {episode_title}"
 
-                    # Filter: Only 'xx' (no language/international) for title cards
-                    filtered_stills = [
-                        still
-                        for still in stills
-                        if (still.get("iso_639_1") or "xx").lower() == "xx"
-                    ]
+                    # Filter and sort by PreferredTCLanguageOrder
+                    filtered_stills = filter_and_sort_posters_by_language(
+                        stills, tc_language_order_list
+                    )
 
                     logger.info(
-                        f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering (xx only)"
+                        f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering by language preferences"
                     )
 
                     for still in filtered_stills:  # Load all stills
@@ -5612,8 +5703,8 @@ async def run_manual_mode_upload(
                 logger.info(f"Manual upload image dimensions: {width}x{height} pixels")
 
                 # Define target ratios and tolerance
-                POSTER_RATIO = 2 / 3    # 0.666...
-                BACKGROUND_RATIO = 16 / 9 # 1.777...
+                POSTER_RATIO = 2 / 3  # 0.666...
+                BACKGROUND_RATIO = 16 / 9  # 1.777...
                 # Tolerance allows for minor pixel deviations
                 TOLERANCE = 0.05
 
@@ -6869,6 +6960,8 @@ async def get_manual_assets_gallery():
 
                         # Build relative path from manual assets dir
                         relative_path = f"{library_name}/{folder_name}/{img_file.name}"
+                        # URL encode the path to handle special characters like #
+                        encoded_relative_path = quote(relative_path, safe="/")
 
                         assets.append(
                             {
@@ -6876,7 +6969,7 @@ async def get_manual_assets_gallery():
                                 "path": relative_path,
                                 "type": asset_type,
                                 "size": img_file.stat().st_size,
-                                "url": f"/manual_poster_assets/{relative_path}",
+                                "url": f"/manual_poster_assets/{encoded_relative_path}",
                             }
                         )
                         total_assets += 1
@@ -7106,12 +7199,14 @@ async def get_folder_view_assets(item_path: str):
                     # Create relative path from ASSETS_DIR
                     relative_path = image_path.relative_to(ASSETS_DIR)
                     url_path = str(relative_path).replace("\\", "/")
+                    # URL encode the path to handle special characters like #
+                    encoded_url_path = quote(url_path, safe="/")
 
                     assets.append(
                         {
                             "name": image_path.name,
                             "path": str(relative_path).replace("\\", "/"),
-                            "url": f"/poster_assets/{url_path}",
+                            "url": f"/poster_assets/{encoded_url_path}",
                             "size": image_path.stat().st_size,
                         }
                     )
@@ -7175,10 +7270,17 @@ async def get_recent_assets():
 
             # Determine if manually created based on Manual field or download_source
             manual_field = asset_dict.get("Manual", "N/A")
-            is_manually_created = manual_field in ["Yes", "true", True]
 
-            if not is_manually_created:
-                # Fallback check on download_source
+            # Manual can be: "Yes" (resolved), "No" (explicitly unresolved), "true"/"false" (legacy), or N/A (not set)
+            # "Yes" = resolved/manually marked as no edits needed
+            # "No" = explicitly unresolved (was resolved but user clicked unresolve)
+            # "true" = legacy resolved state
+            # "false" or N/A = regular assets
+
+            if manual_field in ["Yes", "true", True]:
+                is_manually_created = True
+            else:
+                # For "No", "false", False, or N/A - check download_source as fallback
                 is_manually_created = download_source == "N/A" or (
                     download_source
                     and (
@@ -7196,6 +7298,14 @@ async def get_recent_assets():
                 if is_fallback:
                     logger.debug(
                         f"[SKIP]  Skipping fallback asset in recent view: {title}"
+                    )
+                    continue
+
+                # Skip assets that were explicitly marked as unresolved (Manual="No")
+                # "No" means user clicked "Unresolve" - these should be hidden from recent assets
+                if manual_field == "No":
+                    logger.debug(
+                        f"[SKIP]  Skipping explicitly unresolved asset in recent view: {title}"
                     )
                     continue
 
@@ -7748,8 +7858,65 @@ async def run_scheduler_now():
 
 
 # ============================================================================
+# LOGS WATCHER API
+# ============================================================================
+
+
+@app.get("/api/logs-watcher/status")
+async def get_logs_watcher_status():
+    """Get current logs watcher status"""
+    try:
+        if not LOGS_WATCHER_AVAILABLE:
+            return {
+                "success": True,
+                "available": False,
+                "running": False,
+                "message": "Logs watcher module not available",
+            }
+
+        if not logs_watcher:
+            return {
+                "success": True,
+                "available": True,
+                "running": False,
+                "message": "Logs watcher not initialized (database may not be available)",
+            }
+
+        return {
+            "success": True,
+            "available": True,
+            "running": logs_watcher.is_running,
+            "logs_dir": str(logs_watcher.logs_dir),
+            "debounce_seconds": logs_watcher.debounce_seconds,
+            "poll_interval": logs_watcher.poll_interval,
+            "monitored_files": {
+                "csv": "ImageChoices.csv",
+                "json": sorted(
+                    [
+                        "tautulli.json",
+                        "arr.json",
+                        "normal.json",
+                        "manual.json",
+                        "testing.json",
+                        "backup.json",
+                        "syncjelly.json",
+                        "syncemby.json",
+                        "scheduled.json",
+                        "replace.json",
+                    ]
+                ),
+            },
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting logs watcher status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # ASSET REPLACEMENT API
 # ============================================================================
+
 
 class AssetReplaceRequest(BaseModel):
     """Request to fetch asset previews from services or upload custom"""
@@ -7770,6 +7937,7 @@ class AssetUploadRequest(BaseModel):
 
     asset_path: str
     image_data: str  # Base64 encoded image
+
 
 @app.post("/api/assets/fetch-replacements")
 async def fetch_asset_replacements(request: AssetReplaceRequest):
@@ -7943,6 +8111,9 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             preferred_background_language_order = flat_config.get(
                 "PreferredBackgroundLanguageOrder", ""
             )
+            preferred_tc_language_order = flat_config.get(
+                "PreferredTCLanguageOrder", ""
+            )
         else:
             api_part = grouped_config.get("ApiPart", {})
             tmdb_token = api_part.get("tmdbtoken", "")
@@ -7964,6 +8135,9 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             preferred_background_language_order = grouped_config.get(
                 "PreferredBackgroundLanguageOrder", ""
             )
+            preferred_tc_language_order = grouped_config.get(
+                "PreferredTCLanguageOrder", ""
+            )
 
             # If not found at root, try in ApiPart
             if not preferred_language_order and isinstance(
@@ -7983,6 +8157,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
             ):
                 preferred_background_language_order = grouped_config["ApiPart"].get(
                     "PreferredBackgroundLanguageOrder", ""
+                )
+            if not preferred_tc_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_tc_language_order = grouped_config["ApiPart"].get(
+                    "PreferredTCLanguageOrder", ""
                 )
 
         # Parse language preferences (handle both string and list formats)
@@ -8005,9 +8185,10 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         background_language_order_list = parse_language_order(
             preferred_background_language_order
         )
+        tc_language_order_list = parse_language_order(preferred_tc_language_order)
 
         logger.info(
-            f"Language preferences loaded - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}"
+            f"Language preferences loaded - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}, TitleCard: {tc_language_order_list}"
         )
 
         # Helper function to filter and sort by language preference
@@ -8335,6 +8516,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": still.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": still.get("width", 0),
+                                                "height": still.get("height", 0),
                                             }
                                         )
 
@@ -8359,6 +8542,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": poster.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": poster.get("width", 0),
+                                                "height": poster.get("height", 0),
                                             }
                                         )
 
@@ -8383,6 +8568,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": backdrop.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": backdrop.get("width", 0),
+                                                "height": backdrop.get("height", 0),
                                             }
                                         )
 
@@ -8411,6 +8598,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": poster.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": poster.get("width", 0),
+                                                "height": poster.get("height", 0),
                                             }
                                         )
 
@@ -9161,15 +9350,15 @@ async def upload_asset_replacement(
                 error_msg = "Image height cannot be zero."
                 logger.error(error_msg)
                 raise HTTPException(status_code=400, detail=error_msg)
-            
+
             # Calculate ratio
             ratio = width / height
             logger.info(f"Image aspect ratio: {ratio:.3f}")
 
             # Define expected ratios
-            POSTER_RATIO = 2 / 3   # ≈ 0.667
-            BG_TC_RATIO = 16 / 9   # ≈ 1.778
-            TOLERANCE = 0.05       # ±5% tolerance
+            POSTER_RATIO = 2 / 3  # ≈ 0.667
+            BG_TC_RATIO = 16 / 9  # ≈ 1.778
+            TOLERANCE = 0.05  # ±5% tolerance
 
             def ratio_within_tolerance(actual, expected, tolerance):
                 return abs(actual - expected) / expected <= tolerance
@@ -10098,8 +10287,8 @@ class ImageChoiceRecord(BaseModel):
 async def get_assets_overview():
     """
     Get asset overview with categorized issues.
-    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Total with Issues
-    Note: Manual entries are excluded from all categories
+    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Total with Issues, Resolved
+    Note: Manual entries are categorized separately as "Resolved"
     """
     if not DATABASE_AVAILABLE or db is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -10138,15 +10327,18 @@ async def get_assets_overview():
         non_primary_provider = []
         truncated_text = []
         assets_with_issues = []
+        resolved_assets = []  # New category for Manual=true items
 
         # Categorize each record
         for record in records:
             record_dict = dict(record)
 
-            # Skip Manual entries entirely (Manual == "True" or "true")
+            # Check if this is a Manual entry (resolved)
+            # Manual can be "Yes" (new), "true" (legacy), or True (boolean)
             manual_value = str(record_dict.get("Manual", "")).lower()
-            if manual_value == "true":
-                continue
+            if manual_value == "yes" or manual_value == "true":
+                resolved_assets.append(record_dict)
+                continue  # Skip issue categorization for resolved items
 
             has_issue = False
 
@@ -10264,6 +10456,10 @@ async def get_assets_overview():
                 "assets_with_issues": {
                     "count": len(assets_with_issues),
                     "assets": assets_with_issues,
+                },
+                "resolved": {
+                    "count": len(resolved_assets),
+                    "assets": resolved_assets,
                 },
             },
             "config": {
@@ -10458,13 +10654,15 @@ async def find_asset_for_imagechoice(record_id: int):
         )
         relative_path = asset_file.relative_to(ASSETS_DIR)
         path_str = str(relative_path).replace("\\", "/")
+        # URL encode the path to handle special characters like #
+        encoded_path_str = quote(path_str, safe="/")
 
         return {
             "success": True,
             "asset": {
                 "name": asset_file.name,
                 "path": path_str,
-                "url": f"/poster_assets/{path_str}",
+                "url": f"/poster_assets/{encoded_path_str}",
                 "type": asset_type,
                 "library": library,
             },
@@ -10561,7 +10759,7 @@ async def spa_fallback(request: Request, exc: HTTPException):
     """
     # Don't intercept API calls or WebSocket connections
     if request.url.path.startswith(("/api/", "/ws/")):
-        return exc
+        raise exc
 
     # Return index.html for all other 404s (client-side routes)
     index_path = FRONTEND_DIR / "index.html"
@@ -10569,7 +10767,7 @@ async def spa_fallback(request: Request, exc: HTTPException):
         return FileResponse(index_path)
 
     # If index.html doesn't exist, return the original 404
-    return exc
+    raise exc
 
 
 # ============================================================================
