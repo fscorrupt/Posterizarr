@@ -581,7 +581,7 @@ class LogsFileHandler(FileSystemEventHandler):
                 logger.info(f"[OK] File matches monitored CSV: {filename}")
                 self.watcher.on_csv_modified()
 
-            elif filename in self.RUNTIME_JSON_FILES:
+            elif filename.lower() in self.RUNTIME_JSON_FILES:
                 logger.info(f"[OK] File matches monitored JSON: {filename}")
                 self.watcher.on_runtime_json_modified(filename)
 
@@ -619,7 +619,7 @@ class LogsFileHandler(FileSystemEventHandler):
                 logger.debug("File write buffer complete, triggering import")
                 self.watcher.on_csv_modified()
 
-            elif filename in self.RUNTIME_JSON_FILES:
+            elif filename.lower() in self.RUNTIME_JSON_FILES:
                 logger.info(f"[OK] File matches monitored JSON: {filename}")
                 logger.debug("Waiting 0.5s for file to be fully written...")
                 # Give the file a moment to be fully written

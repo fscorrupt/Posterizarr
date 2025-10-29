@@ -266,7 +266,7 @@ function LogViewer() {
       };
 
       ws.onclose = (event) => {
-        console.log("🔌 WebSocket closed:", event.code);
+        console.log(" WebSocket closed:", event.code);
         setConnected(false);
 
         if (!event.wasClean) {
