@@ -136,6 +136,20 @@ function RecentAssets({ refreshTrigger = 0 }) {
     }
   }, [refreshTrigger]);
 
+  // Listen for assetReplaced events (when assets are marked as resolved/unresolved)
+  useEffect(() => {
+    const handleAssetReplaced = () => {
+      console.log("Asset replaced/unresolve event received, refreshing recent assets...");
+      fetchRecentAssets(true);
+    };
+
+    window.addEventListener("assetReplaced", handleAssetReplaced);
+
+    return () => {
+      window.removeEventListener("assetReplaced", handleAssetReplaced);
+    };
+  }, []);
+
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10
     const validCount = Math.min(Math.max(newCount, 5), 10);

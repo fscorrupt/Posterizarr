@@ -7226,10 +7226,17 @@ async def get_recent_assets():
 
             # Determine if manually created based on Manual field or download_source
             manual_field = asset_dict.get("Manual", "N/A")
-            is_manually_created = manual_field in ["Yes", "true", True]
 
-            if not is_manually_created:
-                # Fallback check on download_source
+            # Manual can be: "Yes" (resolved), "No" (explicitly unresolved), "true"/"false" (legacy), or N/A (not set)
+            # "Yes" = resolved/manually marked as no edits needed
+            # "No" = explicitly unresolved (was resolved but user clicked unresolve)
+            # "true" = legacy resolved state
+            # "false" or N/A = regular assets
+
+            if manual_field in ["Yes", "true", True]:
+                is_manually_created = True
+            else:
+                # For "No", "false", False, or N/A - check download_source as fallback
                 is_manually_created = download_source == "N/A" or (
                     download_source
                     and (
@@ -7247,6 +7254,14 @@ async def get_recent_assets():
                 if is_fallback:
                     logger.debug(
                         f"[SKIP]  Skipping fallback asset in recent view: {title}"
+                    )
+                    continue
+
+                # Skip assets that were explicitly marked as unresolved (Manual="No")
+                # "No" means user clicked "Unresolve" - these should be hidden from recent assets
+                if manual_field == "No":
+                    logger.debug(
+                        f"[SKIP]  Skipping explicitly unresolved asset in recent view: {title}"
                     )
                     continue
 
@@ -10262,8 +10277,9 @@ async def get_assets_overview():
             record_dict = dict(record)
 
             # Check if this is a Manual entry (resolved)
+            # Manual can be "Yes" (new), "true" (legacy), or True (boolean)
             manual_value = str(record_dict.get("Manual", "")).lower()
-            if manual_value == "true":
+            if manual_value == "yes" or manual_value == "true":
                 resolved_assets.append(record_dict)
                 continue  # Skip issue categorization for resolved items
 

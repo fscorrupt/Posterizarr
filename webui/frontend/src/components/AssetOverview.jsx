@@ -89,8 +89,11 @@ const AssetRow = React.memo(
       [asset.DownloadSource]
     );
 
-    // Check if asset is resolved (Manual = true)
-    const isResolved = asset.Manual === "true" || asset.Manual === true;
+    // Check if asset is resolved (Manual = "Yes" or "true" for legacy)
+    const isResolved =
+      asset.Manual === "Yes" ||
+      asset.Manual === "true" ||
+      asset.Manual === true;
 
     return (
       <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
@@ -578,7 +581,7 @@ const AssetOverview = () => {
         TextTruncated: asset.TextTruncated || null,
         DownloadSource: asset.DownloadSource || null,
         FavProviderLink: asset.FavProviderLink || null,
-        Manual: "true", // Mark as manually reviewed
+        Manual: "Yes", // Mark as manually reviewed (Yes instead of true)
       };
 
       console.log(
@@ -662,7 +665,7 @@ const AssetOverview = () => {
         TextTruncated: asset.TextTruncated || null,
         DownloadSource: asset.DownloadSource || null,
         FavProviderLink: asset.FavProviderLink || null,
-        Manual: "false", // Mark as unresolved
+        Manual: "No", // Mark as explicitly unresolved (No instead of false)
       };
 
       console.log(
@@ -745,14 +748,21 @@ const AssetOverview = () => {
 
     // Filter based on status first
     if (selectedStatus === "Resolved") {
+      // Show assets marked as "Yes" or "true" (legacy)
       assetsToFilter = assetsToFilter.filter(
-        (asset) => asset.Manual === "true" || asset.Manual === true
+        (asset) =>
+          asset.Manual === "Yes" ||
+          asset.Manual === "true" ||
+          asset.Manual === true
       );
     } else if (selectedStatus === "Unresolved") {
+      // Show everything except resolved ("Yes" or "true")
       assetsToFilter = assetsToFilter.filter(
         (asset) =>
           !asset.Manual ||
-          (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
+          (asset.Manual !== "Yes" &&
+            asset.Manual !== "true" &&
+            asset.Manual !== true)
       );
     }
     // "All" status shows everything
@@ -768,14 +778,21 @@ const AssetOverview = () => {
 
     // Filter based on status first
     if (selectedStatus === "Resolved") {
+      // Show assets marked as "Yes" or "true" (legacy)
       assetsToFilter = assetsToFilter.filter(
-        (asset) => asset.Manual === "true" || asset.Manual === true
+        (asset) =>
+          asset.Manual === "Yes" ||
+          asset.Manual === "true" ||
+          asset.Manual === true
       );
     } else if (selectedStatus === "Unresolved") {
+      // Show everything except resolved ("Yes" or "true")
       assetsToFilter = assetsToFilter.filter(
         (asset) =>
           !asset.Manual ||
-          (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
+          (asset.Manual !== "Yes" &&
+            asset.Manual !== "true" &&
+            asset.Manual !== true)
       );
     }
     // "All" status shows everything
@@ -874,16 +891,21 @@ const AssetOverview = () => {
 
     // Filter based on selected status
     if (selectedStatus === "Resolved") {
-      // Show only resolved assets (Manual === "true" or true)
+      // Show only resolved assets (Manual === "Yes" or "true" for legacy)
       assets = assets.filter(
-        (asset) => asset.Manual === "true" || asset.Manual === true
+        (asset) =>
+          asset.Manual === "Yes" ||
+          asset.Manual === "true" ||
+          asset.Manual === true
       );
     } else if (selectedStatus === "Unresolved") {
-      // Show only unresolved assets (Manual !== "true" and !== true)
+      // Show only unresolved assets (not "Yes" or "true")
       assets = assets.filter(
         (asset) =>
           !asset.Manual ||
-          (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
+          (asset.Manual !== "Yes" &&
+            asset.Manual !== "true" &&
+            asset.Manual !== true)
       );
     }
     // If selectedStatus === "All", don't filter by Manual status
