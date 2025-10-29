@@ -240,7 +240,17 @@ class LogsWatcher:
                                         f"  CSV: {file.name} (mtime: {mtime}, last: {last_mtime})"
                                     )
 
-                                if mtime > last_mtime and last_mtime > 0:
+                                # Trigger import on first detection (last_mtime == 0) or modification (mtime > last_mtime)
+                                if last_mtime == 0:
+                                    logger.info(
+                                        f"POLLING DETECTED: NEW CSV FILE {file.name}!"
+                                    )
+                                    logger.debug(f"  File mtime: {mtime}")
+                                    logger.debug(
+                                        "  First detection - triggering import"
+                                    )
+                                    self.on_csv_modified()
+                                elif mtime > last_mtime:
                                     logger.info(f"POLLING DETECTED: CSV modification!")
                                     logger.debug(f"  File: {file.name}")
                                     logger.debug(f"  Current mtime: {mtime}")
@@ -283,7 +293,17 @@ class LogsWatcher:
                                             f"  JSON: {file.name} (mtime: {mtime}, last: {last_mtime})"
                                         )
 
-                                    if mtime > last_mtime and last_mtime > 0:
+                                    # Trigger import on first detection (last_mtime == 0) or modification (mtime > last_mtime)
+                                    if last_mtime == 0:
+                                        logger.info(
+                                            f"POLLING DETECTED: NEW JSON FILE {file.name}!"
+                                        )
+                                        logger.debug(f"  File mtime: {mtime}")
+                                        logger.debug(
+                                            "  First detection - triggering import"
+                                        )
+                                        self.on_runtime_json_modified(file.name)
+                                    elif mtime > last_mtime:
                                         logger.info(
                                             f"POLLING DETECTED: {file.name} modification!"
                                         )
