@@ -365,7 +365,7 @@ class RuntimeDatabase:
             if end_time == "":
                 end_time = None
 
-            # If we have both start and end times, use them for precise matching
+            # Strategy 1: Check for exact match on timestamps
             if start_time and end_time:
                 cursor.execute(
                     """
@@ -374,47 +374,34 @@ class RuntimeDatabase:
                 """,
                     (mode, start_time, end_time),
                 )
-            # If we only have start time, match on that
-            elif start_time:
-                cursor.execute(
-                    """
-                    SELECT COUNT(*) FROM runtime_stats 
-                    WHERE mode = ? AND start_time = ?
-                """,
-                    (mode, start_time),
-                )
-            else:
-                # No timestamps - check if we have a very recent entry (within last 10 seconds)
-                # This prevents duplicate imports during restart
-                cursor.execute(
-                    """
-                    SELECT COUNT(*) FROM runtime_stats 
-                    WHERE mode = ? 
-                    AND datetime(timestamp) > datetime('now', '-10 seconds')
-                """,
-                    (mode,),
-                )
                 count = cursor.fetchone()[0]
-                conn.close()
-
                 if count > 0:
+                    conn.close()
                     logger.debug(
-                        f"Recent entry found for {mode} (within 10s), treating as duplicate"
+                        f"Entry already exists: mode={mode}, start={start_time}, end={end_time}"
                     )
-                return count > 0
-                # No timestamps - can't reliably check for duplicates
-                conn.close()
-                return False
+                    return True
 
+            # Strategy 2: Check for recent entry with same mode (within last 5 seconds)
+            # This catches rapid duplicate imports from watcher detecting multiple writes
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM runtime_stats 
+                WHERE mode = ? 
+                AND datetime(timestamp) > datetime('now', '-5 seconds')
+            """,
+                (mode,),
+            )
             count = cursor.fetchone()[0]
             conn.close()
 
-            exists = count > 0
-            if exists:
+            if count > 0:
                 logger.debug(
-                    f"Entry already exists: mode={mode}, start={start_time}, end={end_time}"
+                    f"Recent entry found for {mode} (within 5s), treating as duplicate"
                 )
-            return exists
+                return True
+
+            return False
 
         except Exception as e:
             logger.error(f"Error checking if entry exists: {e}")
