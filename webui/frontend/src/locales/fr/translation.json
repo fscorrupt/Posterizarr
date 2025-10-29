@@ -61,6 +61,7 @@
       "loadMore": "Charger plus ({{remaining}} restant(s))",
       "episodeStill": "CAPTURE D'ÉPISODE",
       "seasonPoster": "AFFICHE DE SAISON",
+      "download": "Télécharger",
       "searchTips": {
         "title": "💡 Conseils de recherche :",
         "byTitle": "Par titre :",
@@ -1271,6 +1272,7 @@
     "noPreviewsLoaded": "Aucun aperçu chargé pour le moment",
     "fetchPreviews": "Récupérer les aperçus",
     "select": "Sélectionner",
+    "download": "Télécharger",
     "uploadAssetButton": "TÉLÉCHARGER LA RESSOURCE",
     "uploadingAsset": "Téléchargement en cours...",
     "dimensionValid": "Format d'image valide",

@@ -727,7 +727,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         setImageDimensions({ width, height });
 
         // Define target ratios and tolerance
-        const POSTER_RATIO = 2 / 3;    // ~0.667
+        const POSTER_RATIO = 2 / 3; // ~0.667
         const BACKGROUND_RATIO = 16 / 9; // ~1.778
         // Using 0.05 absolute tolerance (matches the 5% relative tolerance on 16:9, and is close for 2:3)
         const TOLERANCE = 0.05;
@@ -736,7 +736,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         if (height === 0) {
           setIsDimensionValid(false);
           // You may need to add this new translation key
-          showError(t("assetReplacer.imageHeightZero", "Image height cannot be zero.")); 
+          showError(
+            t("assetReplacer.imageHeightZero", "Image height cannot be zero.")
+          );
           return;
         }
 
@@ -2071,6 +2073,32 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  const handleDownload = async (e) => {
+    e.stopPropagation(); // Prevent card selection when clicking download
+    try {
+      const response = await fetch(preview.original_url || preview.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      // Create filename from source and metadata
+      const source = preview.source?.toLowerCase() || "image";
+      const lang = preview.language || "";
+      const timestamp = Date.now();
+      const extension =
+        preview.original_url?.split(".").pop()?.split("?")[0] || "jpg";
+      a.download = `${source}_${lang}_${timestamp}.${extension}`;
+
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
   return (
     <div
       className="group relative bg-theme-hover rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
@@ -2104,6 +2132,18 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
 
         {/* Hover overlay with metadata */}
         <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
+          {/* Download Button - Top Right */}
+          <button
+            onClick={handleDownload}
+            className="absolute top-2 right-2 px-3 py-2 bg-theme-primary hover:bg-theme-primary/80 rounded-lg transition-all shadow-lg z-10 flex items-center gap-2"
+            title={t("assetReplacer.download") || "Download"}
+          >
+            <Download className="w-4 h-4 text-white" />
+            <span className="text-white text-sm font-medium">
+              {t("assetReplacer.download")}
+            </span>
+          </button>
+
           {/* Select Button */}
           <Check className="w-10 h-10 text-green-400 mb-3" />
 
@@ -2124,6 +2164,12 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
 
           {/* Metadata Badges */}
           <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+            {/* Dimensions */}
+            {(preview.width || preview.height) && (
+              <span className="bg-slate-600 px-2 py-1 rounded text-xs text-white font-medium">
+                {preview.width} × {preview.height}
+              </span>
+            )}
             {/* Language */}
             {preview.language && (
               <span className="bg-theme-primary px-2 py-1 rounded text-xs text-white font-medium">

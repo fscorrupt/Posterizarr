@@ -8444,6 +8444,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": still.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": still.get("width", 0),
+                                                "height": still.get("height", 0),
                                             }
                                         )
 
@@ -8468,6 +8470,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": poster.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": poster.get("width", 0),
+                                                "height": poster.get("height", 0),
                                             }
                                         )
 
@@ -8492,6 +8496,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": backdrop.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": backdrop.get("width", 0),
+                                                "height": backdrop.get("height", 0),
                                             }
                                         )
 
@@ -8520,6 +8526,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                                 "vote_average": poster.get(
                                                     "vote_average", 0
                                                 ),
+                                                "width": poster.get("width", 0),
+                                                "height": poster.get("height", 0),
                                             }
                                         )
 

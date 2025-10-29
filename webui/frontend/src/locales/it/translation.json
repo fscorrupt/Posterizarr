@@ -61,6 +61,7 @@
       "loadMore": "Carica altro ({{remaining}} rimanenti)",
       "episodeStill": "FOTOGRAMMA EPISODIO",
       "seasonPoster": "LOCANDINA STAGIONE",
+      "download": "Scarica",
       "searchTips": {
         "title": "💡 Suggerimenti di ricerca:",
         "byTitle": "Per titolo:",
@@ -1271,6 +1272,7 @@
     "noPreviewsLoaded": "Nessuna anteprima ancora caricata",
     "fetchPreviews": "Recupera anteprime",
     "select": "Seleziona",
+    "download": "Scarica",
     "uploadAssetButton": "CARICA ASSET",
     "uploadingAsset": "Caricamento in corso...",
     "dimensionValid": "Proporzioni valide",

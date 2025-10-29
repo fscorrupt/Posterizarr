@@ -61,6 +61,7 @@
       "loadMore": "Mehr laden ({{remaining}} verbleibend)",
       "episodeStill": "EPISODE STILL",
       "seasonPoster": "SEASON POSTER",
+      "download": "Herunterladen",
       "searchTips": {
         "title": "💡 Such-Tipps:",
         "byTitle": "Nach Titel:",
@@ -1272,6 +1273,7 @@
     "noPreviewsLoaded": "Noch keine Vorschauen geladen",
     "fetchPreviews": "Vorschauen abrufen",
     "select": "Auswählen",
+    "download": "Herunterladen",
     "uploadAssetButton": "ASSET HOCHLADEN",
     "uploadingAsset": "Wird hochgeladen...",
     "dimensionValid": "Seitenverhältnis gültig",

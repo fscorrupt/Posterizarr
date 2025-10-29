@@ -61,6 +61,7 @@
       "loadMore": "Carregar mais ({{remaining}} restantes)",
       "episodeStill": "FOTO DO EPISÓDIO",
       "seasonPoster": "CARTAZ DA TEMPORADA",
+      "download": "Baixar",
       "searchTips": {
         "title": "💡 Dicas de pesquisa:",
         "byTitle": "Por título:",
@@ -1271,6 +1272,7 @@
     "noPreviewsLoaded": "Nenhuma pré-visualização carregada ainda",
     "fetchPreviews": "Buscar pré-visualizações",
     "select": "Selecionar",
+    "download": "Baixar",
     "uploadAssetButton": "CARREGAR ATIVO",
     "uploadingAsset": "Carregando...",
     "dimensionValid": "Proporção válida",

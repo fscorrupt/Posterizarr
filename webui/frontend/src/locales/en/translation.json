@@ -61,6 +61,7 @@
       "loadMore": "Load More ({{remaining}} remaining)",
       "episodeStill": "EPISODE STILL",
       "seasonPoster": "SEASON POSTER",
+      "download": "Download",
       "searchTips": {
         "title": "💡 Search Tips:",
         "byTitle": "By Title:",
@@ -1273,6 +1274,7 @@
     "noPreviewsLoaded": "No previews loaded yet",
     "fetchPreviews": "Fetch Previews",
     "select": "Select",
+    "download": "Download",
     "uploadAssetButton": "UPLOAD ASSET",
     "uploadingAsset": "Uploading...",
     "dimensionValid": "Aspect ratio valid",
