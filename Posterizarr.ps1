@@ -51,7 +51,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "2.0.6"
+$CurrentScriptVersion = "2.0.7"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -184,7 +184,7 @@ function Output-ConfigJson {
         if ($value.Length -le 7) { return $value }
         return ($value[0..6] -join '') + '****'
     }
-    $redactKeys = @("tvdbapi", "tmdbtoken", "fanarttvapikey", "plextoken", "jellyfinapikey", "embyapikey", "embyurl", "jellyfinurl", "discord", "plexurl", "UptimeKumaUrl", "AppriseUrl")
+    $redactKeys = @("tvdbapi", "tmdbtoken", "fanarttvapikey", "plextoken", "jellyfinapikey", "embyapikey", "embyurl", "jellyfinurl", "discord", "plexurl", "UptimeKumaUrl", "AppriseUrl", "basicAuthPassword")
     $indent = '  ' * $indentLevel
 
     if ($indentLevel -eq 0) {
@@ -1349,7 +1349,7 @@ function GetTMDBMoviePoster {
         if ($response) {
             if ($response.images.posters) {
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
-                    if ($lang -eq 'null') {
+                    if ($lang -eq 'null' -or $lang -eq 'xx') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                             $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
@@ -1374,7 +1374,7 @@ function GetTMDBMoviePoster {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TextlessPoster = $true
                             $global:PosterWithText = $null
@@ -1382,7 +1382,7 @@ function GetTMDBMoviePoster {
                         Else {
                             Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
-                        if ($lang -ne 'null') {
+                        if ($lang -ne 'null' -or $lang -eq 'xx') {
                             $global:PosterWithText = $true
                             $global:TMDBAssetTextLang = $lang
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
@@ -1552,7 +1552,7 @@ function GetTMDBMovieBackground {
             if ($response.images.backdrops) {
                 foreach ($lang in $global:PreferredBackgroundLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                             $FavPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                         }
@@ -1561,7 +1561,7 @@ function GetTMDBMovieBackground {
                         }
                     }
                     Else {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
@@ -1576,13 +1576,13 @@ function GetTMDBMovieBackground {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             Write-Entry -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
                             Write-Entry -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
-                        if ($lang -ne 'null') {
+                        if ($lang -ne 'null' -or $lang -eq 'xx') {
                             $global:PosterWithText = $true
                             $global:TMDBAssetTextLang = $lang
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
@@ -1773,7 +1773,7 @@ function GetTMDBShowPoster {
                 if ($response.images.posters) {
                     foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            if ($lang -eq 'null') {
+                            if ($lang -eq 'null' -or $lang -eq 'xx') {
                                 $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                                 $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                             }
@@ -1782,7 +1782,7 @@ function GetTMDBShowPoster {
                             }
                         }
                         Else {
-                            if ($lang -eq 'null') {
+                            if ($lang -eq 'null' -or $lang -eq 'xx') {
                                 $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                             }
                             Else {
@@ -1797,7 +1797,7 @@ function GetTMDBShowPoster {
                                 $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                             }
                             $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                            if ($lang -eq 'null') {
+                            if ($lang -eq 'null' -or $lang -eq 'xx') {
                                 Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                 $global:TextlessPoster = $true
                                 $global:PosterWithText = $null
@@ -1805,7 +1805,7 @@ function GetTMDBShowPoster {
                             Else {
                                 Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
-                            if ($lang -ne 'null') {
+                            if ($lang -ne 'null' -or $lang -eq 'xx') {
                                 $global:PosterWithText = $true
                                 $global:TMDBAssetTextLang = $lang
                                 $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
@@ -1984,7 +1984,7 @@ function GetTMDBSeasonPoster {
                 Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                 foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($responseBackup.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                             $FavPoster = ($responseBackup.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
@@ -1993,7 +1993,7 @@ function GetTMDBSeasonPoster {
                         }
                     }
                     Else {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($responseBackup.images.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
@@ -2008,7 +2008,7 @@ function GetTMDBSeasonPoster {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TextlessPoster = $true
                             $global:PosterWithText = $null
@@ -2016,7 +2016,7 @@ function GetTMDBSeasonPoster {
                         Else {
                             Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
-                        if ($lang -ne 'null') {
+                        if ($lang -ne 'null' -or $lang -eq 'xx') {
                             $global:PosterWithText = $true
                             $global:TMDBAssetTextLang = $lang
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
@@ -2036,7 +2036,7 @@ function GetTMDBSeasonPoster {
             if ($response.posters) {
                 foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                             $FavPoster = ($response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
@@ -2045,7 +2045,7 @@ function GetTMDBSeasonPoster {
                         }
                     }
                     Else {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($response.posters | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
@@ -2060,7 +2060,7 @@ function GetTMDBSeasonPoster {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TextlessPoster = $true
                             $global:PosterWithText = $null
@@ -2068,7 +2068,7 @@ function GetTMDBSeasonPoster {
                         Else {
                             Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
-                        if ($lang -ne 'null') {
+                        if ($lang -ne 'null' -or $lang -eq 'xx') {
                             $global:PosterWithText = $true
                             $global:TMDBAssetTextLang = $lang
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
@@ -2247,7 +2247,7 @@ function GetTMDBShowBackground {
             if ($response.images.backdrops) {
                 foreach ($lang in $global:PreferredBackgroundLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                             $FavPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
@@ -2256,7 +2256,7 @@ function GetTMDBShowBackground {
                         }
                     }
                     Else {
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
                         }
                         Else {
@@ -2271,13 +2271,13 @@ function GetTMDBShowBackground {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($lang -eq 'null') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
                             Write-Entry -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
                             Write-Entry -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
-                        if ($lang -ne 'null') {
+                        if ($lang -ne 'null' -or $lang -eq 'xx') {
                             $global:PosterWithText = $true
                             $global:TMDBAssetTextLang = $lang
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
@@ -2313,130 +2313,198 @@ function GetTMDBTitleCard {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
-    }
-    catch {
-        Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+    if ($global:TCPreferTextless -eq $true) {
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredTCLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+        }
+        catch {
+            Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
 
-    }
-    if ($response) {
-        if ($response.stills) {
-            $NoLangPoster = ($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
-            if (!$NoLangPoster) {
+        }
+        if ($response) {
+            if ($response.stills) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    if ($global:TMDBVoteSorting -eq 'primary') {
-                        $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+                    $NoLangPoster = ($response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                }
+                Else {
+                    $NoLangPoster = ($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
+                }
+                if (!$NoLangPoster) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:TCPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:TCOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($global:TCOnlyTextless -eq $false) {
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
-                        if ($filteredPosters) {
-                            $posterpath = $filteredPosters[0].file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                if ($filteredPosters) {
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No TC posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No TC posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
                         }
-                        else {
-                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        Else {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $posterpath = $response.stills[0].file_path
+                                $global:TMDBAssetTextLang = $response.stills[0].iso_639_1
+                            }
+                            Else {
+                                $posterpath = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                            }
                         }
+                        if ($posterpath) {
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            Write-Entry -Subtext "Found TC with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                        }
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
                     }
                     Else {
-                        $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
-
-                        if ($filteredPosters) {
-                            $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        }
-                        else {
-                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                        }
+                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'primary') {
-                        $posterpath = $response.stills[0].file_path
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $filteredPosters = $response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No TC posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
+                        Else {
+                            $filteredPosters = $response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No TC posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
                     }
                     Else {
-                        $posterpath = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = (($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })[0]).file_path
+                        }
+                        Else {
+                            $posterpath = (($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        }
+                    }
+                    if ($posterpath) {
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        Write-Entry -Subtext "Found Textless TC on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        $global:TextlessPoster = $true
+                        $global:PosterWithText = $null
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+                        return $global:posterurl
                     }
                 }
-                if ($posterpath) {
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    if ($global:TMDBVoteSorting -eq 'primary') {
-                        $global:TMDBAssetTextLang = $response.stills[0].iso_639_1
-                    }
-                    Else {
-                        $global:TMDBAssetTextLang = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
-                    }
-                }
-                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-                if ($posterurl) {
-                    return $global:posterurl
+                if (!$global:posterurl) {
+                    Write-Entry -Subtext "No TC found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                if ($global:WidthHeightFilter -eq 'true') {
-                    if ($global:TMDBVoteSorting -eq 'primary') {
-                        $filteredPosters = $response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
-
-                        if ($filteredPosters) {
-                            $posterpath = $filteredPosters[0].file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        }
-                        else {
-                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                        }
-                    }
-                    Else {
-                        $filteredPosters = $response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
-
-                        if ($filteredPosters) {
-                            $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        }
-                        else {
-                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                        }
-                    }
-                }
-                Else {
-                    if ($global:TMDBVoteSorting -eq 'primary') {
-                        $posterpath = (($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })[0]).file_path
-                    }
-                    Else {
-                        $posterpath = (($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null } | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                    }
-                }
-                if ($posterpath) {
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Entry -Subtext "Found Textless Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                    $global:TextlessPoster = $true
-                    $global:PosterWithText = $null
-                }
+                Write-Entry -Subtext "No TC found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-                if ($posterurl) {
-                    return $global:posterurl
-                }
             }
         }
         Else {
-            Write-Entry -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-            if ($global:FavProvider -ne 'TVDB') {
-                $global:Fallback = "TVDB"
-            }
-            $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-
         }
     }
     Else {
-        Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-        if ($global:FavProvider -ne 'TVDB') {
-            $global:Fallback = "TVDB"
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=$($global:PreferredTCLanguageOrderTMDB[0])&include_image_language=$($global:PreferredTCLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
-        $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        catch {
+            Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:errorCount++; Write-Entry -Subtext "[ERROR-HERE] See above. ^^^ errorCount: $errorCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
 
+        }
+        if ($response) {
+            if ($response.stills) {
+                foreach ($lang in $global:PreferredTCLanguageOrderTMDB) {
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
+                            $FavPoster = ($response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.stills | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                        }
+                    }
+                    Else {
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
+                            $FavPoster = ($response.stills | Where-Object { $_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null })
+                        }
+                        Else {
+                            $FavPoster = ($response.stills | Where-Object iso_639_1 -eq $lang)
+                        }
+                    }
+                    if ($FavPoster) {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
+                        }
+                        Else {
+                            $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        }
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($lang -eq 'null' -or $lang -eq 'xx') {
+                            Write-Entry -Subtext "Found TC without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        }
+                        Else {
+                            Write-Entry -Subtext "Found TC with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        }
+                        if ($lang -ne 'null' -or $lang -eq 'xx') {
+                            $global:PosterWithText = $true
+                            $global:TMDBAssetTextLang = $lang
+                            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+                        }
+                        return $global:posterurl
+                        continue
+                    }
+                }
+                if (!$global:posterurl) {
+                    Write-Entry -Subtext "No TC found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+                }
+            }
+            Else {
+                Write-Entry -Subtext "No TC found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+            }
+        }
+        Else {
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+        }
     }
 }
 function GetFanartMoviePoster {
@@ -6812,16 +6880,20 @@ if (!$global:TMDBVoteSorting) {
 # 1. Load user-configured values
 $global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
 $global:PreferredSeasonLanguageOrder = $config.ApiPart.PreferredSeasonLanguageOrder
+$global:PreferredTCLanguageOrder = $config.ApiPart.PreferredTCLanguageOrder
 $global:PreferredBackgroundLanguageOrder = $config.ApiPart.PreferredBackgroundLanguageOrder
 
 # Special handling: inherit poster language if set to "PleaseFillMe"
 if ($global:PreferredBackgroundLanguageOrder -eq 'PleaseFillMe') {
     $global:PreferredBackgroundLanguageOrder = $global:PreferredLanguageOrder
 }
-
+if ($global:PreferredTCLanguageOrder -eq 'PleaseFillMe') {
+    $global:PreferredTCLanguageOrder = $global:PreferredLanguageOrder
+}
 # 2️. Initialize all settings — function will validate and set defaults if needed
 Initialize-LanguageSettings -SettingName "PreferredLanguageOrder"           -Label "Poster"
 Initialize-LanguageSettings -SettingName "PreferredSeasonLanguageOrder"     -Label "Season"
+Initialize-LanguageSettings -SettingName "PreferredTCLanguageOrder"         -Label "TC"
 Initialize-LanguageSettings -SettingName "PreferredBackgroundLanguageOrder" -Label "Background"
 
 # default to TMDB if favprovider missing
@@ -7639,7 +7711,7 @@ if ($Manual) {
     $EpisodeCount = 0
     $SeasonCount = 0
     $collectionCount = 0
-    $Mode = "Manual"
+    $Mode = "manual"
 
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
     # Regex to find a positive number (1 or greater) at the end of the string
