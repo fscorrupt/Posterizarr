@@ -18,9 +18,22 @@
     "BgTcMinWidth": "3840",
     "BgTcMinHeight": "2160",
     "tmdb_vote_sorting": "vote_average",
-    "PreferredLanguageOrder": ["xx", "en", "de"],
-    "PreferredSeasonLanguageOrder": ["xx", "en", "de"],
-    "PreferredBackgroundLanguageOrder": ["PleaseFillMe"]
+    "PreferredLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ],
+    "PreferredSeasonLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ],
+    "PreferredBackgroundLanguageOrder": [
+      "PleaseFillMe"
+    ],
+    "PreferredTCLanguageOrder": [
+      "PleaseFillMe"
+    ]
   },
   "PlexPart": {
     "LibstoExclude": [
@@ -103,7 +116,9 @@
     "BackgroundPosters": "false",
     "TitleCards": "false",
     "NewLineOnSpecificSymbols": "false",
-    "NewLineSymbols": [" - "],
+    "NewLineSymbols": [
+      " - "
+    ],
     "SkipTBA": "false",
     "SkipJapTitle": "false",
     "AssetCleanup": "false",

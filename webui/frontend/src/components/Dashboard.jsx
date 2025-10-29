@@ -408,7 +408,7 @@ function Dashboard() {
         : "Scriptlog.log";
 
       const wsURL = getWebSocketURL(logFile);
-      console.log(`🔌 Dashboard connecting to: ${wsURL}`);
+      console.log(` Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
 

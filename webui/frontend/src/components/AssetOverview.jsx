@@ -79,7 +79,7 @@ const getProviderBadge = (url) => {
 
 // Asset Row Component - Memoized to prevent unnecessary re-renders
 const AssetRow = React.memo(
-  ({ asset, tags, showName, onNoEditsNeeded, onReplace }) => {
+  ({ asset, tags, showName, onNoEditsNeeded, onUnresolve, onReplace }) => {
     const { t } = useTranslation();
     const [logoError, setLogoError] = useState(false);
 
@@ -88,6 +88,12 @@ const AssetRow = React.memo(
       () => getProviderBadge(asset.DownloadSource),
       [asset.DownloadSource]
     );
+
+    // Check if asset is resolved (Manual = "Yes" or "true" for legacy)
+    const isResolved =
+      asset.Manual === "Yes" ||
+      asset.Manual === "true" ||
+      asset.Manual === true;
 
     return (
       <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
@@ -172,22 +178,37 @@ const AssetRow = React.memo(
 
           {/* Action Buttons */}
           <div className="flex items-start gap-2">
-            <button
-              onClick={() => onNoEditsNeeded(asset)}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-              title={t("assetOverview.noEditsNeededTooltip")}
-            >
-              <CheckIcon className="w-4 h-4 text-theme-primary" />
-              {t("assetOverview.noEditsNeeded")}
-            </button>
-            <button
-              onClick={() => onReplace(asset)}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
-              title={t("assetOverview.replaceTooltip")}
-            >
-              <Replace className="w-4 h-4 text-theme-primary" />
-              {t("assetOverview.replace")}
-            </button>
+            {isResolved ? (
+              // Show "Unresolve" button for resolved assets
+              <button
+                onClick={() => onUnresolve(asset)}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+                title={t("assetOverview.unresolveTooltip")}
+              >
+                <Edit className="w-4 h-4 text-theme-primary" />
+                {t("assetOverview.unresolve")}
+              </button>
+            ) : (
+              // Show "No Edits Needed" and "Replace" buttons for unresolved assets
+              <>
+                <button
+                  onClick={() => onNoEditsNeeded(asset)}
+                  className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+                  title={t("assetOverview.noEditsNeededTooltip")}
+                >
+                  <CheckIcon className="w-4 h-4 text-theme-primary" />
+                  {t("assetOverview.noEditsNeeded")}
+                </button>
+                <button
+                  onClick={() => onReplace(asset)}
+                  className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+                  title={t("assetOverview.replaceTooltip")}
+                >
+                  <Replace className="w-4 h-4 text-theme-primary" />
+                  {t("assetOverview.replace")}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -207,6 +228,7 @@ const AssetOverview = () => {
   const [selectedType, setSelectedType] = useState("All Types");
   const [selectedLibrary, setSelectedLibrary] = useState("All Libraries");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [selectedStatus, setSelectedStatus] = useState("Unresolved"); // New filter for resolved/unresolved
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showReplacer, setShowReplacer] = useState(false);
 
@@ -214,16 +236,19 @@ const AssetOverview = () => {
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false); // New dropdown state
 
   // Dropdown position states (true = opens upward, false = opens downward)
   const [typeDropdownUp, setTypeDropdownUp] = useState(false);
   const [libraryDropdownUp, setLibraryDropdownUp] = useState(false);
   const [categoryDropdownUp, setCategoryDropdownUp] = useState(false);
+  const [statusDropdownUp, setStatusDropdownUp] = useState(false); // New dropdown position
 
   // Refs for click outside detection
   const typeDropdownRef = useRef(null);
   const libraryDropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
+  const statusDropdownRef = useRef(null); // New ref
 
   // Fetch data from API
   const fetchData = async () => {
@@ -292,6 +317,12 @@ const AssetOverview = () => {
         !categoryDropdownRef.current.contains(event.target)
       ) {
         setCategoryDropdownOpen(false);
+      }
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target)
+      ) {
+        setStatusDropdownOpen(false);
       }
     };
 
@@ -550,7 +581,7 @@ const AssetOverview = () => {
         TextTruncated: asset.TextTruncated || null,
         DownloadSource: asset.DownloadSource || null,
         FavProviderLink: asset.FavProviderLink || null,
-        Manual: "true", // Mark as manually reviewed
+        Manual: "Yes", // Mark as manually reviewed (Yes instead of true)
       };
 
       console.log(
@@ -613,6 +644,87 @@ const AssetOverview = () => {
     }
   };
 
+  // Handle marking asset as "Unresolve" (undo resolution)
+  const handleUnresolve = async (asset) => {
+    console.log(`[AssetOverview] Unresolving asset:`, {
+      id: asset.id,
+      title: asset.Title,
+      type: asset.Type,
+      library: asset.LibraryName,
+    });
+
+    try {
+      // Build the complete record with Manual set to "false"
+      const updateRecord = {
+        Title: asset.Title,
+        Type: asset.Type || null,
+        Rootfolder: asset.Rootfolder || null,
+        LibraryName: asset.LibraryName || null,
+        Language: asset.Language || null,
+        Fallback: asset.Fallback || null,
+        TextTruncated: asset.TextTruncated || null,
+        DownloadSource: asset.DownloadSource || null,
+        FavProviderLink: asset.FavProviderLink || null,
+        Manual: "No", // Mark as explicitly unresolved (No instead of false)
+      };
+
+      console.log(
+        `[AssetOverview] Sending PUT request to /api/imagechoices/${asset.id}`,
+        {
+          method: "PUT",
+          payload: updateRecord,
+        }
+      );
+
+      const response = await fetch(`/api/imagechoices/${asset.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateRecord),
+      });
+
+      const responseData = await response.json();
+      console.log(`[AssetOverview] PUT response:`, {
+        ok: response.ok,
+        status: response.status,
+        data: responseData,
+      });
+
+      if (response.ok) {
+        console.log(
+          `[AssetOverview] ✅ Asset ${asset.id} marked as Manual=false (Unresolved)`
+        );
+        showSuccess(
+          t("assetOverview.markedAsUnresolved", { title: asset.Title })
+        );
+
+        // Refresh the data to update the UI
+        await fetchData();
+
+        // Trigger event to update sidebar badge count
+        window.dispatchEvent(new Event("assetReplaced"));
+      } else {
+        console.error(`[AssetOverview] ❌ Failed to unresolve asset:`, {
+          status: response.status,
+          statusText: response.statusText,
+          error: responseData,
+        });
+        showError(t("assetOverview.unresolveFailed", { title: asset.Title }));
+      }
+    } catch (error) {
+      console.error(`[AssetOverview] ❌ Error unresolving asset:`, {
+        error: error.message,
+        stack: error.stack,
+        asset: {
+          id: asset.id,
+          title: asset.Title,
+        },
+      });
+      showError(t("assetOverview.unresolveError", { error: error.message }));
+    }
+  };
+
   // Get all assets from all categories
   const allAssets = useMemo(() => {
     if (!data) return [];
@@ -630,30 +742,66 @@ const AssetOverview = () => {
     return Array.from(assets.values());
   }, [data]);
 
-  // Get unique types and libraries for filters (excluding Manual entries)
+  // Get unique types and libraries for filters (based on selectedStatus)
   const types = useMemo(() => {
-    const nonManualAssets = allAssets.filter(
-      (asset) =>
-        !asset.Manual ||
-        (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
-    );
+    let assetsToFilter = allAssets;
+
+    // Filter based on status first
+    if (selectedStatus === "Resolved") {
+      // Show assets marked as "Yes" or "true" (legacy)
+      assetsToFilter = assetsToFilter.filter(
+        (asset) =>
+          asset.Manual === "Yes" ||
+          asset.Manual === "true" ||
+          asset.Manual === true
+      );
+    } else if (selectedStatus === "Unresolved") {
+      // Show everything except resolved ("Yes" or "true")
+      assetsToFilter = assetsToFilter.filter(
+        (asset) =>
+          !asset.Manual ||
+          (asset.Manual !== "Yes" &&
+            asset.Manual !== "true" &&
+            asset.Manual !== true)
+      );
+    }
+    // "All" status shows everything
+
     const uniqueTypes = new Set(
-      nonManualAssets.map((a) => a.Type).filter(Boolean)
+      assetsToFilter.map((a) => a.Type).filter(Boolean)
     );
     return ["All Types", ...Array.from(uniqueTypes).sort()];
-  }, [allAssets]);
+  }, [allAssets, selectedStatus]);
 
   const libraries = useMemo(() => {
-    const nonManualAssets = allAssets.filter(
-      (asset) =>
-        !asset.Manual ||
-        (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
-    );
+    let assetsToFilter = allAssets;
+
+    // Filter based on status first
+    if (selectedStatus === "Resolved") {
+      // Show assets marked as "Yes" or "true" (legacy)
+      assetsToFilter = assetsToFilter.filter(
+        (asset) =>
+          asset.Manual === "Yes" ||
+          asset.Manual === "true" ||
+          asset.Manual === true
+      );
+    } else if (selectedStatus === "Unresolved") {
+      // Show everything except resolved ("Yes" or "true")
+      assetsToFilter = assetsToFilter.filter(
+        (asset) =>
+          !asset.Manual ||
+          (asset.Manual !== "Yes" &&
+            asset.Manual !== "true" &&
+            asset.Manual !== true)
+      );
+    }
+    // "All" status shows everything
+
     const uniqueLibs = new Set(
-      nonManualAssets.map((a) => a.LibraryName).filter(Boolean)
+      assetsToFilter.map((a) => a.LibraryName).filter(Boolean)
     );
     return ["All Libraries", ...Array.from(uniqueLibs).sort()];
-  }, [allAssets]);
+  }, [allAssets, selectedStatus]);
 
   // Category cards configuration (must be before filteredAssets to avoid circular dependency)
   const categoryCards = useMemo(() => {
@@ -741,12 +889,26 @@ const AssetOverview = () => {
       assets = categoryKey ? data.categories[categoryKey]?.assets || [] : [];
     }
 
-    // Filter out Manual entries (Manual === "true" or true)
-    assets = assets.filter(
-      (asset) =>
-        !asset.Manual ||
-        (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
-    );
+    // Filter based on selected status
+    if (selectedStatus === "Resolved") {
+      // Show only resolved assets (Manual === "Yes" or "true" for legacy)
+      assets = assets.filter(
+        (asset) =>
+          asset.Manual === "Yes" ||
+          asset.Manual === "true" ||
+          asset.Manual === true
+      );
+    } else if (selectedStatus === "Unresolved") {
+      // Show only unresolved assets (not "Yes" or "true")
+      assets = assets.filter(
+        (asset) =>
+          !asset.Manual ||
+          (asset.Manual !== "Yes" &&
+            asset.Manual !== "true" &&
+            asset.Manual !== true)
+      );
+    }
+    // If selectedStatus === "All", don't filter by Manual status
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -772,6 +934,7 @@ const AssetOverview = () => {
   }, [
     data,
     selectedCategory,
+    selectedStatus,
     searchQuery,
     selectedType,
     selectedLibrary,
@@ -848,19 +1011,20 @@ const AssetOverview = () => {
 
     // 3. NON-PRIMARY LANGUAGE CHECK
     // Check for "Unknown" language first (add badge for non-primary language)
-    if (asset.Language && asset.Language.toLowerCase() === "unknown") {
+    // This includes when Language is "unknown", "false", false, or missing
+    if (
+      !asset.Language ||
+      asset.Language === "false" ||
+      asset.Language === false ||
+      asset.Language.toLowerCase() === "unknown"
+    ) {
       tags.push({
         label: t("assetOverview.notPrimaryLanguage"),
         color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
       });
     }
-    // Language is either a valid language code/string or "false" (string)
-    else if (
-      asset.Language &&
-      asset.Language !== "false" &&
-      asset.Language !== false &&
-      data?.config?.primary_language
-    ) {
+    // Language is a valid language code/string
+    else if (data?.config?.primary_language) {
       const langNormalized =
         asset.Language.toLowerCase() === "textless"
           ? "xx"
@@ -876,12 +1040,7 @@ const AssetOverview = () => {
           color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
         });
       }
-    } else if (
-      asset.Language &&
-      asset.Language !== "false" &&
-      asset.Language !== false &&
-      !data?.config?.primary_language
-    ) {
+    } else if (!data?.config?.primary_language) {
       // No primary language set, anything that's not Textless/xx is non-primary
       if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
         tags.push({
@@ -974,9 +1133,9 @@ const AssetOverview = () => {
 
       {/* Filters */}
       <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
-          <div className="relative">
+          <div className="relative md:col-span-2 lg:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             <input
               type="text"
@@ -985,6 +1144,61 @@ const AssetOverview = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
             />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative" ref={statusDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp =
+                  calculateDropdownPosition(statusDropdownRef);
+                setStatusDropdownUp(shouldOpenUp);
+                setStatusDropdownOpen(!statusDropdownOpen);
+              }}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text text-sm flex items-center justify-between hover:bg-theme-hover hover:border-theme-primary/50 transition-all shadow-sm"
+            >
+              <span className="font-medium">
+                {selectedStatus === "All"
+                  ? t("assetOverview.allStatuses")
+                  : selectedStatus === "Resolved"
+                  ? t("assetOverview.resolved")
+                  : t("assetOverview.unresolved")}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  statusDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {statusDropdownOpen && (
+              <div
+                className={`absolute z-50 w-full ${
+                  statusDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl`}
+              >
+                {["All", "Resolved", "Unresolved"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setSelectedStatus(status);
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                      selectedStatus === status
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
+                    }`}
+                  >
+                    {status === "All"
+                      ? t("assetOverview.allStatuses")
+                      : status === "Resolved"
+                      ? t("assetOverview.resolved")
+                      : t("assetOverview.unresolved")}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Type Filter */}
@@ -1199,6 +1413,7 @@ const AssetOverview = () => {
                   showName={showName}
                   onNoEditsNeeded={handleNoEditsNeeded}
                   onReplace={handleReplace}
+                  onUnresolve={handleUnresolve}
                 />
               );
             })}

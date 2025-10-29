@@ -191,6 +191,8 @@ def save_runtime_to_db(log_path: Path, mode: str = "normal"):
             runtime_data = parse_runtime_from_log(log_path, mode)
 
         if runtime_data:
+            # Watcher handles duplicate prevention by only importing on modification
+            # So we can safely add the entry here
             runtime_db.add_runtime_entry(**runtime_data)
             logger.info(f"Runtime data saved to database for {mode} mode")
         else:
@@ -245,12 +247,12 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
         seconds = runtime_seconds % 60
         runtime_formatted = f"{hours}h {minutes}m {seconds}s"
 
-        # Parse image counts
+        # Parse image counts - handle None values from JSON
         total_images = (
-            data.get("Posters", 0)
-            + data.get("Backgrounds", 0)
-            + data.get("Titlecards", 0)
-            + data.get("Seasons", 0)
+            (data.get("Posters") or 0)
+            + (data.get("Backgrounds") or 0)
+            + (data.get("Titlecards") or 0)
+            + (data.get("Seasons") or 0)
         )
 
         # Parse fallback count - support both old and new formats
@@ -291,23 +293,23 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             "runtime_seconds": runtime_seconds,
             "runtime_formatted": runtime_formatted,
             "total_images": total_images,
-            "posters": data.get("Posters", 0),
-            "seasons": data.get("Seasons", 0),
-            "backgrounds": data.get("Backgrounds", 0),
-            "titlecards": data.get("Titlecards", 0),
-            "collections": data.get("Collections", 0),
-            "errors": data.get("Errors", 0),
+            "posters": data.get("Posters") or 0,
+            "seasons": data.get("Seasons") or 0,
+            "backgrounds": data.get("Backgrounds") or 0,
+            "titlecards": data.get("Titlecards") or 0,
+            "collections": data.get("Collections") or 0,
+            "errors": data.get("Errors") or 0,
             "fallbacks": fallback_count,
             "textless": textless_count,
             "truncated": truncated_count,
             "text": text_count,
-            "tba_skipped": data.get("TBA Skipped", 0),
-            "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
+            "tba_skipped": data.get("TBA Skipped") or 0,
+            "jap_chines_skipped": data.get("Jap/Chines Skipped") or 0,
             "notification_sent": str(data.get("Notification Sent", "false")).lower()
             == "true",
             "uptime_kuma": str(data.get("Uptime Kuma", "false")).lower() == "true",
-            "images_cleared": data.get("Images cleared", 0),
-            "folders_cleared": data.get("Folders Cleared", 0),
+            "images_cleared": data.get("Images cleared") or 0,
+            "folders_cleared": data.get("Folders Cleared") or 0,
             "space_saved": data.get("Space saved", ""),
             "script_version": data.get("Script Version", ""),
             "im_version": data.get("IM Version", ""),
@@ -437,6 +439,7 @@ def import_json_to_db(logs_dir: Path = None):
                 runtime_data = parse_runtime_from_json(json_path, mode)
 
                 if runtime_data:
+                    # Import directly - duplicate prevention handled by watcher
                     runtime_db.add_runtime_entry(**runtime_data)
                     imported_count += 1
                     logger.info(f"Imported {json_file} to database")

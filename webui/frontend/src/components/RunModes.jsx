@@ -21,6 +21,7 @@ import {
   Cloud,
   X,
   ExternalLink,
+  Download,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ConfirmDialog from "./ConfirmDialog";
@@ -119,6 +120,33 @@ const TMDBPosterSearchModal = React.memo(
         displayedCount: 10,
       });
       showSuccess(t("runModes.tmdb.posterSelected"));
+    };
+
+    const handleDownloadPoster = async (e, poster) => {
+      e.stopPropagation(); // Prevent poster selection when clicking download
+      try {
+        const response = await fetch(poster.original_url || poster.url);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+
+        // Create filename from source and metadata
+        const source = poster.source?.toLowerCase() || "image";
+        const lang = poster.language || "";
+        const title = poster.title?.replace(/[^a-z0-9]/gi, "_") || "";
+        const timestamp = Date.now();
+        const extension =
+          poster.original_url?.split(".").pop()?.split("?")[0] || "jpg";
+        a.download = `${source}_${title}_${lang}_${timestamp}.${extension}`;
+
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error("Download failed:", error);
+      }
     };
 
     if (!tmdbSearch.showModal) return null;
@@ -358,16 +386,29 @@ const TMDBPosterSearchModal = React.memo(
 
                         {/* Overlay on Hover */}
                         <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
+                          {/* Download Button - Top Right */}
+                          <button
+                            onClick={(e) => handleDownloadPoster(e, poster)}
+                            className="absolute top-2 right-2 px-3 py-2 bg-theme-primary hover:bg-theme-primary/80 rounded-lg transition-all shadow-lg z-10 flex items-center gap-2"
+                            title={t("runModes.tmdb.download") || "Download"}
+                          >
+                            <Download className="w-4 h-4 text-white" />
+                            <span className="text-white text-sm font-medium">
+                              {t("runModes.tmdb.download")}
+                            </span>
+                          </button>
+
                           <CheckCircle className="w-8 h-8 text-green-400 mb-2" />
                           <p className="text-white text-sm font-semibold mb-1">
                             {poster.title || poster.source}
                           </p>
-                          {(poster.width || poster.height) && (
-                            <p className="text-white/80 text-xs mb-2">
-                              {poster.width} × {poster.height}
-                            </p>
-                          )}
                           <div className="flex flex-wrap gap-1 justify-center">
+                            {/* Dimensions Badge */}
+                            {(poster.width || poster.height) && (
+                              <span className="bg-slate-600 px-2 py-1 rounded text-xs text-white">
+                                {poster.width} × {poster.height}
+                              </span>
+                            )}
                             {poster.source && (
                               <span className="bg-blue-600 px-2 py-1 rounded text-xs text-white">
                                 {poster.source}

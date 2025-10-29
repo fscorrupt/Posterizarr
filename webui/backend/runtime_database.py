@@ -341,6 +341,85 @@ class RuntimeDatabase:
             # Mark as migrated even on error to prevent repeated attempts
             self._mark_as_migrated(0)
 
+    def entry_exists(
+        self, mode: str, start_time: str = None, end_time: str = None
+    ) -> bool:
+        """
+        Check if a runtime entry already exists based on mode and timestamps
+
+        Args:
+            mode: The run mode (normal, manual, testing, etc.)
+            start_time: Start time from JSON (format: "DD.MM.YYYY HH:MM:SS")
+            end_time: End time from JSON (format: "DD.MM.YYYY HH:MM:SS")
+
+        Returns:
+            bool: True if entry exists, False otherwise
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            # Treat empty strings as None
+            if start_time == "":
+                start_time = None
+            if end_time == "":
+                end_time = None
+
+            # If we have both start and end times, use them for precise matching
+            if start_time and end_time:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats 
+                    WHERE mode = ? AND start_time = ? AND end_time = ?
+                """,
+                    (mode, start_time, end_time),
+                )
+            # If we only have start time, match on that
+            elif start_time:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats 
+                    WHERE mode = ? AND start_time = ?
+                """,
+                    (mode, start_time),
+                )
+            else:
+                # No timestamps - check if we have a very recent entry (within last 10 seconds)
+                # This prevents duplicate imports during restart
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM runtime_stats 
+                    WHERE mode = ? 
+                    AND datetime(timestamp) > datetime('now', '-10 seconds')
+                """,
+                    (mode,),
+                )
+                count = cursor.fetchone()[0]
+                conn.close()
+
+                if count > 0:
+                    logger.debug(
+                        f"Recent entry found for {mode} (within 10s), treating as duplicate"
+                    )
+                return count > 0
+                # No timestamps - can't reliably check for duplicates
+                conn.close()
+                return False
+
+            count = cursor.fetchone()[0]
+            conn.close()
+
+            exists = count > 0
+            if exists:
+                logger.debug(
+                    f"Entry already exists: mode={mode}, start={start_time}, end={end_time}"
+                )
+            return exists
+
+        except Exception as e:
+            logger.error(f"Error checking if entry exists: {e}")
+            return False
+
     def add_runtime_entry(
         self,
         mode: str,
