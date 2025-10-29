@@ -139,7 +139,9 @@ function RecentAssets({ refreshTrigger = 0 }) {
   // Listen for assetReplaced events (when assets are marked as resolved/unresolved)
   useEffect(() => {
     const handleAssetReplaced = () => {
-      console.log("Asset replaced/unresolve event received, refreshing recent assets...");
+      console.log(
+        "Asset replaced/unresolve event received, refreshing recent assets..."
+      );
       fetchRecentAssets(true);
     };
 
