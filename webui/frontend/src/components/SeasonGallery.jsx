@@ -920,11 +920,11 @@ function SeasonGallery() {
                   {/* Media Type */}
                   <div>
                     <label className="text-sm text-theme-muted">
-                      Media Type
+                      {t("common.mediaType")}
                     </label>
                     <div className="mt-1">
                       <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium bg-indigo-500/20 text-indigo-400 border-indigo-500/50">
-                        Season
+                        {t("common.season")}
                       </span>
                     </div>
                   </div>
@@ -938,7 +938,7 @@ function SeasonGallery() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">Filename</label>
+                    <label className="text-sm text-theme-muted">{t("common.filename")}</label>
                     <p className="text-theme-text break-all mt-1">
                       {selectedImage.name}
                     </p>
@@ -948,7 +948,7 @@ function SeasonGallery() {
                   <div>
                     <label className="text-sm text-theme-muted flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      Last Viewed
+                      {t("common.lastViewed")}
                     </label>
                     <p className="text-theme-text mt-1 text-sm">
                       {formatTimestamp()}
@@ -958,7 +958,7 @@ function SeasonGallery() {
                   <div>
                     <label className="text-sm text-theme-muted flex items-center gap-1">
                       <HardDrive className="w-3.5 h-3.5" />
-                      Path
+                      {t("common.path")}
                     </label>
                     <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
                       {formatDisplayPath(selectedImage.path)}
@@ -966,7 +966,7 @@ function SeasonGallery() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-theme-muted">Size</label>
+                    <label className="text-sm text-theme-muted">{t("common.size")}</label>
                     <p className="text-theme-text mt-1">
                       {(selectedImage.size / 1024).toFixed(2)} KB
                     </p>

@@ -1365,7 +1365,18 @@
     "settings": "Paramètres",
     "logout": "Déconnexion",
     "login": "Connexion",
-    "done": "Terminé"
+    "done": "Terminé",
+    "mediaType": "Type de média",
+    "lastViewed": "Dernière vue",
+    "path": "Chemin",
+    "filename": "Nom de fichier",
+    "size": "Taille",
+    "movie": "Film",
+    "show": "Série",
+    "season": "Saison",
+    "episode": "Épisode",
+    "background": "Arrière-plan",
+    "asset": "Ressource"
   },
   "theme": {
     "title": "Thème",

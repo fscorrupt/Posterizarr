@@ -1367,7 +1367,18 @@
     "settings": "Settings",
     "logout": "Logout",
     "login": "Login",
-    "done": "Done"
+    "done": "Done",
+    "mediaType": "Media Type",
+    "lastViewed": "Last Viewed",
+    "path": "Path",
+    "filename": "Filename",
+    "size": "Size",
+    "movie": "Movie",
+    "show": "Show",
+    "season": "Season",
+    "episode": "Episode",
+    "background": "Background",
+    "asset": "Asset"
   },
   "theme": {
     "title": "Theme",

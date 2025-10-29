@@ -692,7 +692,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
                   {/* Media Type */}
                   <div>
                     <label className="text-sm text-theme-muted">
-                      Media Type
+                      {t("common.mediaType")}
                     </label>
                     <div className="mt-1">
                       <span
@@ -700,7 +700,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
                           selectedAsset.type
                         )}`}
                       >
-                        {getMediaTypeLabel(selectedAsset)}
+                        {t(`common.${getMediaTypeLabel(selectedAsset).toLowerCase()}`)}
                       </span>
                     </div>
                   </div>
@@ -722,7 +722,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
                     <div>
                       <label className="text-sm text-theme-muted flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" />
-                        Added On
+                        {t("common.lastViewed")}
                       </label>
                       <p className="text-theme-text mt-1">
                         {formatTimestamp(selectedAsset.created_at)}
@@ -747,7 +747,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
                   <div>
                     <label className="text-sm text-theme-muted flex items-center gap-1">
                       <HardDrive className="w-3.5 h-3.5" />
-                      Path
+                      {t("common.path")}
                     </label>
                     <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
                       {selectedAsset.rootfolder}

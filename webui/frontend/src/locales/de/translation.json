@@ -1418,7 +1418,18 @@
     "settings": "Einstellungen",
     "logout": "Abmelden",
     "login": "Anmelden",
-    "done": "Fertig"
+    "done": "Fertig",
+    "mediaType": "Medientyp",
+    "lastViewed": "Zuletzt angesehen",
+    "path": "Pfad",
+    "filename": "Dateiname",
+    "size": "Größe",
+    "movie": "Film",
+    "show": "Serie",
+    "season": "Staffel",
+    "episode": "Episode",
+    "background": "Hintergrund",
+    "asset": "Asset"
   },
   "theme": {
     "title": "Design",

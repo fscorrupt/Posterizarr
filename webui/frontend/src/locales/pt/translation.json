@@ -1365,7 +1365,18 @@
     "settings": "Configurações",
     "logout": "Sair",
     "login": "Entrar",
-    "done": "Concluído"
+    "done": "Concluído",
+    "mediaType": "Tipo de mídia",
+    "lastViewed": "Última visualização",
+    "path": "Caminho",
+    "filename": "Nome do arquivo",
+    "size": "Tamanho",
+    "movie": "Filme",
+    "show": "Série",
+    "season": "Temporada",
+    "episode": "Episódio",
+    "background": "Plano de fundo",
+    "asset": "Recurso"
   },
   "theme": {
     "title": "Tema",

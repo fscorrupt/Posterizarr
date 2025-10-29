@@ -1365,7 +1365,18 @@
     "settings": "Impostazioni",
     "logout": "Esci",
     "login": "Accedi",
-    "done": "Fatto"
+    "done": "Fatto",
+    "mediaType": "Tipo di media",
+    "lastViewed": "Ultima visualizzazione",
+    "path": "Percorso",
+    "filename": "Nome file",
+    "size": "Dimensione",
+    "movie": "Film",
+    "show": "Serie",
+    "season": "Stagione",
+    "episode": "Episodio",
+    "background": "Sfondo",
+    "asset": "Risorsa"
   },
   "theme": {
     "title": "Tema",
