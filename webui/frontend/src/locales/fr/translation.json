@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sync Jellyfin",
-        "description": "Synchroniser les affiches vers Jellyfin"
+        "description": "Synchroniser les affiches Plex vers Jellyfin"
       },
       "syncEmby": {
         "title": "Sync Emby",
-        "description": "Synchroniser les affiches vers Emby"
+        "description": "Synchroniser les affiches Plex vers Emby"
       }
     },
     "manual": {
@@ -1273,12 +1273,13 @@
     "select": "Sélectionner",
     "uploadAssetButton": "TÉLÉCHARGER LA RESSOURCE",
     "uploadingAsset": "Téléchargement en cours...",
-    "dimensionValid": "Dimensions valides",
-    "dimensionInvalid": "Dimensions trop petites",
-    "dimensionRequirement": "Les dimensions de l'image doivent respecter les exigences minimales pour le téléchargement",
-    "imageDimensionsValid": "Dimensions de l'image ({{width}}x{{height}}) sont valides !",
-    "imageDimensionsTooSmall": "Dimensions de l'image ({{width}}x{{height}}) sont trop petites. Minimum requis : {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Veuillez d'abord sélectionner une image valide avec les bonnes dimensions.",
+    "dimensionValid": "Format d'image valide",
+    "dimensionInvalid": "Format d'image invalide",
+    "dimensionRequirement": "L'image doit avoir le bon format d'image pour être téléchargée",
+    "imageDimensionsValid": "Dimensions de l'image ({{width}}x{{height}}) valides !",
+    "invalidImageRatio": "Format d'image invalide ({{ratio}}). L'image est en {{width}}x{{height}}, mais doit être approximativement au format {{expectedRatioString}} (ratio ~{{expectedRatio}}).",
+    "imageHeightZero": "La hauteur de l'image ne peut pas être nulle. Veuillez télécharger une image valide.",
+    "selectValidImage": "Veuillez d'abord sélectionner une image valide avec le bon format d'image.",
     "seasonNumberHint": "Tout nom de saison se terminant par 0 ou 00 (par ex., \"Saison 0\", \"Staffel 00\") ou correspondant à un mot-clé comme \"Specials\" sera traité comme une saison Specials.",
     "posterizarrRunningError": "Impossible de remplacer les ressources pendant que Posterizarr est en cours d'exécution. Veuillez attendre que tous les traitements soient terminés avant d'utiliser les options de remplacement ou de mise à jour manuelle.",
     "confirmReplaceTitle": "Confirmer le remplacement de la ressource",

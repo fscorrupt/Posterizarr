@@ -5652,7 +5652,7 @@ async def run_manual_mode_upload(
             if len(content) == 0:
                 raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-            # Validate image dimensions and REJECT if too small
+            # Validate image aspect ratio
             try:
                 from PIL import Image
                 import io
@@ -5662,48 +5662,48 @@ async def run_manual_mode_upload(
                 width, height = img.size
                 logger.info(f"Manual upload image dimensions: {width}x{height} pixels")
 
-                # Load config to get minimum dimensions
-                try:
-                    if CONFIG_PATH.exists():
-                        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                            config = json.load(f)
-                        poster_min_width = int(
-                            config.get("ApiPart", {}).get("PosterMinWidth", "2000")
-                        )
-                        poster_min_height = int(
-                            config.get("ApiPart", {}).get("PosterMinHeight", "3000")
-                        )
-                        bg_tc_min_width = int(
-                            config.get("ApiPart", {}).get("BgTcMinWidth", "3840")
-                        )
-                        bg_tc_min_height = int(
-                            config.get("ApiPart", {}).get("BgTcMinHeight", "2160")
-                        )
-                    else:
-                        poster_min_width = 2000
-                        poster_min_height = 3000
-                        bg_tc_min_width = 3840
-                        bg_tc_min_height = 2160
-                except:
-                    poster_min_width = 2000
-                    poster_min_height = 3000
-                    bg_tc_min_width = 3840
-                    bg_tc_min_height = 2160
+                # Define target ratios and tolerance
+                POSTER_RATIO = 2 / 3    # 0.666...
+                BACKGROUND_RATIO = 16 / 9 # 1.777...
+                # Tolerance allows for minor pixel deviations
+                TOLERANCE = 0.05
 
-                # Check dimensions based on poster type and REJECT if too small
+                # Check for zero height
+                if height == 0:
+                    error_msg = "Image height cannot be zero."
+                    logger.error(error_msg)
+                    raise HTTPException(status_code=400, detail=error_msg)
+
+                image_ratio = width / height
+                logger.info(f"Image ratio calculated as: {image_ratio}")
+
+                # Check aspect ratio based on poster type
                 if posterType in ["standard", "season", "collection"]:
-                    if width < poster_min_width or height < poster_min_height:
-                        error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {poster_min_width}x{poster_min_height} pixels for posters. Please upload a higher resolution image."
+                    # Check for 2:3 ratio
+                    if abs(image_ratio - POSTER_RATIO) > TOLERANCE:
+                        error_msg = (
+                            f"Invalid aspect ratio for poster. Image is {width}x{height} "
+                            f"(ratio ~{image_ratio:.2f}), but must be 2:3 "
+                            f"(ratio ~{POSTER_RATIO:.2f})."
+                        )
                         logger.error(error_msg)
                         raise HTTPException(status_code=400, detail=error_msg)
+                    logger.info("Image aspect ratio validated as 2:3.")
+
                 elif posterType in ["background", "titlecard"]:
-                    if width < bg_tc_min_width or height < bg_tc_min_height:
-                        error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {bg_tc_min_width}x{bg_tc_min_height} pixels for backgrounds/title cards. Please upload a higher resolution image."
+                    # Check for 16:9 ratio
+                    if abs(image_ratio - BACKGROUND_RATIO) > TOLERANCE:
+                        error_msg = (
+                            f"Invalid aspect ratio for background/title card. Image is {width}x{height} "
+                            f"(ratio ~{image_ratio:.2f}), but must be 16:9 "
+                            f"(ratio ~{BACKGROUND_RATIO:.2f})."
+                        )
                         logger.error(error_msg)
                         raise HTTPException(status_code=400, detail=error_msg)
+                    logger.info("Image aspect ratio validated as 16:9.")
 
             except HTTPException:
-                # Re-raise HTTP exceptions (dimension validation failures)
+                # Re-raise HTTP exceptions (ratio validation failures)
                 raise
             except Exception as e:
                 logger.warning(
@@ -9238,15 +9238,14 @@ async def upload_asset_replacement(
             logger.error("Uploaded file is empty")
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-        # Validate image dimensions and reject if too small
+        # Validate image aspect ratio instead of dimensions
         try:
             from PIL import Image
             import io
 
-            # Open image from bytes
             img = Image.open(io.BytesIO(contents))
             width, height = img.size
-            logger.info(f"Image dimensions: {width}x{height} pixels")
+            logger.info(f"Manual upload image dimensions: {width}x{height} pixels")
 
             # Determine asset type from path/filename
             asset_path_lower = asset_path.lower()
@@ -9266,53 +9265,47 @@ async def upload_asset_replacement(
                 and not is_titlecard
             )
 
-            # Load config to get minimum dimensions
-            try:
-                if CONFIG_PATH.exists():
-                    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                        config = json.load(f)
-                    poster_min_width = int(
-                        config.get("ApiPart", {}).get("PosterMinWidth", "2000")
-                    )
-                    poster_min_height = int(
-                        config.get("ApiPart", {}).get("PosterMinHeight", "3000")
-                    )
-                    bg_tc_min_width = int(
-                        config.get("ApiPart", {}).get("BgTcMinWidth", "3840")
-                    )
-                    bg_tc_min_height = int(
-                        config.get("ApiPart", {}).get("BgTcMinHeight", "2160")
-                    )
-                else:
-                    # Fallback to defaults if config not available
-                    poster_min_width = 2000
-                    poster_min_height = 3000
-                    bg_tc_min_width = 3840
-                    bg_tc_min_height = 2160
-            except:
-                # Fallback to defaults if config not available
-                poster_min_width = 2000
-                poster_min_height = 3000
-                bg_tc_min_width = 3840
-                bg_tc_min_height = 2160
+            # Check for zero height
+            if height == 0:
+                error_msg = "Image height cannot be zero."
+                logger.error(error_msg)
+                raise HTTPException(status_code=400, detail=error_msg)
+            
+            # Calculate ratio
+            ratio = width / height
+            logger.info(f"Image aspect ratio: {ratio:.3f}")
 
-            # Check dimensions based on asset type and REJECT if too small
+            # Define expected ratios
+            POSTER_RATIO = 2 / 3   # ≈ 0.667
+            BG_TC_RATIO = 16 / 9   # ≈ 1.778
+            TOLERANCE = 0.05       # ±5% tolerance
+
+            def ratio_within_tolerance(actual, expected, tolerance):
+                return abs(actual - expected) / expected <= tolerance
+
+            # Validate based on type
             if is_poster or is_season:
-                if width < poster_min_width or height < poster_min_height:
-                    error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {poster_min_width}x{poster_min_height} pixels for posters. Please upload a higher resolution image."
+                if not ratio_within_tolerance(ratio, POSTER_RATIO, TOLERANCE):
+                    error_msg = (
+                        f"Invalid aspect ratio ({ratio:.3f}). Expected approximately 2:3 "
+                        f"({POSTER_RATIO:.3f} ± {TOLERANCE*100:.0f}%)."
+                    )
                     logger.error(error_msg)
                     raise HTTPException(status_code=400, detail=error_msg)
+
             elif is_background or is_titlecard:
-                if width < bg_tc_min_width or height < bg_tc_min_height:
-                    error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {bg_tc_min_width}x{bg_tc_min_height} pixels for backgrounds/title cards. Please upload a higher resolution image."
+                if not ratio_within_tolerance(ratio, BG_TC_RATIO, TOLERANCE):
+                    error_msg = (
+                        f"Invalid aspect ratio ({ratio:.3f}). Expected approximately 16:9 "
+                        f"({BG_TC_RATIO:.3f} ± {TOLERANCE*100:.0f}%)."
+                    )
                     logger.error(error_msg)
                     raise HTTPException(status_code=400, detail=error_msg)
 
         except HTTPException:
-            # Re-raise HTTP exceptions (dimension validation failures)
             raise
         except Exception as e:
-            logger.warning(f"Could not validate image dimensions: {e}")
+            logger.warning(f"Could not validate image ratio: {e}")
             # Don't fail upload if dimension check itself fails, just log it
 
         # Check if asset exists in alternate location (for moving between folders)

@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sync Jellyfin",
-        "description": "Sync posters to Jellyfin"
+        "description": "Sync plex posters to Jellyfin"
       },
       "syncEmby": {
         "title": "Sync Emby",
-        "description": "Sync posters to Emby"
+        "description": "Sync plex posters to Emby"
       }
     },
     "manual": {
@@ -1275,12 +1275,13 @@
     "select": "Select",
     "uploadAssetButton": "UPLOAD ASSET",
     "uploadingAsset": "Uploading...",
-    "dimensionValid": "Dimensions valid",
-    "dimensionInvalid": "Dimensions too small",
-    "dimensionRequirement": "Image dimensions must meet minimum requirements to upload",
+	  "dimensionValid": "Aspect ratio valid",
+    "dimensionInvalid": "Invalid aspect ratio",
+    "dimensionRequirement": "Image must have the correct aspect ratio to upload",
     "imageDimensionsValid": "Image dimensions ({{width}}x{{height}}) are valid!",
-    "imageDimensionsTooSmall": "Image dimensions ({{width}}x{{height}}) are too small. Minimum required: {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Please select a valid image with correct dimensions first.",
+    "invalidImageRatio": "Invalid aspect ratio ({{ratio}}). Image is {{width}}x{{height}}, but must be approximately {{expectedRatioString}} (ratio ~{{expectedRatio}}).",
+    "imageHeightZero": "Image height cannot be zero. Please upload a valid image.",
+    "selectValidImage": "Please select a valid image with the correct aspect ratio first.",
     "seasonNumberHint": "Any season name ending in 0 or 00 (e.g., \"Season 0\", \"Staffel 00\") or matching a keyword like \"Specials\" will be handled as a Specials season.",
     "posterizarrRunningError": "Cannot replace assets while Posterizarr is running. Please wait until all processing is completed before using the replace or manual update options.",
     "confirmReplaceTitle": "Confirm Asset Replacement",

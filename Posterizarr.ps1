@@ -51,7 +51,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "2.0.5"
+$CurrentScriptVersion = "2.0.6"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7649,7 +7649,7 @@ if ($Manual) {
     $ExtractedTitleRegex = '^\s*(?:Season\s*\d+\s*\|\s*)?(.*?)(?:\s*\|\s*Season\s*\d+)?\s*$'
 
     # Regex to find "Specials" keywords or the numbers 0/00
-    $specialsPattern = '^(?:Specials|Extras|Spéciaux|0{1,2}|[Ss]eason 0)$' # Add any other language keywords here
+    $specialsPattern = '^(?:Specials|Extras|Spéciaux|0{1,2}|[Ss]eason ?0{1,2})$' # Add any other language keywords here
 
     if ([string]::IsNullOrEmpty($PicturePath)) {
         $PicturePath = Read-Host "Enter local path or url to source picture"

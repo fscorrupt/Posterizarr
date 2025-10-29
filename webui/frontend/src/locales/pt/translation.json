@@ -90,11 +90,11 @@
       },
       "syncJellyfin": {
         "title": "Sincronizar Jellyfin",
-        "description": "Sincronizar cartazes para o Jellyfin"
+        "description": "Sincronizar os posters do Plex para o Jellyfin"
       },
       "syncEmby": {
         "title": "Sincronizar Emby",
-        "description": "Sincronizar cartazes para o Emby"
+        "description": "Sincronizar os posters do Plex para o Emby"
       }
     },
     "manual": {
@@ -1273,12 +1273,13 @@
     "select": "Selecionar",
     "uploadAssetButton": "CARREGAR ATIVO",
     "uploadingAsset": "Carregando...",
-    "dimensionValid": "Dimensões válidas",
-    "dimensionInvalid": "Dimensões muito pequenas",
-    "dimensionRequirement": "As dimensões da imagem devem atender aos requisitos mínimos para fazer upload",
+    "dimensionValid": "Proporção válida",
+    "dimensionInvalid": "Proporção inválida",
+    "dimensionRequirement": "A imagem deve ter a proporção correta para carregar",
     "imageDimensionsValid": "Dimensões da imagem ({{width}}x{{height}}) são válidas!",
-    "imageDimensionsTooSmall": "Dimensões da imagem ({{width}}x{{height}}) são muito pequenas. Mínimo necessário: {{minWidth}}x{{minHeight}} pixels.",
-    "selectValidImage": "Por favor, selecione primeiro uma imagem válida com as dimensões corretas.",
+    "invalidImageRatio": "Proporção inválida ({{ratio}}). A imagem é {{width}}x{{height}}, mas deve ser aproximadamente {{expectedRatioString}} (proporção ~{{expectedRatio}}).",
+    "imageHeightZero": "A altura da imagem não pode ser zero. Carregue uma imagem válida.",
+    "selectValidImage": "Selecione primeiro uma imagem válida com a proporção correta.",
     "seasonNumberHint": "Qualquer nome de temporada que termine em 0 ou 00 (ex: \"Temporada 0\", \"Staffel 00\") ou que corresponda a uma palavra-chave como \"Especiais\" será tratado como temporada Especiais.",
     "posterizarrRunningError": "Não é possível substituir ativos enquanto o Posterizarr está em execução. Aguarde até que todo o processamento seja concluído antes de usar as opções de substituição ou atualização manual.",
     "confirmReplaceTitle": "Confirmar substituição de ativo",
