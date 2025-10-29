@@ -68,6 +68,11 @@ class LogsWatcher:
         self.poll_interval = 5  # Check every 5 seconds
         self.last_file_mtimes: Dict[str, float] = {}  # Track file modification times
 
+        # Track files that existed at startup (to prevent restart duplicates)
+        self.files_at_startup: set = (
+            set()
+        )  # Set of filenames that existed when watcher started
+
         logger.info(f"LogsWatcher initialized for directory: {self.logs_dir}")
 
     def start(self):
@@ -129,6 +134,22 @@ class LogsWatcher:
             )
 
             self.is_running = True
+
+            # Record which files exist at startup (to prevent restart duplicates)
+            logger.debug("Recording existing files at startup...")
+            try:
+                for file in self.logs_dir.iterdir():
+                    if file.is_file():
+                        self.files_at_startup.add(file.name.lower())
+                logger.debug(
+                    f"[OK] Found {len(self.files_at_startup)} existing files at startup"
+                )
+                if self.files_at_startup:
+                    logger.debug(
+                        f"  Existing files: {', '.join(sorted(self.files_at_startup))}"
+                    )
+            except Exception as e:
+                logger.warning(f"Could not scan for existing files: {e}")
 
             # Start polling thread as fallback for Windows/Docker
             logger.debug("Starting polling thread for reliability...")
@@ -239,13 +260,25 @@ class LogsWatcher:
                                     )
 
                                 # Only trigger import on MODIFICATION (mtime > last_mtime)
-                                # Skip first detection (last_mtime == 0) to prevent restart duplicates
+                                # OR if this is a NEW file (didn't exist at startup)
                                 if last_mtime == 0:
-                                    # First detection - just record mtime, don't import
-                                    if poll_count % 12 == 1:
-                                        logger.debug(
-                                            f"  [SKIP] First detection of {file.name}, recording mtime only (no import)"
+                                    # First detection - check if file existed at startup
+                                    if file.name.lower() in self.files_at_startup:
+                                        # File existed at startup - skip to prevent restart duplicates
+                                        if poll_count % 12 == 1:
+                                            logger.debug(
+                                                f"  [SKIP] {file.name} existed at startup, recording mtime only"
+                                            )
+                                    else:
+                                        # NEW file created after startup - import it!
+                                        logger.info(
+                                            f"POLLING DETECTED: NEW CSV FILE {file.name} created after startup!"
                                         )
+                                        logger.debug(f"  File mtime: {mtime}")
+                                        logger.debug(
+                                            "  First detection of new file - triggering import"
+                                        )
+                                        self.on_csv_modified()
                                 elif mtime > last_mtime:
                                     logger.info(f"POLLING DETECTED: CSV modification!")
                                     logger.debug(f"  File: {file.name}")
@@ -290,13 +323,25 @@ class LogsWatcher:
                                         )
 
                                     # Only trigger import on MODIFICATION (mtime > last_mtime)
-                                    # Skip first detection (last_mtime == 0) to prevent restart duplicates
+                                    # OR if this is a NEW file (didn't exist at startup)
                                     if last_mtime == 0:
-                                        # First detection - just record mtime, don't import
-                                        if poll_count % 12 == 1:
-                                            logger.debug(
-                                                f"  [SKIP] First detection of {file.name}, recording mtime only (no import)"
+                                        # First detection - check if file existed at startup
+                                        if filename_lower in self.files_at_startup:
+                                            # File existed at startup - skip to prevent restart duplicates
+                                            if poll_count % 12 == 1:
+                                                logger.debug(
+                                                    f"  [SKIP] {file.name} existed at startup, recording mtime only"
+                                                )
+                                        else:
+                                            # NEW file created after startup - import it!
+                                            logger.info(
+                                                f"POLLING DETECTED: NEW JSON FILE {file.name} created after startup!"
                                             )
+                                            logger.debug(f"  File mtime: {mtime}")
+                                            logger.debug(
+                                                "  First detection of new file - triggering import"
+                                            )
+                                            self.on_runtime_json_modified(file.name)
                                     elif mtime > last_mtime:
                                         logger.info(
                                             f"POLLING DETECTED: {file.name} modification!"
