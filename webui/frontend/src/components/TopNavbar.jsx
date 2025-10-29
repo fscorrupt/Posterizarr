@@ -76,7 +76,7 @@ const TopNavbar = () => {
           </div>
 
           {/* User Icon with Dropdown (only if auth is enabled) */}
-          {isAuthEnabled ? (
+          {isAuthEnabled && (
             <div className="relative">
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -110,13 +110,6 @@ const TopNavbar = () => {
                 </>
               )}
             </div>
-          ) : (
-            <button
-              className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
-              title={t("topNavbar.userProfile")}
-            >
-              <User className="w-5 h-5" />
-            </button>
           )}
         </div>
       </div>

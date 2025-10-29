@@ -7636,12 +7636,14 @@ async def get_test_gallery():
                     relative_path = image_path.relative_to(TEST_DIR)
                     # Create URL path with forward slashes
                     url_path = str(relative_path).replace("\\", "/")
+                    # URL encode the path to handle special characters like #
+                    encoded_url_path = quote(url_path, safe="/")
                     images.append(
                         {
                             "path": str(relative_path),
                             "name": image_path.name,
                             "size": image_path.stat().st_size,
-                            "url": f"/test/{url_path}",
+                            "url": f"/test/{encoded_url_path}",
                         }
                     )
                 except Exception as e:

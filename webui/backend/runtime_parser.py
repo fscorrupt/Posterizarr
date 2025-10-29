@@ -191,10 +191,18 @@ def save_runtime_to_db(log_path: Path, mode: str = "normal"):
             runtime_data = parse_runtime_from_log(log_path, mode)
 
         if runtime_data:
-            # Watcher handles duplicate prevention by only importing on modification
-            # So we can safely add the entry here
-            runtime_db.add_runtime_entry(**runtime_data)
-            logger.info(f"Runtime data saved to database for {mode} mode")
+            # Check for duplicates based on start/end time
+            # Watcher prevents restart duplicates, this prevents same-data duplicates
+            start_time = runtime_data.get("start_time")
+            end_time = runtime_data.get("end_time")
+
+            if runtime_db.entry_exists(mode, start_time, end_time):
+                logger.info(
+                    f"Runtime entry already exists for {mode} mode (start: {start_time}), skipping duplicate import"
+                )
+            else:
+                runtime_db.add_runtime_entry(**runtime_data)
+                logger.info(f"Runtime data saved to database for {mode} mode")
         else:
             logger.warning(f"No runtime data to save for {mode} mode")
 
