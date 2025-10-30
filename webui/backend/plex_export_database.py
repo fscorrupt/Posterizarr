@@ -171,8 +171,21 @@ class PlexExportDatabase:
 
                 for row in reader:
                     try:
-                        # Remove quotes from values
-                        clean_row = {k: v.strip('"') for k, v in row.items()}
+                        # Remove quotes from values - handle both string and other types
+                        clean_row = {}
+                        for k, v in row.items():
+                            if isinstance(v, str):
+                                clean_row[k] = v.strip('"').strip()
+                            else:
+                                clean_row[k] = str(v).strip() if v is not None else ""
+
+                        # Skip empty rows (check critical fields)
+                        if not clean_row.get("title") and not clean_row.get(
+                            "ratingKey"
+                        ):
+                            logger.debug("Skipping empty row")
+                            skipped_count += 1
+                            continue
 
                         cursor.execute(
                             """
@@ -272,8 +285,21 @@ class PlexExportDatabase:
 
                 for row in reader:
                     try:
-                        # Remove quotes from values
-                        clean_row = {k: v.strip('"') for k, v in row.items()}
+                        # Remove quotes from values - handle both string and other types
+                        clean_row = {}
+                        for k, v in row.items():
+                            if isinstance(v, str):
+                                clean_row[k] = v.strip('"').strip()
+                            else:
+                                clean_row[k] = str(v).strip() if v is not None else ""
+
+                        # Skip empty rows (check critical fields)
+                        if not clean_row.get("Show Name") and not clean_row.get(
+                            "Season Number"
+                        ):
+                            logger.debug("Skipping empty row")
+                            skipped_count += 1
+                            continue
 
                         cursor.execute(
                             """

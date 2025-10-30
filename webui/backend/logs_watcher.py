@@ -1008,9 +1008,14 @@ def create_logs_watcher(
                 else:
                     logger.warning(f"  {episode_csv.name} not found")
 
-                logger.info(
-                    f"[OK] Plex CSV import callback completed successfully ({imported_count} total records)"
-                )
+                if imported_count > 0:
+                    logger.info(
+                        f"[OK] Plex CSV import callback completed successfully ({imported_count} total records)"
+                    )
+                else:
+                    logger.warning(
+                        "[WARN] Plex CSV import completed but no records were imported (empty or invalid CSV files)"
+                    )
             else:
                 logger.error("[ERROR] plex_export_db_instance is None, cannot import")
         except Exception as e:
