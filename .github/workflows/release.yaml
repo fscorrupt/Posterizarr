@@ -10,9 +10,16 @@ on:
         required: true
         default: 'test-1.0.0'
 
+env:
+  # Used to ensure the image name is lowercase
+  REPO_NAME_LOWERCASE: ${{ github.repository_owner && format('{0}/{1}', github.repository_owner, github.repository_name) || github.repository }}
+
 jobs:
-  release:
-    name: Build and Push Docker Image
+  # ===============================================
+  # Build linux/amd64
+  # ===============================================
+  build-amd64:
+    name: Build linux/amd64
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,30 +41,116 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-
+          
       - name: Lowercase repository name
         id: repo_name_lowercase
         run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Build and push linux/amd64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          # Push to a unique tag based on the Git SHA and platform
+          tags: ghcr.io/${{ env.REPO_NAME_LOWERCASE }}:${{ github.sha }}-amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ===============================================
+  # Build linux/arm64
+  # ===============================================
+  build-arm64:
+    name: Build linux/arm64
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Needed to push to GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+          
+      - name: Lowercase repository name
+        id: repo_name_lowercase
+        run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Build and push linux/arm64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          # Push to a unique tag based on the Git SHA and platform
+          tags: ghcr.io/${{ env.REPO_NAME_LOWERCASE }}:${{ github.sha }}-arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ===============================================
+  # Create and Push Manifest
+  # ===============================================
+  push-manifest:
+    name: Create and Push Manifest
+    runs-on: ubuntu-latest
+    # This job MUST wait for both builds to be successful
+    needs: [build-amd64, build-arm64]
+    permissions:
+      contents: read
+      packages: write # Needed to push to GHCR
+
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+          
+      - name: Lowercase repository name
+        id: repo_name_lowercase
+        run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      # Final Metadata step to extract tags for the manifest list
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ env.REPO_NAME_LOWERCASE }} # Image name based on repo owner/name
+          images: ghcr.io/${{ env.REPO_NAME_LOWERCASE }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             # Use the manually provided version when triggered via workflow_dispatch
             ${{ github.event_name == 'workflow_dispatch' && format('type=raw,value={0}', github.event.inputs.version) || '' }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64 # Build for amd64 and arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            
+      - name: Create and push manifest list
+        run: |
+          # Define the platform-specific images that were built in previous jobs
+          IMG_AMD64="ghcr.io/${{ env.REPO_NAME_LOWERCASE }}:${{ github.sha }}-amd64"
+          IMG_ARM64="ghcr.io/${{ env.REPO_NAME_LOWERCASE }}:${{ github.sha }}-arm64"
+          
+          # Loop through each "final" tag generated by the metadata action
+          for TAG in ${{ steps.meta.outputs.tags }}; do
+            echo "Creating and pushing manifest for: $TAG"
+            
+            # Create a manifest list pointing to the two platform-specific images
+            docker manifest create $TAG \
+              --amend $IMG_AMD64 \
+              --amend $IMG_ARM64
+              
+            # Push the manifest list to the registry
+            docker manifest push $TAG
+          done
