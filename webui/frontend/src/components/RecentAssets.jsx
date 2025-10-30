@@ -721,18 +721,70 @@ function RecentAssets({ refreshTrigger = 0 }) {
                     </p>
                   </div>
 
-                  {/* Timestamp */}
-                  {selectedAsset.created_at && (
+                  {/* Timestamps */}
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {t("common.created")}
+                    </label>
+                    <p className="text-theme-text mt-1 text-sm">
+                      {selectedAsset.created
+                        ? new Date(selectedAsset.created * 1000).toLocaleString(
+                            "en-GB",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: false,
+                            }
+                          )
+                        : "Unknown"}
+                    </p>
+                  </div>
+
+                  {selectedAsset.modified && (
                     <div>
                       <label className="text-sm text-theme-muted flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" />
-                        {t("common.lastViewed")}
+                        {t("common.modified")}
                       </label>
-                      <p className="text-theme-text mt-1">
-                        {formatTimestamp(selectedAsset.created_at)}
+                      <p className="text-theme-text mt-1 text-sm">
+                        {new Date(selectedAsset.modified * 1000).toLocaleString(
+                          "en-GB",
+                          {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            hour12: false,
+                          }
+                        )}
                       </p>
                     </div>
                   )}
+
+                  <div>
+                    <label className="text-sm text-theme-muted flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {t("common.lastViewed")}
+                    </label>
+                    <p className="text-theme-text mt-1 text-sm">
+                      {new Date().toLocaleString("en-GB", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false,
+                      })}
+                    </p>
+                  </div>
 
                   {/* Library */}
                   {selectedAsset.library && (

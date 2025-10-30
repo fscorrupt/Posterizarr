@@ -1367,6 +1367,8 @@
     "login": "Accedi",
     "done": "Fatto",
     "mediaType": "Tipo di media",
+    "created": "Creato",
+    "modified": "Modificato",
     "lastViewed": "Ultima visualizzazione",
     "path": "Percorso",
     "filename": "Nome file",

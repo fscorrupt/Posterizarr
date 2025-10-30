@@ -128,6 +128,9 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
         if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
             total_images = posters + seasons + backgrounds + titlecards
 
+        # Note: Log files don't contain start_time/end_time timestamps
+        # Setting these to empty strings means duplicate detection will rely on
+        # the time-based strategy (recent entry within 5 seconds)
         return {
             "mode": mode,
             "runtime_seconds": runtime_seconds,
@@ -140,6 +143,8 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
             "errors": errors,
             "fallbacks": fallback_images,
             "log_file": log_path.name,
+            "start_time": "",  # Not available in log files
+            "end_time": "",  # Not available in log files
         }
 
     except Exception as e:
@@ -196,11 +201,18 @@ def save_runtime_to_db(log_path: Path, mode: str = "normal"):
             start_time = runtime_data.get("start_time")
             end_time = runtime_data.get("end_time")
 
+            logger.debug(
+                f"Checking for duplicate: mode={mode}, start={start_time}, end={end_time}"
+            )
+
             if runtime_db.entry_exists(mode, start_time, end_time):
                 logger.info(
-                    f"Runtime entry already exists for {mode} mode (start: {start_time}), skipping duplicate import"
+                    f"Runtime entry already exists for {mode} mode (start: {start_time}, end: {end_time}), skipping duplicate import"
                 )
             else:
+                logger.debug(
+                    f"No duplicate found, importing: mode={mode}, start={start_time}, end={end_time}"
+                )
                 runtime_db.add_runtime_entry(**runtime_data)
                 logger.info(f"Runtime data saved to database for {mode} mode")
         else:

@@ -365,7 +365,8 @@ class RuntimeDatabase:
             if end_time == "":
                 end_time = None
 
-            # Strategy 1: Check for exact match on timestamps
+            # Strategy 1: Check for exact match on timestamps (preferred)
+            # If we have timestamps, use them for precise duplicate detection
             if start_time and end_time:
                 cursor.execute(
                     """
@@ -375,15 +376,26 @@ class RuntimeDatabase:
                     (mode, start_time, end_time),
                 )
                 count = cursor.fetchone()[0]
+                conn.close()
+
                 if count > 0:
-                    conn.close()
                     logger.debug(
                         f"Entry already exists: mode={mode}, start={start_time}, end={end_time}"
                     )
                     return True
 
-            # Strategy 2: Check for recent entry with same mode (within last 5 seconds)
-            # This catches rapid duplicate imports from watcher detecting multiple writes
+                # Timestamps don't match - this is a NEW entry, not a duplicate
+                logger.debug(
+                    f"No match found for timestamps: mode={mode}, start={start_time}, end={end_time}"
+                )
+                return False
+
+            # Strategy 2: Time-based fallback (only when timestamps unavailable)
+            # Check for recent entry with same mode (within last 5 seconds)
+            # This is used for log-based imports that don't have start/end timestamps
+            logger.debug(
+                f"No timestamps available for {mode}, using time-based duplicate check"
+            )
             cursor.execute(
                 """
                 SELECT COUNT(*) FROM runtime_stats 
@@ -393,14 +405,15 @@ class RuntimeDatabase:
                 (mode,),
             )
             count = cursor.fetchone()[0]
-            conn.close()
 
             if count > 0:
                 logger.debug(
                     f"Recent entry found for {mode} (within 5s), treating as duplicate"
                 )
+                conn.close()
                 return True
 
+            conn.close()
             return False
 
         except Exception as e:

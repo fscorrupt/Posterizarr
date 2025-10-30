@@ -840,21 +840,6 @@ function RunModes() {
           setUploadedFile(null);
           setUploadPreview(null);
           fetchStatus();
-
-          console.log("Waiting for log file: Manuallog.log (upload)");
-
-          // Wait for log file to be created before navigating
-          const logExists = await waitForLogFile("Manuallog.log");
-
-          if (logExists) {
-            console.log("Redirecting to LogViewer with log: Manuallog.log");
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          } else {
-            console.warn(
-              "Log file Manuallog.log not found, redirecting anyway"
-            );
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          }
         } else {
           showError(`Error: ${data.message}`);
         }
@@ -899,21 +884,6 @@ function RunModes() {
           setUploadedFile(null);
           setUploadPreview(null);
           fetchStatus();
-
-          console.log("Waiting for log file: Manuallog.log (URL)");
-
-          // Wait for log file to be created before navigating
-          const logExists = await waitForLogFile("Manuallog.log");
-
-          if (logExists) {
-            console.log("Redirecting to LogViewer with log: Manuallog.log");
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          } else {
-            console.warn(
-              "Log file Manuallog.log not found, redirecting anyway"
-            );
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          }
         } else {
           showError(`Error: ${data.message}`);
         }
