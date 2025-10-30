@@ -49,7 +49,7 @@ RUN echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/r
         bash \
         shadow \
         git \
-    && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-Module -Name FanartTvAPI -Scope AllUsers -Force" \
+    && pwsh -NoProfile -Command "Register-PSRepository -Default -ErrorAction Stop; Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop; Install-Module -Name FanartTvAPI -Scope AllUsers -Force -ErrorAction Stop" \
     && mkdir -p /app /usr/share/fonts/custom /var/cache/fontconfig \
     && chmod -R 755 /app /usr/local/share/powershell \
     && chmod -R 777 /usr/share/fonts/custom /var/cache/fontconfig
