@@ -55,10 +55,29 @@ else:
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
-    ASSETS_DIR = PROJECT_ROOT / "assets"
-    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
+
+    # Load AssetPath and ManualAssetPath from config
+    CONFIG_PATH_TEMP = PROJECT_ROOT / "config.json"
+    ASSETS_DIR = PROJECT_ROOT / "assets"  # Default
+    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"  # Default
+
+    if CONFIG_PATH_TEMP.exists():
+        try:
+            with open(CONFIG_PATH_TEMP, "r", encoding="utf-8") as f:
+                config_data = json.load(f)
+                if "PlexPart" in config_data:
+                    asset_path = config_data["PlexPart"].get("AssetPath")
+                    manual_asset_path = config_data["PlexPart"].get("ManualAssetPath")
+
+                    if asset_path:
+                        ASSETS_DIR = Path(asset_path)
+                    if manual_asset_path:
+                        MANUAL_ASSETS_DIR = Path(manual_asset_path)
+        except Exception as e:
+            pass  # Use defaults if config can't be read
+
     ASSETS_DIR.mkdir(exist_ok=True)
     MANUAL_ASSETS_DIR.mkdir(exist_ok=True)
 
