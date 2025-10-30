@@ -50,17 +50,44 @@ if IS_DOCKER:
     MANUAL_ASSETS_DIR = Path("/manualassets")
     IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
+    BACKUP_DIR = BASE_DIR / "assetsbackup"  # Docker default
 else:
     # Local: webui/backend/main.py -> project root (3 levels up)
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
-    ASSETS_DIR = PROJECT_ROOT / "assets"
-    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
+
+    # Load AssetPath, ManualAssetPath and BackupPath from config
+    CONFIG_PATH_TEMP = PROJECT_ROOT / "config.json"
+    ASSETS_DIR = PROJECT_ROOT / "assets"  # Default
+    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"  # Default
+    BACKUP_DIR = PROJECT_ROOT / "assetsbackup"  # Default
+
+    if CONFIG_PATH_TEMP.exists():
+        try:
+            with open(CONFIG_PATH_TEMP, "r", encoding="utf-8") as f:
+                config_data = json.load(f)
+                if "PrerequisitePart" in config_data:
+                    asset_path = config_data["PrerequisitePart"].get("AssetPath")
+                    manual_asset_path = config_data["PrerequisitePart"].get(
+                        "ManualAssetPath"
+                    )
+                    backup_path = config_data["PrerequisitePart"].get("BackupPath")
+
+                    if asset_path:
+                        ASSETS_DIR = Path(asset_path)
+                    if manual_asset_path:
+                        MANUAL_ASSETS_DIR = Path(manual_asset_path)
+                    if backup_path:
+                        BACKUP_DIR = Path(backup_path)
+        except Exception as e:
+            pass  # Use defaults if config can't be read
+
     ASSETS_DIR.mkdir(exist_ok=True)
     MANUAL_ASSETS_DIR.mkdir(exist_ok=True)
+    BACKUP_DIR.mkdir(exist_ok=True)
 
 # Ensure directories exist locally
 SUBDIRS_TO_CREATE = [
@@ -781,11 +808,17 @@ def process_image_path(image_path: Path):
         url_path = str(relative_path).replace("\\", "/")
         # URL encode the path to handle special characters like #
         encoded_url_path = quote(url_path, safe="/")
+
+        # Get file stats
+        file_stat = image_path.stat()
+
         return {
             "path": str(relative_path),
             "name": image_path.name,
-            "size": image_path.stat().st_size,
+            "size": file_stat.st_size,
             "url": f"/poster_assets/{encoded_url_path}",
+            "created": file_stat.st_ctime,  # Creation time (Unix timestamp)
+            "modified": file_stat.st_mtime,  # Modification time (Unix timestamp)
         }
     except Exception as e:
         logger.error(f"Error processing image path {image_path}: {e}")
@@ -1081,6 +1114,106 @@ def find_poster_in_assets(
         logger.warning(
             f"No image found for rootfolder: {rootfolder}, type: {asset_type}"
         )
+        return None
+
+    except Exception as e:
+        logger.error(f"Error searching for {asset_type} in assets: {e}")
+        return None
+
+
+def find_poster_with_metadata(
+    rootfolder: str,
+    asset_type: str = "Poster",
+    title: str = "",
+    download_source: str = "",
+) -> dict:
+    """
+    Same as find_poster_in_assets but returns metadata including file timestamps
+
+    Returns:
+        dict with 'url', 'created', 'modified' keys, or None if not found
+    """
+    if not ASSETS_DIR.exists():
+        return None
+
+    try:
+        # If download_source is a local path, try to extract the filename from it
+        image_filename = None
+        if download_source and download_source != "N/A":
+            if (
+                "\\" in download_source or "/" in download_source
+            ) and "." in download_source:
+                import os
+
+                image_filename = os.path.basename(download_source)
+
+        # Search recursively for the folder
+        for item in ASSETS_DIR.rglob("*"):
+            if item.is_dir() and item.name == "@eaDir":
+                continue
+
+            if item.is_dir() and item.name == rootfolder:
+                image_file = None
+
+                # First priority: use filename from download_source if available
+                if image_filename:
+                    image_file = item / image_filename
+                    if not image_file.exists():
+                        image_file = None
+
+                # Second priority: determine by asset type
+                if not image_file:
+                    if asset_type == "Season":
+                        import re
+
+                        match = re.search(r"Season\s*(\d+)", title, re.IGNORECASE)
+                        if match:
+                            season_num = match.group(1).zfill(2)
+                            image_file = item / f"Season{season_num}.jpg"
+                            if not image_file.exists():
+                                image_file = item / f"Season{match.group(1)}.jpg"
+                        else:
+                            import glob
+
+                            season_files = list(item.glob("Season*.jpg"))
+                            if season_files:
+                                image_file = season_files[0]
+
+                    elif asset_type in ["TitleCard", "Title_Card", "Episode"]:
+                        import re
+
+                        match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
+                        if match:
+                            episode_code = match.group(1).upper()
+                            image_file = item / f"{episode_code}.jpg"
+
+                    elif asset_type in [
+                        "Background",
+                        "Movie Background",
+                        "Show Background",
+                        "TV Background",
+                        "Series Background",
+                        "Episode Background",
+                    ]:
+                        image_file = item / "background.jpg"
+
+                    else:
+                        image_file = item / "poster.jpg"
+
+                # Check if the image file exists
+                if image_file and image_file.exists() and image_file.is_file():
+                    file_stat = image_file.stat()
+                    relative_path = image_file.relative_to(ASSETS_DIR)
+                    url_path = str(relative_path).replace("\\", "/")
+                    encoded_url_path = quote(url_path, safe="/")
+                    mtime = int(file_stat.st_mtime)
+
+                    return {
+                        "url": f"/poster_assets/{encoded_url_path}?t={mtime}",
+                        "created": file_stat.st_ctime,
+                        "modified": file_stat.st_mtime,
+                    }
+
         return None
 
     except Exception as e:
@@ -7309,10 +7442,10 @@ async def get_recent_assets():
                     )
                     continue
 
-                poster_url = find_poster_in_assets(
+                poster_data = find_poster_with_metadata(
                     rootfolder, asset_type, title, download_source
                 )
-                if poster_url:
+                if poster_data:
                     # Format asset for frontend (match old CSV format)
                     asset = {
                         "title": asset_dict.get("Title", ""),
@@ -7330,9 +7463,10 @@ async def get_recent_assets():
                             else ""
                         ),
                         "is_manually_created": is_manually_created,
-                        "poster_url": poster_url,
+                        "poster_url": poster_data["url"],
                         "has_poster": True,
-                        "created_at": asset_dict.get("created_at", ""),
+                        "created": poster_data["created"],
+                        "modified": poster_data["modified"],
                     }
                     recent_assets.append(asset)
                 else:
