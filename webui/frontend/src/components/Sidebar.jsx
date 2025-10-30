@@ -17,6 +17,7 @@ import {
   Layers,
   Tv,
   Database,
+  Server,
   Palette,
   Type,
   Bell,
@@ -162,10 +163,10 @@ const Sidebar = () => {
       icon: TrendingUp,
     },
     {
-      id: "plexExport",
-      path: "/plex-export",
-      label: t("nav.plexExport", "Plex Export"),
-      icon: Database,
+      id: "mediaServerExport",
+      path: "/media-server-export",
+      label: t("nav.mediaServerExport", "Media Server Export"),
+      icon: Server,
     },
     {
       id: "gallery",

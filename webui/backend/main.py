@@ -5124,6 +5124,141 @@ async def import_plex_csvs():
         logger.error(f"Error importing Plex CSVs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# =========================================================================
+# OtherMedia (Jellyfin/Emby) Export Endpoints
+# =========================================================================
+
+
+@app.get("/api/other-media-export/statistics")
+async def get_other_media_statistics():
+    """Get OtherMedia (Jellyfin/Emby) export database statistics"""
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        stats = plex_export_db.get_other_statistics()
+
+        return {"success": True, "statistics": stats}
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/other-media-export/runs")
+async def get_other_media_runs():
+    """Get list of all OtherMedia export run timestamps"""
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        runs = plex_export_db.get_other_all_runs()
+
+        return {"success": True, "runs": runs, "count": len(runs)}
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia runs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/other-media-export/library")
+async def get_other_media_library_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get OtherMedia library export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        data = plex_export_db.get_other_library_data(run_timestamp)
+
+        if limit:
+            data = data[:limit]
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia library data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/other-media-export/episodes")
+async def get_other_media_episode_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get OtherMedia episode export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        data = plex_export_db.get_other_episode_data(run_timestamp, limit)
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia episode data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/other-media-export/import")
+async def import_other_media_csvs():
+    """
+    Import the latest OtherMedia (Jellyfin/Emby) CSV files from Logs directory
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        results = plex_export_db.import_other_latest_csvs()
+
+        return {
+            "success": True,
+            "results": results,
+            "message": f"Imported {results['library_count']} library + {results['episode_count']} episode records",
+        }
+
+    except Exception as e:
+        logger.error(f"Error importing OtherMedia CSVs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
         # =========================================================================
         # Admin Endpoints
         # =========================================================================

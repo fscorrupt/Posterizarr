@@ -364,6 +364,7 @@
     "runModes": "Modes d'exécution",
     "runtimeHistory": "Historique d'exécution",
     "plexExport": "Export Plex",
+    "mediaServerExport": "Historique d'exportation du serveur multimédia",
     "assets": "Ressources",
     "config": "Configuration",
     "galleries": "Galeries",
@@ -1897,5 +1898,11 @@
     "episodeTitles": "Titres d'épisodes",
     "resolutions": "Résolutions",
     "importedAt": "Importé le"
+  },
+  "mediaServerExport": {
+    "pageTitle": "Historique d'exportation du serveur multimédia",
+    "description": "Suivre et interroger vos exports de bibliothèque de serveur multimédia au fil du temps",
+    "plex": "Plex",
+    "jellyfinEmby": "Jellyfin / Emby"
   }
 }
