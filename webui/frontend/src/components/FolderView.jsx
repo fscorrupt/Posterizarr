@@ -14,9 +14,6 @@ import {
   CheckSquare,
   Square,
   Check,
-  X,
-  Calendar,
-  HardDrive,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -25,6 +22,7 @@ import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 import ScrollToButtons from "./ScrollToButtons";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 const API_URL = "/api";
 
@@ -1011,170 +1009,34 @@ function FolderView() {
       )}
 
       {/* Image Preview Modal */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="flex flex-col md:flex-row max-h-[90vh]">
-              {/* Image */}
-              <div className="flex-1 flex items-center justify-center bg-black p-4">
-                <img
-                  src={`${selectedImage.url}?t=${cacheBuster}`}
-                  alt={selectedImage.name}
-                  className="max-w-full max-h-[80vh] object-contain"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "flex";
-                  }}
-                />
-                <div
-                  className="text-center flex-col items-center justify-center"
-                  style={{ display: "none" }}
-                >
-                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
-                    <ImageIcon className="w-16 h-16 text-theme-primary" />
-                  </div>
-                  <p className="text-white text-lg font-semibold mb-2">
-                    {t("folderView.previewNotAvailable")}
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    {t("folderView.useFileExplorer")}
-                  </p>
-                </div>
-              </div>
-
-              {/* Info Panel */}
-              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
-                <h3 className="text-xl font-bold text-theme-text mb-4">
-                  Asset Details
-                </h3>
-
-                <div className="space-y-4">
-                  {/* Media Type */}
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      {t("common.mediaType")}
-                    </label>
-                    <div className="mt-1">
-                      <span
-                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
-                          getMediaType(selectedImage.path, selectedImage.name)
-                        )}`}
-                      >
-                        {t(
-                          `common.${getMediaType(
-                            selectedImage.path,
-                            selectedImage.name
-                          ).toLowerCase()}`
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted">Folder</label>
-                    <p className="text-theme-text break-all mt-1">
-                      {currentPath.length > 0
-                        ? currentPath[currentPath.length - 1]
-                        : "Unknown"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      {t("common.filename")}
-                    </label>
-                    <p className="text-theme-text break-all mt-1">
-                      {selectedImage.name}
-                    </p>
-                  </div>
-
-                  {/* Timestamp */}
-                  <div>
-                    <label className="text-sm text-theme-muted flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {t("common.lastViewed")}
-                    </label>
-                    <p className="text-theme-text mt-1 text-sm">
-                      {formatTimestamp()}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted flex items-center gap-1">
-                      <HardDrive className="w-3.5 h-3.5" />
-                      {t("common.path")}
-                    </label>
-                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
-                      /{currentPath.join("/")}/{selectedImage.name}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      {t("common.size")}
-                    </label>
-                    <p className="text-theme-text mt-1">
-                      {formatFileSize(selectedImage.size)}
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-theme space-y-2">
-                    <button
-                      onClick={() => {
-                        setAssetToReplace({
-                          path: selectedImage.path,
-                          url: selectedImage.url,
-                          name: selectedImage.name,
-                          type: getAssetType(selectedImage.name),
-                        });
-                        setReplacerOpen(true);
-                        setSelectedImage(null);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-all"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      {t("folderView.replace")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setDeleteConfirm({
-                          path: selectedImage.path,
-                          name: selectedImage.name,
-                        });
-                      }}
-                      disabled={deletingImage === selectedImage.path}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Trash2
-                        className={`w-4 h-4 ${
-                          deletingImage === selectedImage.path
-                            ? "animate-spin"
-                            : ""
-                        }`}
-                      />
-                      {t("folderView.deleteButton")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ImagePreviewModal
+        selectedImage={selectedImage}
+        onClose={() => setSelectedImage(null)}
+        onDelete={(image) => {
+          setDeleteConfirm({
+            path: image.path,
+            name: image.name,
+          });
+        }}
+        onReplace={(image) => {
+          setAssetToReplace({
+            path: image.path,
+            url: image.url,
+            name: image.name,
+            type: getAssetType(image.name),
+          });
+          setReplacerOpen(true);
+          setSelectedImage(null);
+        }}
+        isDeleting={deletingImage === selectedImage?.path}
+        cacheBuster={cacheBuster}
+        formatDisplayPath={(path) =>
+          `/${currentPath.join("/")}/${selectedImage?.name || ""}`
+        }
+        formatTimestamp={formatTimestamp}
+        getMediaType={getMediaType}
+        getTypeColor={getTypeColor}
+      />
 
       {/* Asset Grid Styles */}
       <style jsx>{`
