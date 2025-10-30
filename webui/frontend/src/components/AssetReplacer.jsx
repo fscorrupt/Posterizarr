@@ -925,28 +925,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           // Dispatch event to update badge counts
           window.dispatchEvent(new Event("assetReplaced"));
 
-          // Call onSuccess to delete DB entry before navigating
+          // Call onSuccess to delete DB entry
           console.log(
             "Calling onSuccess callback to delete DB entry (upload path)"
           );
           if (onSuccess) {
             await onSuccess();
           }
-
-          console.log("Waiting for log file: Manuallog.log");
-
-          // Wait for log file to be created before navigating
-          const logExists = await waitForLogFile("Manuallog.log");
-
-          if (logExists) {
-            console.log("Redirecting to LogViewer with log: Manuallog.log");
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          } else {
-            console.warn(
-              "Log file Manuallog.log not found, redirecting anyway"
-            );
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          }
+          onClose();
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
           // Dispatch event to update badge counts
@@ -1174,28 +1160,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           // Dispatch event to update badge counts
           window.dispatchEvent(new Event("assetReplaced"));
 
-          // Call onSuccess to delete DB entry before navigating
+          // Call onSuccess to delete DB entry
           console.log(
             "Calling onSuccess callback to delete DB entry (preview path)"
           );
           if (onSuccess) {
             await onSuccess();
           }
-
-          console.log("Waiting for log file: Manuallog.log");
-
-          // Wait for log file to be created before navigating
-          const logExists = await waitForLogFile("Manuallog.log");
-
-          if (logExists) {
-            console.log("Redirecting to LogViewer with log: Manuallog.log");
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          } else {
-            console.warn(
-              "Log file Manuallog.log not found, redirecting anyway"
-            );
-            navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          }
+          onClose();
         } else {
           showSuccess(t("assetReplacer.replacedSuccessfully"));
           // Dispatch event to update badge counts
