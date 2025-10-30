@@ -50,17 +50,44 @@ if IS_DOCKER:
     MANUAL_ASSETS_DIR = Path("/manualassets")
     IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
+    BACKUP_DIR = BASE_DIR / "assetsbackup"  # Docker default
 else:
     # Local: webui/backend/main.py -> project root (3 levels up)
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
-    ASSETS_DIR = PROJECT_ROOT / "assets"
-    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
+
+    # Load AssetPath, ManualAssetPath and BackupPath from config
+    CONFIG_PATH_TEMP = PROJECT_ROOT / "config.json"
+    ASSETS_DIR = PROJECT_ROOT / "assets"  # Default
+    MANUAL_ASSETS_DIR = PROJECT_ROOT / "manualassets"  # Default
+    BACKUP_DIR = PROJECT_ROOT / "assetsbackup"  # Default
+
+    if CONFIG_PATH_TEMP.exists():
+        try:
+            with open(CONFIG_PATH_TEMP, "r", encoding="utf-8") as f:
+                config_data = json.load(f)
+                if "PrerequisitePart" in config_data:
+                    asset_path = config_data["PrerequisitePart"].get("AssetPath")
+                    manual_asset_path = config_data["PrerequisitePart"].get(
+                        "ManualAssetPath"
+                    )
+                    backup_path = config_data["PrerequisitePart"].get("BackupPath")
+
+                    if asset_path:
+                        ASSETS_DIR = Path(asset_path)
+                    if manual_asset_path:
+                        MANUAL_ASSETS_DIR = Path(manual_asset_path)
+                    if backup_path:
+                        BACKUP_DIR = Path(backup_path)
+        except Exception as e:
+            pass  # Use defaults if config can't be read
+
     ASSETS_DIR.mkdir(exist_ok=True)
     MANUAL_ASSETS_DIR.mkdir(exist_ok=True)
+    BACKUP_DIR.mkdir(exist_ok=True)
 
 # Ensure directories exist locally
 SUBDIRS_TO_CREATE = [
