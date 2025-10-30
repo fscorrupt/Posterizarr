@@ -33,6 +33,7 @@ import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
 import AssetOverview from "./components/AssetOverview";
 import RuntimeHistory from "./components/RuntimeHistory";
+import PlexExportHistory from "./components/PlexExportHistory";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 import LoginScreen from "./components/LoginScreen";
@@ -220,6 +221,7 @@ function AppContent() {
                 <Route path="/manual-assets" element={<ManualAssets />} />
                 <Route path="/asset-overview" element={<AssetOverview />} />
                 <Route path="/runtime-history" element={<RuntimeHistory />} />
+                <Route path="/plex-export" element={<PlexExportHistory />} />
 
                 <Route
                   path="/gallery"

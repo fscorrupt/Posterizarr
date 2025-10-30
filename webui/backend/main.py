@@ -156,7 +156,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "WARNING",
+        "log_level": "DEBUG",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -482,6 +482,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import plex export database module
+try:
+    logger.debug("Attempting to import plex_export_database module")
+    from plex_export_database import PlexExportDatabase
+
+    PLEX_EXPORT_DB_AVAILABLE = True
+    logger.info("Plex export database module loaded successfully")
+except ImportError as e:
+    PLEX_EXPORT_DB_AVAILABLE = False
+    logger.warning(
+        f"Plex export database not available: {e}. Plex CSV tracking will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -490,6 +504,7 @@ logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
 logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
+logger.debug(f"Plex Export Database: {PLEX_EXPORT_DB_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -497,6 +512,7 @@ current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
+plex_export_db: Optional["PlexExportDatabase"] = None
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
@@ -1441,7 +1457,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db, logs_watcher
+    global scheduler, db, config_db, plex_export_db, logs_watcher
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1465,6 +1481,20 @@ async def lifespan(app: FastAPI):
             config_db = None
     else:
         logger.info("Config database module not available, skipping initialization")
+
+    # Initialize plex export database if available
+    if PLEX_EXPORT_DB_AVAILABLE:
+        try:
+            logger.info("Initializing Plex export database...")
+            plex_export_db = PlexExportDatabase()
+            logger.info("Plex export database ready")
+        except Exception as e:
+            logger.error(f"Failed to initialize Plex export database: {e}")
+            plex_export_db = None
+    else:
+        logger.info(
+            "Plex export database module not available, skipping initialization"
+        )
 
     # Initialize database if available
     if DATABASE_AVAILABLE:
@@ -1525,6 +1555,9 @@ async def lifespan(app: FastAPI):
                 logs_dir=LOGS_DIR,
                 db_instance=db,
                 runtime_db_instance=runtime_db,
+                plex_export_db_instance=(
+                    plex_export_db if PLEX_EXPORT_DB_AVAILABLE else None
+                ),
             )
             logs_watcher.start()
             logger.info(
@@ -4946,6 +4979,149 @@ async def import_json_runtime_data():
 
     except Exception as e:
         logger.error(f"Error importing JSON runtime data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================================================
+# Plex Export Database Endpoints
+# =========================================================================
+
+
+@app.get("/api/plex-export/statistics")
+async def get_plex_export_statistics():
+    """
+    Get Plex export database statistics
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        stats = plex_export_db.get_statistics()
+
+        return {
+            "success": True,
+            "statistics": stats,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex export statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/plex-export/runs")
+async def get_plex_export_runs():
+    """
+    Get list of all Plex export run timestamps
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        runs = plex_export_db.get_all_runs()
+
+        return {
+            "success": True,
+            "runs": runs,
+            "count": len(runs),
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex export runs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/plex-export/library")
+async def get_plex_library_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get Plex library export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        data = plex_export_db.get_library_data(run_timestamp, limit)
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex library data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/plex-export/episodes")
+async def get_plex_episode_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get Plex episode export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        data = plex_export_db.get_episode_data(run_timestamp, limit)
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex episode data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/plex-export/import")
+async def import_plex_csvs():
+    """
+    Import the latest Plex CSV files from Logs directory
+    """
+    try:
+        if not PLEX_EXPORT_DB_AVAILABLE or not plex_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        results = plex_export_db.import_latest_csvs()
+
+        return {
+            "success": True,
+            "results": results,
+            "message": f"Imported {results['library_count']} library + {results['episode_count']} episode records",
+        }
+
+    except Exception as e:
+        logger.error(f"Error importing Plex CSVs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
         # =========================================================================

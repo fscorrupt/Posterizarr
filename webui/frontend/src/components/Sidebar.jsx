@@ -162,6 +162,12 @@ const Sidebar = () => {
       icon: TrendingUp,
     },
     {
+      id: "plexExport",
+      path: "/plex-export",
+      label: t("nav.plexExport", "Plex Export"),
+      icon: Database,
+    },
+    {
       id: "gallery",
       path: "/gallery",
       label: t("nav.assets"),
