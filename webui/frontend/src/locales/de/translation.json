@@ -1420,6 +1420,8 @@
     "login": "Anmelden",
     "done": "Fertig",
     "mediaType": "Medientyp",
+    "created": "Erstellt",
+    "modified": "Geändert",
     "lastViewed": "Zuletzt angesehen",
     "path": "Pfad",
     "filename": "Dateiname",

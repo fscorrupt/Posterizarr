@@ -10,9 +10,6 @@ import {
   ImageIcon,
   CheckSquare,
   Square,
-  X,
-  Calendar,
-  HardDrive,
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
@@ -21,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 import ScrollToButtons from "./ScrollToButtons";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 const API_URL = "/api";
 
@@ -171,6 +169,65 @@ function SeasonGallery() {
 
   const formatDisplayPath = (path) => {
     return path;
+  };
+
+  // Helper function to get media type from filename/path
+  const getMediaType = (assetPath, assetName) => {
+    const path = assetPath.toLowerCase();
+    const name = assetName.toLowerCase();
+
+    // Check for title cards/episodes first
+    if (
+      name.includes("titlecard") ||
+      name.match(/s\d+e\d+/i) ||
+      name.match(/_s\d+e\d+/i)
+    ) {
+      return "Episode";
+    }
+
+    // Check for season posters
+    if (
+      name.includes("season") &&
+      (name.includes("poster") || name.match(/s\d+/i))
+    ) {
+      return "Season";
+    }
+
+    // Background files
+    if (name.includes("background")) {
+      return "Background";
+    }
+
+    // Check if it's a show (has series/show in path or multiple seasons)
+    if (
+      path.includes("/series/") ||
+      path.includes("\\series\\") ||
+      path.includes("/shows/") ||
+      path.includes("\\shows\\")
+    ) {
+      return "Show";
+    }
+
+    // Default to Movie for posters folder
+    return "Movie";
+  };
+
+  // Get color for media type badge
+  const getTypeColor = (type) => {
+    switch (type) {
+      case "Movie":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+      case "Show":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/50";
+      case "Season":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/50";
+      case "Episode":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/50";
+      case "Background":
+        return "bg-pink-500/20 text-pink-400 border-pink-500/50";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+    }
   };
 
   // Format timestamp for display
@@ -866,154 +923,27 @@ function SeasonGallery() {
         </>
       )}
 
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="relative max-w-7xl max-h-[90vh] bg-theme-card rounded-lg overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="flex flex-col md:flex-row max-h-[90vh]">
-              {/* Image */}
-              <div className="flex-1 flex items-center justify-center bg-black p-4">
-                <img
-                  src={`${selectedImage.url}?t=${cacheBuster}`}
-                  alt={selectedImage.name}
-                  className="max-w-full max-h-[80vh] object-contain"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "flex";
-                  }}
-                />
-                <div
-                  className="text-center flex-col items-center justify-center"
-                  style={{ display: "none" }}
-                >
-                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
-                    <ImageIcon className="w-16 h-16 text-theme-primary" />
-                  </div>
-                  <p className="text-white text-lg font-semibold mb-2">
-                    {t("seasonGallery.imageNotAvailable")}
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    {t("seasonGallery.useFileExplorer")}
-                  </p>
-                </div>
-              </div>
-
-              {/* Info Panel */}
-              <div className="md:w-80 p-6 bg-theme-card overflow-y-auto">
-                <h3 className="text-xl font-bold text-theme-text mb-4">
-                  Season Details
-                </h3>
-
-                <div className="space-y-4">
-                  {/* Media Type */}
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      {t("common.mediaType")}
-                    </label>
-                    <div className="mt-1">
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium bg-indigo-500/20 text-indigo-400 border-indigo-500/50">
-                        {t("common.season")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted">Show</label>
-                    <p className="text-theme-text break-all mt-1">
-                      {selectedImage.path.split(/[\\/]/).slice(-2, -1)[0] ||
-                        "Unknown"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      {t("common.filename")}
-                    </label>
-                    <p className="text-theme-text break-all mt-1">
-                      {selectedImage.name}
-                    </p>
-                  </div>
-
-                  {/* Timestamp */}
-                  <div>
-                    <label className="text-sm text-theme-muted flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {t("common.lastViewed")}
-                    </label>
-                    <p className="text-theme-text mt-1 text-sm">
-                      {formatTimestamp()}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted flex items-center gap-1">
-                      <HardDrive className="w-3.5 h-3.5" />
-                      {t("common.path")}
-                    </label>
-                    <p className="text-theme-text text-sm break-all mt-1 font-mono bg-theme-bg p-2 rounded border border-theme">
-                      {formatDisplayPath(selectedImage.path)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-theme-muted">
-                      {t("common.size")}
-                    </label>
-                    <p className="text-theme-text mt-1">
-                      {(selectedImage.size / 1024).toFixed(2)} KB
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-theme space-y-2">
-                    <button
-                      onClick={() => {
-                        setAssetToReplace({ ...selectedImage, type: "season" });
-                        setReplacerOpen(true);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-all"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      {t("seasonGallery.replace")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setDeleteConfirm({
-                          path: selectedImage.path,
-                          name: selectedImage.name,
-                        });
-                      }}
-                      disabled={deletingImage === selectedImage.path}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Trash2
-                        className={`w-4 h-4 ${
-                          deletingImage === selectedImage.path
-                            ? "animate-spin"
-                            : ""
-                        }`}
-                      />
-                      {t("seasonGallery.delete")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        selectedImage={selectedImage}
+        onClose={() => setSelectedImage(null)}
+        onDelete={(image) => {
+          setDeleteConfirm({
+            path: image.path,
+            name: image.name,
+          });
+        }}
+        onReplace={(image) => {
+          setAssetToReplace({ ...image, type: "season" });
+          setReplacerOpen(true);
+        }}
+        isDeleting={deletingImage === selectedImage?.path}
+        cacheBuster={cacheBuster}
+        formatDisplayPath={formatDisplayPath}
+        formatTimestamp={formatTimestamp}
+        getMediaType={getMediaType}
+        getTypeColor={getTypeColor}
+      />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
