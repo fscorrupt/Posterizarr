@@ -708,7 +708,8 @@ class PlexExportDatabase:
                 params = []
 
             if limit:
-                query += f" LIMIT {limit}"
+                query += " LIMIT ?"
+                params.append(limit)
 
             cursor.execute(query, params)
             rows = cursor.fetchall()
@@ -753,7 +754,8 @@ class PlexExportDatabase:
                 params = []
 
             if limit:
-                query += f" LIMIT {limit}"
+                query += " LIMIT ?"
+                params.append(limit)
 
             cursor.execute(query, params)
             rows = cursor.fetchall()
@@ -861,7 +863,8 @@ class PlexExportDatabase:
                 params = []
 
             if limit:
-                query += f" LIMIT {limit}"
+                query += " LIMIT ?"
+                params.append(limit)
 
             cursor.execute(query, params)
             results = [dict(row) for row in cursor.fetchall()]
@@ -903,7 +906,8 @@ class PlexExportDatabase:
                 params = []
 
             if limit:
-                query += f" LIMIT {limit}"
+                query += " LIMIT ?"
+                params.append(limit)
 
             cursor.execute(query, params)
             results = [dict(row) for row in cursor.fetchall()]
