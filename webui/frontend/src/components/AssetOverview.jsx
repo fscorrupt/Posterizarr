@@ -1133,19 +1133,8 @@ const AssetOverview = () => {
 
       {/* Filters */}
       <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative md:col-span-2 lg:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            <input
-              type="text"
-              placeholder={t("assetOverview.searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-            />
-          </div>
-
+        {/* First Row: 4 Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {/* Status Filter */}
           <div className="relative" ref={statusDropdownRef}>
             <button
@@ -1361,6 +1350,18 @@ const AssetOverview = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Second Row: Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+          <input
+            type="text"
+            placeholder={t("assetOverview.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+          />
         </div>
       </div>
 
