@@ -95,12 +95,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   // Extract metadata from asset
   const extractMetadata = () => {
-    // Extract metadata from path - NO ID extraction, just path information
-    // We'll let users search manually by title + year
+    // Extract metadata from path including provider IDs if present
     let title = null;
     let year = null;
     let folderName = null;
     let libraryName = null;
+    let tmdb_id = null;
+    let tvdb_id = null;
+    let imdb_id = null;
 
     // Extract library name (parent folder: "4K", "TV", etc.)
     const pathSegments = asset.path?.split(/[\/\\]/).filter(Boolean);
@@ -334,10 +336,35 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       }
     }
 
+    // Extract provider IDs from folder name if present
+    // Supports formats: {tmdb-123}, [tmdb-123], (tmdb-123), {tvdb-456}, [tvdb-456], {imdb-tt123}, etc.
+    if (folderName) {
+      // TMDB ID - match various bracket formats
+      const tmdbMatch = folderName.match(/[\[{(]tmdb-(\d+)[\]})]*/i);
+      if (tmdbMatch) {
+        tmdb_id = tmdbMatch[1];
+        console.log(`Extracted TMDB ID from folder: ${tmdb_id}`);
+      }
+
+      // TVDB ID - match various bracket formats
+      const tvdbMatch = folderName.match(/[\[{(]tvdb-(\d+)[\]})]*/i);
+      if (tvdbMatch) {
+        tvdb_id = tvdbMatch[1];
+        console.log(`Extracted TVDB ID from folder: ${tvdb_id}`);
+      }
+
+      // IMDB ID - match various bracket formats (format: tt1234567)
+      const imdbMatch = folderName.match(/[\[{(]imdb-(tt\d+)[\]})]*/i);
+      if (imdbMatch) {
+        imdb_id = imdbMatch[1];
+        console.log(`Extracted IMDB ID from folder: ${imdb_id}`);
+      }
+    }
+
     return {
-      // NO ID extraction - users will search manually
-      tmdb_id: null,
-      tvdb_id: null,
+      tmdb_id: tmdb_id,
+      tvdb_id: tvdb_id,
+      imdb_id: imdb_id,
       title: title,
       year: year,
       folder_name: folderName,
@@ -613,8 +640,10 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         ...metadata,
         title: searchTitle.trim(),
         year: searchYear ? parseInt(searchYear) : null,
-        tmdb_id: null,
-        tvdb_id: null,
+        // Keep IDs from folder name if they exist, otherwise null
+        tmdb_id: metadata.tmdb_id || null,
+        tvdb_id: metadata.tvdb_id || null,
+        imdb_id: metadata.imdb_id || null,
         season_number: manualSearchForm.seasonNumber
           ? parseInt(manualSearchForm.seasonNumber)
           : metadata.season_number,

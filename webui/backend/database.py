@@ -413,6 +413,46 @@ class ImageChoicesDB:
             logger.error(f"Error fetching record by ID: {e}")
             raise
 
+    def get_choice_by_rootfolder(self, rootfolder: str):
+        """
+        Get image choice by rootfolder name
+
+        Args:
+            rootfolder: Rootfolder name to search for (e.g., "Movie Name (2024) {tmdb-12345}")
+
+        Returns:
+            sqlite3.Row or None: Record if found, None otherwise
+        """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM imagechoices WHERE Rootfolder = ?", (rootfolder,))
+            return cursor.fetchone()
+        except sqlite3.Error as e:
+            logger.error(f"Error fetching record by rootfolder: {e}")
+            raise
+
+    def get_choice_by_rootfolder_and_title(self, rootfolder: str, title: str):
+        """
+        Get image choice by rootfolder and title (more specific lookup)
+
+        Args:
+            rootfolder: Rootfolder name to search for (e.g., "Movie Name (2024) {tmdb-12345}")
+            title: Title/filename to search for (e.g., "Season 4", "S04E01", "background")
+
+        Returns:
+            sqlite3.Row or None: Record if found, None otherwise
+        """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT * FROM imagechoices WHERE Rootfolder = ? AND Title = ?",
+                (rootfolder, title)
+            )
+            return cursor.fetchone()
+        except sqlite3.Error as e:
+            logger.error(f"Error fetching record by rootfolder and title: {e}")
+            raise
+
     def update_choice(self, record_id: int, **kwargs):
         """
         Update an existing image choice record
