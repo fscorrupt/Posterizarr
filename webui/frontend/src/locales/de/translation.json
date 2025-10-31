@@ -1389,7 +1389,18 @@
     "updateFailed": "Aktualisierung von {{title}} fehlgeschlagen",
     "unresolveFailed": "Reaktivierung von {{title}} fehlgeschlagen",
     "updateError": "Fehler beim Aktualisieren des Assets: {{error}}",
-    "unresolveError": "Fehler: {{error}}"
+    "unresolveError": "Fehler: {{error}}",
+    "selectAsset": "Asset auswählen",
+    "selectAll": "Alle auswählen",
+    "selectAllFiltered": "Alle gefilterten Assets auswählen",
+    "selectedCount": "{{count}} ausgewählt",
+    "markSelectedAsResolved": "Ausgewählte als gelöst markieren",
+    "clearSelection": "Auswahl aufheben",
+    "processing": "Wird verarbeitet...",
+    "bulkMarkSuccess": "{{count}} Asset(s) erfolgreich als gelöst markiert",
+    "bulkMarkPartial": "{{success}} als gelöst markiert, {{failed}} fehlgeschlagen",
+    "bulkMarkFailed": "Assets konnten nicht als gelöst markiert werden",
+    "bulkMarkError": "Fehler: {{error}}"
   },
   "common": {
     "save": "Speichern",

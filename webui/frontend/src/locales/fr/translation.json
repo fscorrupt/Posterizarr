@@ -1336,7 +1336,18 @@
     "updateFailed": "Échec de la mise à jour de {{title}}",
     "unresolveFailed": "Échec de la réactivation de {{title}}",
     "updateError": "Erreur lors de la mise à jour de la ressource : {{error}}",
-    "unresolveError": "Erreur : {{error}}"
+    "unresolveError": "Erreur : {{error}}",
+    "selectAsset": "Sélectionner la ressource",
+    "selectAll": "Tout sélectionner",
+    "selectAllFiltered": "Sélectionner toutes les ressources filtrées",
+    "selectedCount": "{{count}} sélectionné(s)",
+    "markSelectedAsResolved": "Marquer sélectionnés comme résolus",
+    "clearSelection": "Effacer la sélection",
+    "processing": "Traitement...",
+    "bulkMarkSuccess": "{{count}} ressource(s) marquée(s) comme résolue(s) avec succès",
+    "bulkMarkPartial": "{{success}} marqué(s) comme résolu(s), {{failed}} échoué(s)",
+    "bulkMarkFailed": "Échec de marquer les ressources comme résolues",
+    "bulkMarkError": "Erreur : {{error}}"
   },
   "common": {
     "save": "Enregistrer",

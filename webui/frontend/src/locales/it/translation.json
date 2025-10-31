@@ -1336,7 +1336,18 @@
     "updateFailed": "Aggiornamento di {{title}} non riuscito",
     "unresolveFailed": "Riattivazione di {{title}} non riuscita",
     "updateError": "Errore durante l'aggiornamento dell'asset: {{error}}",
-    "unresolveError": "Errore: {{error}}"
+    "unresolveError": "Errore: {{error}}",
+    "selectAsset": "Seleziona asset",
+    "selectAll": "Seleziona tutto",
+    "selectAllFiltered": "Seleziona tutti gli asset filtrati",
+    "selectedCount": "{{count}} selezionato/i",
+    "markSelectedAsResolved": "Contrassegna selezionati come risolti",
+    "clearSelection": "Cancella selezione",
+    "processing": "Elaborazione...",
+    "bulkMarkSuccess": "{{count}} asset contrassegnato/i come risolto/i con successo",
+    "bulkMarkPartial": "{{success}} contrassegnato/i come risolto/i, {{failed}} non riuscito/i",
+    "bulkMarkFailed": "Impossibile contrassegnare gli asset come risolti",
+    "bulkMarkError": "Errore: {{error}}"
   },
   "common": {
     "save": "Salva",
