@@ -20,6 +20,9 @@ import {
 import { setupFetchInterceptor } from "./utils/fetchInterceptor";
 setupFetchInterceptor();
 
+// Initialize UI logger (auto-initializes on import)
+import "./utils/uiLogger";
+
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
@@ -38,8 +41,6 @@ import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 import LoginScreen from "./components/LoginScreen";
 import LoadingScreen from "./components/LoadingScreen";
-
-import uiLogger from "./utils/uiLogger";
 
 function AppContent() {
   const { isCollapsed } = useSidebar();

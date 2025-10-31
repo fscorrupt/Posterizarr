@@ -68,6 +68,9 @@ function ImagePreviewModal({
         const response = await fetch(
           `${API_URL}/asset-type-lookup?rootfolder=${encodeURIComponent(rootfolder)}&filename=${encodeURIComponent(filename)}`
         );
+        if (!response.ok) {
+          throw new Error('Failed to fetch asset type');
+        }
         const data = await response.json();
 
         if (data.success && data.type) {

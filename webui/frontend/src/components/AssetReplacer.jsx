@@ -95,6 +95,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   // Extract metadata from asset
   const extractMetadata = () => {
+    console.log("=== AssetReplacer: Extracting Metadata ===");
+    console.log("Asset path:", asset.path);
+    console.log("Asset type:", asset.type);
+    console.log("Asset _dbData:", asset._dbData);
+
     // Extract metadata from path including provider IDs if present
     let title = null;
     let year = null;
@@ -106,18 +111,22 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
     // Extract library name (parent folder: "4K", "TV", etc.)
     const pathSegments = asset.path?.split(/[\/\\]/).filter(Boolean);
+    console.log("Path segments:", pathSegments);
+
     if (pathSegments && pathSegments.length > 0) {
       // Find library name - usually the top-level folder like "4K" or "TV"
       for (let i = 0; i < pathSegments.length; i++) {
         // Common library folder names
         if (pathSegments[i].match(/^(4K|TV|Movies|Series|anime)$/i)) {
           libraryName = pathSegments[i];
+          console.log(`Found library name: ${libraryName}`);
           break;
         }
       }
       // If not found, use the first segment as library name
       if (!libraryName && pathSegments.length > 0) {
         libraryName = pathSegments[0];
+        console.log(`Using first segment as library name: ${libraryName}`);
       }
     }
 
@@ -130,9 +139,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     } else if (asset.path?.match(/S\d+E\d+/) || asset.type === "titlecard") {
       assetType = "titlecard";
     }
+    console.log(`Detected asset type: ${assetType}`);
 
     // For seasons and titlecards, extract title from parent folder (show name)
     if (assetType === "season" || assetType === "titlecard") {
+      console.log("Processing TV show asset (season or titlecard)");
       // Path format: ".../Show Name (Year) {tvdb-123}/Season01/..." or ".../Show Name (Year) {tvdb-123}/S01E01.jpg"
 
       if (pathSegments && pathSegments.length > 1) {
@@ -340,28 +351,39 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     // Supports formats: {tmdb-123}, [tmdb-123], (tmdb-123), {tvdb-456}, [tvdb-456], {imdb-tt123}, etc.
     if (folderName) {
       // TMDB ID - match various bracket formats
-      const tmdbMatch = folderName.match(/[\[{(]tmdb-(\d+)[\]})]*/i);
+      const tmdbMatch = folderName.match(/[\[{(]tmdb-(\d+)[\]})]/i);
       if (tmdbMatch) {
         tmdb_id = tmdbMatch[1];
         console.log(`Extracted TMDB ID from folder: ${tmdb_id}`);
       }
 
       // TVDB ID - match various bracket formats
-      const tvdbMatch = folderName.match(/[\[{(]tvdb-(\d+)[\]})]*/i);
+      const tvdbMatch = folderName.match(/[\[{(]tvdb-(\d+)[\]})]/i);
       if (tvdbMatch) {
         tvdb_id = tvdbMatch[1];
         console.log(`Extracted TVDB ID from folder: ${tvdb_id}`);
       }
 
       // IMDB ID - match various bracket formats (format: tt1234567)
-      const imdbMatch = folderName.match(/[\[{(]imdb-(tt\d+)[\]})]*/i);
+      const imdbMatch = folderName.match(/[\[{(]imdb-(tt\d+)[\]})]/i);
       if (imdbMatch) {
         imdb_id = imdbMatch[1];
         console.log(`Extracted IMDB ID from folder: ${imdb_id}`);
       }
     }
 
-    return {
+    // Fallback: Use provider IDs from database if not found in folder name
+    // Database fields: tmdb_id, tvdb_id (from ImageChoices.db)
+    if (!tmdb_id && asset._dbData?.tmdb_id) {
+      tmdb_id = asset._dbData.tmdb_id;
+      console.log(`Using TMDB ID from database: ${tmdb_id}`);
+    }
+    if (!tvdb_id && asset._dbData?.tvdb_id) {
+      tvdb_id = asset._dbData.tvdb_id;
+      console.log(`Using TVDB ID from database: ${tvdb_id}`);
+    }
+
+    const metadata = {
       tmdb_id: tmdb_id,
       tvdb_id: tvdb_id,
       imdb_id: imdb_id,
@@ -374,6 +396,22 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       season_number: seasonNumber,
       episode_number: episodeNumber,
     };
+
+    console.log("=== Extracted Metadata ===");
+    console.log("Title:", title);
+    console.log("Year:", year);
+    console.log("Folder Name:", folderName);
+    console.log("Library Name:", libraryName);
+    console.log("TMDB ID:", tmdb_id);
+    console.log("TVDB ID:", tvdb_id);
+    console.log("IMDB ID:", imdb_id);
+    console.log("Media Type:", mediaType);
+    console.log("Asset Type:", assetType);
+    console.log("Season Number:", seasonNumber);
+    console.log("Episode Number:", episodeNumber);
+    console.log("==========================");
+
+    return metadata;
   };
 
   // Determine if we should use horizontal layout (backgrounds and titlecards)
@@ -627,14 +665,24 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   };
 
   const handleFetchClick = () => {
+    console.log("=== AssetReplacer: Fetch Button Clicked ===");
+
     // Validation
     let metadata = extractMetadata();
 
     if (manualSearch) {
+      console.log("Using manual search mode");
       if (!searchTitle.trim()) {
+        console.warn("Manual search: No title provided");
         showError(t("assetReplacer.enterTitleError"));
         return;
       }
+
+      console.log("Manual search params:", {
+        searchTitle,
+        searchYear,
+        manualSearchForm,
+      });
 
       metadata = {
         ...metadata,
@@ -651,19 +699,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           ? parseInt(manualSearchForm.episodeNumber)
           : metadata.episode_number,
       };
+
+      console.log("Updated metadata with manual search:", metadata);
     }
 
     // Store params and show confirmation
+    console.log("Storing fetch params and showing confirmation dialog");
     setPendingFetchParams({ metadata, manualSearch });
     setShowFetchConfirm(true);
   };
 
   const fetchPreviews = async () => {
+    console.log("=== AssetReplacer: Fetching Previews ===");
     setShowFetchConfirm(false);
 
-    if (!pendingFetchParams) return;
+    if (!pendingFetchParams) {
+      console.error("No pending fetch params found!");
+      return;
+    }
 
     const { metadata, manualSearch: isManualSearch } = pendingFetchParams;
+    console.log("Fetch params:", { metadata, isManualSearch });
 
     setLoading(true);
     showError(null);
@@ -692,10 +748,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         }),
       });
 
+      console.log("API response status:", response.status);
       const data = await response.json();
+      console.log("API response data:", data);
 
       if (data.success) {
-        console.log("Received results from API:");
+        console.log("✓ Successfully received results from API:");
         console.log("  TMDB:", data.results.tmdb?.length || 0, "items");
         console.log("  TVDB:", data.results.tvdb?.length || 0, "items");
         console.log("  Fanart:", data.results.fanart?.length || 0, "items");
@@ -722,44 +780,64 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
         // Auto-switch to first provider with results
         if (results.tmdb.length > 0) {
+          console.log("Auto-switching to TMDB tab (has results)");
           setActiveProviderTab("tmdb");
         } else if (results.tvdb.length > 0) {
+          console.log("Auto-switching to TVDB tab (has results)");
           setActiveProviderTab("tvdb");
         } else if (results.fanart.length > 0) {
+          console.log("Auto-switching to Fanart tab (has results)");
           setActiveProviderTab("fanart");
         }
 
+        console.log("Switching to previews tab");
         setActiveTab("previews");
       } else {
+        console.error("API returned error:", data.error || "Unknown error");
         showError(t("assetReplacer.fetchPreviewsError"));
       }
     } catch (err) {
+      console.error("✗ Error fetching previews:", err);
       showError(
         t("assetReplacer.errorFetchingPreviews", { error: err.message })
       );
       console.error("Error fetching previews:", err);
     } finally {
       setLoading(false);
+      console.log("=== Fetch Complete ===");
     }
   };
 
   const handleFileUpload = async (event) => {
+    console.log("=== AssetReplacer: File Upload ===");
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+
+    console.log("File selected:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
+      console.error("Invalid file type:", file.type);
       showError(t("assetReplacer.selectImageError"));
       return;
     }
 
     // Store the file for later upload
     setUploadedFile(file);
+    console.log("File stored for upload");
 
     // Show preview of uploaded image and check ratio
     const reader = new FileReader();
     reader.onloadend = () => {
       setUploadedImage(reader.result);
+      console.log("Image preview loaded");
 
       // Create an Image object to get dimensions
       const img = new Image();
@@ -767,6 +845,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         const width = img.width;
         const height = img.height;
         setImageDimensions({ width, height });
+        console.log(`Image dimensions: ${width}x${height}`);
 
         // Define target ratios and tolerance
         const POSTER_RATIO = 2 / 3; // ~0.667
@@ -797,17 +876,39 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           expectedRatio = POSTER_RATIO;
           expectedRatioString = "2:3";
           isValid = Math.abs(imageRatio - POSTER_RATIO) <= TOLERANCE;
+          console.log(
+            `Checking poster ratio: ${imageRatio.toFixed(
+              3
+            )} vs ${POSTER_RATIO.toFixed(
+              3
+            )}, tolerance: ${TOLERANCE}, valid: ${isValid}`
+          );
         } else {
           // background or titlecard
           expectedRatio = BACKGROUND_RATIO;
           expectedRatioString = "16:9";
           isValid = Math.abs(imageRatio - BACKGROUND_RATIO) <= TOLERANCE;
+          console.log(
+            `Checking background/titlecard ratio: ${imageRatio.toFixed(
+              3
+            )} vs ${BACKGROUND_RATIO.toFixed(
+              3
+            )}, tolerance: ${TOLERANCE}, valid: ${isValid}`
+          );
         }
 
         // Check if ratio is valid
         setIsDimensionValid(isValid);
+        console.log(
+          `Image dimension validation result: ${isValid ? "VALID" : "INVALID"}`
+        );
 
         if (!isValid) {
+          console.warn(
+            `Image ratio mismatch! Got ${imageRatio.toFixed(
+              3
+            )}, expected ${expectedRatio.toFixed(3)} (${expectedRatioString})`
+          );
           // You will need to add/update this translation key
           showError(
             t("assetReplacer.invalidImageRatio", {
@@ -831,22 +932,34 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   };
 
   const handleUploadClick = () => {
+    console.log("=== AssetReplacer: Upload Click ===");
+    console.log("File uploaded:", !!uploadedFile);
+    console.log("Dimensions valid:", isDimensionValid);
+    console.log("Posterizarr running:", isPosterizarrRunning);
+
     if (!uploadedFile || !isDimensionValid) {
+      console.warn("Upload validation failed: no file or invalid dimensions");
       showError(t("assetReplacer.selectValidImage"));
       return;
     }
 
     // Check if Posterizarr is running
     if (isPosterizarrRunning) {
+      console.warn("Upload blocked: Posterizarr is running");
       showError(t("assetReplacer.posterizarrRunningError"));
       return;
     }
 
+    console.log("Showing upload confirmation dialog");
     // Show confirmation dialog
     setShowUploadConfirm(true);
   };
 
   const handleConfirmUpload = async () => {
+    console.log("=== AssetReplacer: Confirmed Upload ===");
+    console.log("Process with overlays:", processWithOverlays);
+    console.log("Manual form:", manualForm);
+
     setShowUploadConfirm(false);
     setUploading(true);
     showError(null);
@@ -917,13 +1030,18 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         }
       }
 
+      console.log("Upload URL:", url);
+
       const formData = new FormData();
       formData.append("file", uploadedFile);
 
+      console.log("Sending upload request...");
       const response = await fetch(url, {
         method: "POST",
         body: formData,
       });
+
+      console.log("Upload response status:", response.status);
 
       if (!response.ok) {
         const contentType = response.headers.get("content-type");
@@ -932,9 +1050,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         if (contentType && contentType.includes("application/json")) {
           try {
             const errorData = await response.json();
+            console.error("Upload error (JSON):", errorData);
             errorMessage =
               errorData.detail || errorData.message || errorMessage;
           } catch (e) {
+            console.error("Failed to parse JSON error:", e);
             // Failed to parse JSON error
           }
         } else {
@@ -947,9 +1067,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       }
 
       const data = await response.json();
+      console.log("Upload response data:", data);
 
       if (data.success) {
         if (data.manual_run_triggered) {
+          console.log("✓ Upload successful - Manual run triggered");
           showSuccess(t("assetReplacer.replacedAndQueued"));
           // Dispatch event to update badge counts
           window.dispatchEvent(new Event("assetReplaced"));
@@ -980,30 +1102,46 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         showError(t("assetReplacer.uploadError"));
       }
     } catch (err) {
+      console.error("✗ Error uploading file:", err);
       showError(t("assetReplacer.errorUploadingFile", { error: err.message }));
       console.error("Error uploading file:", err);
     } finally {
       setUploading(false);
+      console.log("=== Upload Complete ===");
     }
   };
 
   const handlePreviewClick = (preview) => {
+    console.log("=== AssetReplacer: Preview Click ===");
+    console.log("Preview:", preview);
+    console.log("Posterizarr running:", isPosterizarrRunning);
+
     // Check if Posterizarr is running
     if (isPosterizarrRunning) {
+      console.warn("Preview selection blocked: Posterizarr is running");
       showError(t("assetReplacer.posterizarrRunningError"));
       return;
     }
 
+    console.log("Showing preview confirmation dialog");
     // Store the preview and show confirmation
     setPendingPreview(preview);
     setShowPreviewConfirm(true);
   };
 
   const handleSelectPreview = async () => {
+    console.log("=== AssetReplacer: Confirmed Preview Selection ===");
+    console.log("Process with overlays:", processWithOverlays);
+
     setShowPreviewConfirm(false);
     const preview = pendingPreview;
 
-    if (!preview) return;
+    if (!preview) {
+      console.error("No pending preview found!");
+      return;
+    }
+
+    console.log("Selected preview:", preview);
 
     setUploading(true);
     showError(null);
