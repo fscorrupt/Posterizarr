@@ -340,21 +340,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     // Supports formats: {tmdb-123}, [tmdb-123], (tmdb-123), {tvdb-456}, [tvdb-456], {imdb-tt123}, etc.
     if (folderName) {
       // TMDB ID - match various bracket formats
-      const tmdbMatch = folderName.match(/[\[{(]tmdb-(\d+)[\]})]*/i);
+      const tmdbMatch = folderName.match(/[\[{(]tmdb-(\d+)[\]})]/i);
       if (tmdbMatch) {
         tmdb_id = tmdbMatch[1];
         console.log(`Extracted TMDB ID from folder: ${tmdb_id}`);
       }
 
       // TVDB ID - match various bracket formats
-      const tvdbMatch = folderName.match(/[\[{(]tvdb-(\d+)[\]})]*/i);
+      const tvdbMatch = folderName.match(/[\[{(]tvdb-(\d+)[\]})]/i);
       if (tvdbMatch) {
         tvdb_id = tvdbMatch[1];
         console.log(`Extracted TVDB ID from folder: ${tvdb_id}`);
       }
 
       // IMDB ID - match various bracket formats (format: tt1234567)
-      const imdbMatch = folderName.match(/[\[{(]imdb-(tt\d+)[\]})]*/i);
+      const imdbMatch = folderName.match(/[\[{(]imdb-(tt\d+)[\]})]/i);
       if (imdbMatch) {
         imdb_id = imdbMatch[1];
         console.log(`Extracted IMDB ID from folder: ${imdb_id}`);
