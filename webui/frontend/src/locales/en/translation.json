@@ -363,6 +363,8 @@
     "dashboard": "Dashboard",
     "runModes": "Run Modes",
     "runtimeHistory": "Runtime History",
+    "plexExport": "Plex Export",
+    "mediaServerExport": "Media Server Export",
     "assets": "Assets",
     "config": "Configuration",
     "galleries": "Galleries",
@@ -1860,5 +1862,49 @@
         }
       ]
     }
+  },
+  "plexExport": {
+    "pageTitle": "Plex Export History",
+    "description": "Track and query your Plex library exports over time",
+    "refresh": "Refresh",
+    "import": "Import",
+    "importing": "Importing...",
+    "totalRuns": "Total Runs",
+    "libraryRecords": "Library Records",
+    "episodeRecords": "Episode Records",
+    "latestRun": "Latest Run",
+    "noData": "No data",
+    "selectRun": "Select Run",
+    "search": "Search...",
+    "library": "Library",
+    "episodes": "Episodes",
+    "title": "Title",
+    "year": "Year",
+    "resolution": "Resolution",
+    "actions": "Actions",
+    "show": "Show",
+    "season": "Season",
+    "noResults": "No matching results",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "page": "Page",
+    "originalTitle": "Original Title",
+    "libraryType": "Library Type",
+    "ratingKey": "Rating Key",
+    "path": "Path",
+    "folder": "Root Folder",
+    "labels": "Labels",
+    "episodeNumbers": "Episode Numbers",
+    "episodeTitles": "Episode Titles",
+    "resolutions": "Resolutions",
+    "importedAt": "Imported At"
+  },
+  "mediaServerExport": {
+    "pageTitle": "Media Server Export History",
+    "description": "Track and query your media server library exports over time",
+    "plex": "Plex",
+    "jellyfinEmby": "Jellyfin / Emby"
   }
 }

@@ -17,6 +17,7 @@ import {
   Layers,
   Tv,
   Database,
+  Server,
   Palette,
   Type,
   Bell,
@@ -160,6 +161,12 @@ const Sidebar = () => {
       path: "/runtime-history",
       label: t("nav.runtimeHistory"),
       icon: TrendingUp,
+    },
+    {
+      id: "mediaServerExport",
+      path: "/media-server-export",
+      label: t("nav.mediaServerExport", "Media Server Export"),
+      icon: Server,
     },
     {
       id: "gallery",
