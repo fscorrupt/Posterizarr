@@ -1763,7 +1763,7 @@
           "title": "Set Notification Trigger",
           "description": "Configure when the script should execute.",
           "substeps": [
-            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Under 'Notification Triggers', enable ONLY 'On File Import'",
             "Disable all other triggers"
           ]
         },
@@ -1835,7 +1835,7 @@
           "title": "Set Notification Trigger",
           "description": "Configure when the script should execute.",
           "substeps": [
-            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Under 'Notification Triggers', enable ONLY 'On File Import'",
             "Disable all other triggers"
           ]
         },

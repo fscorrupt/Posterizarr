@@ -1814,7 +1814,7 @@
           "title": "Benachrichtigungs-Trigger setzen",
           "description": "Konfiguriere, wann das Skript ausgeführt werden soll.",
           "substeps": [
-            "Unter 'Notification Triggers', aktiviere NUR 'On Import'",
+            "Unter 'Notification Triggers', aktiviere NUR 'On File Import'",
             "Deaktiviere alle anderen Trigger"
           ]
         },
@@ -1886,7 +1886,7 @@
           "title": "Benachrichtigungs-Trigger setzen",
           "description": "Konfiguriere, wann das Skript ausgeführt werden soll.",
           "substeps": [
-            "Unter 'Notification Triggers', aktiviere NUR 'On Import'",
+            "Unter 'Notification Triggers', aktiviere NUR 'On File Import'",
             "Deaktiviere alle anderen Trigger"
           ]
         },
