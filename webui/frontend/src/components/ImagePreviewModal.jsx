@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Calendar,
@@ -8,6 +8,8 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+const API_URL = "/api";
 
 /**
  * Global Image Preview Modal Component
@@ -38,8 +40,78 @@ function ImagePreviewModal({
   getTypeColor,
 }) {
   const { t } = useTranslation();
+  const [actualMediaType, setActualMediaType] = useState(null);
+  const [loadingType, setLoadingType] = useState(false);
+
+  // Extract rootfolder from path and fetch actual type from database
+  useEffect(() => {
+    if (!selectedImage) {
+      setActualMediaType(null);
+      return;
+    }
+
+    const fetchActualType = async () => {
+      try {
+        setLoadingType(true);
+        
+        // Extract rootfolder from path (the parent folder name)
+        const pathParts = selectedImage.path.split(/[\\/]/);
+        const rootfolder = pathParts[pathParts.length - 2]; // Parent folder of the image file
+        const filename = selectedImage.name || pathParts[pathParts.length - 1]; // Filename
+        
+        if (!rootfolder) {
+          setActualMediaType(null);
+          return;
+        }
+
+        // Query the database for the actual type (include filename for specific match)
+        const response = await fetch(
+          `${API_URL}/asset-type-lookup?rootfolder=${encodeURIComponent(rootfolder)}&filename=${encodeURIComponent(filename)}`
+        );
+        const data = await response.json();
+
+        if (data.success && data.type) {
+          setActualMediaType(data.type);
+        } else {
+          // Fallback to filename-based detection if not in database
+          setActualMediaType(null);
+        }
+      } catch (error) {
+        console.error("Error fetching asset type from database:", error);
+        setActualMediaType(null);
+      } finally {
+        setLoadingType(false);
+      }
+    };
+
+    fetchActualType();
+  }, [selectedImage]);
+
+  // Get the display media type - use database type if available, otherwise fallback
+  const getDisplayMediaType = () => {
+    if (actualMediaType) {
+      // Map database types to display types
+      const type = actualMediaType.toLowerCase();
+      
+      if (type === "movie" || type === "poster") return "Movie";
+      if (type === "show") return "Show";
+      if (type === "season") return "Season";
+      if (type === "episode" || type === "titlecard" || type === "title_card") return "Episode";
+      if (type.includes("background")) return "Background";
+      return actualMediaType;
+    }
+    
+    // Fallback to filename-based detection
+    if (getMediaType) {
+      return getMediaType(selectedImage.path, selectedImage.name);
+    }
+    
+    return "Asset";
+  };
 
   if (!selectedImage) return null;
+
+  const displayType = getDisplayMediaType();
 
   return (
     <div
@@ -93,24 +165,25 @@ function ImagePreviewModal({
 
             <div className="space-y-4">
               {/* Media Type */}
-              {getMediaType && getTypeColor && (
+              {getTypeColor && (
                 <div>
                   <label className="text-sm text-theme-muted">
                     {t("common.mediaType")}
                   </label>
                   <div className="mt-1">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
-                        getMediaType(selectedImage.path, selectedImage.name)
-                      )}`}
-                    >
-                      {t(
-                        `common.${getMediaType(
-                          selectedImage.path,
-                          selectedImage.name
-                        ).toLowerCase()}`
-                      )}
-                    </span>
+                    {loadingType ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium bg-gray-500/20 text-gray-400 border-gray-500/50">
+                        Loading...
+                      </span>
+                    ) : (
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
+                          displayType
+                        )}`}
+                      >
+                        {t(`common.${displayType.toLowerCase()}`)}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}

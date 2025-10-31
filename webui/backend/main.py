@@ -7490,6 +7490,127 @@ async def get_recent_assets():
         return {"success": False, "error": str(e), "assets": [], "total_count": 0}
 
 
+@app.get("/api/asset-type-lookup")
+async def get_asset_type_lookup(rootfolder: str, filename: str = None):
+    """
+    Look up the asset type from imagechoices database by rootfolder name and optionally filename
+
+    This helps correctly classify assets (Movie vs Show, Season, Episode, Background) when displaying
+    in galleries, as the database has the authoritative Type information.
+
+    Args:
+        rootfolder: The rootfolder name from the asset path (e.g., "Movie Name (2024) {tmdb-12345}")
+        filename: Optional filename to get more specific type (e.g., "Season04.jpg", "S04E01.jpg", "background.jpg")
+
+    Returns:
+        dict with 'success' and 'type' (or 'error')
+    """
+    try:
+        if not rootfolder:
+            return {"success": False, "error": "rootfolder parameter required"}
+
+        record = None
+
+        # If filename provided, try to find exact match by pattern matching
+        if filename:
+            import os
+            import re
+
+            base_name = os.path.splitext(filename)[0].lower()
+
+            # Get all records for this rootfolder
+            cursor = db.connection.cursor()
+            cursor.execute(
+                "SELECT * FROM imagechoices WHERE Rootfolder = ?", (rootfolder,)
+            )
+            all_records = cursor.fetchall()
+
+            if all_records:
+                # Try to match by filename pattern
+                for rec in all_records:
+                    rec_dict = dict(rec)
+                    title = rec_dict.get("Title", "")
+                    rec_type = rec_dict.get("Type", "")
+
+                    # Check for Season pattern (e.g., "Season04.jpg" matches Title containing "Season 4")
+                    if base_name.startswith("season"):
+                        season_match = re.match(
+                            r"season0*(\d+)", base_name, re.IGNORECASE
+                        )
+                        if season_match and rec_type == "Season":
+                            season_num = season_match.group(1)
+                            # Title is like "Mocro Maffia | Season 4"
+                            if (
+                                f"Season {season_num}" in title
+                                or f"Season{season_num}" in title
+                            ):
+                                record = rec
+                                break
+
+                    # Check for Episode pattern (e.g., "S04E01.jpg" matches Title starting with "S04E01")
+                    elif re.match(r"s\d+e\d+", base_name, re.IGNORECASE):
+                        episode_code = base_name.upper()
+                        # Remove leading zeros for matching
+                        normalized_code = re.sub(
+                            r"S0*(\d+)E0*(\d+)", r"S\1E\2", episode_code
+                        )
+
+                        if rec_type == "Episode":
+                            # Title is like "S04E01 | ICH WEIß, WO ER ARBEITET"
+                            title_upper = title.upper()
+                            # Match with or without leading zeros
+                            if title_upper.startswith(
+                                episode_code
+                            ) or title_upper.startswith(normalized_code):
+                                record = rec
+                                break
+
+                    # Check for background
+                    elif base_name == "background":
+                        if "background" in rec_type.lower():
+                            record = rec
+                            break
+
+                    # Check for poster
+                    elif base_name == "poster":
+                        # For poster, prefer "Show" or "Movie" type (not backgrounds, not seasons)
+                        if rec_type in ["Show", "Movie", "Poster"]:
+                            record = rec
+                            break
+
+        # If no specific match found, fall back to rootfolder only (gets poster/show/movie type)
+        if not record:
+            logger.debug(
+                f"No specific match found, falling back to rootfolder lookup: {rootfolder}"
+            )
+            record = db.get_choice_by_rootfolder(rootfolder)
+
+        if record:
+            asset_dict = dict(record)
+            asset_type = asset_dict.get("Type", "")
+
+            logger.debug(
+                f"Asset type lookup for rootfolder='{rootfolder}', filename='{filename}': {asset_type}"
+            )
+
+            return {
+                "success": True,
+                "type": asset_type,
+                "title": asset_dict.get("Title", ""),
+                "library": asset_dict.get("LibraryName", ""),
+            }
+        else:
+            logger.debug(f"No database record found for rootfolder: {rootfolder}")
+            return {"success": False, "error": "Asset not found in database"}
+
+    except Exception as e:
+        logger.error(f"Error looking up asset type: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+        return {"success": False, "error": str(e)}
+
+
 @app.get("/api/version")
 async def get_version():
     """
