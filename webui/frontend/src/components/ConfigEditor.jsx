@@ -1270,8 +1270,17 @@ function ConfigEditor() {
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
 
-    // If more space above than below, open upward
-    return spaceAbove > spaceBelow;
+    // Dropdown max height is 240px (max-h-60 = 15rem = 240px)
+    // Add buffer of 8px for margin
+    const dropdownHeight = 248;
+
+    // Only open upward if there's enough space above AND more space above than below
+    // This prevents cut-off at the top of the screen
+    if (spaceAbove > spaceBelow && spaceAbove >= dropdownHeight) {
+      return true;
+    }
+
+    return false;
   };
 
   // Click-outside detection for dropdowns
@@ -2059,11 +2068,28 @@ function ConfigEditor() {
 
               {isDropdownOpen(dropdownKey) && (
                 <div
-                  className={`absolute z-50 left-0 right-0 ${
-                    isDropdownUp(dropdownKey)
-                      ? "bottom-full mb-2"
-                      : "top-full mt-2"
-                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                  className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                  style={{
+                    left: dropdownRefs.current[
+                      dropdownKey
+                    ]?.getBoundingClientRect().left,
+                    width: dropdownRefs.current[dropdownKey]?.offsetWidth,
+                    ...(isDropdownUp(dropdownKey)
+                      ? {
+                          bottom:
+                            window.innerHeight -
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().top +
+                            8,
+                        }
+                      : {
+                          top:
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().bottom + 8,
+                        }),
+                  }}
                 >
                   <button
                     onClick={(e) => {
@@ -2194,11 +2220,28 @@ function ConfigEditor() {
 
               {isDropdownOpen(dropdownKey) && (
                 <div
-                  className={`absolute z-50 left-0 right-0 ${
-                    isDropdownUp(dropdownKey)
-                      ? "bottom-full mb-2"
-                      : "top-full mt-2"
-                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                  className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                  style={{
+                    left: dropdownRefs.current[
+                      dropdownKey
+                    ]?.getBoundingClientRect().left,
+                    width: dropdownRefs.current[dropdownKey]?.offsetWidth,
+                    ...(isDropdownUp(dropdownKey)
+                      ? {
+                          bottom:
+                            window.innerHeight -
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().top +
+                            8,
+                        }
+                      : {
+                          top:
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().bottom + 8,
+                        }),
+                  }}
                 >
                   <button
                     onClick={(e) => {
@@ -3356,11 +3399,28 @@ function ConfigEditor() {
 
             {isDropdownOpen(dropdownKey) && !disabled && (
               <div
-                className={`absolute z-50 left-0 right-0 ${
-                  isDropdownUp(dropdownKey)
-                    ? "bottom-full mb-2"
-                    : "top-full mt-2"
-                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                style={{
+                  left: dropdownRefs.current[
+                    dropdownKey
+                  ]?.getBoundingClientRect().left,
+                  width: dropdownRefs.current[dropdownKey]?.offsetWidth,
+                  ...(isDropdownUp(dropdownKey)
+                    ? {
+                        bottom:
+                          window.innerHeight -
+                          dropdownRefs.current[
+                            dropdownKey
+                          ]?.getBoundingClientRect().top +
+                          8,
+                      }
+                    : {
+                        top:
+                          dropdownRefs.current[
+                            dropdownKey
+                          ]?.getBoundingClientRect().bottom + 8,
+                      }),
+                }}
               >
                 {gravityOptions.map((option) => (
                   <button
@@ -3621,11 +3681,29 @@ function ConfigEditor() {
 
               {isDropdownOpen(`color-${fieldKey}`) && !disabled && (
                 <div
-                  className={`absolute z-50 left-0 right-0 ${
-                    isDropdownUp(`color-${fieldKey}`)
-                      ? "bottom-full mb-2"
-                      : "top-full mt-2"
-                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                  className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                  style={{
+                    left: dropdownRefs.current[
+                      `color-${fieldKey}`
+                    ]?.getBoundingClientRect().left,
+                    width:
+                      dropdownRefs.current[`color-${fieldKey}`]?.offsetWidth,
+                    ...(isDropdownUp(`color-${fieldKey}`)
+                      ? {
+                          bottom:
+                            window.innerHeight -
+                            dropdownRefs.current[
+                              `color-${fieldKey}`
+                            ]?.getBoundingClientRect().top +
+                            8,
+                        }
+                      : {
+                          top:
+                            dropdownRefs.current[
+                              `color-${fieldKey}`
+                            ]?.getBoundingClientRect().bottom + 8,
+                        }),
+                  }}
                 >
                   <button
                     onClick={(e) => {
