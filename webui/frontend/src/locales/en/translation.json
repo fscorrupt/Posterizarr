@@ -1336,7 +1336,18 @@
     "updateFailed": "Failed to update {{title}}",
     "unresolveFailed": "Failed to unresolve {{title}}",
     "updateError": "Error updating asset: {{error}}",
-    "unresolveError": "Error: {{error}}"
+    "unresolveError": "Error: {{error}}",
+    "selectAsset": "Select asset",
+    "selectAll": "Select All",
+    "selectAllFiltered": "Select all filtered assets",
+    "selectedCount": "{{count}} selected",
+    "markSelectedAsResolved": "Mark Selected as Resolved",
+    "clearSelection": "Clear Selection",
+    "processing": "Processing...",
+    "bulkMarkSuccess": "Successfully marked {{count}} asset(s) as resolved",
+    "bulkMarkPartial": "Marked {{success}} as resolved, {{failed}} failed",
+    "bulkMarkFailed": "Failed to mark assets as resolved",
+    "bulkMarkError": "Error: {{error}}"
   },
   "common": {
     "save": "Save",

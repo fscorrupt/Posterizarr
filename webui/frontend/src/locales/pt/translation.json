@@ -1334,7 +1334,18 @@
     "updateFailed": "Falha ao atualizar {{title}}",
     "unresolveFailed": "Falha ao reativar {{title}}",
     "updateError": "Erro ao atualizar ativo: {{error}}",
-    "unresolveError": "Erro: {{error}}"
+    "unresolveError": "Erro: {{error}}",
+    "selectAsset": "Selecionar ativo",
+    "selectAll": "Selecionar tudo",
+    "selectAllFiltered": "Selecionar todos os ativos filtrados",
+    "selectedCount": "{{count}} selecionado(s)",
+    "markSelectedAsResolved": "Marcar selecionados como resolvidos",
+    "clearSelection": "Limpar seleção",
+    "processing": "Processando...",
+    "bulkMarkSuccess": "{{count}} ativo(s) marcado(s) como resolvido(s) com sucesso",
+    "bulkMarkPartial": "{{success}} marcado(s) como resolvido(s), {{failed}} falharam",
+    "bulkMarkFailed": "Falha ao marcar ativos como resolvidos",
+    "bulkMarkError": "Erro: {{error}}"
   },
   "common": {
     "save": "Salvar",
