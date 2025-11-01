@@ -333,9 +333,10 @@ function RuntimeHistory() {
 
   if (loading) {
     return (
-      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <p className="text-theme-muted">{t("runtimeHistory.loading")}</p>
         </div>
       </div>
     );

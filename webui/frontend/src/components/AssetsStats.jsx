@@ -76,13 +76,10 @@ function AssetsStats({ onSuccess, onError }) {
 
   if (loading) {
     return (
-      <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-          <Image className="w-6 h-6 text-theme-primary" />
-          {t("assetsStats.title")}
-        </h2>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <p className="text-theme-muted">{t("assetsStats.loading")}</p>
         </div>
       </div>
     );
