@@ -12,11 +12,45 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("posterizarr-theme") || "plex";
+    return localStorage.getItem("posterizarr-theme") || "dark";
   });
 
   // Define your themes and the CSS variables they control
   const themes = {
+    dark: {
+      name: "Dark",
+      variables: {
+        "--theme-primary": "rgb(170, 170, 170)",
+        "--theme-primary-hover": "rgba(255, 255, 255, 0.45)",
+        "--theme-accent": "#7a7a7a",
+        "--theme-bg": "#141414",
+        "--theme-bg-dark": "#000000",
+        "--theme-bg-card": "#2d2d2d",
+        "--theme-bg-hover": "#3a3a3a",
+        "--theme-border": "#3a3a3a",
+        "--theme-text": "#ddd",
+        "--theme-text-muted": "#999",
+        "--theme-text-hover": "#fff",
+        "--button-color": "#7a7a7a",
+        "--button-color-hover": "#9b9b9b",
+        "--button-text": "#eee",
+        "--button-text-hover": "#fff",
+        "--link-color": "#7a7a7a",
+        "--link-color-hover": "#fff",
+        "--label-text-color": "#000000",
+        "--modal-bg-color":
+          "linear-gradient(135deg, #3a3a3a, #2d2d2d, #202020, #141414, #000000)",
+        "--modal-header-color":
+          "linear-gradient(135deg, #3a3a3a, #2d2d2d, #202020, #141414, #000000)",
+        "--modal-footer-color":
+          "linear-gradient(135deg, #3a3a3a, #2d2d2d, #202020, #141414, #000000)",
+        "--drop-down-menu-bg": "#2d2d2d",
+        "--accent-color": "170, 170, 170",
+        "--accent-color-hover": "rgba(255, 255, 255, 0.45)",
+        "--arr-queue-color": "#6b5",
+        "--plex-poster-unwatched": "#e5a00d",
+      },
+    },
     plex: {
       name: "Plex",
       variables: {

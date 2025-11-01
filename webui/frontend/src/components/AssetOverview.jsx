@@ -79,7 +79,17 @@ const getProviderBadge = (url) => {
 
 // Asset Row Component - Memoized to prevent unnecessary re-renders
 const AssetRow = React.memo(
-  ({ asset, tags, showName, onNoEditsNeeded, onUnresolve, onReplace }) => {
+  ({
+    asset,
+    tags,
+    showName,
+    onNoEditsNeeded,
+    onUnresolve,
+    onReplace,
+    isSelected,
+    onToggleSelection,
+    showCheckbox,
+  }) => {
     const { t } = useTranslation();
     const [logoError, setLogoError] = useState(false);
 
@@ -98,81 +108,98 @@ const AssetRow = React.memo(
     return (
       <div className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-theme-text break-words">
-              {showName ? (
-                <>
-                  <span className="text-theme-primary">{showName}</span>
-                  <span className="text-theme-muted mx-2">|</span>
-                  <span>{asset.Title}</span>
-                </>
-              ) : (
-                asset.Title
-              )}
-            </h3>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
-              <span className="font-medium">{t("assetOverview.type")}:</span>
-              <span className="bg-theme-card px-2 py-0.5 rounded">
-                {asset.Type || "Unknown"}
-              </span>
-              <span className="hidden sm:inline">•</span>
-              <span className="font-medium">
-                {t("assetOverview.language")}:
-              </span>
-              <span className="bg-theme-card px-2 py-0.5 rounded">
-                {asset.Language &&
-                asset.Language !== "false" &&
-                asset.Language !== false
-                  ? asset.Language
-                  : "Unknown"}
-              </span>
-              <span className="hidden sm:inline">•</span>
-              <span className="font-medium">{t("assetOverview.source")}:</span>
-              {asset.DownloadSource &&
-              asset.DownloadSource !== "false" &&
-              asset.DownloadSource !== false ? (
-                <a
-                  href={asset.DownloadSource}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
-                  title={asset.DownloadSource}
-                >
-                  {badge.logo && !logoError ? (
-                    <img
-                      src={badge.logo}
-                      alt={badge.name}
-                      className="h-[35px] object-contain"
-                      onError={() => setLogoError(true)}
-                    />
-                  ) : (
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
-                    >
-                      {badge.name}
-                    </span>
-                  )}
-                  <ExternalLink className="w-3 h-3 opacity-60" />
-                </a>
-              ) : (
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
-                >
-                  {badge.name}
-                </span>
-              )}
-            </div>
+          {/* Checkbox Column */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {showCheckbox && (
+              <div className="flex items-center pt-1">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleSelection(asset.id)}
+                  className="w-4 h-4 rounded border-theme-muted bg-theme-bg text-theme-primary focus:ring-2 focus:ring-theme-primary focus:ring-offset-0 cursor-pointer"
+                  title={t("assetOverview.selectAsset")}
+                />
+              </div>
+            )}
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
-                >
-                  {tag.label}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-theme-text break-words">
+                {showName ? (
+                  <>
+                    <span className="text-theme-primary">{showName}</span>
+                    <span className="text-theme-muted mx-2">|</span>
+                    <span>{asset.Title}</span>
+                  </>
+                ) : (
+                  asset.Title
+                )}
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
+                <span className="font-medium">{t("assetOverview.type")}:</span>
+                <span className="bg-theme-card px-2 py-0.5 rounded">
+                  {asset.Type || "Unknown"}
                 </span>
-              ))}
+                <span className="hidden sm:inline">•</span>
+                <span className="font-medium">
+                  {t("assetOverview.language")}:
+                </span>
+                <span className="bg-theme-card px-2 py-0.5 rounded">
+                  {asset.Language &&
+                  asset.Language !== "false" &&
+                  asset.Language !== false
+                    ? asset.Language
+                    : "Unknown"}
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span className="font-medium">
+                  {t("assetOverview.source")}:
+                </span>
+                {asset.DownloadSource &&
+                asset.DownloadSource !== "false" &&
+                asset.DownloadSource !== false ? (
+                  <a
+                    href={asset.DownloadSource}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    title={asset.DownloadSource}
+                  >
+                    {badge.logo && !logoError ? (
+                      <img
+                        src={badge.logo}
+                        alt={badge.name}
+                        className="h-[35px] object-contain"
+                        onError={() => setLogoError(true)}
+                      />
+                    ) : (
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                      >
+                        {badge.name}
+                      </span>
+                    )}
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+                  >
+                    {badge.name}
+                  </span>
+                )}
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
+                  >
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -232,6 +259,10 @@ const AssetOverview = () => {
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showReplacer, setShowReplacer] = useState(false);
 
+  // Selection state for bulk actions
+  const [selectedAssetIds, setSelectedAssetIds] = useState(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
   // Dropdown states
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
@@ -269,6 +300,17 @@ const AssetOverview = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    setSelectedAssetIds(new Set());
+  }, [
+    searchQuery,
+    selectedType,
+    selectedLibrary,
+    selectedCategory,
+    selectedStatus,
+  ]);
 
   // Helper function to parse clean show name from Rootfolder
   const parseShowName = (rootfolder) => {
@@ -725,6 +767,121 @@ const AssetOverview = () => {
     }
   };
 
+  // Handle toggling selection of a single asset
+  const handleToggleSelection = (assetId) => {
+    setSelectedAssetIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(assetId)) {
+        newSet.delete(assetId);
+      } else {
+        newSet.add(assetId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle selecting/deselecting all filtered assets
+  const handleSelectAll = () => {
+    if (
+      selectedAssetIds.size === filteredAssets.length &&
+      filteredAssets.length > 0
+    ) {
+      // Deselect all
+      setSelectedAssetIds(new Set());
+    } else {
+      // Select all filtered assets
+      setSelectedAssetIds(new Set(filteredAssets.map((asset) => asset.id)));
+    }
+  };
+
+  // Handle bulk mark as resolved
+  const handleBulkMarkAsResolved = async () => {
+    if (selectedAssetIds.size === 0) return;
+
+    setIsBulkProcessing(true);
+    const selectedAssets = filteredAssets.filter((asset) =>
+      selectedAssetIds.has(asset.id)
+    );
+
+    console.log(
+      `[AssetOverview] Bulk marking ${selectedAssets.length} assets as resolved`
+    );
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      // Process each selected asset
+      for (const asset of selectedAssets) {
+        try {
+          const updateRecord = {
+            Title: asset.Title,
+            Type: asset.Type || null,
+            Rootfolder: asset.Rootfolder || null,
+            LibraryName: asset.LibraryName || null,
+            Language: asset.Language || null,
+            Fallback: asset.Fallback || null,
+            TextTruncated: asset.TextTruncated || null,
+            DownloadSource: asset.DownloadSource || null,
+            FavProviderLink: asset.FavProviderLink || null,
+            Manual: "Yes",
+          };
+
+          const response = await fetch(`/api/imagechoices/${asset.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updateRecord),
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            failCount++;
+            console.error(
+              `Failed to update asset ${asset.id}:`,
+              await response.text()
+            );
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Error updating asset ${asset.id}:`, error);
+        }
+      }
+
+      // Clear selection after processing
+      setSelectedAssetIds(new Set());
+
+      // Refresh data
+      await fetchData();
+
+      // Trigger event to update sidebar badge count
+      window.dispatchEvent(new Event("assetReplaced"));
+
+      // Show result message
+      if (successCount > 0 && failCount === 0) {
+        showSuccess(
+          t("assetOverview.bulkMarkSuccess", { count: successCount })
+        );
+      } else if (successCount > 0 && failCount > 0) {
+        showSuccess(
+          t("assetOverview.bulkMarkPartial", {
+            success: successCount,
+            failed: failCount,
+          })
+        );
+      } else {
+        showError(t("assetOverview.bulkMarkFailed"));
+      }
+    } catch (error) {
+      console.error("[AssetOverview] Error in bulk mark as resolved:", error);
+      showError(t("assetOverview.bulkMarkError", { error: error.message }));
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   // Get all assets from all categories
   const allAssets = useMemo(() => {
     if (!data) return [];
@@ -1133,19 +1290,8 @@ const AssetOverview = () => {
 
       {/* Filters */}
       <div className="bg-theme-card border border-theme rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative md:col-span-2 lg:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            <input
-              type="text"
-              placeholder={t("assetOverview.searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-            />
-          </div>
-
+        {/* First Row: 4 Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {/* Status Filter */}
           <div className="relative" ref={statusDropdownRef}>
             <button
@@ -1362,10 +1508,62 @@ const AssetOverview = () => {
             )}
           </div>
         </div>
+
+        {/* Second Row: Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+          <input
+            type="text"
+            placeholder={t("assetOverview.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+          />
+        </div>
       </div>
 
       {/* Assets Grid */}
       <div className="bg-theme-card border border-theme rounded-lg p-6">
+        {/* Bulk Action Toolbar - Shows when items are selected */}
+        {selectedAssetIds.size > 0 && (
+          <div className="mb-4 p-4 bg-theme-primary/10 border border-theme-primary rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <CheckIcon className="w-5 h-5 text-theme-primary" />
+              <span className="text-theme-text font-medium">
+                {t("assetOverview.selectedCount", {
+                  count: selectedAssetIds.size,
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBulkMarkAsResolved}
+                disabled={isBulkProcessing}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 disabled:bg-theme-primary/50 rounded-lg text-white font-medium transition-all shadow-sm disabled:cursor-not-allowed"
+              >
+                {isBulkProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("assetOverview.processing")}
+                  </>
+                ) : (
+                  <>
+                    <CheckIcon className="w-4 h-4" />
+                    {t("assetOverview.markSelectedAsResolved")}
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setSelectedAssetIds(new Set())}
+                disabled={isBulkProcessing}
+                className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t("assetOverview.clearSelection")}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-theme-text">
             {selectedCategory === "All Categories"
@@ -1375,13 +1573,30 @@ const AssetOverview = () => {
               ({filteredAssets.length})
             </span>
           </h2>
-          <button
-            onClick={fetchData}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-          >
-            <RefreshCw className="w-4 h-4 text-theme-primary" />
-            <span className="text-theme-text">{t("common.refresh")}</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Select All Button */}
+            {filteredAssets.length > 0 && (
+              <button
+                onClick={handleSelectAll}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 rounded-lg text-sm font-medium transition-all shadow-sm"
+                title={t("assetOverview.selectAllFiltered")}
+              >
+                <CheckIcon className="w-4 h-4 text-white" />
+                <span className="text-white">
+                  {t("assetOverview.selectAll")}
+                </span>
+              </button>
+            )}
+
+            <button
+              onClick={fetchData}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            >
+              <RefreshCw className="w-4 h-4 text-theme-primary" />
+              <span className="text-theme-text">{t("common.refresh")}</span>
+            </button>
+          </div>
         </div>
 
         {filteredAssets.length === 0 ? (
@@ -1414,6 +1629,9 @@ const AssetOverview = () => {
                   onNoEditsNeeded={handleNoEditsNeeded}
                   onReplace={handleReplace}
                   onUnresolve={handleUnresolve}
+                  isSelected={selectedAssetIds.has(asset.id)}
+                  onToggleSelection={handleToggleSelection}
+                  showCheckbox={selectedAssetIds.size > 0}
                 />
               );
             })}

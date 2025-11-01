@@ -143,6 +143,27 @@ function Gallery() {
       const data = await response.json();
       setImages(data.images || []);
 
+      // Log media types for debugging
+      if (data.images && data.images.length > 0) {
+        const typeCounts = {};
+        data.images.forEach((img) => {
+          const type = img.type || "undefined";
+          typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+        console.log(
+          `[Gallery] Loaded ${data.images.length} images from ${folder.name}:`,
+          typeCounts
+        );
+        console.log(
+          `[Gallery] Sample images:`,
+          data.images.slice(0, 3).map((img) => ({
+            name: img.name,
+            path: img.path,
+            type: img.type,
+          }))
+        );
+      }
+
       if (showNotification && data.images && data.images.length > 0) {
         showSuccess(
           t("gallery.postersLoaded", {

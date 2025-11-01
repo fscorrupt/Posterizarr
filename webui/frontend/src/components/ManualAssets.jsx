@@ -446,7 +446,7 @@ function ManualAssets() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">Loading manual assets...</p>

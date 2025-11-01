@@ -7,54 +7,115 @@
    ======================================== */
 
 :root {
-  /* Default Theme (Plex) */
-  --theme-primary: #e5a00d;
-  --theme-primary-hover: #cc8f0c;
-  --theme-accent: #282a2d;
-  --theme-bg: radial-gradient(
-      circle farthest-side at 0% 100%,
-      rgb(47, 47, 47) 0%,
-      rgba(47, 47, 47, 0) 100%
-    ),
-    radial-gradient(
-      circle farthest-side at 100% 100%,
-      rgb(63, 63, 63) 0%,
-      rgba(63, 63, 63, 0) 100%
-    ),
-    radial-gradient(
-      circle farthest-side at 100% 0%,
-      rgb(76, 76, 76) 0%,
-      rgba(76, 76, 76, 0) 100%
-    ),
-    radial-gradient(
-      circle farthest-side at 0% 0%,
-      rgb(58, 58, 58) 0%,
-      rgba(58, 58, 58, 0) 100%
-    ),
-    black;
+  /* Default Theme (Dark) */
+  --theme-primary: rgb(170, 170, 170);
+  --theme-primary-hover: rgba(255, 255, 255, 0.45);
+  --theme-accent: #7a7a7a;
+  --theme-bg: #141414;
   --theme-bg-dark: #000000;
-  --theme-bg-card: #1a1a1a;
-  --theme-bg-hover: #2a2a2a;
+  --theme-bg-card: #2d2d2d;
+  --theme-bg-hover: #3a3a3a;
   --theme-border: #3a3a3a;
-  --theme-text: #dddddd;
-  --theme-text-muted: #999999;
-  --theme-text-hover: #ffffff;
+  --theme-text: #ddd;
+  --theme-text-muted: #999;
+  --theme-text-hover: #fff;
 
   /* Extended Variables */
-  --button-color: #cc7b19;
-  --button-color-hover: #e59029;
-  --button-text: #eeeeee;
-  --button-text-hover: #ffffff;
-  --link-color: #e5a00d;
-  --link-color-hover: #ffffff;
-  --label-text-color: #333333;
-  --modal-bg-color: #282828;
-  --modal-header-color: #323232;
-  --modal-footer-color: #323232;
-  --drop-down-menu-bg: #191a1c;
-  --accent-color: 229, 160, 13;
-  --accent-color-hover: #ffc107;
-  --arr-queue-color: #27c24c;
+  --button-color: #7a7a7a;
+  --button-color-hover: #9b9b9b;
+  --button-text: #eee;
+  --button-text-hover: #fff;
+  --link-color: #7a7a7a;
+  --link-color-hover: #fff;
+  --label-text-color: #000000;
+  --modal-bg-color: linear-gradient(
+    135deg,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --modal-header-color: linear-gradient(
+    135deg,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --modal-footer-color: linear-gradient(
+    135deg,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --drop-down-menu-bg: #2d2d2d;
+  --accent-color: 170, 170, 170;
+  --accent-color-hover: rgba(255, 255, 255, 0.45);
+  --arr-queue-color: #6b5;
+  --plex-poster-unwatched: #e5a00d;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --theme-primary: rgb(170, 170, 170);
+  --theme-primary-hover: rgba(255, 255, 255, 0.45);
+  --theme-accent: #7a7a7a;
+  --theme-bg: radial-gradient(
+    circle,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #2d2d2d;
+  --theme-bg-hover: #3a3a3a;
+  --theme-border: #3a3a3a;
+  --theme-text: #ddd;
+  --theme-text-muted: #999;
+  --theme-text-hover: #fff;
+
+  /* Extended Variables */
+  --button-color: #7a7a7a;
+  --button-color-hover: #9b9b9b;
+  --button-text: #eee;
+  --button-text-hover: #fff;
+  --link-color: #7a7a7a;
+  --link-color-hover: #fff;
+  --label-text-color: #000000;
+  --modal-bg-color: linear-gradient(
+    135deg,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --modal-header-color: linear-gradient(
+    135deg,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --modal-footer-color: linear-gradient(
+    135deg,
+    #3a3a3a,
+    #2d2d2d,
+    #202020,
+    #141414,
+    #000000
+  );
+  --drop-down-menu-bg: #2d2d2d;
+  --accent-color: 170, 170, 170;
+  --accent-color-hover: rgba(255, 255, 255, 0.45);
+  --arr-queue-color: #6b5;
   --plex-poster-unwatched: #e5a00d;
 }
 

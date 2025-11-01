@@ -156,7 +156,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "WARNING",
+        "log_level": "INFO",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -217,7 +217,7 @@ def initialize_webui_settings():
     """Initialize webui_settings.json with default values if it doesn't exist"""
     if not WEBUI_SETTINGS_PATH.exists():
         default_settings = {
-            "log_level": "WARNING",
+            "log_level": "INFO",
             "theme": "dark",
             "auto_refresh_interval": 180,
         }
@@ -482,6 +482,20 @@ except ImportError as e:
     )
     logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
 
+# Import media export database module
+try:
+    logger.debug("Attempting to import media_export_database module")
+    from media_export_database import MediaExportDatabase
+
+    MEDIA_EXPORT_DB_AVAILABLE = True
+    logger.info("Media export database module loaded successfully")
+except ImportError as e:
+    MEDIA_EXPORT_DB_AVAILABLE = False
+    logger.warning(
+        f"Media export database not available: {e}. Media CSV tracking will be disabled."
+    )
+    logger.debug(f"ImportError details: {type(e).__name__}: {str(e)}", exc_info=True)
+
 logger.info("Module loading completed")
 logger.debug(f"Config Mapper: {CONFIG_MAPPER_AVAILABLE}")
 logger.debug(f"Scheduler: {SCHEDULER_AVAILABLE}")
@@ -490,6 +504,7 @@ logger.debug(f"Database: {DATABASE_AVAILABLE}")
 logger.debug(f"Config Database: {CONFIG_DATABASE_AVAILABLE}")
 logger.debug(f"Runtime Database: {RUNTIME_DB_AVAILABLE}")
 logger.debug(f"Logs Watcher: {LOGS_WATCHER_AVAILABLE}")
+logger.debug(f"Media Export Database: {MEDIA_EXPORT_DB_AVAILABLE}")
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
@@ -497,6 +512,7 @@ current_start_time: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
 config_db: Optional["ConfigDB"] = None
+media_export_db: Optional["MediaExportDatabase"] = None
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
@@ -812,6 +828,17 @@ def process_image_path(image_path: Path):
         # Get file stats
         file_stat = image_path.stat()
 
+        # Extract library folder (first part of relative path) and determine media type
+        library_folder = None
+        media_type = None
+        try:
+            library_folder = relative_path.parts[0]
+            media_type = determine_media_type(image_path.name, library_folder)
+        except (ValueError, IndexError):
+            # If relative_path does not have any parts, or library_folder cannot be determined,
+            # we ignore the error and leave library_folder and media_type as None.
+            pass
+
         return {
             "path": str(relative_path),
             "name": image_path.name,
@@ -819,10 +846,145 @@ def process_image_path(image_path: Path):
             "url": f"/poster_assets/{encoded_url_path}",
             "created": file_stat.st_ctime,  # Creation time (Unix timestamp)
             "modified": file_stat.st_mtime,  # Modification time (Unix timestamp)
+            "type": media_type,  # Media type (Movie, Show, Season, Episode, Background)
         }
     except Exception as e:
         logger.error(f"Error processing image path {image_path}: {e}")
         return None
+
+
+def determine_media_type(filename: str, library_folder: str = None) -> str:
+    """
+    Determine media type from filename and library folder
+
+    Args:
+        filename: The asset filename (e.g., "poster.jpg", "Season01.jpg", "S01E01.jpg")
+        library_folder: The library folder name from assets (e.g., "TestMovies", "TestSerien")
+
+    Returns: Movie, Show, Season, Episode, or Background
+    """
+    name = filename.lower()
+
+    # Check for episodes/title cards first (these are always Episodes regardless of library)
+    if re.match(r"^S\d+E\d+\.jpg$", filename) or re.match(
+        r".*_S\d+E\d+\.jpg$", filename
+    ):
+        logger.debug(
+            f"[MediaType] {filename} in {library_folder} -> Episode (pattern match)"
+        )
+        return "Episode"
+
+    # Check for season posters (these are always Seasons regardless of library)
+    if re.match(r"^Season\d+\.jpg$", filename, re.IGNORECASE):
+        logger.debug(
+            f"[MediaType] {filename} in {library_folder} -> Season (pattern match)"
+        )
+        return "Season"
+
+    # Get library type from database for backgrounds and posters
+    library_type = None
+    if library_folder:
+        library_type = get_library_type_from_db(library_folder)
+        logger.debug(
+            f"[MediaType] Library '{library_folder}' type from DB: {library_type}"
+        )
+
+    # Check for backgrounds
+    if name == "background.jpg":
+        if library_type == "show":
+            logger.debug(
+                f"[MediaType] {filename} in {library_folder} -> Show Background (library_type=show)"
+            )
+            return "Show Background"
+        elif library_type == "movie":
+            logger.debug(
+                f"[MediaType] {filename} in {library_folder} -> Movie Background (library_type=movie)"
+            )
+            return "Movie Background"
+        # Default to generic Background if library type unknown
+        logger.debug(
+            f"[MediaType] {filename} in {library_folder} -> Background (library_type unknown)"
+        )
+        return "Background"
+
+    # For poster.jpg files, check library type from database
+    if name == "poster.jpg":
+        if library_type == "show":
+            logger.debug(
+                f"[MediaType] {filename} in {library_folder} -> Show (library_type=show)"
+            )
+            return "Show"
+        elif library_type == "movie":
+            logger.debug(
+                f"[MediaType] {filename} in {library_folder} -> Movie (library_type=movie)"
+            )
+            return "Movie"
+
+    # Default to Movie for poster.jpg files
+    logger.debug(f"[MediaType] {filename} in {library_folder} -> Movie (default)")
+    return "Movie"
+
+
+def get_library_type_from_db(library_folder: str) -> Optional[str]:
+    """
+    Get library type (movie/show) from database by library folder name
+    Uses a cache to avoid repeated database lookups
+
+    Args:
+        library_folder: The library folder name (e.g., "TestMovies", "TestSerien")
+
+    Returns:
+        "movie" or "show", or None if not found
+    """
+    # Use a simple module-level cache
+    if not hasattr(get_library_type_from_db, "cache"):
+        get_library_type_from_db.cache = {}
+
+    # Check cache first
+    if library_folder in get_library_type_from_db.cache:
+        cached_type = get_library_type_from_db.cache[library_folder]
+        logger.debug(f"[LibraryType] Cache hit for '{library_folder}': {cached_type}")
+        return cached_type
+
+    logger.debug(
+        f"[LibraryType] Cache miss for '{library_folder}', querying database..."
+    )
+
+    # Try to use existing media_export_db instance if available
+    db_instance = None
+    if MEDIA_EXPORT_DB_AVAILABLE and media_export_db is not None:
+        db_instance = media_export_db
+    elif MEDIA_EXPORT_DB_AVAILABLE:
+        # If module is available but instance not yet created, create a temporary one
+        try:
+            from media_export_database import MediaExportDatabase
+
+            db_instance = MediaExportDatabase()
+        except Exception as e:
+            logger.debug(
+                f"[LibraryType] Could not create MediaExportDatabase instance: {e}"
+            )
+
+    if db_instance:
+        try:
+            library_type = db_instance.lookup_library_type_by_name(library_folder)
+            if library_type:
+                # Cache the result
+                get_library_type_from_db.cache[library_folder] = library_type
+                logger.info(
+                    f"[LibraryType] Database lookup for '{library_folder}': {library_type} (cached)"
+                )
+                return library_type
+            else:
+                logger.warning(
+                    f"[LibraryType] No library type found in database for '{library_folder}'"
+                )
+        except Exception as e:
+            logger.error(
+                f"[LibraryType] Error looking up library type for '{library_folder}': {e}"
+            )
+
+    return None
 
 
 def scan_and_cache_assets():
@@ -835,6 +997,7 @@ def scan_and_cache_assets():
         return
 
     cache_scan_in_progress = True
+    scan_start_time = time.time()
     logger.info("Starting asset scan to refresh cache...")
 
     # Clear old data before re-scanning
@@ -853,15 +1016,30 @@ def scan_and_cache_assets():
     try:
         # Scan once for all image types and filter @eaDir in one pass
         image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+        logger.info(f"Scanning assets directory: {ASSETS_DIR}")
         all_images = [
             p
             for p in ASSETS_DIR.rglob("*")
             if p.suffix.lower() in image_extensions and "@eaDir" not in p.parts
         ]
+        logger.info(f"Found {len(all_images)} image files to process")
 
         temp_folders = {}
+        processed_count = 0
+        last_log_time = time.time()
 
         for image_path in all_images:
+            processed_count += 1
+
+            # Log progress every 5000 files or every 10 seconds
+            current_time = time.time()
+            if processed_count % 5000 == 0 or (current_time - last_log_time) >= 10:
+                logger.info(
+                    f"Processing assets: {processed_count}/{len(all_images)} ({(processed_count/len(all_images)*100):.1f}%)"
+                )
+                last_log_time = current_time
+
             image_data = process_image_path(image_path)
             if not image_data:
                 continue
@@ -901,10 +1079,12 @@ def scan_and_cache_assets():
                 asset_cache["titlecards"].append(image_data)
                 temp_folders[folder_name]["titlecard_count"] += 1
 
+        logger.info("Sorting asset lists...")
         # Sort the image lists once by path
         for key in ["posters", "backgrounds", "seasons", "titlecards"]:
             asset_cache[key].sort(key=lambda x: x["path"])
 
+        logger.info("Finalizing folder metadata...")
         # Finalize folder data
         folder_list = list(temp_folders.values())
         for folder in folder_list:
@@ -922,8 +1102,10 @@ def scan_and_cache_assets():
     finally:
         asset_cache["last_scanned"] = time.time()
         cache_scan_in_progress = False  # Release lock
+        scan_duration = time.time() - scan_start_time
         logger.info(
-            f"Asset cache refresh finished. Found {len(asset_cache['posters'])} posters, "
+            f"Asset cache refresh finished in {scan_duration:.1f}s. "
+            f"Found {len(asset_cache['posters'])} posters, "
             f"{len(asset_cache['backgrounds'])} backgrounds, "
             f"{len(asset_cache['seasons'])} seasons, "
             f"{len(asset_cache['titlecards'])} titlecards, "
@@ -984,11 +1166,10 @@ def stop_cache_refresh_background():
 
 def get_fresh_assets():
     """Returns the asset cache (always fresh thanks to background refresh)"""
-    # Fully rely on background refresh!
-    # Only perform a synchronous scan if the cache is completely empty (first startup)
+    # Fully rely on background refresh - no blocking scans!
+    # Return cache even if empty (first startup) - background thread will populate it
     if asset_cache["last_scanned"] == 0:
-        logger.info("First-time cache population...")
-        scan_and_cache_assets()
+        logger.debug("Cache not yet populated - background scan in progress")
     return asset_cache
 
 
@@ -1441,13 +1622,13 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db, config_db, logs_watcher
+    global scheduler, db, config_db, media_export_db, logs_watcher
 
-    # Startup: Pre-populate asset cache
+    # Startup: Initialize cache asynchronously
     logger.info("Starting Posterizarr Web UI Backend")
-    scan_and_cache_assets()
+    logger.info("Asset cache will be populated in background (non-blocking startup)")
 
-    # Start background cache refresh
+    # Start background cache refresh (handles initial scan asynchronously)
     start_cache_refresh_background()
 
     # Initialize config database if available
@@ -1465,6 +1646,20 @@ async def lifespan(app: FastAPI):
             config_db = None
     else:
         logger.info("Config database module not available, skipping initialization")
+
+    # Initialize media export database if available
+    if MEDIA_EXPORT_DB_AVAILABLE:
+        try:
+            logger.info("Initializing media export database...")
+            media_export_db = MediaExportDatabase()
+            logger.info("Media export database ready")
+        except Exception as e:
+            logger.error(f"Failed to initialize media export database: {e}")
+            media_export_db = None
+    else:
+        logger.info(
+            "Media export database module not available, skipping initialization"
+        )
 
     # Initialize database if available
     if DATABASE_AVAILABLE:
@@ -1525,6 +1720,9 @@ async def lifespan(app: FastAPI):
                 logs_dir=LOGS_DIR,
                 db_instance=db,
                 runtime_db_instance=runtime_db,
+                media_export_db_instance=(
+                    media_export_db if MEDIA_EXPORT_DB_AVAILABLE else None
+                ),
             )
             logs_watcher.start()
             logger.info(
@@ -1672,10 +1870,12 @@ class ManualModeRequest(BaseModel):
 
 
 class UILogEntry(BaseModel):
-    level: str  # "log", "warn", "error", "info", "debug"
+    level: str  # "INFO", "WARNING", "ERROR", "DEBUG"
     message: str
     timestamp: str
-    source: str = "ui"
+    component: str = (
+        "UI"  # Component/module name (e.g., "Gallery", "ImagePreviewModal")
+    )
 
 
 class UILogBatch(BaseModel):
@@ -3706,20 +3906,25 @@ def get_last_log_lines(count=25, mode=None, log_file=None):
 async def receive_ui_log(log_entry: UILogEntry):
     """
     Receives UI/Frontend logs and writes them to FrontendUI.log
+    Format matches backend logs for consistent viewing
     """
     try:
         ui_log_path = UI_LOGS_DIR / "FrontendUI.log"
 
-        # Create log entry in the same format as backend logs
-        timestamp = log_entry.timestamp
+        # Use server timestamp to avoid client/server time differences
+        from datetime import datetime
+
+        server_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         level = log_entry.level.upper()
+        component = log_entry.component
         message = log_entry.message
-        source = log_entry.source if log_entry.source else "UI"
 
-        # Format: [TIMESTAMP] [LEVEL] |UI| MESSAGE
-        log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
+        # Format: [TIMESTAMP] [LEVEL] [UI:Component] - MESSAGE
+        # This matches backend format but with UI: prefix
+        log_line = f"[{server_timestamp}] [{level:8}] [UI:{component}] - {message}\n"
 
-        # Write into FrontendUI.log
+        # Write to FrontendUI.log
         with open(ui_log_path, "a", encoding="utf-8") as f:
             f.write(log_line)
 
@@ -3734,20 +3939,27 @@ async def receive_ui_log(log_entry: UILogEntry):
 async def receive_ui_logs_batch(batch: UILogBatch):
     """
     Receives multiple UI logs at once (better performance)
+    Uses server timestamps to ensure chronological consistency
     """
     try:
         ui_log_path = UI_LOGS_DIR / "FrontendUI.log"
 
+        from datetime import datetime
+
         log_lines = []
         for log_entry in batch.logs:
-            timestamp = log_entry.timestamp
+            # Use server timestamp for all logs
+            server_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             level = log_entry.level.upper()
+            component = log_entry.component
             message = log_entry.message
 
-            log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
+            log_line = (
+                f"[{server_timestamp}] [{level:8}] [UI:{component}] - {message}\n"
+            )
             log_lines.append(log_line)
 
-        # Batch-Write for better performance
+        # Batch write for better performance
         with open(ui_log_path, "a", encoding="utf-8") as f:
             f.writelines(log_lines)
 
@@ -4946,6 +5158,284 @@ async def import_json_runtime_data():
 
     except Exception as e:
         logger.error(f"Error importing JSON runtime data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================================================
+# Plex Export Database Endpoints
+# =========================================================================
+
+
+@app.get("/api/plex-export/statistics")
+async def get_plex_export_statistics():
+    """
+    Get Plex export database statistics
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        stats = media_export_db.get_statistics()
+
+        return {
+            "success": True,
+            "statistics": stats,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex export statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/plex-export/runs")
+async def get_plex_export_runs():
+    """
+    Get list of all Plex export run timestamps
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        runs = media_export_db.get_all_runs()
+
+        return {
+            "success": True,
+            "runs": runs,
+            "count": len(runs),
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex export runs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/plex-export/library")
+async def get_plex_library_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get Plex library export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        data = media_export_db.get_library_data(run_timestamp, limit)
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex library data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/plex-export/episodes")
+async def get_plex_episode_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get Plex episode export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        data = media_export_db.get_episode_data(run_timestamp, limit)
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting Plex episode data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/plex-export/import")
+async def import_plex_csvs():
+    """
+    Import the latest Plex CSV files from Logs directory
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "Plex export database not available",
+            }
+
+        results = media_export_db.import_latest_csvs()
+
+        return {
+            "success": True,
+            "results": results,
+            "message": f"Imported {results['library_count']} library + {results['episode_count']} episode records",
+        }
+
+    except Exception as e:
+        logger.error(f"Error importing Plex CSVs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================================================
+# OtherMedia (Jellyfin/Emby) Export Endpoints
+# =========================================================================
+
+
+@app.get("/api/other-media-export/statistics")
+async def get_other_media_statistics():
+    """Get OtherMedia (Jellyfin/Emby) export database statistics"""
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        stats = media_export_db.get_other_statistics()
+
+        return {"success": True, "statistics": stats}
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/other-media-export/runs")
+async def get_other_media_runs():
+    """Get list of all OtherMedia export run timestamps"""
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        runs = media_export_db.get_other_all_runs()
+
+        return {"success": True, "runs": runs, "count": len(runs)}
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia runs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/other-media-export/library")
+async def get_other_media_library_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get OtherMedia library export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        data = media_export_db.get_other_library_data(run_timestamp)
+
+        if limit:
+            data = data[:limit]
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia library data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/other-media-export/episodes")
+async def get_other_media_episode_data(
+    run_timestamp: Optional[str] = None, limit: Optional[int] = None
+):
+    """
+    Get OtherMedia episode export data
+
+    Args:
+        run_timestamp: Optional specific run to query (default: latest)
+        limit: Optional limit on number of results
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        data = media_export_db.get_other_episode_data(run_timestamp, limit)
+
+        return {
+            "success": True,
+            "data": data,
+            "count": len(data),
+            "run_timestamp": run_timestamp or "latest",
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting OtherMedia episode data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/other-media-export/import")
+async def import_other_media_csvs():
+    """
+    Import the latest OtherMedia (Jellyfin/Emby) CSV files from Logs directory
+    """
+    try:
+        if not MEDIA_EXPORT_DB_AVAILABLE or not media_export_db:
+            return {
+                "success": False,
+                "message": "OtherMedia export database not available",
+            }
+
+        results = media_export_db.import_other_latest_csvs()
+
+        return {
+            "success": True,
+            "results": results,
+            "message": f"Imported {results['library_count']} library + {results['episode_count']} episode records",
+        }
+
+    except Exception as e:
+        logger.error(f"Error importing OtherMedia CSVs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
         # =========================================================================
@@ -6404,6 +6894,109 @@ async def get_log_content(log_name: str, tail: int = 100):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/logs/ui/unified")
+async def get_unified_ui_logs(tail: int = 500):
+    """
+    Get unified UI logs from FrontendUI.log with both backend and frontend entries
+    Returns chronologically sorted logs with source identification
+    """
+    try:
+        ui_log_path = UI_LOGS_DIR / "FrontendUI.log"
+
+        if not ui_log_path.exists():
+            return {"logs": [], "total": 0, "message": "No UI logs available yet"}
+
+        import re
+        from datetime import datetime
+
+        logs = []
+
+        with open(ui_log_path, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+
+        # Parse each log line
+        # Backend format: [TIMESTAMP] [LEVEL] [BACKEND:module:function:line] - MESSAGE
+        # Frontend format: [TIMESTAMP] [LEVEL] [UI:Component] - MESSAGE
+
+        backend_pattern = re.compile(
+            r"^\[([^\]]+)\]\s+\[([^\]]+)\]\s+\[BACKEND:([^\]]+)\]\s+-\s+(.*)$"
+        )
+        frontend_pattern = re.compile(
+            r"^\[([^\]]+)\]\s+\[([^\]]+)\]\s+\[UI:([^\]]+)\]\s+-\s+(.*)$"
+        )
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Try backend format
+            backend_match = backend_pattern.match(line)
+            if backend_match:
+                timestamp_str, level, module_info, message = backend_match.groups()
+                logs.append(
+                    {
+                        "timestamp": timestamp_str,
+                        "level": level.strip(),
+                        "source": "backend",
+                        "component": module_info,
+                        "message": message,
+                        "raw": line,
+                    }
+                )
+                continue
+
+            # Try frontend format
+            frontend_match = frontend_pattern.match(line)
+            if frontend_match:
+                timestamp_str, level, component, message = frontend_match.groups()
+                logs.append(
+                    {
+                        "timestamp": timestamp_str,
+                        "level": level.strip(),
+                        "source": "frontend",
+                        "component": component,
+                        "message": message,
+                        "raw": line,
+                    }
+                )
+                continue
+
+            # If no pattern matches, include as raw log
+            logs.append(
+                {
+                    "timestamp": "",
+                    "level": "UNKNOWN",
+                    "source": "unknown",
+                    "component": "",
+                    "message": line,
+                    "raw": line,
+                }
+            )
+
+        # Sort by timestamp (most recent last)
+        def parse_timestamp(log_entry):
+            try:
+                if log_entry["timestamp"]:
+                    return datetime.strptime(
+                        log_entry["timestamp"], "%Y-%m-%d %H:%M:%S"
+                    )
+                return datetime.min
+            except (ValueError, TypeError):
+                return datetime.min
+
+        logs.sort(key=parse_timestamp)
+
+        # Return last N entries
+        result_logs = logs[-tail:] if tail and len(logs) > tail else logs
+
+        return {"logs": result_logs, "total": len(result_logs), "total_all": len(logs)}
+
+    except Exception as e:
+        logger.error(f"Error reading unified UI logs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/logs/{log_name}/exists")
 async def check_log_exists(log_name: str):
     """Check if a log file exists (for waiting until script creates log)"""
@@ -7325,6 +7918,10 @@ async def get_folder_view_assets(item_path: str):
         if not item_full_path.exists() or not item_full_path.is_dir():
             return {"assets": []}
 
+        # Extract library folder from item_path for media type determination
+        path_parts = item_path.split("/")
+        library_folder = path_parts[0] if len(path_parts) > 0 else None
+
         assets = []
         for ext in ["*.jpg", "*.jpeg", "*.png", "*.webp"]:
             for image_path in item_full_path.glob(ext):
@@ -7335,12 +7932,16 @@ async def get_folder_view_assets(item_path: str):
                     # URL encode the path to handle special characters like #
                     encoded_url_path = quote(url_path, safe="/")
 
+                    # Determine media type using library folder
+                    media_type = determine_media_type(image_path.name, library_folder)
+
                     assets.append(
                         {
                             "name": image_path.name,
                             "path": str(relative_path).replace("\\", "/"),
                             "url": f"/poster_assets/{encoded_url_path}",
                             "size": image_path.stat().st_size,
+                            "type": media_type,  # Add type field for correct badge display
                         }
                     )
 
@@ -7488,6 +8089,127 @@ async def get_recent_assets():
 
         logger.error(traceback.format_exc())
         return {"success": False, "error": str(e), "assets": [], "total_count": 0}
+
+
+@app.get("/api/asset-type-lookup")
+async def get_asset_type_lookup(rootfolder: str, filename: str = None):
+    """
+    Look up the asset type from imagechoices database by rootfolder name and optionally filename
+
+    This helps correctly classify assets (Movie vs Show, Season, Episode, Background) when displaying
+    in galleries, as the database has the authoritative Type information.
+
+    Args:
+        rootfolder: The rootfolder name from the asset path (e.g., "Movie Name (2024) {tmdb-12345}")
+        filename: Optional filename to get more specific type (e.g., "Season04.jpg", "S04E01.jpg", "background.jpg")
+
+    Returns:
+        dict with 'success' and 'type' (or 'error')
+    """
+    try:
+        if not rootfolder:
+            return {"success": False, "error": "rootfolder parameter required"}
+
+        record = None
+
+        # If filename provided, try to find exact match by pattern matching
+        if filename:
+            import os
+            import re
+
+            base_name = os.path.splitext(filename)[0].lower()
+
+            # Get all records for this rootfolder
+            cursor = db.connection.cursor()
+            cursor.execute(
+                "SELECT * FROM imagechoices WHERE Rootfolder = ?", (rootfolder,)
+            )
+            all_records = cursor.fetchall()
+
+            if all_records:
+                # Try to match by filename pattern
+                for rec in all_records:
+                    rec_dict = dict(rec)
+                    title = rec_dict.get("Title", "")
+                    rec_type = rec_dict.get("Type", "")
+
+                    # Check for Season pattern (e.g., "Season04.jpg" matches Title containing "Season 4")
+                    if base_name.startswith("season"):
+                        season_match = re.match(
+                            r"season0*(\d+)", base_name, re.IGNORECASE
+                        )
+                        if season_match and rec_type == "Season":
+                            season_num = season_match.group(1)
+                            # Title is like "Mocro Maffia | Season 4"
+                            if (
+                                f"Season {season_num}" in title
+                                or f"Season{season_num}" in title
+                            ):
+                                record = rec
+                                break
+
+                    # Check for Episode pattern (e.g., "S04E01.jpg" matches Title starting with "S04E01")
+                    elif re.match(r"s\d+e\d+", base_name, re.IGNORECASE):
+                        episode_code = base_name.upper()
+                        # Remove leading zeros for matching
+                        normalized_code = re.sub(
+                            r"S0*(\d+)E0*(\d+)", r"S\1E\2", episode_code
+                        )
+
+                        if rec_type == "Episode":
+                            # Title is like "S04E01 | ICH WEIß, WO ER ARBEITET"
+                            title_upper = title.upper()
+                            # Match with or without leading zeros
+                            if title_upper.startswith(
+                                episode_code
+                            ) or title_upper.startswith(normalized_code):
+                                record = rec
+                                break
+
+                    # Check for background
+                    elif base_name == "background":
+                        if "background" in rec_type.lower():
+                            record = rec
+                            break
+
+                    # Check for poster
+                    elif base_name == "poster":
+                        # For poster, prefer "Show" or "Movie" type (not backgrounds, not seasons)
+                        if rec_type in ["Show", "Movie", "Poster"]:
+                            record = rec
+                            break
+
+        # If no specific match found, fall back to rootfolder only (gets poster/show/movie type)
+        if not record:
+            logger.debug(
+                f"No specific match found, falling back to rootfolder lookup: {rootfolder}"
+            )
+            record = db.get_choice_by_rootfolder(rootfolder)
+
+        if record:
+            asset_dict = dict(record)
+            asset_type = asset_dict.get("Type", "")
+
+            logger.debug(
+                f"Asset type lookup for rootfolder='{rootfolder}', filename='{filename}': {asset_type}"
+            )
+
+            return {
+                "success": True,
+                "type": asset_type,
+                "title": asset_dict.get("Title", ""),
+                "library": asset_dict.get("LibraryName", ""),
+            }
+        else:
+            logger.debug(f"No database record found for rootfolder: {rootfolder}")
+            return {"success": False, "error": "Asset not found in database"}
+
+    except Exception as e:
+        logger.error(f"Error looking up asset type: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+        return {"success": False, "error": str(e)}
 
 
 @app.get("/api/version")
@@ -7693,6 +8415,7 @@ async def get_cache_status():
         now = time.time()
         last_scan = asset_cache.get("last_scanned", 0)
         age_seconds = now - last_scan if last_scan > 0 else 0
+        is_initial_scan = last_scan == 0
 
         # Robust thread checking
         thread_alive = False
@@ -7714,6 +8437,7 @@ async def get_cache_status():
                 "ttl_seconds": CACHE_TTL_SECONDS,
                 "refresh_interval": CACHE_REFRESH_INTERVAL,
                 "is_stale": False,  # TTL check removed, cache is always valid
+                "is_initial_scan": is_initial_scan,
                 "posters_count": len(asset_cache.get("posters", [])),
                 "backgrounds_count": len(asset_cache.get("backgrounds", [])),
                 "seasons_count": len(asset_cache.get("seasons", [])),
@@ -7738,6 +8462,7 @@ async def get_cache_status():
                 "seasons_count": 0,
                 "titlecards_count": 0,
                 "folders_count": 0,
+                "is_initial_scan": True,
             },
             "background_refresh": {
                 "running": False,

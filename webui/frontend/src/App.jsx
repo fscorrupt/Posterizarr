@@ -20,6 +20,9 @@ import {
 import { setupFetchInterceptor } from "./utils/fetchInterceptor";
 setupFetchInterceptor();
 
+// Initialize UI logger (auto-initializes on import)
+import "./utils/uiLogger";
+
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
@@ -33,12 +36,11 @@ import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
 import AssetOverview from "./components/AssetOverview";
 import RuntimeHistory from "./components/RuntimeHistory";
+import MediaServerHistory from "./components/MediaServerHistory";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 import LoginScreen from "./components/LoginScreen";
 import LoadingScreen from "./components/LoadingScreen";
-
-import uiLogger from "./utils/uiLogger";
 
 function AppContent() {
   const { isCollapsed } = useSidebar();
@@ -220,6 +222,10 @@ function AppContent() {
                 <Route path="/manual-assets" element={<ManualAssets />} />
                 <Route path="/asset-overview" element={<AssetOverview />} />
                 <Route path="/runtime-history" element={<RuntimeHistory />} />
+                <Route
+                  path="/media-server-export"
+                  element={<MediaServerHistory />}
+                />
 
                 <Route
                   path="/gallery"

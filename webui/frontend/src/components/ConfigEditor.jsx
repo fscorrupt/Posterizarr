@@ -993,6 +993,72 @@ function ConfigEditor() {
   const [useJellySync, setUseJellySync] = useState(false);
   const [useEmbySync, setUseEmbySync] = useState(false);
 
+  // Validation state for min/max pairs
+  const [validationErrors, setValidationErrors] = useState({});
+
+  // Define min/max field pairs that need validation
+  const MIN_MAX_PAIRS = [
+    { min: "PosterMinPointSize", max: "PosterMaxPointSize" },
+    { min: "SeasonPosterMinPointSize", max: "SeasonPosterMaxPointSize" },
+    { min: "BackgroundMinPointSize", max: "BackgroundMaxPointSize" },
+    { min: "TitleCardTitleMinPointSize", max: "TitleCardTitleMaxPointSize" },
+    { min: "TitleCardEPMinPointSize", max: "TitleCardEPMaxPointSize" },
+    { min: "ShowTitleMinPointSize", max: "ShowTitleMaxPointSize" },
+    { min: "CollectionTitleMinPointSize", max: "CollectionTitleMaxPointSize" },
+    {
+      min: "CollectionPosterMinPointSize",
+      max: "CollectionPosterMaxPointSize",
+    },
+  ];
+
+  // Define parent-child dimension constraints
+  // Text max width/height cannot exceed parent poster/background min width/height
+  const PARENT_CHILD_CONSTRAINTS = [
+    // Poster-based constraints (use PosterMinWidth/PosterMinHeight as parent)
+    { parent: "PosterMinWidth", child: "PosterMaxWidth", type: "width" },
+    { parent: "PosterMinHeight", child: "PosterMaxHeight", type: "height" },
+    { parent: "PosterMinWidth", child: "SeasonPosterMaxWidth", type: "width" },
+    {
+      parent: "PosterMinHeight",
+      child: "SeasonPosterMaxHeight",
+      type: "height",
+    },
+    {
+      parent: "PosterMinWidth",
+      child: "CollectionPosterMaxWidth",
+      type: "width",
+    },
+    {
+      parent: "PosterMinHeight",
+      child: "CollectionPosterMaxHeight",
+      type: "height",
+    },
+    {
+      parent: "PosterMinWidth",
+      child: "CollectionTitleMaxWidth",
+      type: "width",
+    },
+    {
+      parent: "PosterMinHeight",
+      child: "CollectionTitleMaxHeight",
+      type: "height",
+    },
+
+    // Background/TitleCard-based constraints (use BgTcMinWidth/BgTcMinHeight as parent)
+    { parent: "BgTcMinWidth", child: "BackgroundMaxWidth", type: "width" },
+    { parent: "BgTcMinHeight", child: "BackgroundMaxHeight", type: "height" },
+    { parent: "BgTcMinWidth", child: "TitleCardTitleMaxWidth", type: "width" },
+    {
+      parent: "BgTcMinHeight",
+      child: "TitleCardTitleMaxHeight",
+      type: "height",
+    },
+    { parent: "BgTcMinWidth", child: "TitleCardEPMaxWidth", type: "width" },
+    { parent: "BgTcMinHeight", child: "TitleCardEPMaxHeight", type: "height" },
+    { parent: "BgTcMinWidth", child: "ShowTitleMaxWidth", type: "width" },
+    { parent: "BgTcMinHeight", child: "ShowTitleMaxHeight", type: "height" },
+  ];
+
   // Dropdown states - using object to handle multiple instances per field type
   const [openDropdowns, setOpenDropdowns] = useState({});
   const [dropdownPositions, setDropdownPositions] = useState({}); // Track if dropdown opens up or down
@@ -1195,21 +1261,23 @@ function ConfigEditor() {
 
   useEffect(() => {
     if (config && !hasInitializedGroups.current) {
-      const firstGroup = getGroupsByTab(activeTab)[0];
-      if (firstGroup) {
-        setExpandedGroups({ [firstGroup]: true });
-        hasInitializedGroups.current = true;
+      const groups = getGroupsByTab(activeTab);
+      // Only auto-expand if there's exactly one section
+      if (groups.length === 1) {
+        setExpandedGroups({ [groups[0]]: true });
       }
+      hasInitializedGroups.current = true;
     }
   }, [config, activeTab]);
 
   useEffect(() => {
     if (activeTab && config && hasInitializedGroups.current) {
-      const firstGroup = getGroupsByTab(activeTab)[0];
-      if (firstGroup) {
+      const groups = getGroupsByTab(activeTab);
+      // Only auto-expand if there's exactly one section
+      if (groups.length === 1) {
         setExpandedGroups((prev) => ({
           ...prev,
-          [firstGroup]: true,
+          [groups[0]]: true,
         }));
       }
     }
@@ -1270,8 +1338,17 @@ function ConfigEditor() {
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
 
-    // If more space above than below, open upward
-    return spaceAbove > spaceBelow;
+    // Dropdown max height is 240px (max-h-60 = 15rem = 240px)
+    // Add buffer of 8px for margin
+    const dropdownHeight = 248;
+
+    // Only open upward if there's enough space above AND more space above than below
+    // This prevents cut-off at the top of the screen
+    if (spaceAbove > spaceBelow && spaceAbove >= dropdownHeight) {
+      return true;
+    }
+
+    return false;
   };
 
   // Click-outside detection for dropdowns
@@ -1340,6 +1417,9 @@ function ConfigEditor() {
           initialAuthStatus.current = Boolean(authEnabled);
           console.log("Initial auth status saved:", initialAuthStatus.current);
         }
+
+        // Validate min/max pairs on initial load
+        validateMinMaxPairs(data.config);
 
         console.log(
           "Config structure:",
@@ -1501,6 +1581,19 @@ function ConfigEditor() {
   };
 
   const saveConfig = async (isAutoSave = false) => {
+    // Validate min/max pairs before saving
+    const isValid = validateMinMaxPairs(config);
+
+    if (!isValid) {
+      const errorCount = Object.keys(validationErrors).length;
+      showError(
+        `Cannot save: ${errorCount} validation ${
+          errorCount === 1 ? "error" : "errors"
+        } found. Please fix value conflicts.`
+      );
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -1592,23 +1685,130 @@ function ConfigEditor() {
     }));
   };
 
+  // Validate min/max pairs in the config
+  const validateMinMaxPairs = (configToValidate) => {
+    const errors = {};
+
+    // Validate standard min/max pairs (e.g., MinPointSize vs MaxPointSize)
+    MIN_MAX_PAIRS.forEach(({ min, max }) => {
+      let minValue, maxValue;
+
+      // Get values from flat or nested structure
+      if (usingFlatStructure) {
+        minValue = configToValidate[min];
+        maxValue = configToValidate[max];
+      } else {
+        // Try to find the values in the nested structure
+        for (const section of Object.keys(configToValidate || {})) {
+          if (configToValidate[section]?.[min] !== undefined) {
+            minValue = configToValidate[section][min];
+          }
+          if (configToValidate[section]?.[max] !== undefined) {
+            maxValue = configToValidate[section][max];
+          }
+        }
+      }
+
+      // Convert to numbers for comparison
+      const minNum = parseFloat(minValue);
+      const maxNum = parseFloat(maxValue);
+
+      // Only validate if both values exist and are valid numbers
+      if (!isNaN(minNum) && !isNaN(maxNum)) {
+        if (minNum > maxNum) {
+          errors[
+            min
+          ] = `Minimum value (${minNum}) cannot be greater than maximum value (${maxNum})`;
+          errors[
+            max
+          ] = `Maximum value (${maxNum}) cannot be less than minimum value (${minNum})`;
+        }
+      }
+    });
+
+    // Validate parent-child dimension constraints
+    // Text max width/height cannot exceed parent poster/background min width/height
+    PARENT_CHILD_CONSTRAINTS.forEach(({ parent, child, type }) => {
+      let parentValue, childValue;
+
+      // Get values from flat or nested structure
+      if (usingFlatStructure) {
+        parentValue = configToValidate[parent];
+        childValue = configToValidate[child];
+      } else {
+        // Try to find the values in the nested structure
+        for (const section of Object.keys(configToValidate || {})) {
+          if (configToValidate[section]?.[parent] !== undefined) {
+            parentValue = configToValidate[section][parent];
+          }
+          if (configToValidate[section]?.[child] !== undefined) {
+            childValue = configToValidate[section][child];
+          }
+        }
+      }
+
+      // Convert to numbers for comparison
+      const parentNum = parseFloat(parentValue);
+      const childNum = parseFloat(childValue);
+
+      // Only validate if both values exist and are valid numbers
+      if (!isNaN(parentNum) && !isNaN(childNum)) {
+        if (childNum > parentNum) {
+          const dimension = type === "width" ? "width" : "height";
+          errors[
+            child
+          ] = `Text ${dimension} (${childNum}) cannot be greater than parent image ${dimension} (${parentNum})`;
+        }
+      }
+    });
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const updateValue = (key, value) => {
+    let updatedConfig;
+
     if (usingFlatStructure) {
-      setConfig((prev) => ({
-        ...prev,
+      updatedConfig = {
+        ...config,
         [key]: value,
-      }));
+      };
+      setConfig(updatedConfig);
     } else {
       const [section, field] = key.includes(".") ? key.split(".") : [null, key];
       if (section) {
-        setConfig((prev) => ({
-          ...prev,
+        updatedConfig = {
+          ...config,
           [section]: {
-            ...prev[section],
+            ...config[section],
             [field]: value,
           },
-        }));
+        };
+        setConfig(updatedConfig);
       }
+    }
+
+    // Check if this field is part of a min/max pair OR parent-child constraint and trigger validation
+    const isMinMaxField = MIN_MAX_PAIRS.some(
+      ({ min, max }) =>
+        key === min ||
+        key === max ||
+        key.endsWith(`.${min}`) ||
+        key.endsWith(`.${max}`)
+    );
+
+    const isParentChildField = PARENT_CHILD_CONSTRAINTS.some(
+      ({ parent, child }) =>
+        key === parent ||
+        key === child ||
+        key.endsWith(`.${parent}`) ||
+        key.endsWith(`.${child}`)
+    );
+
+    if ((isMinMaxField || isParentChildField) && updatedConfig) {
+      // Use setTimeout to ensure state has updated before validating
+      setTimeout(() => validateMinMaxPairs(updatedConfig), 0);
     }
   };
 
@@ -2059,11 +2259,28 @@ function ConfigEditor() {
 
               {isDropdownOpen(dropdownKey) && (
                 <div
-                  className={`absolute z-50 left-0 right-0 ${
-                    isDropdownUp(dropdownKey)
-                      ? "bottom-full mb-2"
-                      : "top-full mt-2"
-                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                  className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                  style={{
+                    left: dropdownRefs.current[
+                      dropdownKey
+                    ]?.getBoundingClientRect().left,
+                    width: dropdownRefs.current[dropdownKey]?.offsetWidth,
+                    ...(isDropdownUp(dropdownKey)
+                      ? {
+                          bottom:
+                            window.innerHeight -
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().top +
+                            8,
+                        }
+                      : {
+                          top:
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().bottom + 8,
+                        }),
+                  }}
                 >
                   <button
                     onClick={(e) => {
@@ -2194,11 +2411,28 @@ function ConfigEditor() {
 
               {isDropdownOpen(dropdownKey) && (
                 <div
-                  className={`absolute z-50 left-0 right-0 ${
-                    isDropdownUp(dropdownKey)
-                      ? "bottom-full mb-2"
-                      : "top-full mt-2"
-                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                  className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                  style={{
+                    left: dropdownRefs.current[
+                      dropdownKey
+                    ]?.getBoundingClientRect().left,
+                    width: dropdownRefs.current[dropdownKey]?.offsetWidth,
+                    ...(isDropdownUp(dropdownKey)
+                      ? {
+                          bottom:
+                            window.innerHeight -
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().top +
+                            8,
+                        }
+                      : {
+                          top:
+                            dropdownRefs.current[
+                              dropdownKey
+                            ]?.getBoundingClientRect().bottom + 8,
+                        }),
+                  }}
                 >
                   <button
                     onClick={(e) => {
@@ -3356,11 +3590,28 @@ function ConfigEditor() {
 
             {isDropdownOpen(dropdownKey) && !disabled && (
               <div
-                className={`absolute z-50 left-0 right-0 ${
-                  isDropdownUp(dropdownKey)
-                    ? "bottom-full mb-2"
-                    : "top-full mt-2"
-                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                style={{
+                  left: dropdownRefs.current[
+                    dropdownKey
+                  ]?.getBoundingClientRect().left,
+                  width: dropdownRefs.current[dropdownKey]?.offsetWidth,
+                  ...(isDropdownUp(dropdownKey)
+                    ? {
+                        bottom:
+                          window.innerHeight -
+                          dropdownRefs.current[
+                            dropdownKey
+                          ]?.getBoundingClientRect().top +
+                          8,
+                      }
+                    : {
+                        top:
+                          dropdownRefs.current[
+                            dropdownKey
+                          ]?.getBoundingClientRect().bottom + 8,
+                      }),
+                }}
               >
                 {gravityOptions.map((option) => (
                   <button
@@ -3621,11 +3872,29 @@ function ConfigEditor() {
 
               {isDropdownOpen(`color-${fieldKey}`) && !disabled && (
                 <div
-                  className={`absolute z-50 left-0 right-0 ${
-                    isDropdownUp(`color-${fieldKey}`)
-                      ? "bottom-full mb-2"
-                      : "top-full mt-2"
-                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                  className="fixed z-50 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto"
+                  style={{
+                    left: dropdownRefs.current[
+                      `color-${fieldKey}`
+                    ]?.getBoundingClientRect().left,
+                    width:
+                      dropdownRefs.current[`color-${fieldKey}`]?.offsetWidth,
+                    ...(isDropdownUp(`color-${fieldKey}`)
+                      ? {
+                          bottom:
+                            window.innerHeight -
+                            dropdownRefs.current[
+                              `color-${fieldKey}`
+                            ]?.getBoundingClientRect().top +
+                            8,
+                        }
+                      : {
+                          top:
+                            dropdownRefs.current[
+                              `color-${fieldKey}`
+                            ]?.getBoundingClientRect().bottom + 8,
+                        }),
+                  }}
                 >
                   <button
                     onClick={(e) => {
@@ -3773,6 +4042,7 @@ function ConfigEditor() {
       keyLower === "maxlogs"
     ) {
       const disabled = isFieldDisabled(key, groupName);
+      const hasError = validationErrors[key];
 
       return (
         <div className="space-y-2">
@@ -3800,11 +4070,23 @@ function ConfigEditor() {
               }
             }}
             disabled={disabled}
-            className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all ${
+            className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border ${
+              hasError ? "border-red-500" : "border-theme"
+            } rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 ${
+              hasError
+                ? "focus:ring-red-500 focus:border-red-500"
+                : "focus:ring-theme-primary focus:border-theme-primary"
+            } transition-all ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
             }`}
             placeholder="Enter number"
           />
+          {hasError && (
+            <p className="text-xs text-red-500 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {hasError}
+            </p>
+          )}
         </div>
       );
     }
@@ -3877,7 +4159,7 @@ function ConfigEditor() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">{t("configEditor.loadingConfig")}</p>
@@ -3919,6 +4201,13 @@ function ConfigEditor() {
               Unsaved changes
             </span>
           )}
+          {Object.keys(validationErrors).length > 0 && (
+            <span className="flex items-center gap-1 text-xs text-red-500">
+              <AlertCircle className="w-3 h-3" />
+              {Object.keys(validationErrors).length} validation{" "}
+              {Object.keys(validationErrors).length === 1 ? "error" : "errors"}
+            </span>
+          )}
         </div>
 
         {/* Right side - Buttons */}
@@ -3937,20 +4226,30 @@ function ConfigEditor() {
           </button>
           <button
             onClick={() => saveConfig(false)}
-            disabled={saving}
+            disabled={saving || Object.keys(validationErrors).length > 0}
             className={`flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border ${
-              hasUnsavedChanges
+              Object.keys(validationErrors).length > 0
+                ? "border-red-500"
+                : hasUnsavedChanges
                 ? "border-yellow-500 animate-pulse"
                 : "border-theme"
             } hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
-            title={t("configEditor.saveConfigTitle")}
+            title={
+              Object.keys(validationErrors).length > 0
+                ? "Fix validation errors before saving"
+                : t("configEditor.saveConfigTitle")
+            }
           >
             {saving ? (
               <Loader2 className="w-4 h-4 text-theme-primary animate-spin" />
             ) : (
               <Save
                 className={`w-4 h-4 ${
-                  hasUnsavedChanges ? "text-yellow-500" : "text-theme-primary"
+                  Object.keys(validationErrors).length > 0
+                    ? "text-red-500"
+                    : hasUnsavedChanges
+                    ? "text-yellow-500"
+                    : "text-theme-primary"
                 }`}
               />
             )}

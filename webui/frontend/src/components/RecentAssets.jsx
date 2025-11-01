@@ -700,11 +700,7 @@ function RecentAssets({ refreshTrigger = 0 }) {
                           selectedAsset.type
                         )}`}
                       >
-                        {t(
-                          `common.${getMediaTypeLabel(
-                            selectedAsset
-                          ).toLowerCase()}`
-                        )}
+                        {getTypeLabel(selectedAsset.type)}
                       </span>
                     </div>
                   </div>

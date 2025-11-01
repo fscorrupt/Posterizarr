@@ -363,6 +363,8 @@
     "dashboard": "Tableau de bord",
     "runModes": "Modes d'exécution",
     "runtimeHistory": "Historique d'exécution",
+    "plexExport": "Export Plex",
+    "mediaServerExport": "Historique d'exportation du serveur multimédia",
     "assets": "Ressources",
     "config": "Configuration",
     "galleries": "Galeries",
@@ -1334,7 +1336,18 @@
     "updateFailed": "Échec de la mise à jour de {{title}}",
     "unresolveFailed": "Échec de la réactivation de {{title}}",
     "updateError": "Erreur lors de la mise à jour de la ressource : {{error}}",
-    "unresolveError": "Erreur : {{error}}"
+    "unresolveError": "Erreur : {{error}}",
+    "selectAsset": "Sélectionner la ressource",
+    "selectAll": "Tout sélectionner",
+    "selectAllFiltered": "Sélectionner toutes les ressources filtrées",
+    "selectedCount": "{{count}} sélectionné(s)",
+    "markSelectedAsResolved": "Marquer sélectionnés comme résolus",
+    "clearSelection": "Effacer la sélection",
+    "processing": "Traitement...",
+    "bulkMarkSuccess": "{{count}} ressource(s) marquée(s) comme résolue(s) avec succès",
+    "bulkMarkPartial": "{{success}} marqué(s) comme résolu(s), {{failed}} échoué(s)",
+    "bulkMarkFailed": "Échec de marquer les ressources comme résolues",
+    "bulkMarkError": "Erreur : {{error}}"
   },
   "common": {
     "save": "Enregistrer",
@@ -1858,5 +1871,49 @@
         }
       ]
     }
+  },
+  "plexExport": {
+    "pageTitle": "Historique d'export Plex",
+    "description": "Suivre et interroger vos exports de bibliothèque Plex au fil du temps",
+    "refresh": "Actualiser",
+    "import": "Importer",
+    "importing": "Importation...",
+    "totalRuns": "Exécutions totales",
+    "libraryRecords": "Enregistrements de bibliothèque",
+    "episodeRecords": "Enregistrements d'épisodes",
+    "latestRun": "Dernière exécution",
+    "noData": "Aucune donnée",
+    "selectRun": "Sélectionner l'exécution",
+    "search": "Rechercher...",
+    "library": "Bibliothèque",
+    "episodes": "Épisodes",
+    "title": "Titre",
+    "year": "Année",
+    "resolution": "Résolution",
+    "actions": "Actions",
+    "show": "Série",
+    "season": "Saison",
+    "noResults": "Aucun résultat correspondant",
+    "showing": "Affichage de",
+    "to": "à",
+    "of": "sur",
+    "results": "résultats",
+    "page": "Page",
+    "originalTitle": "Titre original",
+    "libraryType": "Type de bibliothèque",
+    "ratingKey": "Clé de notation",
+    "path": "Chemin",
+    "folder": "Dossier racine",
+    "labels": "Étiquettes",
+    "episodeNumbers": "Numéros d'épisodes",
+    "episodeTitles": "Titres d'épisodes",
+    "resolutions": "Résolutions",
+    "importedAt": "Importé le"
+  },
+  "mediaServerExport": {
+    "pageTitle": "Historique d'exportation du serveur multimédia",
+    "description": "Suivre et interroger vos exports de bibliothèque de serveur multimédia au fil du temps",
+    "plex": "Plex",
+    "jellyfinEmby": "Jellyfin / Emby"
   }
 }

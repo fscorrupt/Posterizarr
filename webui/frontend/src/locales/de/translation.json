@@ -363,6 +363,8 @@
     "dashboard": "Dashboard",
     "runModes": "Ausführungsmodi",
     "runtimeHistory": "Laufzeitverlauf",
+    "plexExport": "Plex Export",
+    "mediaServerExport": "Medienserver-Exportverlauf",
     "assets": "Assets",
     "config": "Konfiguration",
     "galleries": "Galerien",
@@ -1387,7 +1389,18 @@
     "updateFailed": "Aktualisierung von {{title}} fehlgeschlagen",
     "unresolveFailed": "Reaktivierung von {{title}} fehlgeschlagen",
     "updateError": "Fehler beim Aktualisieren des Assets: {{error}}",
-    "unresolveError": "Fehler: {{error}}"
+    "unresolveError": "Fehler: {{error}}",
+    "selectAsset": "Asset auswählen",
+    "selectAll": "Alle auswählen",
+    "selectAllFiltered": "Alle gefilterten Assets auswählen",
+    "selectedCount": "{{count}} ausgewählt",
+    "markSelectedAsResolved": "Ausgewählte als gelöst markieren",
+    "clearSelection": "Auswahl aufheben",
+    "processing": "Wird verarbeitet...",
+    "bulkMarkSuccess": "{{count}} Asset(s) erfolgreich als gelöst markiert",
+    "bulkMarkPartial": "{{success}} als gelöst markiert, {{failed}} fehlgeschlagen",
+    "bulkMarkFailed": "Assets konnten nicht als gelöst markiert werden",
+    "bulkMarkError": "Fehler: {{error}}"
   },
   "common": {
     "save": "Speichern",
@@ -1814,7 +1827,7 @@
           "title": "Benachrichtigungs-Trigger setzen",
           "description": "Konfiguriere, wann das Skript ausgeführt werden soll.",
           "substeps": [
-            "Unter 'Notification Triggers', aktiviere NUR 'On Import'",
+            "Unter 'Notification Triggers', aktiviere NUR 'On File Import'",
             "Deaktiviere alle anderen Trigger"
           ]
         },
@@ -1886,7 +1899,7 @@
           "title": "Benachrichtigungs-Trigger setzen",
           "description": "Konfiguriere, wann das Skript ausgeführt werden soll.",
           "substeps": [
-            "Unter 'Notification Triggers', aktiviere NUR 'On Import'",
+            "Unter 'Notification Triggers', aktiviere NUR 'On File Import'",
             "Deaktiviere alle anderen Trigger"
           ]
         },
@@ -1911,5 +1924,49 @@
         }
       ]
     }
+  },
+  "plexExport": {
+    "pageTitle": "Plex Export-Verlauf",
+    "description": "Verfolgen und Abfragen Ihrer Plex-Bibliotheksexporte im Zeitverlauf",
+    "refresh": "Aktualisieren",
+    "import": "Importieren",
+    "importing": "Importiere...",
+    "totalRuns": "Gesamte Durchläufe",
+    "libraryRecords": "Bibliothekseinträge",
+    "episodeRecords": "Episodeneinträge",
+    "latestRun": "Letzter Durchlauf",
+    "noData": "Keine Daten",
+    "selectRun": "Durchlauf auswählen",
+    "search": "Suchen...",
+    "library": "Bibliothek",
+    "episodes": "Episoden",
+    "title": "Titel",
+    "year": "Jahr",
+    "resolution": "Auflösung",
+    "actions": "Aktionen",
+    "show": "Serie",
+    "season": "Staffel",
+    "noResults": "Keine übereinstimmenden Ergebnisse",
+    "showing": "Zeige",
+    "to": "bis",
+    "of": "von",
+    "results": "Ergebnisse",
+    "page": "Seite",
+    "originalTitle": "Originaltitel",
+    "libraryType": "Bibliothekstyp",
+    "ratingKey": "Bewertungsschlüssel",
+    "path": "Pfad",
+    "folder": "Stammordner",
+    "labels": "Labels",
+    "episodeNumbers": "Episodennummern",
+    "episodeTitles": "Episodentitel",
+    "resolutions": "Auflösungen",
+    "importedAt": "Importiert am"
+  },
+  "mediaServerExport": {
+    "pageTitle": "Medienserver-Exportverlauf",
+    "description": "Verfolgen und Abfragen Ihrer Medienserver-Bibliotheksexporte im Zeitverlauf",
+    "plex": "Plex",
+    "jellyfinEmby": "Jellyfin / Emby"
   }
 }

@@ -2,11 +2,12 @@
 Logs Directory Watcher for Background Processes
 
 Monitors the Logs directory for changes to files created by background watcher processes
-(Tautulli, Sonarr, Radarr) and automatically imports them to databases.
+(Tautulli, Sonarr, Radarr, Plex) and automatically imports them to databases.
 
 Features:
 - Watches for ImageChoices.csv modifications
 - Watches for runtime JSON files (tautulli.json, arr.json, etc.)
+- Watches for Plex export CSVs (PlexLibexport.csv, PlexEpisodeExport.csv)
 - Debounces file changes to avoid duplicate imports
 - Thread-safe background monitoring
 - Hybrid event-based + polling approach for reliability
@@ -35,8 +36,11 @@ class LogsWatcher:
         logs_dir: Path,
         db_instance=None,
         runtime_db_instance=None,
+        media_export_db_instance=None,
         import_callback=None,
         runtime_callback=None,
+        plex_callback=None,
+        other_media_callback=None,
     ):
         """
         Initialize the logs watcher
@@ -45,14 +49,20 @@ class LogsWatcher:
             logs_dir: Path to the Logs directory to watch
             db_instance: ImageChoices database instance
             runtime_db_instance: Runtime database instance
+            media_export_db_instance: Plex export database instance
             import_callback: Function to call for ImageChoices.csv imports
             runtime_callback: Function to call for runtime JSON imports
+            plex_callback: Function to call for Plex CSV imports
+            other_media_callback: Function to call for OtherMediaServer CSV imports
         """
         self.logs_dir = Path(logs_dir)
         self.db = db_instance
         self.runtime_db = runtime_db_instance
+        self.media_export_db = media_export_db_instance
         self.import_callback = import_callback
         self.runtime_callback = runtime_callback
+        self.plex_callback = plex_callback
+        self.other_media_callback = other_media_callback
 
         self.observer: Any = None  # watchdog.observers.Observer instance
         self.handler: Any = None  # LogsFileHandler instance
@@ -61,6 +71,8 @@ class LogsWatcher:
         # Debouncing: Track last import times
         self.last_csv_import: float = 0
         self.last_json_imports: Dict[str, float] = {}
+        self.last_plex_import: float = 0
+        self.last_other_media_import: float = 0
         self.debounce_seconds = 2  # Wait 2 seconds before re-importing same file
 
         # Polling fallback for Windows/Docker reliability
@@ -302,6 +314,132 @@ class LogsWatcher:
                         f"Error scanning directory for CSV: {e}", exc_info=True
                     )
 
+                # Check Plex CSV files
+                plex_csv_found = False
+                try:
+                    plex_library_csv = self.logs_dir / "PlexLibexport.csv"
+                    plex_episode_csv = self.logs_dir / "PlexEpisodeExport.csv"
+
+                    # Check if at least one Plex CSV exists
+                    if plex_library_csv.exists() or plex_episode_csv.exists():
+                        plex_csv_found = True
+                        # Use the most recent modification time of the two files
+                        max_mtime = 0
+                        if plex_library_csv.exists():
+                            max_mtime = max(max_mtime, plex_library_csv.stat().st_mtime)
+                        if plex_episode_csv.exists():
+                            max_mtime = max(max_mtime, plex_episode_csv.stat().st_mtime)
+
+                        last_mtime = self.last_file_mtimes.get("plex_csv", 0)
+
+                        if poll_count % 12 == 1:
+                            logger.debug(
+                                f"  Plex CSVs: (mtime: {max_mtime}, last: {last_mtime})"
+                            )
+
+                        # Only trigger import on MODIFICATION
+                        if last_mtime == 0:
+                            # First detection - check if files existed at startup
+                            if (
+                                "plexlibexport.csv" in self.files_at_startup
+                                or "plexepisodeexport.csv" in self.files_at_startup
+                            ):
+                                if poll_count % 12 == 1:
+                                    logger.debug(
+                                        f"  [SKIP] Plex CSVs existed at startup, recording mtime only"
+                                    )
+                            else:
+                                # NEW files created after startup
+                                logger.info(
+                                    f"POLLING DETECTED: NEW Plex CSV files created after startup!"
+                                )
+                                logger.debug(f"  File mtime: {max_mtime}")
+                                self.on_plex_csv_modified()
+                        elif max_mtime > last_mtime:
+                            logger.info(f"POLLING DETECTED: Plex CSV modification!")
+                            logger.debug(f"  Current mtime: {max_mtime}")
+                            logger.debug(f"  Last mtime: {last_mtime}")
+                            logger.debug(f"  Delta: {max_mtime - last_mtime}s")
+                            self.on_plex_csv_modified()
+
+                        self.last_file_mtimes["plex_csv"] = max_mtime
+
+                    if not plex_csv_found and poll_count % 12 == 1:
+                        logger.debug("  Plex CSVs: Not found")
+
+                except Exception as e:
+                    logger.error(f"Error checking Plex CSVs: {e}", exc_info=True)
+
+                # Check OtherMediaServer CSV files
+                other_media_csv_found = False
+                try:
+                    other_media_library_csv = (
+                        self.logs_dir / "OtherMediaServerLibExport.csv"
+                    )
+                    other_media_episode_csv = (
+                        self.logs_dir / "OtherMediaServerEpisodeExport.csv"
+                    )
+
+                    # Check if at least one OtherMedia CSV exists
+                    if (
+                        other_media_library_csv.exists()
+                        or other_media_episode_csv.exists()
+                    ):
+                        other_media_csv_found = True
+                        # Use the most recent modification time of the two files
+                        max_mtime = 0
+                        if other_media_library_csv.exists():
+                            max_mtime = max(
+                                max_mtime, other_media_library_csv.stat().st_mtime
+                            )
+                        if other_media_episode_csv.exists():
+                            max_mtime = max(
+                                max_mtime, other_media_episode_csv.stat().st_mtime
+                            )
+
+                        last_mtime = self.last_file_mtimes.get("other_media_csv", 0)
+
+                        if poll_count % 12 == 1:
+                            logger.debug(
+                                f"  OtherMedia CSVs: (mtime: {max_mtime}, last: {last_mtime})"
+                            )
+
+                        # Only trigger import on MODIFICATION
+                        if last_mtime == 0:
+                            # First detection - check if files existed at startup
+                            if (
+                                "othermediaserverlibexport.csv" in self.files_at_startup
+                                or "othermediaserverepisodeexport.csv"
+                                in self.files_at_startup
+                            ):
+                                if poll_count % 12 == 1:
+                                    logger.debug(
+                                        f"  [SKIP] OtherMedia CSVs existed at startup, recording mtime only"
+                                    )
+                            else:
+                                # NEW OtherMedia CSV created after startup - import it!
+                                logger.info(
+                                    f"POLLING DETECTED: NEW OtherMedia CSV created after startup!"
+                                )
+                                logger.debug(f"  File mtime: {max_mtime}")
+                                self.on_other_media_csv_modified()
+                        elif max_mtime > last_mtime:
+                            logger.info(
+                                f"POLLING DETECTED: OtherMedia CSV modification!"
+                            )
+                            logger.debug(f"  Current mtime: {max_mtime}")
+                            logger.debug(f"  Last mtime: {last_mtime}")
+                            logger.debug(f"  Delta: {max_mtime - last_mtime}s")
+                            self.on_other_media_csv_modified()
+
+                        self.last_file_mtimes["other_media_csv"] = max_mtime
+
+                    if not other_media_csv_found and poll_count % 12 == 1:
+                        logger.debug("  OtherMedia CSVs: Not found")
+
+                except Exception as e:
+                    logger.error(f"Error checking OtherMedia CSVs: {e}", exc_info=True)
+
                 # Check JSON files (case-insensitive by scanning directory)
                 json_found_count = 0
                 try:
@@ -531,6 +669,190 @@ class LogsWatcher:
         finally:
             logger.debug(f"[Thread {thread_id}] CSV import thread finishing")
 
+    def on_plex_csv_modified(self):
+        """Handle Plex CSV modification (both PlexLibexport.csv and PlexEpisodeExport.csv)"""
+        current_time = time.time()
+        logger.info("=" * 80)
+        logger.info("PLEX CSV MODIFICATION DETECTED")
+        logger.info(f"  Files: PlexLibexport.csv / PlexEpisodeExport.csv")
+        logger.info(f"  Timestamp: {datetime.fromtimestamp(current_time)}")
+        logger.debug(f"  on_plex_csv_modified() triggered at {current_time}")
+
+        # Debounce: Skip if we imported recently
+        time_since_last = current_time - self.last_plex_import
+        logger.debug(f"  Last Plex CSV import: {self.last_plex_import}")
+        logger.debug(f"  Time since last import: {time_since_last:.2f}s")
+        logger.debug(f"  Debounce threshold: {self.debounce_seconds}s")
+
+        if time_since_last < self.debounce_seconds:
+            logger.warning(f"DEBOUNCED: Skipping Plex CSV import")
+            logger.debug(
+                f"  Reason: Last import was {time_since_last:.2f}s ago (need {self.debounce_seconds}s)"
+            )
+            logger.info("=" * 80)
+            return
+
+        self.last_plex_import = current_time
+        logger.info(
+            f"[OK] Debounce check passed (time since last: {time_since_last:.2f}s)"
+        )
+
+        try:
+            if self.plex_callback:
+                logger.info("Triggering Plex CSV import in background thread...")
+                logger.debug(f"  Callback function: {self.plex_callback}")
+                logger.debug("  Creating thread...")
+                thread = threading.Thread(
+                    target=self._safe_import_plex, daemon=True, name="PlexCSVImport"
+                )
+                thread.start()
+                logger.info(
+                    f"Plex CSV import thread started: {thread.name} (ID: {thread.ident})"
+                )
+                logger.info("=" * 80)
+            else:
+                logger.error("No Plex import callback configured!")
+                logger.debug("  plex_callback is None")
+                logger.info("=" * 80)
+
+        except Exception as e:
+            logger.error("=" * 80)
+            logger.error("ERROR handling Plex CSV modification")
+            logger.error(f"  Error: {e}", exc_info=True)
+            logger.error("=" * 80)
+
+    def on_other_media_csv_modified(self):
+        """Handle OtherMediaServer CSV modification (both Library and Episode exports)"""
+        current_time = time.time()
+        logger.info("=" * 80)
+        logger.info("OTHERMEDIA CSV MODIFICATION DETECTED")
+        logger.info(
+            f"  Files: OtherMediaServerLibExport.csv / OtherMediaServerEpisodeExport.csv"
+        )
+        logger.info(f"  Timestamp: {datetime.fromtimestamp(current_time)}")
+        logger.debug(f"  on_other_media_csv_modified() triggered at {current_time}")
+
+        # Debounce: Skip if we imported recently
+        time_since_last = current_time - self.last_other_media_import
+        logger.debug(f"  Last OtherMedia CSV import: {self.last_other_media_import}")
+        logger.debug(f"  Time since last import: {time_since_last:.2f}s")
+        logger.debug(f"  Debounce threshold: {self.debounce_seconds}s")
+
+        if time_since_last < self.debounce_seconds:
+            logger.warning(f"DEBOUNCED: Skipping OtherMedia CSV import")
+            logger.debug(
+                f"  Reason: Last import was {time_since_last:.2f}s ago (need {self.debounce_seconds}s)"
+            )
+            logger.info("=" * 80)
+            return
+
+        self.last_other_media_import = current_time
+        logger.info(
+            f"[OK] Debounce check passed (time since last: {time_since_last:.2f}s)"
+        )
+
+        try:
+            if self.other_media_callback:
+                logger.info("Triggering OtherMedia CSV import in background thread...")
+                logger.debug(f"  Callback function: {self.other_media_callback}")
+                logger.debug("  Creating thread...")
+                thread = threading.Thread(
+                    target=self._safe_import_other_media,
+                    daemon=True,
+                    name="OtherMediaCSVImport",
+                )
+                thread.start()
+                logger.info(
+                    f"OtherMedia CSV import thread started: {thread.name} (ID: {thread.ident})"
+                )
+                logger.info("=" * 80)
+            else:
+                logger.error("No OtherMedia import callback configured!")
+                logger.debug("  other_media_callback is None")
+                logger.info("=" * 80)
+
+        except Exception as e:
+            logger.error("=" * 80)
+            logger.error("ERROR handling OtherMedia CSV modification")
+            logger.error(f"  Error: {e}", exc_info=True)
+            logger.error("=" * 80)
+
+    def _safe_import_plex(self):
+        """Thread-safe Plex CSV import wrapper"""
+        thread_id = threading.get_ident()
+        thread_name = threading.current_thread().name
+        logger.info("=" * 80)
+        logger.info(f"PLEX CSV IMPORT THREAD STARTED")
+        logger.info(f"  Thread: {thread_name}")
+        logger.info(f"  Thread ID: {thread_id}")
+        logger.info("=" * 80)
+
+        try:
+            if self.plex_callback:
+                logger.debug(f"[Thread {thread_id}] Calling plex_callback()...")
+                logger.debug(f"[Thread {thread_id}] Callback: {self.plex_callback}")
+
+                start_time = time.time()
+                self.plex_callback()
+                elapsed = time.time() - start_time
+
+                logger.info("=" * 80)
+                logger.info(f"[SUCCESS] PLEX CSV IMPORT COMPLETED SUCCESSFULLY")
+                logger.info(f"  Thread: {thread_name}")
+                logger.info(f"  Duration: {elapsed:.2f}s")
+                logger.info("=" * 80)
+            else:
+                logger.error(
+                    f"[Thread {thread_id}] [ERROR] Plex CSV import callback is None"
+                )
+
+        except Exception as e:
+            logger.error("=" * 80)
+            logger.error(f"[ERROR] PLEX CSV IMPORT FAILED")
+            logger.error(f"  Thread: {thread_name} (ID: {thread_id})")
+            logger.error(f"  Error: {e}", exc_info=True)
+            logger.error("=" * 80)
+
+    def _safe_import_other_media(self):
+        """Thread-safe OtherMedia CSV import wrapper"""
+        thread_id = threading.get_ident()
+        thread_name = threading.current_thread().name
+        logger.info("=" * 80)
+        logger.info(f"OTHERMEDIA CSV IMPORT THREAD STARTED")
+        logger.info(f"  Thread: {thread_name}")
+        logger.info(f"  Thread ID: {thread_id}")
+        logger.info("=" * 80)
+
+        try:
+            if self.other_media_callback:
+                logger.debug(f"[Thread {thread_id}] Calling other_media_callback()...")
+                logger.debug(
+                    f"[Thread {thread_id}] Callback: {self.other_media_callback}"
+                )
+
+                start_time = time.time()
+                self.other_media_callback()
+                elapsed = time.time() - start_time
+
+                logger.info("=" * 80)
+                logger.info(f"[SUCCESS] OTHERMEDIA CSV IMPORT COMPLETED SUCCESSFULLY")
+                logger.info(f"  Thread: {thread_name}")
+                logger.info(f"  Duration: {elapsed:.2f}s")
+                logger.info("=" * 80)
+            else:
+                logger.error(
+                    f"[Thread {thread_id}] [ERROR] OtherMedia CSV import callback is None"
+                )
+
+        except Exception as e:
+            logger.error("=" * 80)
+            logger.error(f"[ERROR] OTHERMEDIA CSV IMPORT FAILED")
+            logger.error(f"  Thread: {thread_name} (ID: {thread_id})")
+            logger.error(f"  Error: {e}", exc_info=True)
+            logger.error("=" * 80)
+        finally:
+            logger.debug(f"[Thread {thread_id}] Plex CSV import thread finishing")
+
     def _safe_import_runtime(self, json_filename: str):
         """Thread-safe runtime import wrapper"""
         thread_id = threading.get_ident()
@@ -595,6 +917,10 @@ class LogsFileHandler(FileSystemEventHandler):
 
     # Files to watch
     CSV_FILE = "ImageChoices.csv"
+    PLEX_LIBRARY_CSV = "PlexLibexport.csv"
+    PLEX_EPISODE_CSV = "PlexEpisodeExport.csv"
+    OTHER_MEDIA_LIBRARY_CSV = "OtherMediaServerLibExport.csv"
+    OTHER_MEDIA_EPISODE_CSV = "OtherMediaServerEpisodeExport.csv"
     RUNTIME_JSON_FILES = {
         "tautulli.json",
         "arr.json",
@@ -614,6 +940,9 @@ class LogsFileHandler(FileSystemEventHandler):
         logger.info("=" * 80)
         logger.info("LogsFileHandler initialized")
         logger.info(f"  Monitoring CSV: {self.CSV_FILE}")
+        logger.info(
+            f"  Monitoring Plex CSVs: {self.PLEX_LIBRARY_CSV}, {self.PLEX_EPISODE_CSV}"
+        )
         logger.info(f"  Monitoring JSON files: {len(self.RUNTIME_JSON_FILES)}")
         for json_file in sorted(self.RUNTIME_JSON_FILES):
             logger.info(f"    • {json_file}")
@@ -640,12 +969,23 @@ class LogsFileHandler(FileSystemEventHandler):
                 logger.info(f"[OK] File matches monitored CSV: {filename}")
                 self.watcher.on_csv_modified()
 
+            elif filename in (self.PLEX_LIBRARY_CSV, self.PLEX_EPISODE_CSV):
+                logger.info(f"[OK] File matches monitored Plex CSV: {filename}")
+                self.watcher.on_plex_csv_modified()
+
+            elif filename in (
+                self.OTHER_MEDIA_LIBRARY_CSV,
+                self.OTHER_MEDIA_EPISODE_CSV,
+            ):
+                logger.info(f"[OK] File matches monitored OtherMedia CSV: {filename}")
+                self.watcher.on_other_media_csv_modified()
+
             elif filename.lower() in self.RUNTIME_JSON_FILES:
                 logger.info(f"[OK] File matches monitored JSON: {filename}")
                 self.watcher.on_runtime_json_modified(filename)
 
             else:
-                logger.debug(f"[SKIP]  File not monitored, ignoring: {filename}")
+                logger.debug(f"[SKIP] File not monitored, ignoring: {filename}")
 
         except Exception as e:
             logger.error("=" * 80)
@@ -678,6 +1018,25 @@ class LogsFileHandler(FileSystemEventHandler):
                 logger.debug("File write buffer complete, triggering import")
                 self.watcher.on_csv_modified()
 
+            elif filename in (self.PLEX_LIBRARY_CSV, self.PLEX_EPISODE_CSV):
+                logger.info(f"[OK] File matches monitored Plex CSV: {filename}")
+                logger.debug("Waiting 0.5s for file to be fully written...")
+                # Give the file a moment to be fully written
+                time.sleep(0.5)
+                logger.debug("File write buffer complete, triggering import")
+                self.watcher.on_plex_csv_modified()
+
+            elif filename in (
+                self.OTHER_MEDIA_LIBRARY_CSV,
+                self.OTHER_MEDIA_EPISODE_CSV,
+            ):
+                logger.info(f"[OK] File matches monitored OtherMedia CSV: {filename}")
+                logger.debug("Waiting 0.5s for file to be fully written...")
+                # Give the file a moment to be fully written
+                time.sleep(0.5)
+                logger.debug("File write buffer complete, triggering import")
+                self.watcher.on_other_media_csv_modified()
+
             elif filename.lower() in self.RUNTIME_JSON_FILES:
                 logger.info(f"[OK] File matches monitored JSON: {filename}")
                 logger.debug("Waiting 0.5s for file to be fully written...")
@@ -700,6 +1059,7 @@ def create_logs_watcher(
     logs_dir: Path,
     db_instance=None,
     runtime_db_instance=None,
+    media_export_db_instance=None,
 ) -> LogsWatcher:
     """
     Factory function to create and configure a LogsWatcher
@@ -708,6 +1068,7 @@ def create_logs_watcher(
         logs_dir: Path to the Logs directory
         db_instance: ImageChoices database instance
         runtime_db_instance: Runtime database instance
+        media_export_db_instance: Plex export database instance
 
     Returns:
         Configured LogsWatcher instance
@@ -724,6 +1085,10 @@ def create_logs_watcher(
     logger.info(f"  runtime_db_instance: {runtime_db_instance}")
     logger.info(
         f"  runtime_db_instance (type): {type(runtime_db_instance).__name__ if runtime_db_instance else 'None'}"
+    )
+    logger.info(f"  media_export_db_instance: {media_export_db_instance}")
+    logger.info(
+        f"  media_export_db_instance (type): {type(media_export_db_instance).__name__ if media_export_db_instance else 'None'}"
     )
 
     logger.debug("Importing required modules...")
@@ -790,17 +1155,138 @@ def create_logs_watcher(
             logger.error(f"  File: {json_path.name}")
             logger.error(f"  Error: {e}", exc_info=True)
 
+    def import_plex_callback():
+        """Callback for Plex CSV imports"""
+        logger.info("=" * 80)
+        logger.info("PLEX CSV IMPORT CALLBACK INVOKED")
+        logger.info(f"  Plex Export DB instance: {media_export_db_instance}")
+        logger.info(f"  Logs dir: {logs_dir}")
+        logger.info("=" * 80)
+        try:
+            if media_export_db_instance:
+                # Import both CSV files to database with the SAME timestamp
+                from pathlib import Path
+                from datetime import datetime
+
+                # Create a single timestamp for this import run
+                run_timestamp = datetime.now().isoformat()
+                logger.info(f"Using shared timestamp: {run_timestamp}")
+
+                library_csv = Path(logs_dir) / "PlexLibexport.csv"
+                episode_csv = Path(logs_dir) / "PlexEpisodeExport.csv"
+
+                imported_count = 0
+                if library_csv.exists():
+                    logger.info(f"Importing {library_csv.name}...")
+                    lib_count = media_export_db_instance.import_library_csv(
+                        library_csv, run_timestamp
+                    )
+                    logger.info(f"  Imported {lib_count} library records")
+                    imported_count += lib_count
+                else:
+                    logger.warning(f"  {library_csv.name} not found")
+
+                if episode_csv.exists():
+                    logger.info(f"Importing {episode_csv.name}...")
+                    ep_count = media_export_db_instance.import_episode_csv(
+                        episode_csv, run_timestamp
+                    )
+                    logger.info(f"  Imported {ep_count} episode records")
+                    imported_count += ep_count
+                else:
+                    logger.warning(f"  {episode_csv.name} not found")
+
+                if imported_count > 0:
+                    logger.info(
+                        f"[OK] Plex CSV import callback completed successfully ({imported_count} total records)"
+                    )
+                else:
+                    logger.warning(
+                        "[WARN] Plex CSV import completed but no records were imported (empty or invalid CSV files)"
+                    )
+            else:
+                logger.error("[ERROR] media_export_db_instance is None, cannot import")
+        except Exception as e:
+            logger.error("[ERROR] Plex CSV import callback failed")
+            logger.error(f"  Error: {e}", exc_info=True)
+
+    def import_other_media_callback():
+        """Callback for OtherMediaServer (Jellyfin/Emby) CSV imports"""
+        logger.info("=" * 80)
+        logger.info("OTHER MEDIA CSV IMPORT CALLBACK INVOKED")
+        logger.info(f"  Plex Export DB instance: {media_export_db_instance}")
+        logger.info(f"  Logs dir: {logs_dir}")
+        logger.info("=" * 80)
+        try:
+            if media_export_db_instance:
+                # Import both CSV files to database with the SAME timestamp
+                from pathlib import Path
+                from datetime import datetime
+
+                # Create a single timestamp for this import run
+                run_timestamp = datetime.now().isoformat()
+                logger.info(f"Using shared timestamp: {run_timestamp}")
+
+                library_csv = Path(logs_dir) / "OtherMediaServerLibExport.csv"
+                episode_csv = Path(logs_dir) / "OtherMediaServerEpisodeExport.csv"
+
+                imported_count = 0
+                if library_csv.exists():
+                    logger.info(f"Importing {library_csv.name}...")
+                    lib_count = media_export_db_instance.import_other_library_csv(
+                        library_csv, run_timestamp
+                    )
+                    logger.info(f"  Imported {lib_count} library records")
+                    imported_count += lib_count
+                else:
+                    logger.warning(f"  {library_csv.name} not found")
+
+                if episode_csv.exists():
+                    logger.info(f"Importing {episode_csv.name}...")
+                    ep_count = media_export_db_instance.import_other_episode_csv(
+                        episode_csv, run_timestamp
+                    )
+                    logger.info(f"  Imported {ep_count} episode records")
+                    imported_count += ep_count
+                else:
+                    logger.warning(f"  {episode_csv.name} not found")
+
+                if imported_count > 0:
+                    logger.info(
+                        f"[OK] OtherMedia CSV import callback completed successfully ({imported_count} total records)"
+                    )
+                else:
+                    logger.warning(
+                        "[WARN] OtherMedia CSV import completed but no records were imported (empty or invalid CSV files)"
+                    )
+            else:
+                logger.error("[ERROR] media_export_db_instance is None, cannot import")
+        except Exception as e:
+            logger.error("[ERROR] OtherMedia CSV import callback failed")
+            logger.error(f"  Error: {e}", exc_info=True)
+
     logger.info("Creating LogsWatcher instance...")
     logger.debug("  Callbacks configured:")
     logger.debug(f"    - CSV callback: {import_csv_callback}")
     logger.debug(f"    - Runtime callback: {import_runtime_callback}")
+    logger.debug(
+        f"    - Plex callback: {import_plex_callback if media_export_db_instance else None}"
+    )
+    logger.debug(
+        f"    - OtherMedia callback: {import_other_media_callback if media_export_db_instance else None}"
+    )
 
     watcher = LogsWatcher(
         logs_dir=logs_dir,
         db_instance=db_instance,
         runtime_db_instance=runtime_db_instance,
+        media_export_db_instance=media_export_db_instance,
         import_callback=import_csv_callback,
         runtime_callback=import_runtime_callback,
+        plex_callback=import_plex_callback if media_export_db_instance else None,
+        other_media_callback=(
+            import_other_media_callback if media_export_db_instance else None
+        ),
     )
 
     logger.info("[OK] LogsWatcher instance created successfully")

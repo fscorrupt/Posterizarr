@@ -363,6 +363,8 @@
     "dashboard": "Dashboard",
     "runModes": "Run Modes",
     "runtimeHistory": "Runtime History",
+    "plexExport": "Plex Export",
+    "mediaServerExport": "Media Server Export",
     "assets": "Assets",
     "config": "Configuration",
     "galleries": "Galleries",
@@ -1336,7 +1338,18 @@
     "updateFailed": "Failed to update {{title}}",
     "unresolveFailed": "Failed to unresolve {{title}}",
     "updateError": "Error updating asset: {{error}}",
-    "unresolveError": "Error: {{error}}"
+    "unresolveError": "Error: {{error}}",
+    "selectAsset": "Select asset",
+    "selectAll": "Select All",
+    "selectAllFiltered": "Select all filtered assets",
+    "selectedCount": "{{count}} selected",
+    "markSelectedAsResolved": "Mark Selected as Resolved",
+    "clearSelection": "Clear Selection",
+    "processing": "Processing...",
+    "bulkMarkSuccess": "Successfully marked {{count}} asset(s) as resolved",
+    "bulkMarkPartial": "Marked {{success}} as resolved, {{failed}} failed",
+    "bulkMarkFailed": "Failed to mark assets as resolved",
+    "bulkMarkError": "Error: {{error}}"
   },
   "common": {
     "save": "Save",
@@ -1763,7 +1776,7 @@
           "title": "Set Notification Trigger",
           "description": "Configure when the script should execute.",
           "substeps": [
-            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Under 'Notification Triggers', enable ONLY 'On File Import'",
             "Disable all other triggers"
           ]
         },
@@ -1835,7 +1848,7 @@
           "title": "Set Notification Trigger",
           "description": "Configure when the script should execute.",
           "substeps": [
-            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Under 'Notification Triggers', enable ONLY 'On File Import'",
             "Disable all other triggers"
           ]
         },
@@ -1860,5 +1873,49 @@
         }
       ]
     }
+  },
+  "plexExport": {
+    "pageTitle": "Plex Export History",
+    "description": "Track and query your Plex library exports over time",
+    "refresh": "Refresh",
+    "import": "Import",
+    "importing": "Importing...",
+    "totalRuns": "Total Runs",
+    "libraryRecords": "Library Records",
+    "episodeRecords": "Episode Records",
+    "latestRun": "Latest Run",
+    "noData": "No data",
+    "selectRun": "Select Run",
+    "search": "Search...",
+    "library": "Library",
+    "episodes": "Episodes",
+    "title": "Title",
+    "year": "Year",
+    "resolution": "Resolution",
+    "actions": "Actions",
+    "show": "Show",
+    "season": "Season",
+    "noResults": "No matching results",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "page": "Page",
+    "originalTitle": "Original Title",
+    "libraryType": "Library Type",
+    "ratingKey": "Rating Key",
+    "path": "Path",
+    "folder": "Root Folder",
+    "labels": "Labels",
+    "episodeNumbers": "Episode Numbers",
+    "episodeTitles": "Episode Titles",
+    "resolutions": "Resolutions",
+    "importedAt": "Imported At"
+  },
+  "mediaServerExport": {
+    "pageTitle": "Media Server Export History",
+    "description": "Track and query your media server library exports over time",
+    "plex": "Plex",
+    "jellyfinEmby": "Jellyfin / Emby"
   }
 }

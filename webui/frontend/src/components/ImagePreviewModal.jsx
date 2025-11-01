@@ -39,7 +39,37 @@ function ImagePreviewModal({
 }) {
   const { t } = useTranslation();
 
+  // Get the display media type - use type from backend if available, otherwise fallback
+  const getDisplayMediaType = () => {
+    // First priority: use the type field from backend (already determined by database lookup)
+    if (selectedImage?.type) {
+      console.log(
+        `[ImagePreviewModal] Using backend type for ${selectedImage.name}: ${selectedImage.type}`
+      );
+      return selectedImage.type;
+    }
+
+    // Fallback to filename-based detection if type not provided
+    if (getMediaType) {
+      const fallbackType = getMediaType(selectedImage.path, selectedImage.name);
+      console.log(
+        `[ImagePreviewModal] No backend type for ${selectedImage.name}, using fallback: ${fallbackType}`
+      );
+      return fallbackType;
+    }
+
+    console.warn(
+      `[ImagePreviewModal] No type available for ${selectedImage.name}, using default: Asset`
+    );
+    return "Asset";
+  };
+
   if (!selectedImage) return null;
+
+  const displayType = getDisplayMediaType();
+  console.log(
+    `[ImagePreviewModal] Displaying ${selectedImage.name} with type: ${displayType}`
+  );
 
   return (
     <div
@@ -93,7 +123,7 @@ function ImagePreviewModal({
 
             <div className="space-y-4">
               {/* Media Type */}
-              {getMediaType && getTypeColor && (
+              {getTypeColor && (
                 <div>
                   <label className="text-sm text-theme-muted">
                     {t("common.mediaType")}
@@ -101,15 +131,10 @@ function ImagePreviewModal({
                   <div className="mt-1">
                     <span
                       className={`inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm font-medium ${getTypeColor(
-                        getMediaType(selectedImage.path, selectedImage.name)
+                        displayType
                       )}`}
                     >
-                      {t(
-                        `common.${getMediaType(
-                          selectedImage.path,
-                          selectedImage.name
-                        ).toLowerCase()}`
-                      )}
+                      {displayType}
                     </span>
                   </div>
                 </div>

@@ -5,10 +5,10 @@ class UILogger {
     this.enabled = true;
     this.logQueue = [];
     this.maxQueueSize = 50;
-    this.flushInterval = 5000; // Send logs every 5 seconds
+    this.flushInterval = 3000; // Send logs every 3 seconds
     this.flushTimer = null;
 
-    // Speichere Original-Console-Methoden
+    // Store original console methods
     this.originalConsole = {
       log: console.log,
       error: console.error,
@@ -27,7 +27,7 @@ class UILogger {
     // Start automatic flush
     this.startAutoFlush();
 
-    // Cleanup bei Page-Unload
+    // Cleanup on page unload
     window.addEventListener("beforeunload", () => {
       this.flush();
     });
@@ -39,31 +39,31 @@ class UILogger {
     // console.log
     console.log = function (...args) {
       self.originalConsole.log.apply(console, args);
-      self.captureLog("log", args);
+      self.captureLog("INFO", args);
     };
 
     // console.error
     console.error = function (...args) {
       self.originalConsole.error.apply(console, args);
-      self.captureLog("error", args);
+      self.captureLog("ERROR", args);
     };
 
     // console.warn
     console.warn = function (...args) {
       self.originalConsole.warn.apply(console, args);
-      self.captureLog("warn", args);
+      self.captureLog("WARNING", args);
     };
 
     // console.info
     console.info = function (...args) {
       self.originalConsole.info.apply(console, args);
-      self.captureLog("info", args);
+      self.captureLog("INFO", args);
     };
 
-    // console.debug (optional)
+    // console.debug
     console.debug = function (...args) {
       self.originalConsole.debug.apply(console, args);
-      self.captureLog("debug", args);
+      self.captureLog("DEBUG", args);
     };
   }
 
@@ -71,12 +71,29 @@ class UILogger {
     if (!this.enabled) return;
 
     try {
-      // Formatiere Log-Nachricht
-      const message = args
+      // Extract component/context from first arg if it starts with [
+      let component = "UI";
+      let messageArgs = args;
+
+      if (args.length > 0 && typeof args[0] === "string") {
+        const firstArg = args[0];
+        const componentMatch = firstArg.match(/^\[([^\]]+)\]/);
+        if (componentMatch) {
+          component = componentMatch[1];
+          // Remove the component prefix from the message
+          messageArgs = [
+            firstArg.replace(/^\[[^\]]+\]\s*/, ""),
+            ...args.slice(1),
+          ];
+        }
+      }
+
+      // Format log message
+      const message = messageArgs
         .map((arg) => {
           if (typeof arg === "object") {
             try {
-              return JSON.stringify(arg);
+              return JSON.stringify(arg, null, 2);
             } catch (e) {
               return String(arg);
             }
@@ -85,9 +102,10 @@ class UILogger {
         })
         .join(" ");
 
-      // Create log entry with local timezone timestamp (matches backend format)
+      // Create log entry with server-compatible timestamp format
+      // Backend uses: %Y-%m-%d %H:%M:%S
       const now = new Date();
-      const localTimestamp =
+      const timestamp =
         now.getFullYear() +
         "-" +
         String(now.getMonth() + 1).padStart(2, "0") +
@@ -101,10 +119,10 @@ class UILogger {
         String(now.getSeconds()).padStart(2, "0");
 
       const logEntry = {
-        level: level,
+        level: level.toUpperCase(),
         message: message,
-        timestamp: localTimestamp,
-        source: "ui",
+        timestamp: timestamp,
+        component: component,
       };
 
       // Add to queue
@@ -115,7 +133,7 @@ class UILogger {
         this.flush();
       }
     } catch (error) {
-      // Fehler beim Logging nicht erneut loggen (Endlosschleife vermeiden)
+      // Avoid logging errors during logging (infinite loop)
       this.originalConsole.error("UILogger capture error:", error);
     }
   }

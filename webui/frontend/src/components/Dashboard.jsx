@@ -143,7 +143,7 @@ function Dashboard() {
     const saved = localStorage.getItem("dashboard_card_order");
     return saved
       ? JSON.parse(saved)
-      : ["statusCards", "runtimeStats", "recentAssets", "logViewer"];
+      : ["statusCards", "recentAssets", "runtimeStats", "logViewer"];
   });
 
   const [draggedItem, setDraggedItem] = useState(null);
@@ -502,27 +502,21 @@ function Dashboard() {
     // This ensures data is fresh when switching back to the dashboard tab
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log("Dashboard tab became visible, refreshing data...");
-        // Fetch latest status first
-        fetchStatus(true).then(() => {
-          // Need to fetch status synchronously to get the latest value
-          fetch(`${API_URL}/status`)
-            .then((response) => response.json())
-            .then((data) => {
-              // After status is updated, check if script finished while tab was hidden
-              // If so, trigger instant refresh of runtime stats and recent assets
-              if (!data.running) {
-                console.log(
-                  "Script not running, triggering instant stats refresh..."
-                );
-                setRuntimeStatsRefreshTrigger((prev) => prev + 1);
-              }
-            })
-            .catch((err) => console.error("Error checking status:", err));
-          // WebSocket reconnection will be handled by the status.running useEffect below
-        });
+        console.log("[Dashboard] Tab became visible, refreshing all data...");
+
+        // Always trigger refresh of runtime stats and recent assets when returning to dashboard
+        // This ensures fresh data regardless of whether script is running or not
+        console.log(
+          "[Dashboard] Triggering refresh of runtime stats and recent assets..."
+        );
+        setRuntimeStatsRefreshTrigger((prev) => prev + 1);
+
+        // Fetch latest status
+        fetchStatus(true);
         fetchSchedulerStatus(true);
         fetchSystemInfo(true);
+
+        // WebSocket reconnection will be handled by the status.running useEffect below
       }
     };
 
