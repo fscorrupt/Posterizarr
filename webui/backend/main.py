@@ -997,6 +997,7 @@ def scan_and_cache_assets():
         return
 
     cache_scan_in_progress = True
+    scan_start_time = time.time()
     logger.info("Starting asset scan to refresh cache...")
 
     # Clear old data before re-scanning
@@ -1015,15 +1016,30 @@ def scan_and_cache_assets():
     try:
         # Scan once for all image types and filter @eaDir in one pass
         image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+        logger.info(f"Scanning assets directory: {ASSETS_DIR}")
         all_images = [
             p
             for p in ASSETS_DIR.rglob("*")
             if p.suffix.lower() in image_extensions and "@eaDir" not in p.parts
         ]
+        logger.info(f"Found {len(all_images)} image files to process")
 
         temp_folders = {}
+        processed_count = 0
+        last_log_time = time.time()
 
         for image_path in all_images:
+            processed_count += 1
+
+            # Log progress every 5000 files or every 10 seconds
+            current_time = time.time()
+            if processed_count % 5000 == 0 or (current_time - last_log_time) >= 10:
+                logger.info(
+                    f"Processing assets: {processed_count}/{len(all_images)} ({(processed_count/len(all_images)*100):.1f}%)"
+                )
+                last_log_time = current_time
+
             image_data = process_image_path(image_path)
             if not image_data:
                 continue
@@ -1063,10 +1079,12 @@ def scan_and_cache_assets():
                 asset_cache["titlecards"].append(image_data)
                 temp_folders[folder_name]["titlecard_count"] += 1
 
+        logger.info("Sorting asset lists...")
         # Sort the image lists once by path
         for key in ["posters", "backgrounds", "seasons", "titlecards"]:
             asset_cache[key].sort(key=lambda x: x["path"])
 
+        logger.info("Finalizing folder metadata...")
         # Finalize folder data
         folder_list = list(temp_folders.values())
         for folder in folder_list:
@@ -1084,8 +1102,10 @@ def scan_and_cache_assets():
     finally:
         asset_cache["last_scanned"] = time.time()
         cache_scan_in_progress = False  # Release lock
+        scan_duration = time.time() - scan_start_time
         logger.info(
-            f"Asset cache refresh finished. Found {len(asset_cache['posters'])} posters, "
+            f"Asset cache refresh finished in {scan_duration:.1f}s. "
+            f"Found {len(asset_cache['posters'])} posters, "
             f"{len(asset_cache['backgrounds'])} backgrounds, "
             f"{len(asset_cache['seasons'])} seasons, "
             f"{len(asset_cache['titlecards'])} titlecards, "
@@ -1146,11 +1166,10 @@ def stop_cache_refresh_background():
 
 def get_fresh_assets():
     """Returns the asset cache (always fresh thanks to background refresh)"""
-    # Fully rely on background refresh!
-    # Only perform a synchronous scan if the cache is completely empty (first startup)
+    # Fully rely on background refresh - no blocking scans!
+    # Return cache even if empty (first startup) - background thread will populate it
     if asset_cache["last_scanned"] == 0:
-        logger.info("First-time cache population...")
-        scan_and_cache_assets()
+        logger.debug("Cache not yet populated - background scan in progress")
     return asset_cache
 
 
@@ -1605,11 +1624,11 @@ async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
     global scheduler, db, config_db, media_export_db, logs_watcher
 
-    # Startup: Pre-populate asset cache
+    # Startup: Initialize cache asynchronously
     logger.info("Starting Posterizarr Web UI Backend")
-    scan_and_cache_assets()
+    logger.info("Asset cache will be populated in background (non-blocking startup)")
 
-    # Start background cache refresh
+    # Start background cache refresh (handles initial scan asynchronously)
     start_cache_refresh_background()
 
     # Initialize config database if available
@@ -8396,6 +8415,7 @@ async def get_cache_status():
         now = time.time()
         last_scan = asset_cache.get("last_scanned", 0)
         age_seconds = now - last_scan if last_scan > 0 else 0
+        is_initial_scan = last_scan == 0
 
         # Robust thread checking
         thread_alive = False
@@ -8417,6 +8437,7 @@ async def get_cache_status():
                 "ttl_seconds": CACHE_TTL_SECONDS,
                 "refresh_interval": CACHE_REFRESH_INTERVAL,
                 "is_stale": False,  # TTL check removed, cache is always valid
+                "is_initial_scan": is_initial_scan,
                 "posters_count": len(asset_cache.get("posters", [])),
                 "backgrounds_count": len(asset_cache.get("backgrounds", [])),
                 "seasons_count": len(asset_cache.get("seasons", [])),
@@ -8441,6 +8462,7 @@ async def get_cache_status():
                 "seasons_count": 0,
                 "titlecards_count": 0,
                 "folders_count": 0,
+                "is_initial_scan": True,
             },
             "background_refresh": {
                 "running": False,
