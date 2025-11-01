@@ -7897,6 +7897,10 @@ async def get_folder_view_assets(item_path: str):
         if not item_full_path.exists() or not item_full_path.is_dir():
             return {"assets": []}
 
+        # Extract library folder from item_path for media type determination
+        path_parts = item_path.split("/")
+        library_folder = path_parts[0] if len(path_parts) > 0 else None
+
         assets = []
         for ext in ["*.jpg", "*.jpeg", "*.png", "*.webp"]:
             for image_path in item_full_path.glob(ext):
@@ -7907,12 +7911,16 @@ async def get_folder_view_assets(item_path: str):
                     # URL encode the path to handle special characters like #
                     encoded_url_path = quote(url_path, safe="/")
 
+                    # Determine media type using library folder
+                    media_type = determine_media_type(image_path.name, library_folder)
+
                     assets.append(
                         {
                             "name": image_path.name,
                             "path": str(relative_path).replace("\\", "/"),
                             "url": f"/poster_assets/{encoded_url_path}",
                             "size": image_path.stat().st_size,
+                            "type": media_type,  # Add type field for correct badge display
                         }
                     )
 
