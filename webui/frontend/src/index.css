@@ -11,14 +11,7 @@
   --theme-primary: rgb(170, 170, 170);
   --theme-primary-hover: rgba(255, 255, 255, 0.45);
   --theme-accent: #7a7a7a;
-  --theme-bg: radial-gradient(
-    circle,
-    #3a3a3a,
-    #2d2d2d,
-    #202020,
-    #141414,
-    #000000
-  );
+  --theme-bg: #141414;
   --theme-bg-dark: #000000;
   --theme-bg-card: #2d2d2d;
   --theme-bg-hover: #3a3a3a;
