@@ -9,8 +9,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const API_URL = "/api";
-
 /**
  * Global Image Preview Modal Component
  * Displays a full-screen preview of an image with metadata and action buttons

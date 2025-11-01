@@ -9,20 +9,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  TrendingUp,
   Calendar,
-  Package,
   Info,
   X,
   Search,
-  Filter,
   Server,
 } from "lucide-react";
-import {
-  formatDateToLocale,
-  getBrowserTimezone,
-  isTimezoneDifferent,
-} from "../utils/timeUtils";
+import { formatDateToLocale } from "../utils/timeUtils";
 
 const API_URL = "/api";
 
@@ -30,7 +23,6 @@ function MediaServerHistory() {
   const { t } = useTranslation();
   const [mediaServer, setMediaServer] = useState("plex"); // 'plex' or 'other'
   const [statistics, setStatistics] = useState(null);
-  const [runs, setRuns] = useState([]);
   const [libraryData, setLibraryData] = useState([]);
   const [episodeData, setEpisodeData] = useState([]);
   const [selectedRun, setSelectedRun] = useState(null);

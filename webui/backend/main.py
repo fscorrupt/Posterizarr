@@ -156,7 +156,7 @@ queue_listener = None
 def load_webui_settings():
     """Load WebUI settings from JSON file"""
     default_settings = {
-        "log_level": "DEBUG",
+        "log_level": "INFO",
         "theme": "dark",
         "auto_refresh_interval": 180,
     }
@@ -835,6 +835,8 @@ def process_image_path(image_path: Path):
             library_folder = relative_path.parts[0]
             media_type = determine_media_type(image_path.name, library_folder)
         except (ValueError, IndexError):
+            # If relative_path does not have any parts, or library_folder cannot be determined,
+            # we ignore the error and leave library_folder and media_type as None.
             pass
 
         return {
@@ -6961,7 +6963,7 @@ async def get_unified_ui_logs(tail: int = 500):
                         log_entry["timestamp"], "%Y-%m-%d %H:%M:%S"
                     )
                 return datetime.min
-            except:
+            except (ValueError, TypeError):
                 return datetime.min
 
         logs.sort(key=parse_timestamp)
