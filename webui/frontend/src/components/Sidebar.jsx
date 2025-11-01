@@ -157,12 +157,6 @@ const Sidebar = () => {
       icon: Clock,
     },
     {
-      id: "runtimeHistory",
-      path: "/runtime-history",
-      label: t("nav.runtimeHistory"),
-      icon: TrendingUp,
-    },
-    {
       id: "mediaServerExport",
       path: "/media-server-export",
       label: t("nav.mediaServerExport", "Media Server Export"),
@@ -208,6 +202,14 @@ const Sidebar = () => {
             ],
     },
     {
+      id: "manualAssets",
+      path: "/manual-assets",
+      label: "Manual Assets",
+      icon: FileImage,
+      badge: manualAssetsCount,
+      badgeColor: "green",
+    },
+    {
       id: "assetOverview",
       path: "/asset-overview",
       label: t("nav.assetOverview"),
@@ -222,12 +224,10 @@ const Sidebar = () => {
       icon: FolderKanban,
     },
     {
-      id: "manualAssets",
-      path: "/manual-assets",
-      label: "Manual Assets",
-      icon: FileImage,
-      badge: manualAssetsCount,
-      badgeColor: "green",
+      id: "autoTriggers",
+      path: "/auto-triggers",
+      label: t("nav.autoTriggers"),
+      icon: Zap,
     },
     {
       id: "config",
@@ -255,18 +255,18 @@ const Sidebar = () => {
         },
       ],
     },
+    {
+      id: "runtimeHistory",
+      path: "/runtime-history",
+      label: t("nav.runtimeHistory"),
+      icon: TrendingUp,
+    },
     { id: "logs", path: "/logs", label: t("nav.logs"), icon: FileText },
     {
       id: "howItWorks",
       path: "/how-it-works",
       label: t("nav.howItWorks"),
       icon: Lightbulb,
-    },
-    {
-      id: "autoTriggers",
-      path: "/auto-triggers",
-      label: t("nav.autoTriggers"),
-      icon: Zap,
     },
     { id: "about", path: "/about", label: t("nav.about"), icon: Info },
   ];

@@ -143,7 +143,7 @@ function Dashboard() {
     const saved = localStorage.getItem("dashboard_card_order");
     return saved
       ? JSON.parse(saved)
-      : ["statusCards", "runtimeStats", "recentAssets", "logViewer"];
+      : ["statusCards", "recentAssets", "runtimeStats", "logViewer"];
   });
 
   const [draggedItem, setDraggedItem] = useState(null);
