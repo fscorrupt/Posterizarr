@@ -1261,21 +1261,23 @@ function ConfigEditor() {
 
   useEffect(() => {
     if (config && !hasInitializedGroups.current) {
-      const firstGroup = getGroupsByTab(activeTab)[0];
-      if (firstGroup) {
-        setExpandedGroups({ [firstGroup]: true });
-        hasInitializedGroups.current = true;
+      const groups = getGroupsByTab(activeTab);
+      // Only auto-expand if there's exactly one section
+      if (groups.length === 1) {
+        setExpandedGroups({ [groups[0]]: true });
       }
+      hasInitializedGroups.current = true;
     }
   }, [config, activeTab]);
 
   useEffect(() => {
     if (activeTab && config && hasInitializedGroups.current) {
-      const firstGroup = getGroupsByTab(activeTab)[0];
-      if (firstGroup) {
+      const groups = getGroupsByTab(activeTab);
+      // Only auto-expand if there's exactly one section
+      if (groups.length === 1) {
         setExpandedGroups((prev) => ({
           ...prev,
-          [firstGroup]: true,
+          [groups[0]]: true,
         }));
       }
     }
