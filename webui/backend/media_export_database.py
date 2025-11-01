@@ -1,6 +1,6 @@
 """
-Database module for Plex export data tracking
-Handles PlexLibexport.csv and PlexEpisodeExport.csv data with run history
+Database module for Media Server export data tracking
+Handles media library export data (Plex, Jellyfin, Emby) with run history
 """
 
 import sqlite3
@@ -18,17 +18,17 @@ IS_DOCKER = os.getenv("POSTERIZARR_NON_ROOT") == "TRUE"
 if IS_DOCKER:
     BASE_DIR = Path("/config")
 else:
-    # Local: webui/backend/plex_export_database.py -> project root (2 levels up)
+    # Local: webui/backend/media_export_database.py -> project root (2 levels up)
     BASE_DIR = Path(__file__).parent.parent.parent
 
 # Database path in the database folder
 DATABASE_DIR = BASE_DIR / "database"
-DB_PATH = DATABASE_DIR / "plex_export.db"
+DB_PATH = DATABASE_DIR / "media_export.db"
 LOGS_DIR = BASE_DIR / "Logs"
 
 
-class PlexExportDatabase:
-    """Database handler for Plex export data"""
+class MediaExportDatabase:
+    """Database handler for media server export data"""
 
     def __init__(self, db_path: Path = DB_PATH):
         self.db_path = db_path
@@ -650,6 +650,62 @@ class PlexExportDatabase:
 
         return results
 
+    def lookup_library_type_by_name(self, library_name: str) -> Optional[str]:
+        """
+        Lookup library type (movie/show) by library name
+
+        Args:
+            library_name: The library folder name (e.g., "TestMovies", "TestSerien")
+
+        Returns:
+            Library type string ("movie" or "show"), or None if not found
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+
+            # Try Plex library export first (latest run)
+            cursor.execute(
+                """
+                SELECT library_type
+                FROM plex_library_export
+                WHERE library_name = ?
+                ORDER BY run_timestamp DESC
+                LIMIT 1
+                """,
+                (library_name,),
+            )
+
+            result = cursor.fetchone()
+
+            if result:
+                conn.close()
+                return result[0].lower() if result[0] else None
+
+            # Try other media server export (Jellyfin/Emby) if Plex not found
+            cursor.execute(
+                """
+                SELECT library_type
+                FROM other_media_library_export
+                WHERE library_name = ?
+                ORDER BY run_timestamp DESC
+                LIMIT 1
+                """,
+                (library_name,),
+            )
+
+            result = cursor.fetchone()
+            conn.close()
+
+            if result:
+                return result[0].lower() if result[0] else None
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Error looking up library type for {library_name}: {e}")
+            return None
+
     def get_all_runs(self) -> List[str]:
         """Get list of all unique run timestamps from both library and episode tables"""
         try:
@@ -1077,7 +1133,7 @@ class PlexExportDatabase:
 
 
 # Global database instance
-plex_export_db = PlexExportDatabase()
+media_export_db = MediaExportDatabase()
 
 
 if __name__ == "__main__":
@@ -1088,7 +1144,7 @@ if __name__ == "__main__":
     )
 
     # Test the database
-    db = PlexExportDatabase()
+    db = MediaExportDatabase()
 
     # Try to import latest CSVs
     results = db.import_latest_csvs()

@@ -36,7 +36,7 @@ class LogsWatcher:
         logs_dir: Path,
         db_instance=None,
         runtime_db_instance=None,
-        plex_export_db_instance=None,
+        media_export_db_instance=None,
         import_callback=None,
         runtime_callback=None,
         plex_callback=None,
@@ -49,7 +49,7 @@ class LogsWatcher:
             logs_dir: Path to the Logs directory to watch
             db_instance: ImageChoices database instance
             runtime_db_instance: Runtime database instance
-            plex_export_db_instance: Plex export database instance
+            media_export_db_instance: Plex export database instance
             import_callback: Function to call for ImageChoices.csv imports
             runtime_callback: Function to call for runtime JSON imports
             plex_callback: Function to call for Plex CSV imports
@@ -58,7 +58,7 @@ class LogsWatcher:
         self.logs_dir = Path(logs_dir)
         self.db = db_instance
         self.runtime_db = runtime_db_instance
-        self.plex_export_db = plex_export_db_instance
+        self.media_export_db = media_export_db_instance
         self.import_callback = import_callback
         self.runtime_callback = runtime_callback
         self.plex_callback = plex_callback
@@ -1059,7 +1059,7 @@ def create_logs_watcher(
     logs_dir: Path,
     db_instance=None,
     runtime_db_instance=None,
-    plex_export_db_instance=None,
+    media_export_db_instance=None,
 ) -> LogsWatcher:
     """
     Factory function to create and configure a LogsWatcher
@@ -1068,7 +1068,7 @@ def create_logs_watcher(
         logs_dir: Path to the Logs directory
         db_instance: ImageChoices database instance
         runtime_db_instance: Runtime database instance
-        plex_export_db_instance: Plex export database instance
+        media_export_db_instance: Plex export database instance
 
     Returns:
         Configured LogsWatcher instance
@@ -1086,9 +1086,9 @@ def create_logs_watcher(
     logger.info(
         f"  runtime_db_instance (type): {type(runtime_db_instance).__name__ if runtime_db_instance else 'None'}"
     )
-    logger.info(f"  plex_export_db_instance: {plex_export_db_instance}")
+    logger.info(f"  media_export_db_instance: {media_export_db_instance}")
     logger.info(
-        f"  plex_export_db_instance (type): {type(plex_export_db_instance).__name__ if plex_export_db_instance else 'None'}"
+        f"  media_export_db_instance (type): {type(media_export_db_instance).__name__ if media_export_db_instance else 'None'}"
     )
 
     logger.debug("Importing required modules...")
@@ -1159,11 +1159,11 @@ def create_logs_watcher(
         """Callback for Plex CSV imports"""
         logger.info("=" * 80)
         logger.info("PLEX CSV IMPORT CALLBACK INVOKED")
-        logger.info(f"  Plex Export DB instance: {plex_export_db_instance}")
+        logger.info(f"  Plex Export DB instance: {media_export_db_instance}")
         logger.info(f"  Logs dir: {logs_dir}")
         logger.info("=" * 80)
         try:
-            if plex_export_db_instance:
+            if media_export_db_instance:
                 # Import both CSV files to database with the SAME timestamp
                 from pathlib import Path
                 from datetime import datetime
@@ -1178,7 +1178,7 @@ def create_logs_watcher(
                 imported_count = 0
                 if library_csv.exists():
                     logger.info(f"Importing {library_csv.name}...")
-                    lib_count = plex_export_db_instance.import_library_csv(
+                    lib_count = media_export_db_instance.import_library_csv(
                         library_csv, run_timestamp
                     )
                     logger.info(f"  Imported {lib_count} library records")
@@ -1188,7 +1188,7 @@ def create_logs_watcher(
 
                 if episode_csv.exists():
                     logger.info(f"Importing {episode_csv.name}...")
-                    ep_count = plex_export_db_instance.import_episode_csv(
+                    ep_count = media_export_db_instance.import_episode_csv(
                         episode_csv, run_timestamp
                     )
                     logger.info(f"  Imported {ep_count} episode records")
@@ -1205,7 +1205,7 @@ def create_logs_watcher(
                         "[WARN] Plex CSV import completed but no records were imported (empty or invalid CSV files)"
                     )
             else:
-                logger.error("[ERROR] plex_export_db_instance is None, cannot import")
+                logger.error("[ERROR] media_export_db_instance is None, cannot import")
         except Exception as e:
             logger.error("[ERROR] Plex CSV import callback failed")
             logger.error(f"  Error: {e}", exc_info=True)
@@ -1214,11 +1214,11 @@ def create_logs_watcher(
         """Callback for OtherMediaServer (Jellyfin/Emby) CSV imports"""
         logger.info("=" * 80)
         logger.info("OTHER MEDIA CSV IMPORT CALLBACK INVOKED")
-        logger.info(f"  Plex Export DB instance: {plex_export_db_instance}")
+        logger.info(f"  Plex Export DB instance: {media_export_db_instance}")
         logger.info(f"  Logs dir: {logs_dir}")
         logger.info("=" * 80)
         try:
-            if plex_export_db_instance:
+            if media_export_db_instance:
                 # Import both CSV files to database with the SAME timestamp
                 from pathlib import Path
                 from datetime import datetime
@@ -1233,7 +1233,7 @@ def create_logs_watcher(
                 imported_count = 0
                 if library_csv.exists():
                     logger.info(f"Importing {library_csv.name}...")
-                    lib_count = plex_export_db_instance.import_other_library_csv(
+                    lib_count = media_export_db_instance.import_other_library_csv(
                         library_csv, run_timestamp
                     )
                     logger.info(f"  Imported {lib_count} library records")
@@ -1243,7 +1243,7 @@ def create_logs_watcher(
 
                 if episode_csv.exists():
                     logger.info(f"Importing {episode_csv.name}...")
-                    ep_count = plex_export_db_instance.import_other_episode_csv(
+                    ep_count = media_export_db_instance.import_other_episode_csv(
                         episode_csv, run_timestamp
                     )
                     logger.info(f"  Imported {ep_count} episode records")
@@ -1260,7 +1260,7 @@ def create_logs_watcher(
                         "[WARN] OtherMedia CSV import completed but no records were imported (empty or invalid CSV files)"
                     )
             else:
-                logger.error("[ERROR] plex_export_db_instance is None, cannot import")
+                logger.error("[ERROR] media_export_db_instance is None, cannot import")
         except Exception as e:
             logger.error("[ERROR] OtherMedia CSV import callback failed")
             logger.error(f"  Error: {e}", exc_info=True)
@@ -1270,22 +1270,22 @@ def create_logs_watcher(
     logger.debug(f"    - CSV callback: {import_csv_callback}")
     logger.debug(f"    - Runtime callback: {import_runtime_callback}")
     logger.debug(
-        f"    - Plex callback: {import_plex_callback if plex_export_db_instance else None}"
+        f"    - Plex callback: {import_plex_callback if media_export_db_instance else None}"
     )
     logger.debug(
-        f"    - OtherMedia callback: {import_other_media_callback if plex_export_db_instance else None}"
+        f"    - OtherMedia callback: {import_other_media_callback if media_export_db_instance else None}"
     )
 
     watcher = LogsWatcher(
         logs_dir=logs_dir,
         db_instance=db_instance,
         runtime_db_instance=runtime_db_instance,
-        plex_export_db_instance=plex_export_db_instance,
+        media_export_db_instance=media_export_db_instance,
         import_callback=import_csv_callback,
         runtime_callback=import_runtime_callback,
-        plex_callback=import_plex_callback if plex_export_db_instance else None,
+        plex_callback=import_plex_callback if media_export_db_instance else None,
         other_media_callback=(
-            import_other_media_callback if plex_export_db_instance else None
+            import_other_media_callback if media_export_db_instance else None
         ),
     )
 
