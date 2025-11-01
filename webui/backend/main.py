@@ -217,7 +217,7 @@ def initialize_webui_settings():
     """Initialize webui_settings.json with default values if it doesn't exist"""
     if not WEBUI_SETTINGS_PATH.exists():
         default_settings = {
-            "log_level": "WARNING",
+            "log_level": "INFO",
             "theme": "dark",
             "auto_refresh_interval": 180,
         }
