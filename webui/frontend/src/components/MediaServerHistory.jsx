@@ -354,19 +354,37 @@ function MediaServerHistory() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-2">
-            <Server className="w-8 h-8" />
-            {t("mediaServerExport.pageTitle", "Media Server Export History")}
-          </h1>
-          <p className="text-theme-muted mt-1">
-            {t(
-              "mediaServerExport.description",
-              "Track and query your media server library exports over time"
-            )}
-          </p>
+
+      {/* Media Server Tabs */}
+      <div className="bg-theme-card rounded-xl border border-theme shadow-sm">
+        <div className="flex gap-2 p-2">
+          <button
+            onClick={() => setMediaServer("plex")}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all ${
+              mediaServer === "plex"
+                ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
+                : "bg-theme-hover text-theme-muted hover:text-theme-text border border-transparent"
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            {t("mediaServerExport.plex", "Plex")}
+          </button>
+          <button
+            onClick={() => setMediaServer("other")}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all ${
+              mediaServer === "other"
+                ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
+                : "bg-theme-hover text-theme-muted hover:text-theme-text border border-transparent"
+            }`}
+          >
+            <Server className="w-4 h-4" />
+            {t("mediaServerExport.jellyfinEmby", "Jellyfin / Emby")}
+          </button>
         </div>
+      </div>
+
+      <div className="flex justify-end items-start">
+        <div></div>
 
         <div className="flex gap-2">
           <button
@@ -401,34 +419,6 @@ function MediaServerHistory() {
                 ? t("plexExport.importing", "Importing...")
                 : t("plexExport.import", "Import")}
             </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Media Server Tabs */}
-      <div className="bg-theme-card rounded-xl border border-theme shadow-sm">
-        <div className="flex gap-2 p-2">
-          <button
-            onClick={() => setMediaServer("plex")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all ${
-              mediaServer === "plex"
-                ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
-                : "bg-theme-hover text-theme-muted hover:text-theme-text border border-transparent"
-            }`}
-          >
-            <Database className="w-4 h-4" />
-            {t("mediaServerExport.plex", "Plex")}
-          </button>
-          <button
-            onClick={() => setMediaServer("other")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all ${
-              mediaServer === "other"
-                ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
-                : "bg-theme-hover text-theme-muted hover:text-theme-text border border-transparent"
-            }`}
-          >
-            <Server className="w-4 h-4" />
-            {t("mediaServerExport.jellyfinEmby", "Jellyfin / Emby")}
           </button>
         </div>
       </div>
